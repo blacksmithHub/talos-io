@@ -1,4 +1,4 @@
-import api from '../index'
+import api from './index'
 
 const { http } = api
 
@@ -8,7 +8,7 @@ const { http } = api
  * ===================
  */
 export default {
-  baseUrl: `${process.env.VUE_APP_TITAN_URL}/rest/default/V1`,
+  baseUrl: `${window.location.origin}/rest/default/V1`,
   url: 'integration/customer/token',
   http,
 

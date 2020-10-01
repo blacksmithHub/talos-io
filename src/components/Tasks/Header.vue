@@ -1,9 +1,6 @@
 <template>
   <div>
-    <v-btn
-      @click="addTask"
-      v-text="'Add task'"
-    />
+    //
   </div>
 </template>
 

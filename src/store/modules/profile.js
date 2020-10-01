@@ -3,7 +3,7 @@ export default {
   state () {
     return {
       loading: false,
-      tasks: []
+      items: []
     }
   },
 
@@ -13,44 +13,44 @@ export default {
      * @param {*} state
      */
     RESET (state) {
-      state.tasks = []
+      state.items = []
     },
 
     /**
      *
      * @param {*} state
-     * @param {*} tasks
+     * @param {*} items
      */
-    SET_TASKS (state, tasks) {
-      state.tasks = tasks
+    SET_ITEMS (state, items) {
+      state.items = items
     },
 
     /**
      *
      * @param {*} state
-     * @param {*} task
+     * @param {*} item
      */
-    ADD_TASK (state, task) {
-      state.tasks.push(task)
-    },
-
-    /**
-     *
-     * @param {*} state
-     * @param {*} key
-     * @param {*} task
-     */
-    UPDATE_TASK (state, key, task) {
-      state.tasks[key] = task
+    ADD_ITEM (state, item) {
+      state.items.push(item)
     },
 
     /**
      *
      * @param {*} state
      * @param {*} key
+     * @param {*} item
      */
-    DELETE_TASK (state, key) {
-      state.task.splice(key, 1)
+    UPDATE_ITEM (state, key, item) {
+      state.items[key] = item
+    },
+
+    /**
+     *
+     * @param {*} state
+     * @param {*} key
+     */
+    DELETE_ITEM (state, key) {
+      state.items.splice(key, 1)
     }
   },
 
@@ -66,38 +66,38 @@ export default {
     /**
      *
      * @param {*} param
-     * @param {*} tasks
+     * @param {*} items
      */
-    setTasks ({ commit }, tasks) {
-      commit('SET_TASKS', tasks)
+    setItems ({ commit }, items) {
+      commit('SET_ITEMS', items)
     },
 
     /**
      *
      * @param {*} param
-     * @param {*} task
+     * @param {*} item
      */
-    addTask ({ commit }, task) {
-      commit('ADD_TASK', task)
-    },
-
-    /**
-     *
-     * @param {*} param
-     * @param {*} key
-     * @param {*} task
-     */
-    updateTask ({ commit }, key, task) {
-      commit('UPDATE_TASK', key, task)
+    addItem ({ commit }, item) {
+      commit('ADD_ITEM', item)
     },
 
     /**
      *
      * @param {*} param
      * @param {*} key
+     * @param {*} item
      */
-    deleteTask ({ commit }, key) {
-      commit('DELETE_TASK', key)
+    updateItem ({ commit }, key, item) {
+      commit('UPDATE_ITEM', key, item)
+    },
+
+    /**
+     *
+     * @param {*} param
+     * @param {*} key
+     */
+    deleteItem ({ commit }, key) {
+      commit('DELETE_ITEM', key)
     }
   }
 }

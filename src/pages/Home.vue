@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <Sidenav />
+    <!-- <Sidenav /> -->
     <v-main>
       <Tasks />
     </v-main>
@@ -8,12 +8,12 @@
 </template>
 
 <script>
-import Sidenav from '@/components/App/Sidenav'
+// import Sidenav from '@/components/App/Sidenav'
 import Tasks from '@/components/Tasks'
 
 export default {
   components: {
-    Sidenav,
+    // Sidenav,
     Tasks
   },
   data () {

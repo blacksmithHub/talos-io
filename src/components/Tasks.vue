@@ -1,18 +1,18 @@
 <template>
   <v-container>
-    <Header />
+    <!-- <Header /> -->
     <Lists />
   </v-container>
 </template>
 
 <script>
 import Lists from '@/components/Tasks/Lists'
-import Header from '@/components/Tasks/Header'
+// import Header from '@/components/Tasks/Header'
 
 export default {
   components: {
-    Lists,
-    Header
+    Lists
+    // Header
   },
   data () {
     return {
