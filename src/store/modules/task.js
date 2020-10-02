@@ -8,6 +8,8 @@ export default {
           name: 'Task 1',
           email: 'qwertyiyan13@gmail.com',
           password: 'Seiburner4923',
+          sku: '919712-006',
+          size: '2C',
           gcashNumber: 123456789,
           cardNumber: null,
           cardHolderName: null,
@@ -21,6 +23,8 @@ export default {
           name: 'Task 2',
           email: 'bolrt@gmail.com',
           password: 'Password123',
+          sku: '919712-006',
+          size: '',
           gcashNumber: 123456789,
           cardNumber: null,
           cardHolderName: null,
@@ -36,6 +40,7 @@ export default {
 
   mutations: {
     /**
+     * Reset all items.
      *
      * @param {*} state
      */
@@ -44,6 +49,7 @@ export default {
     },
 
     /**
+     * Store all items.
      *
      * @param {*} state
      * @param {*} items
@@ -53,6 +59,7 @@ export default {
     },
 
     /**
+     * Add item.
      *
      * @param {*} state
      * @param {*} item
@@ -62,6 +69,7 @@ export default {
     },
 
     /**
+     * Update an item.
      *
      * @param {*} state
      * @param {*} params
@@ -71,6 +79,7 @@ export default {
     },
 
     /**
+     * Delete an item.
      *
      * @param {*} state
      * @param {*} key
@@ -82,6 +91,7 @@ export default {
 
   actions: {
     /**
+     * Trigger reset.
      *
      * @param {*} param
      */
@@ -90,6 +100,7 @@ export default {
     },
 
     /**
+     * Trigger store items.
      *
      * @param {*} param
      * @param {*} items
@@ -99,6 +110,7 @@ export default {
     },
 
     /**
+     * Trigger add item.
      *
      * @param {*} param
      * @param {*} item
@@ -108,6 +120,7 @@ export default {
     },
 
     /**
+     * Trigger update item.
      *
      * @param {*} param
      */
@@ -116,6 +129,7 @@ export default {
     },
 
     /**
+     * Trigger delete item.
      *
      * @param {*} param
      * @param {*} key

@@ -17,7 +17,12 @@ export default {
    *
    */
   fetchToken (params) {
-    return this.http(this.baseUrl)
-      .post(this.url, params)
+    try {
+      return this.http(this.baseUrl)
+        .post(this.url, params)
+        .then(({ data }) => data)
+    } catch (error) {
+      return null
+    }
   }
 }

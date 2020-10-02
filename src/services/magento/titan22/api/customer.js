@@ -17,7 +17,12 @@ export default {
    *
    */
   profile (token) {
-    return this.http(this.baseUrl, token)
-      .get(`${this.url}/me`)
+    try {
+      return this.http(this.baseUrl, token)
+        .get(`${this.url}/me`)
+        .then(({ data }) => data)
+    } catch (error) {
+      return null
+    }
   }
 }

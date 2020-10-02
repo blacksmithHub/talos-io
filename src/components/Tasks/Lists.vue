@@ -21,7 +21,7 @@
                       cols="12"
                       md="6"
                     >
-                      <h4 v-text="`${task.name}`" />
+                      <h4 v-text="task.name" />
                     </v-col>
                     <v-col
                       cols="12"
@@ -32,8 +32,20 @@
                           class="mr-1"
                           v-text="'Email:'"
                         />
-                        <span v-text="`${task.email}`" />
+                        <span v-text="task.email" />
                       </small>
+                    </v-col>
+                    <v-col
+                      cols="12"
+                      md="6"
+                    >
+                      <v-chip
+                        v-if="task.msg"
+                        x-small
+                        outlined
+                        color="error"
+                        v-text="task.msg"
+                      />
                     </v-col>
                   </v-row>
                 </v-col>
@@ -95,6 +107,7 @@ export default {
     ...mapActions('task', ['updateItem']),
 
     /**
+     * Perform on start event.
      *
      */
     onStart (key, task) {
@@ -104,6 +117,7 @@ export default {
     },
 
     /**
+     * Perform on stop event.
      *
      */
     onStop (key, task) {
@@ -113,6 +127,7 @@ export default {
     },
 
     /**
+     * Perform on start all event.
      *
      */
     startAll () {
@@ -124,6 +139,7 @@ export default {
     },
 
     /**
+     * Return status.
      *
      */
     status (id) {

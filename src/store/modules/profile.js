@@ -9,6 +9,7 @@ export default {
 
   mutations: {
     /**
+     * Reset all items.
      *
      * @param {*} state
      */
@@ -17,6 +18,7 @@ export default {
     },
 
     /**
+     * Store all items.
      *
      * @param {*} state
      * @param {*} items
@@ -26,6 +28,7 @@ export default {
     },
 
     /**
+     * Add item.
      *
      * @param {*} state
      * @param {*} item
@@ -35,16 +38,17 @@ export default {
     },
 
     /**
+     * Update an item.
      *
      * @param {*} state
-     * @param {*} key
-     * @param {*} item
+     * @param {*} params
      */
-    UPDATE_ITEM (state, key, item) {
-      state.items[key] = item
+    UPDATE_ITEM (state, params) {
+      state.items[params.key] = params.item
     },
 
     /**
+     * Delete an item.
      *
      * @param {*} state
      * @param {*} key
@@ -56,6 +60,7 @@ export default {
 
   actions: {
     /**
+     * Trigger reset.
      *
      * @param {*} param
      */
@@ -64,6 +69,7 @@ export default {
     },
 
     /**
+     * Trigger store items.
      *
      * @param {*} param
      * @param {*} items
@@ -73,6 +79,7 @@ export default {
     },
 
     /**
+     * Trigger add item.
      *
      * @param {*} param
      * @param {*} item
@@ -82,16 +89,16 @@ export default {
     },
 
     /**
+     * Trigger update item.
      *
-     * @param {*} param
-     * @param {*} key
-     * @param {*} item
+     * @param {*} params
      */
-    updateItem ({ commit }, key, item) {
-      commit('UPDATE_ITEM', key, item)
+    updateItem ({ commit }, params) {
+      commit('UPDATE_ITEM', params)
     },
 
     /**
+     * Trigger delete item.
      *
      * @param {*} param
      * @param {*} key

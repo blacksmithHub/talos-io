@@ -13,38 +13,58 @@ export default {
   http,
 
   /**
-   * Store cart
+   * Create cart
    *
    */
-  storeCart () {
-    return this.http(this.baseUrl)
-      .post(`${this.url}/mine`)
+  create (token) {
+    try {
+      return this.http(this.baseUrl, token)
+        .post(`${this.url}/mine`)
+        .then(({ data }) => data)
+    } catch (error) {
+      return null
+    }
   },
 
   /**
    * Get cart
    *
    */
-  showCart () {
-    return this.http(this.baseUrl)
-      .get(`${this.url}/mine`)
+  get (token) {
+    try {
+      return this.http(this.baseUrl, token)
+        .get(`${this.url}/mine`)
+        .then(({ data }) => data)
+    } catch (error) {
+      return null
+    }
   },
 
   /**
    * Delete product to cart
    *
    */
-  deleteProduct (id) {
-    return this.http(this.baseUrl)
-      .delete(`${this.url}/mine/items/${id}`)
+  delete (id) {
+    try {
+      return this.http(this.baseUrl)
+        .delete(`${this.url}/mine/items/${id}`)
+        .then(({ data }) => data)
+    } catch (error) {
+      return null
+    }
   },
 
   /**
    * Store product to cart
    *
    */
-  storeProduct (params) {
-    return this.http(this.baseUrl)
-      .post(`${this.url}/mine/items`, params)
+  store (params) {
+    try {
+      return this.http(this.baseUrl)
+        .post(`${this.url}/mine/items`, params)
+        .then(({ data }) => data)
+    } catch (error) {
+      return null
+    }
   }
 }
