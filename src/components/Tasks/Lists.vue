@@ -56,14 +56,14 @@
                 >
                   <v-btn
                     icon
-                    @click="onStart(index, task)"
+                    @click="onStart(task)"
                   >
                     <v-icon v-text="'mdi-play'" />
                   </v-btn>
 
                   <v-btn
                     icon
-                    @click="onStop(index, task)"
+                    @click="onStop(task, index)"
                   >
                     <v-icon v-text="'mdi-stop'" />
                   </v-btn>
@@ -92,9 +92,10 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 
-import automate from '@/services/magento/titan22/automate'
+import automate from '@/mixins/magento/titan22/automate'
 
 export default {
+  mixins: [automate],
   data () {
     return {
       //
@@ -103,6 +104,11 @@ export default {
   computed: {
     ...mapState('task', { tasks: 'items' })
   },
+  watch: {
+    tasks () {
+      console.log(this.tasks)
+    }
+  },
   methods: {
     ...mapActions('task', ['updateItem']),
 
@@ -110,31 +116,36 @@ export default {
      * Perform on start event.
      *
      */
-    onStart (key, task) {
+    async onStart (task) {
       task.status = 2
 
-      automate.init(task)
+      await this.init(task)
     },
 
     /**
      * Perform on stop event.
      *
      */
-    onStop (key, task) {
+    onStop (task, key) {
       task.status = 1
 
-      automate.init(task)
+      this.init(task)
+
+      this.updateItem({
+        key: key,
+        task: task
+      })
     },
 
     /**
      * Perform on start all event.
      *
      */
-    startAll () {
-      this.tasks.forEach((task, key) => {
+    async startAll () {
+      await this.tasks.forEach(async (task) => {
         task.status = 2
 
-        automate.init(task)
+        await this.init(task)
       })
     },
 

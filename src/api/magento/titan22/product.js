@@ -1,4 +1,4 @@
-import api from './index'
+import api from '../index'
 import qs from 'qs'
 
 const { http } = api
@@ -24,6 +24,7 @@ export default {
       return this.http(this.baseUrl, token)
         .get(`${this.url}?${params}`)
         .then(({ data }) => data)
+        .catch(() => null)
     } catch (error) {
       return null
     }
@@ -40,6 +41,7 @@ export default {
       return this.http(this.baseUrl, token)
         .get(`${this.url}/attributes?${params}`)
         .then(({ data }) => data)
+        .catch(() => null)
     } catch (error) {
       return null
     }

@@ -12,7 +12,7 @@ import { mapActions } from 'vuex'
 
 // import Sidenav from '@/components/App/Sidenav'
 import Tasks from '@/components/Tasks'
-import productApi from '@/services/magento/titan22/api/product'
+import productApi from '@/api/magento/titan22/product'
 import App from '@/config/app'
 
 export default {
@@ -76,9 +76,15 @@ export default {
 
       if (!attribute) return {}
 
+      const sizes = attribute.items[0].options.filter((data) => data.value).map((item) => {
+        item.label = item.label.toLowerCase()
+
+        return item
+      })
+
       const response = {
         attribute_id: attribute.items[0].attribute_id,
-        sizes: attribute.items[0].options.filter((data) => data.value)
+        sizes: sizes
       }
 
       return response

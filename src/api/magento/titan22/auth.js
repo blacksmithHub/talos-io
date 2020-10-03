@@ -1,26 +1,27 @@
-import api from './index'
+import api from '../index'
 
 const { http } = api
 
 /**
  * ===================
- * Customer API
+ * Auth API
  * ===================
  */
 export default {
   baseUrl: `${window.location.origin}/rest/default/V1`,
-  url: 'customers',
+  url: 'integration/customer/token',
   http,
 
   /**
-   * Get user profile
+   * Get user token
    *
    */
-  profile (token) {
+  fetchToken (params) {
     try {
-      return this.http(this.baseUrl, token)
-        .get(`${this.url}/me`)
+      return this.http(this.baseUrl)
+        .post(this.url, params)
         .then(({ data }) => data)
+        .catch(() => null)
     } catch (error) {
       return null
     }

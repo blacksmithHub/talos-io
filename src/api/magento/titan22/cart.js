@@ -1,4 +1,4 @@
-import api from './index'
+import api from '../index'
 
 const { http } = api
 
@@ -8,7 +8,7 @@ const { http } = api
  * ===================
  */
 export default {
-  baseUrl: `${window.location.origin}/rest/default/V1`,
+  baseUrl: `${window.location.origin}/rest/V1`,
   url: 'carts',
   http,
 
@@ -21,6 +21,7 @@ export default {
       return this.http(this.baseUrl, token)
         .post(`${this.url}/mine`)
         .then(({ data }) => data)
+        .catch(() => null)
     } catch (error) {
       return null
     }
@@ -35,6 +36,7 @@ export default {
       return this.http(this.baseUrl, token)
         .get(`${this.url}/mine`)
         .then(({ data }) => data)
+        .catch(() => null)
     } catch (error) {
       return null
     }
@@ -44,11 +46,12 @@ export default {
    * Delete product to cart
    *
    */
-  delete (id) {
+  delete (id, token) {
     try {
-      return this.http(this.baseUrl)
+      return this.http(this.baseUrl, token)
         .delete(`${this.url}/mine/items/${id}`)
         .then(({ data }) => data)
+        .catch(() => null)
     } catch (error) {
       return null
     }
@@ -58,11 +61,12 @@ export default {
    * Store product to cart
    *
    */
-  store (params) {
+  store (params, token) {
     try {
-      return this.http(this.baseUrl)
+      return this.http(this.baseUrl, token)
         .post(`${this.url}/mine/items`, params)
         .then(({ data }) => data)
+        .catch(() => null)
     } catch (error) {
       return null
     }
