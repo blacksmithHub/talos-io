@@ -5,21 +5,26 @@ export default {
       loading: false,
       items: [
         {
+          id: 1,
           name: 'Task 1',
           email: 'qwertyiyan13@gmail.com',
           password: 'Seiburner4923',
-          sku: '919712-006',
-          sizes: ['2c'],
+          sku: '414571-404',
+          sizes: ['17'],
           gcashNumber: 123456789,
           cardNumber: null,
           cardHolderName: null,
-          month: null,
-          year: null,
+          expiry: null,
           cvv: null,
           bankName: null,
-          status: 1
+          status: {
+            id: 1,
+            msg: 'stopped',
+            class: 'stopped'
+          }
         },
         {
+          id: 2,
           name: 'Task 2',
           email: 'bolrt@gmail.com',
           password: 'Password123',
@@ -28,11 +33,33 @@ export default {
           gcashNumber: 123456789,
           cardNumber: null,
           cardHolderName: null,
-          month: null,
-          year: null,
+          expiry: null,
           cvv: null,
           bankName: null,
-          status: 1
+          status: {
+            id: 1,
+            msg: 'stopped',
+            class: 'stopped'
+          }
+        },
+        {
+          id: 3,
+          name: 'Task 3',
+          email: 'yanfour@gmail.com',
+          password: 'Seiburner4923',
+          sku: 'DA0907-002',
+          sizes: ['10'],
+          gcashNumber: 123456789,
+          cardNumber: null,
+          cardHolderName: null,
+          expiry: null,
+          cvv: null,
+          bankName: null,
+          status: {
+            id: 1,
+            msg: 'stopped',
+            class: 'stopped'
+          }
         }
       ]
     }
@@ -46,6 +73,7 @@ export default {
      */
     RESET (state) {
       state.items = []
+      state.loading = false
     },
 
     /**
@@ -56,26 +84,6 @@ export default {
      */
     SET_ITEMS (state, items) {
       state.items = items
-    },
-
-    /**
-     * Add item.
-     *
-     * @param {*} state
-     * @param {*} item
-     */
-    ADD_ITEM (state, item) {
-      state.items.push(item)
-    },
-
-    /**
-     * Update an item.
-     *
-     * @param {*} state
-     * @param {*} params
-     */
-    UPDATE_ITEM (state, params) {
-      state.items[params.key] = params.task
     },
 
     /**
@@ -115,8 +123,20 @@ export default {
      * @param {*} param
      * @param {*} item
      */
-    addItem ({ commit }, item) {
-      commit('ADD_ITEM', item)
+    addItem ({ state, commit }, item) {
+      const tasks = state.items.slice()
+
+      tasks.push({
+        id: tasks[tasks.length - 1].id + 1,
+        ...item,
+        status: {
+          id: 1,
+          msg: 'stopped',
+          class: 'stopped'
+        }
+      })
+
+      commit('SET_ITEMS', tasks)
     },
 
     /**
@@ -124,8 +144,12 @@ export default {
      *
      * @param {*} param
      */
-    updateItem ({ commit }, params) {
-      commit('UPDATE_ITEM', params)
+    updateItem ({ state, commit }, params) {
+      const tasks = state.items.slice()
+
+      tasks.find((val) => val.id === params.id).status = params.status
+
+      commit('SET_ITEMS', tasks)
     },
 
     /**
