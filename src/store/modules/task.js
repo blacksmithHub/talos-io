@@ -13,10 +13,10 @@ export default {
           sizes: ['8'],
           gcashNumber: 123456789,
           cardNumber: null,
-          cardHolderName: null,
+          cardHolder: null,
           expiry: null,
           cvv: null,
-          bankName: null,
+          bank: 'GCash',
           status: {
             id: 1,
             msg: 'stopped',
@@ -32,10 +32,10 @@ export default {
           sizes: ['6'],
           gcashNumber: 123456789,
           cardNumber: null,
-          cardHolderName: null,
+          cardHolder: null,
           expiry: null,
           cvv: null,
-          bankName: null,
+          bank: 'GCash',
           status: {
             id: 1,
             msg: 'stopped',
@@ -51,10 +51,10 @@ export default {
           sizes: ['5'],
           gcashNumber: 123456789,
           cardNumber: null,
-          cardHolderName: null,
+          cardHolder: null,
           expiry: null,
           cvv: null,
-          bankName: null,
+          bank: 'GCash',
           status: {
             id: 1,
             msg: 'stopped',
@@ -135,6 +135,8 @@ export default {
           class: 'stopped'
         }
       })
+
+      console.log(item, tasks)
 
       commit('SET_ITEMS', tasks)
     },

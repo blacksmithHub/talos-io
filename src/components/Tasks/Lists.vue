@@ -3,7 +3,7 @@
     <template v-for="(task, index) in tasks">
       <v-list-item
         :key="task.title"
-        class="pa-0"
+        class="pa-0 list"
         :class="`${task.status.class}-left-border`"
       >
         <v-list-item-content class="pa-2">
@@ -12,6 +12,8 @@
               cols="5"
               md="8"
               align-self="center"
+              class="task"
+              @click="$emit('click:selectList', task)"
             >
               <v-row no-gutters>
                 <v-col
@@ -73,9 +75,10 @@
 
             <v-col
               align-self="center"
-              class="text-center"
+              class="text-center task"
               cols="3"
               md="2"
+              @click="$emit('click:selectList', task)"
             >
               <v-chip
                 v-if="task.status.msg"
@@ -196,13 +199,13 @@ export default {
 
 <style scoped>
 .running-left-border {
-  border-left: 2px solid orange
+  border-left: 5px solid orange
 }
 .stopped-left-border {
-  border-left: 2px solid grey
+  border-left: 5px solid grey
 }
 .error-left-border {
-  border-left: 2px solid red
+  border-left: 5px solid red
 }
 
 .running-chip {
@@ -213,5 +216,12 @@ export default {
 }
 .error-chip {
   border: 1px solid red
+}
+
+.task:hover {
+  cursor: pointer;
+}
+.list:hover {
+  background-color: whitesmoke;
 }
 </style>

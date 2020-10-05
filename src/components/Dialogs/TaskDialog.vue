@@ -127,6 +127,7 @@
               </v-col>
 
               <v-col
+                v-if="!isGcash"
                 cols="12"
                 md="6"
               >
@@ -145,7 +146,7 @@
 
               <v-col
                 cols="12"
-                md="6"
+                :md="isGcash ? 12 : 6"
               >
                 <v-text-field
                   v-model="cardNumber"
@@ -162,6 +163,7 @@
               </v-col>
 
               <v-col
+                v-if="!isGcash"
                 cols="12"
                 md="6"
               >
@@ -179,6 +181,7 @@
               </v-col>
 
               <v-col
+                v-if="!isGcash"
                 cols="12"
                 md="6"
               >
@@ -224,6 +227,12 @@ import { mapState, mapActions } from 'vuex'
 import { required, email, numeric, maxLength } from 'vuelidate/lib/validators'
 
 export default {
+  props: {
+    task: {
+      type: Object,
+      default: Object
+    }
+  },
   data () {
     return {
       dialog: false,
@@ -237,8 +246,13 @@ export default {
       cardNumber: '',
       expiry: '',
       cvv: '',
+      isGcash: false,
+
+      /**
+       * Todo: get these from vuex
+       */
       availableSizes: ['7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12', '13'],
-      availableBanks: ['BPI', 'PNB', 'BDO']
+      availableBanks: ['GCash', 'BPI', 'PNB', 'BDO']
     }
   },
   computed: {
@@ -365,6 +379,29 @@ export default {
       return errors
     }
   },
+  watch: {
+    bank () {
+      if (this.bank === 'GCash') {
+        this.isGcash = true
+      } else {
+        this.isGcash = false
+      }
+    },
+    task () {
+      if (Object.keys(this.task).length) {
+        this.taskName = this.task.name
+        this.email = this.task.email
+        this.password = this.task.password
+        this.sku = this.task.sku
+        this.sizes = this.task.sizes
+        this.bank = (this.task.gcashNumber) ? 'GCash' : this.task.bank
+        this.cardNumber = this.task.gcashNumber || this.task.cardNumber
+        this.cardHolder = this.task.cardHolder
+        this.expiry = this.task.expiry
+        this.cvv = this.task.cvv
+      }
+    }
+  },
   methods: {
     ...mapActions('task', { addTask: 'addItem' }),
     /**
@@ -372,7 +409,7 @@ export default {
      *
      */
     onCancel () {
-      this.$v.$reset()
+      this.reset()
       this.dialog = false
     },
     /**
@@ -391,14 +428,32 @@ export default {
           sizes: this.sizes,
           gcashNumber: 0,
           cardNumber: this.cardNumber,
-          cardHolderName: this.cardHolder,
+          cardHolder: this.cardHolder,
           expiry: this.expiry,
           cvv: this.cvv,
           bank: this.bank
         })
 
-        this.onClose()
+        this.onCancel()
       }
+    },
+    /**
+     * Reset fields.
+     */
+    reset () {
+      this.$v.$reset()
+
+      this.taskName = ''
+      this.email = ''
+      this.password = ''
+      this.sku = ''
+      this.sizes = []
+      this.bank = ''
+      this.cardHolder = ''
+      this.cardNumber = ''
+      this.expiry = ''
+      this.cvv = ''
+      this.isGcash = false
     }
   },
   validations: {
