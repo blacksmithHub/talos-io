@@ -21,9 +21,9 @@ export default {
       return this.http(this.baseUrl, token)
         .post(`${this.url}/mine`)
         .then(({ data }) => data)
-        .catch(() => null)
+        .catch(() => false)
     } catch (error) {
-      return null
+      return false
     }
   },
 
@@ -36,9 +36,9 @@ export default {
       return this.http(this.baseUrl, token)
         .get(`${this.url}/mine`)
         .then(({ data }) => data)
-        .catch(() => null)
+        .catch(() => false)
     } catch (error) {
-      return null
+      return false
     }
   },
 
@@ -51,9 +51,9 @@ export default {
       return this.http(this.baseUrl, token)
         .delete(`${this.url}/mine/items/${id}`)
         .then(({ data }) => data)
-        .catch(() => null)
+        .catch(() => false)
     } catch (error) {
-      return null
+      return false
     }
   },
 
@@ -66,9 +66,9 @@ export default {
       return this.http(this.baseUrl, token)
         .post(`${this.url}/mine/items`, params)
         .then(({ data }) => data)
-        .catch(() => null)
+        .catch(() => false)
     } catch (error) {
-      return null
+      return false
     }
   },
 
@@ -81,9 +81,9 @@ export default {
       return this.http(this.baseUrl, token)
         .post(`${this.url}/mine/estimate-shipping-methods-by-address-id`, params)
         .then(({ data }) => data)
-        .catch(() => null)
+        .catch(() => false)
     } catch (error) {
-      return null
+      return false
     }
   },
 
@@ -96,9 +96,9 @@ export default {
       return this.http(this.baseUrl, token)
         .post(`${this.url}/mine/shipping-information`, params)
         .then(({ data }) => data)
-        .catch(() => null)
+        .catch(() => false)
     } catch (error) {
-      return null
+      return false
     }
   },
 
@@ -109,11 +109,11 @@ export default {
   createOrder (params, token) {
     try {
       return this.http(this.baseUrl, token)
-        .put(`${this.url}/mine/order`, params)
+        .post(`${this.url}/mine/payment-information`, params)
         .then(({ data }) => data)
-        .catch(() => null)
+        .catch(() => false)
     } catch (error) {
-      return null
+      return false
     }
   }
 }

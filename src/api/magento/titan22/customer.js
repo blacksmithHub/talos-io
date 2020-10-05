@@ -21,9 +21,9 @@ export default {
       return this.http(this.baseUrl, token)
         .get(`${this.url}/me`)
         .then(({ data }) => data)
-        .catch(() => null)
+        .catch(() => false)
     } catch (error) {
-      return null
+      return false
     }
   }
 }

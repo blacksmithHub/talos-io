@@ -24,9 +24,9 @@ export default {
       return this.http(this.baseUrl, token)
         .get(`${this.url}?${params}`)
         .then(({ data }) => data)
-        .catch(() => null)
+        .catch(() => false)
     } catch (error) {
-      return null
+      return false
     }
   },
 
@@ -41,9 +41,9 @@ export default {
       return this.http(this.baseUrl, token)
         .get(`${this.url}/attributes?${params}`)
         .then(({ data }) => data)
-        .catch(() => null)
+        .catch(() => false)
     } catch (error) {
-      return null
+      return false
     }
   }
 }

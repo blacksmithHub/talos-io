@@ -3,6 +3,7 @@ import Vuelidate from 'vuelidate'
 import VueProgressBar from 'vue-progressbar'
 import VueMoment from 'vue-moment'
 import moment from 'moment-timezone'
+import VueCookies from 'vue-cookies'
 
 import App from './App.vue'
 import store from './store'
@@ -11,6 +12,8 @@ import vuetify from './plugins/vuetify'
 import vueProgressBar from './plugins/vue-progress-bar'
 
 Vue.use(VueProgressBar, vueProgressBar)
+
+Vue.use(VueCookies)
 
 Vue.use(Vuelidate)
 

@@ -21,9 +21,9 @@ export default {
       return this.http(this.baseUrl)
         .post(this.url, params)
         .then(({ data }) => data)
-        .catch(() => null)
+        .catch(() => false)
     } catch (error) {
-      return null
+      return false
     }
   }
 }

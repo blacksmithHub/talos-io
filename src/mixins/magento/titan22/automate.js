@@ -46,7 +46,7 @@ export default {
 
       if (!this.isRunning(task.id)) return this.stopTask(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'stopped')
 
-      this.shop(task, user)
+      await this.shop(task, user)
 
       return this.stopTask(task.id, Constant.TASK.STATUS.STOPPED, 'copped!', 'stopped')
     },
@@ -91,32 +91,33 @@ export default {
     async authenticate (task) {
       task.status.msg = 'authenticating'
 
+      let success = false
       const user = {}
 
       do {
-        try {
-          const credentials = {
-            username: task.email,
-            password: task.password
-          }
-
-          const token = await authApi.fetchToken(credentials)
-
-          if (!token) {
-            this.stopTask(task.id, Constant.TASK.STATUS.RUNNING, 'unauthenticated', 'error')
-          } else {
-            user.profile = await customerApi.profile(token)
-
-            if (!user.profile || !user.profile.addresses.length) {
-              this.stopTask(task.id, Constant.TASK.STATUS.RUNNING, 'invalid address', 'error')
-            } else {
-              user.token = token
-            }
-          }
-        } catch (error) {
-          continue
+        const credentials = {
+          username: task.email,
+          password: task.password
         }
-      } while (!Object.keys(user).length && this.isRunning(task.id))
+
+        const token = await authApi.fetchToken(credentials)
+
+        if (!token) {
+          this.stopTask(task.id, Constant.TASK.STATUS.RUNNING, 'unauthenticated', 'error')
+          success = false
+        } else {
+          const response = await customerApi.profile(token)
+
+          if (!response || !response.addresses.length) {
+            this.stopTask(task.id, Constant.TASK.STATUS.RUNNING, 'invalid address', 'error')
+            success = false
+          } else {
+            user.profile = response
+            user.token = token
+            success = true
+          }
+        }
+      } while (!success && this.isRunning(task.id))
 
       return user
     },
@@ -131,13 +132,15 @@ export default {
       const cart = await this.prepareCart(task, user)
 
       while (this.isRunning(task.id)) {
-        await this.prepareOrder(task, cart, user)
+        const product = await this.prepareOrder(task, cart, user)
 
-        const shipping = await this.prepareShipping(task, user)
+        const order = await this.prepareShipping(task, user, product)
 
-        const order = await this.placeOrder(task, shipping, user)
+        await this.placeOrder(task, order, user, cart)
 
-        if (order) break
+        // await this.cleanCart(task, user)
+
+        break
       }
     },
 
@@ -153,24 +156,45 @@ export default {
       let cart = {}
 
       do {
-        try {
-          await cartApi.create(user.token)
+        const cartCreateResponse = await cartApi.create(user.token)
 
-          cart = await cartApi.get(user.token)
+        if (!cartCreateResponse) continue
 
-          if (!cart.items.length) break
-
-          const promises = []
-
-          Object.keys(cart.items).forEach(async (item) => {
-            await promises.push(cartApi.delete(cart.items.[item].item_id, user.token))
-          })
-
-          await Promise.all(promises)
-        } catch (error) {
-          continue
-        }
+        cart = await this.cleanCart(task, user)
       } while (!Object.keys(cart).length && this.isRunning(task.id))
+
+      return cart
+    },
+
+    /**
+     * Clean current cart.
+     *
+     * @param {*} user
+     */
+    async cleanCart (task, user) {
+      let success = false
+      let cart = {}
+
+      do {
+        const cartGetResponse = await cartApi.get(user.token)
+
+        if (!cartGetResponse) continue
+
+        cart = cartGetResponse
+
+        if (!cart.items.length) break
+
+        const promises = []
+
+        Object.keys(cart.items).forEach(async (item) => {
+          await promises.push(cartApi.delete(cart.items.[item].item_id, user.token))
+        })
+
+        await Promise.all(promises)
+          .then((values) => {
+            if (!values.includes(false)) success = true
+          })
+      } while (!success && this.isRunning(task.id))
 
       return cart
     },
@@ -187,22 +211,25 @@ export default {
 
       const attr = attributes.find((attr) => attr.sizes.find((size) => task.sizes.includes(size.label)))
 
-      await this.addProductToCart(attr, task, user, cart)
+      return await this.addProductToCart(attr, task, user, cart)
     },
 
     /**
      * Add product to cart.
      *
+     * @param {*} attr
+     * @param {*} task
+     * @param {*} user
+     * @param {*} cart
      */
     async addProductToCart (attr, task, user, cart) {
-      let success = false
-      const promises = []
+      let response = {}
 
-      do {
-        task.sizes.forEach(async (preferredSize) => {
-          if (!this.isRunning(task.id)) return false
+      while (!Object.keys(response).length && this.isRunning(task.id)) {
+        for (var i = 0; i < task.sizes.length; ++i) {
+          if (!this.isRunning(task.id)) break
 
-          task.status.msg = `trying size: ${preferredSize}`
+          task.status.msg = `trying size: ${task.sizes[i]}`
 
           const order = {
             cartItem: {
@@ -214,7 +241,7 @@ export default {
                   configurable_item_options: [
                     {
                       option_id: attr.attribute_id.toString(),
-                      option_value: parseInt(attr.sizes.find((size) => size.label === preferredSize).value)
+                      option_value: parseInt(attr.sizes.find((size) => size.label === task.sizes[i]).value)
                     }
                   ]
                 }
@@ -223,33 +250,18 @@ export default {
             }
           }
 
-          try {
-            const response = cartApi.store(order, user.token)
+          const apiResponse = await cartApi.store(order, user.token)
 
-            response.then((val) => {
-              if (val) return val
-
-              task.status.msg = `size: ${preferredSize} - out of stock`
-            })
-
-            /**
-             * Exit after success
-             */
-            await promises.push(response)
-          } catch (error) {
-            return true
+          if (apiResponse) {
+            response = apiResponse
+            break
           }
-        })
 
-        await Promise.all(promises).then((values) => {
-          const shoppingCart = values.filter((val) => val)
+          task.status.msg = `size: ${task.sizes[i]} - out of stock`
+        }
+      }
 
-          if (shoppingCart.length) {
-            task.status.msg = `size: ${shoppingCart[0].size} - carted`
-            success = true
-          }
-        })
-      } while (!success && this.isRunning(task.id))
+      return response
     },
 
     /**
@@ -257,68 +269,75 @@ export default {
      *
      * @param {*} task
      * @param {*} user
+     * @param {*} product
      */
-    async prepareShipping (task, user) {
+    async prepareShipping (task, user, product) {
       task.status.msg = 'setting shipping information'
 
       let shipping = {}
 
       do {
-        try {
-          const defaultShippingAddress = user.profile.addresses.find((val) => val.default_shipping)
-          const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
+        const defaultShippingAddress = user.profile.addresses.find((val) => val.default_shipping)
+        const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
 
+        let shippingInfo = {
+          carrier_code: 'freeshipping',
+          method_code: 'freeshipping'
+        }
+
+        if (product.price < 5000) {
           const estimateParams = {
             addressId: defaultShippingAddress.id
           }
 
-          /**
-       * Todo: skip this if price is above 5k
-       */
-          const response = await cartApi.estimateShipping(estimateParams, user.token)
+          const apiResponse = await cartApi.estimateShipping(estimateParams, user.token)
 
-          const shippingAddress = {
-            region: defaultShippingAddress.region.region,
-            region_id: defaultShippingAddress.region_id,
-            region_code: defaultShippingAddress.region.region_code,
-            country_id: defaultShippingAddress.country_id,
-            street: defaultShippingAddress.street,
-            postcode: defaultShippingAddress.postcode,
-            city: defaultShippingAddress.city,
-            firstname: defaultShippingAddress.firstname,
-            lastname: defaultShippingAddress.lastname,
-            email: user.profile.email,
-            telephone: defaultShippingAddress.telephone
+          if (!apiResponse) {
+            shippingInfo = apiResponse[0]
+            continue
           }
-
-          const billingAddress = {
-            region: defaultBillingAddress.region.region,
-            region_id: defaultBillingAddress.region_id,
-            region_code: defaultBillingAddress.region.region_code,
-            country_id: defaultBillingAddress.country_id,
-            street: defaultBillingAddress.street,
-            postcode: defaultBillingAddress.postcode,
-            city: defaultBillingAddress.city,
-            firstname: defaultBillingAddress.firstname,
-            lastname: defaultBillingAddress.lastname,
-            email: user.profile.email,
-            telephone: defaultBillingAddress.telephone
-          }
-
-          const shippingParams = {
-            addressInformation: {
-              shipping_address: shippingAddress,
-              billing_address: billingAddress,
-              shipping_carrier_code: response[0].carrier_code, // free shipping if price is above 5k
-              shipping_method_code: response[0].method_code // free shipping if price is above 5k
-            }
-          }
-
-          shipping = await cartApi.setShippingInformation(shippingParams, user.token)
-        } catch (error) {
-          continue
         }
+
+        const shippingAddress = this.setAddresses(defaultShippingAddress, user)
+        const billingAddress = this.setAddresses(defaultBillingAddress, user)
+
+        const shippingParams = {
+          addressInformation: {
+            shipping_address: shippingAddress,
+            billing_address: billingAddress,
+            shipping_carrier_code: shippingInfo.carrier_code,
+            shipping_method_code: shippingInfo.method_code
+          }
+        }
+
+        shipping = await cartApi.setShippingInformation(shippingParams, user.token)
+
+        if (!shipping) continue
       } while (!Object.keys(shipping).length && this.isRunning(task.id))
+
+      return shipping
+    },
+
+    /**
+     * Return addresses.
+     *
+     * @param {*} address
+     * @param {*} user
+     */
+    setAddresses (address, user) {
+      return {
+        region: address.region.region,
+        region_id: address.region_id,
+        region_code: address.region.region_code,
+        country_id: address.country_id,
+        street: address.street,
+        postcode: address.postcode,
+        city: address.city,
+        firstname: address.firstname,
+        lastname: address.lastname,
+        email: user.profile.email,
+        telephone: address.telephone
+      }
     },
 
     /**
@@ -327,25 +346,36 @@ export default {
      * @param {*} task
      * @param {*} order
      * @param {*} user
+     * @param {*} cart
      */
-    async placeOrder (task, shipping, user) {
+    async placeOrder (task, order, user, cart) {
       task.status.msg = 'placing order'
 
-      let orderNumber = ''
+      let orderNumber = null
+
+      const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
+
+      const params = {
+        amcheckout: {},
+        billingAddress: this.setAddresses(defaultBillingAddress, user),
+        cartId: cart.id.toString(),
+        paymentMethod: {
+          additional_data: null,
+          method: order.payment_methods[0].code,
+          po_number: null
+        }
+      }
 
       do {
-        const params = {
-          paymentMethod: {
-            method: shipping.payment_methods[0].code
-          }
-        }
+        const apiResponse = await cartApi.createOrder(params, user.token)
 
-        try {
-          orderNumber = await cartApi.createOrder(params, user.token)
-        } catch (error) {
-          continue
+        if (apiResponse) {
+          orderNumber = apiResponse
+          break
         }
       } while (!orderNumber && this.isRunning(task.id))
+
+      return orderNumber
     }
   }
 
