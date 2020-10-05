@@ -1,7 +1,4 @@
-// import GuardService from '@/services/guard'
-
 const Home = () => import('../pages/Home')
-// const Login = () => import('../pages/Login')
 
 /**
  * =======================================================================
@@ -20,13 +17,6 @@ export default {
       path: '',
       name: 'Home',
       component: Home
-      // beforeEnter: (to, from, next) => GuardService.authorized(next)
     }
-    // {
-    //     name: 'Login',
-    //     path: '/login',
-    //     component: Login,
-    //     beforeEnter: (to, from, next) => GuardService.registration(from, next)
-    //   }
   ]
 }
