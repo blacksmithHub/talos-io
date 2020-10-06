@@ -38,28 +38,26 @@ export default {
      * @param {*} task
      */
     async init (task) {
-      if (task.status.id === Constant.TASK.STATUS.STOPPED) return this.stopTask(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'stopped')
+      if (task.status.id === Constant.TASK.STATUS.STOPPED) return this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
 
-      if (!this.validate(task)) return this.stopTask(task.id, Constant.TASK.STATUS.ERROR, 'invalid attributes', 'error')
+      if (!this.validate(task)) return this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'invalid attributes', 'error')
 
       const user = await this.authenticate(task)
 
-      if (!this.isRunning(task.id)) return this.stopTask(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'stopped')
+      if (!this.isRunning(task.id)) return this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
 
-      await this.shop(task, user)
-
-      return this.stopTask(task.id, Constant.TASK.STATUS.STOPPED, 'copped!', 'stopped')
+      return await this.shop(task, user)
     },
 
     /**
-     * Terminate task.
+     * Set task status.
      *
      * @param {*} id
      * @param {*} status
      * @param {*} msg
      * @param {*} attr
      */
-    async stopTask (id, status, msg, attr) {
+    async setTaskStatus (id, status, msg, attr) {
       await this.updateTask({
         id: id,
         status: {
@@ -94,30 +92,34 @@ export default {
       let success = false
       const user = {}
 
-      do {
+      while (!success && this.isRunning(task.id)) {
         const credentials = {
           username: task.email,
           password: task.password
         }
 
+        if (!this.isRunning(task.id)) break
+
         const token = await authApi.fetchToken(credentials)
 
         if (!token) {
-          this.stopTask(task.id, Constant.TASK.STATUS.RUNNING, 'unauthenticated', 'error')
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'unauthenticated', 'error')
           success = false
-        } else {
+        } else if (this.isRunning(task.id)) {
           const response = await customerApi.profile(token)
 
           if (!response || !response.addresses.length) {
-            this.stopTask(task.id, Constant.TASK.STATUS.RUNNING, 'invalid address', 'error')
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'invalid address', 'error')
             success = false
           } else {
             user.profile = response
             user.token = token
             success = true
           }
+        } else {
+          break
         }
-      } while (!success && this.isRunning(task.id))
+      }
 
       return user
     },
@@ -131,17 +133,27 @@ export default {
     async shop (task, user) {
       const cart = await this.prepareCart(task, user)
 
-      while (this.isRunning(task.id)) {
+      if (!this.isRunning(task.id)) this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+
+      let success = false
+
+      while (!success && this.isRunning(task.id)) {
         const product = await this.prepareOrder(task, cart, user)
+
+        if (!this.isRunning(task.id)) break
 
         const order = await this.prepareShipping(task, user, product)
 
-        await this.placeOrder(task, order, user, cart)
+        if (!this.isRunning(task.id)) break
 
-        // await this.cleanCart(task, user)
+        const orderNumber = await this.setPaymentInformation(task, order, user, cart)
 
-        break
+        if (!this.isRunning(task.id)) break
+
+        if (orderNumber) success = true
       }
+
+      return success
     },
 
     /**
@@ -151,17 +163,19 @@ export default {
      * @param {*} user
      */
     async prepareCart (task, user) {
-      task.status.msg = 'initializing cart'
+      this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'initializing cart', 'orange')
 
       let cart = {}
 
-      do {
+      while (!Object.keys(cart).length && this.isRunning(task.id)) {
+        if (!this.isRunning(task.id)) break
+
         const cartCreateResponse = await cartApi.create(user.token)
 
         if (!cartCreateResponse) continue
 
         cart = await this.cleanCart(task, user)
-      } while (!Object.keys(cart).length && this.isRunning(task.id))
+      }
 
       return cart
     },
@@ -175,7 +189,9 @@ export default {
       let success = false
       let cart = {}
 
-      do {
+      while (!success && this.isRunning(task.id)) {
+        if (!this.isRunning(task.id)) break
+
         const cartGetResponse = await cartApi.get(user.token)
 
         if (!cartGetResponse) continue
@@ -194,7 +210,7 @@ export default {
           .then((values) => {
             if (!values.includes(false)) success = true
           })
-      } while (!success && this.isRunning(task.id))
+      }
 
       return cart
     },
@@ -229,7 +245,7 @@ export default {
         for (var i = 0; i < task.sizes.length; ++i) {
           if (!this.isRunning(task.id)) break
 
-          task.status.msg = `trying size: ${task.sizes[i]}`
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `trying size: ${task.sizes[i]}`, 'orange')
 
           const order = {
             cartItem: {
@@ -250,15 +266,17 @@ export default {
             }
           }
 
+          if (!this.isRunning(task.id)) break
+
           const apiResponse = await cartApi.store(order, user.token)
 
           if (apiResponse) {
             response = apiResponse
             break
           }
-
-          task.status.msg = `size: ${task.sizes[i]} - out of stock`
         }
+
+        if (Object.keys(response).length) break
       }
 
       return response
@@ -272,11 +290,9 @@ export default {
      * @param {*} product
      */
     async prepareShipping (task, user, product) {
-      task.status.msg = 'setting shipping information'
-
       let shipping = {}
 
-      do {
+      while (!Object.keys(shipping).length && this.isRunning(task.id)) {
         const defaultShippingAddress = user.profile.addresses.find((val) => val.default_shipping)
         const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
 
@@ -289,6 +305,8 @@ export default {
           const estimateParams = {
             addressId: defaultShippingAddress.id
           }
+
+          if (!this.isRunning(task.id)) break
 
           const apiResponse = await cartApi.estimateShipping(estimateParams, user.token)
 
@@ -310,10 +328,15 @@ export default {
           }
         }
 
-        shipping = await cartApi.setShippingInformation(shippingParams, user.token)
+        if (!this.isRunning(task.id)) break
 
-        if (!shipping) continue
-      } while (!Object.keys(shipping).length && this.isRunning(task.id))
+        const cartApiResponse = await cartApi.setShippingInformation(shippingParams, user.token)
+
+        if (cartApiResponse) {
+          shipping = cartApiResponse
+          break
+        }
+      }
 
       return shipping
     },
@@ -348,8 +371,9 @@ export default {
      * @param {*} user
      * @param {*} cart
      */
-    async placeOrder (task, order, user, cart) {
-      task.status.msg = 'placing order'
+    async setPaymentInformation (task, order, user, cart) {
+      const sizeLabel = JSON.parse(order.totals.items[0].options)[0].value
+      this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${sizeLabel} - placing order`, 'orange')
 
       let orderNumber = null
 
@@ -366,16 +390,46 @@ export default {
         }
       }
 
-      do {
+      while (!orderNumber && this.isRunning(task.id)) {
         const apiResponse = await cartApi.createOrder(params, user.token)
 
         if (apiResponse) {
           orderNumber = apiResponse
           break
         }
-      } while (!orderNumber && this.isRunning(task.id))
+      }
 
       return orderNumber
     }
   }
 }
+
+// /**
+//  * Search product by sku.
+//  *
+//  */
+// async searchProduct (task) {
+//   const params = {
+//     searchCriteria: {
+//       pageSize: 50,
+//       sortOrders: [
+//         {
+//           field: 'updated_at',
+//           direction: 'DESC'
+//         }
+//       ],
+//       filterGroups: [
+//         {
+//           filters: [
+//             {
+//               field: 'sku',
+//               value: task.sku
+//             }
+//           ]
+//         }
+//       ]
+//     }
+//   }
+
+//   return await productApi.search(params, App.services.titan22.token)
+// }

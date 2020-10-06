@@ -133,11 +133,9 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 
-import automate from '@/mixins/magento/titan22/automate'
 import Constant from '@/config/constant'
 
 export default {
-  mixins: [automate],
   data () {
     return {
       //
@@ -160,11 +158,11 @@ export default {
           status: {
             id: Constant.TASK.STATUS.RUNNING,
             msg: 'running',
-            class: 'running'
+            class: 'orange'
           }
         })
 
-        await this.init(task)
+        await this.$emit('click:startTask', task)
       })
     },
 
@@ -179,7 +177,7 @@ export default {
           status: {
             id: Constant.TASK.STATUS.STOPPED,
             msg: 'stopped',
-            class: 'stopped'
+            class: 'grey'
           }
         })
       })

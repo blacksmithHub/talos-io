@@ -20,7 +20,7 @@ export default {
           status: {
             id: 1,
             msg: 'stopped',
-            class: 'stopped'
+            class: 'grey'
           }
         },
         {
@@ -39,7 +39,7 @@ export default {
           status: {
             id: 1,
             msg: 'stopped',
-            class: 'stopped'
+            class: 'grey'
           }
         },
         {
@@ -58,7 +58,7 @@ export default {
           status: {
             id: 1,
             msg: 'stopped',
-            class: 'stopped'
+            class: 'grey'
           }
         }
       ]
