@@ -74,7 +74,7 @@ export default {
         })
 
         this.$toast.open({
-          message: '<strong style="font-family: Arial; text-transform: uppercase">checkout</strong>',
+          message: '<strong style="font-family: Arial; text-transform: uppercase">checked out</strong>',
           type: 'success',
           duration: 3000
         })
