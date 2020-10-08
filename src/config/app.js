@@ -5,12 +5,12 @@ export default {
   services: {
     /**
      * ===========================================
-     * Auth Service Configuration
+     * API Service Configuration
      * ===========================================
      *
      */
-    auth: {
-      url: process.env.VUE_APP_AUTH_URL
+    api: {
+      url: process.env.VUE_APP_API_URL
     },
     /**
      * ===========================================

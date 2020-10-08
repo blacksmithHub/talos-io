@@ -1,4 +1,5 @@
 import api from '../index'
+import Config from '@/config/app'
 
 const { http } = api
 
@@ -8,7 +9,7 @@ const { http } = api
  * ===================
  */
 export default {
-  baseUrl: 'http://titan-bot.api/api',
+  baseUrl: `${Config.api.url}/api`,
   url: 'place-order',
   http,
 
