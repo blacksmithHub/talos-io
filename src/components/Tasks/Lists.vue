@@ -139,11 +139,6 @@ import { mapState, mapActions } from 'vuex'
 import Constant from '@/config/constant'
 
 export default {
-  data () {
-    return {
-      //
-    }
-  },
   computed: {
     ...mapState('task', { tasks: 'items' })
   },
@@ -211,8 +206,5 @@ export default {
 
 .task:hover {
   cursor: pointer;
-}
-.list:hover {
-  background-color: whitesmoke;
 }
 </style>
