@@ -78,7 +78,6 @@
               class="text-center task"
               cols="3"
               md="2"
-              @click="$emit('click:selectList', task)"
             >
               <v-chip
                 v-if="task.status.msg"
@@ -136,16 +135,9 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 
-import automate from '@/mixins/magento/titan22/automate'
 import Constant from '@/config/constant'
 
 export default {
-  mixins: [automate],
-  data () {
-    return {
-      //
-    }
-  },
   computed: {
     ...mapState('task', { tasks: 'items' })
   },
@@ -162,11 +154,11 @@ export default {
         status: {
           id: Constant.TASK.STATUS.RUNNING,
           msg: 'running',
-          class: 'running'
+          class: 'orange'
         }
       })
 
-      await this.init(task)
+      await this.$emit('click:startTask', task)
     },
 
     /**
@@ -179,7 +171,7 @@ export default {
         status: {
           id: Constant.TASK.STATUS.STOPPED,
           msg: 'stopped',
-          class: 'stopped'
+          class: 'grey'
         }
       })
     },
@@ -198,30 +190,20 @@ export default {
 </script>
 
 <style scoped>
-.running-left-border {
+.orange-left-border {
   border-left: 5px solid orange
 }
-.stopped-left-border {
+.grey-left-border {
   border-left: 5px solid grey
 }
 .error-left-border {
   border-left: 5px solid red
 }
-
-.running-chip {
-  border: 1px solid orange
-}
-.stopped-chip {
-  border: 1px solid grey
-}
-.error-chip {
-  border: 1px solid red
+.success-left-border {
+  border-left: 5px solid green
 }
 
 .task:hover {
   cursor: pointer;
-}
-.list:hover {
-  background-color: whitesmoke;
 }
 </style>

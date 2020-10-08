@@ -20,7 +20,7 @@ export default {
           status: {
             id: 1,
             msg: 'stopped',
-            class: 'stopped'
+            class: 'grey'
           }
         },
         {
@@ -39,7 +39,7 @@ export default {
           status: {
             id: 1,
             msg: 'stopped',
-            class: 'stopped'
+            class: 'grey'
           }
         },
         {
@@ -58,7 +58,26 @@ export default {
           status: {
             id: 1,
             msg: 'stopped',
-            class: 'stopped'
+            class: 'grey'
+          }
+        },
+        {
+          id: 4,
+          name: 'Task 4',
+          email: 'burnmebitch@gmail.com',
+          password: 'Password123',
+          sku: 'AH7860-100',
+          sizes: ['5'],
+          gcashNumber: 123456789,
+          cardNumber: null,
+          cardHolder: null,
+          expiry: null,
+          cvv: null,
+          bank: 'GCash',
+          status: {
+            id: 1,
+            msg: 'stopped',
+            class: 'grey'
           }
         }
       ]

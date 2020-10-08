@@ -4,5 +4,10 @@ module.exports = {
   ],
   devServer: {
     proxy: process.env.VUE_APP_TITAN_URL
+  },
+  pluginOptions: {
+    electronBuilder: {
+      nodeIntegration: true
+    }
   }
 }
