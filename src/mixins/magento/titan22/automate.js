@@ -3,6 +3,7 @@ import { mapState, mapActions } from 'vuex'
 import authApi from '@/api/magento/titan22/auth'
 import customerApi from '@/api/magento/titan22/customer'
 import cartApi from '@/api/magento/titan22/cart'
+import transactionApi from '@/api/magento/titan22/transaction'
 import Constant from '@/config/constant'
 
 /**
@@ -135,9 +136,9 @@ export default {
 
       if (!this.isRunning(task.id)) this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
 
-      let success = false
+      let data = {}
 
-      while (!success && this.isRunning(task.id)) {
+      while (!Object.keys(data).length && this.isRunning(task.id)) {
         const product = await this.prepareOrder(task, cart, user)
 
         if (!this.isRunning(task.id)) break
@@ -146,14 +147,14 @@ export default {
 
         if (!this.isRunning(task.id)) break
 
-        const orderNumber = await this.setPaymentInformation(task, order, user, cart)
+        const transactionData = await this.setPaymentInformation(task, order, user, cart)
 
         if (!this.isRunning(task.id)) break
 
-        if (orderNumber) success = true
+        data = transactionData
       }
 
-      return success
+      return data
     },
 
     /**
@@ -375,31 +376,34 @@ export default {
       const sizeLabel = JSON.parse(order.totals.items[0].options)[0].value
       this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${sizeLabel} - placing order`, 'orange')
 
-      let orderNumber = null
+      let transactionData = {}
 
       const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
 
       const params = {
-        amcheckout: {},
-        billingAddress: this.setAddresses(defaultBillingAddress, user),
-        cartId: cart.id.toString(),
-        paymentMethod: {
-          additional_data: null,
-          method: order.payment_methods[0].code,
-          po_number: null
-        }
+        payload: {
+          amcheckout: {},
+          billingAddress: this.setAddresses(defaultBillingAddress, user),
+          cartId: cart.id.toString(),
+          paymentMethod: {
+            additional_data: null,
+            method: order.payment_methods[0].code,
+            po_number: null
+          }
+        },
+        token: user.token
       }
 
-      while (!orderNumber && this.isRunning(task.id)) {
-        const apiResponse = await cartApi.createOrder(params, user.token)
+      while (!Object.keys(transactionData).length && this.isRunning(task.id)) {
+        const apiResponse = await transactionApi.placeOrder(params)
 
         if (apiResponse) {
-          orderNumber = apiResponse
+          transactionData = apiResponse
           break
         }
       }
 
-      return orderNumber
+      return transactionData
     }
   }
 }

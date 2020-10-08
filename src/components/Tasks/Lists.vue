@@ -78,7 +78,6 @@
               class="text-center task"
               cols="3"
               md="2"
-              @click="$emit('click:selectList', task)"
             >
               <v-chip
                 v-if="task.status.msg"

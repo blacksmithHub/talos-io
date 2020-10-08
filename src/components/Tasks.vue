@@ -63,7 +63,7 @@ export default {
     async startTask (task) {
       const response = await this.init(task)
 
-      if (response) {
+      if (Object.keys(response).length) {
         this.updateTask({
           id: task.id,
           status: {
@@ -78,7 +78,33 @@ export default {
           type: 'success',
           duration: 3000
         })
+
+        this.launchWindow(response)
       }
+    },
+    /**
+     * Launch the payment window.
+     *
+     */
+    async launchWindow (transactionData) {
+      const electron = require('electron')
+      const { BrowserWindow } = electron.remote
+
+      const win = new BrowserWindow({
+        width: 800,
+        height: 600
+      })
+
+      const ses = win.webContents.session
+
+      await ses.cookies.set({
+        url: 'https://t.2c2p.com/RedirectV3/Payment/Accept',
+        ...transactionData.cookies
+      })
+        .then((response) => {
+          win.loadURL('https://t.2c2p.com/RedirectV3/Payment/Accept')
+          win.webContents.openDevTools()
+        })
     }
   }
 }

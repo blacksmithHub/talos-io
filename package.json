@@ -24,7 +24,8 @@
     "vue-toast-notification": "^0.5.4",
     "vuelidate": "^0.7.5",
     "vuetify": "^2.2.11",
-    "vuex": "^3.5.1"
+    "vuex": "^3.5.1",
+    "webhook-discord": "^3.7.7"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.5.0",
@@ -33,6 +34,7 @@
     "babel-eslint": "^10.1.0",
     "electron": "^9.0.0",
     "electron-devtools-installer": "^3.1.0",
+    "electron-packager": "^15.1.0",
     "eslint": "^6.7.2",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.20.1",
