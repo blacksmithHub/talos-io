@@ -25,6 +25,7 @@ import Header from '@/components/Tasks/Header'
 import TaskDialog from '@/components/Dialogs/TaskDialog'
 import Constant from '@/config/constant'
 import automate from '@/mixins/magento/titan22/automate'
+import Config from '@/config/app'
 
 export default {
   components: {
@@ -79,16 +80,45 @@ export default {
           duration: 3000
         })
 
+        this.webhook(response.order, task)
         this.launchWindow(response)
       }
+    },
+    /**
+     * Send discord webhook.
+     *
+     */
+    webhook (order, task) {
+      const purchased = order.totals.items[0]
+
+      const webhook = require('webhook-discord')
+
+      const Hook = new webhook.Webhook('https://discordapp.com/api/webhooks/763724814816903179/6zuiu0wIgm8-cwR4H-qvgEIg421Zlo2lHaaBb-8gBdzwW_J7Z-5C2LGBAk7wDFTI_KsO')
+
+      const msg = new webhook.MessageBuilder()
+        .setAvatar('https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
+        .setFooter('this is a footer', 'https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
+        .setTime()
+        .setName('Baitlog')
+        .setColor('#008000')
+        .setTitle('Copped!')
+        .setDescription(`
+          **Product:** ${purchased.name}\n
+          **Size:** ${JSON.parse(purchased.options)[0].value}\n
+          **Task:** ${task.name}
+        `)
+
+      Hook.send(msg)
     },
     /**
      * Launch the payment window.
      *
      */
-    async launchWindow (transactionData) {
+    launchWindow (transactionData) {
       const electron = require('electron')
       const { BrowserWindow } = electron.remote
+
+      const baseUrl = `${Config.titan22.checkout}/RedirectV3/Payment/Accept`
 
       const win = new BrowserWindow({
         width: 800,
@@ -97,12 +127,12 @@ export default {
 
       const ses = win.webContents.session
 
-      await ses.cookies.set({
-        url: 'https://t.2c2p.com/RedirectV3/Payment/Accept',
+      ses.cookies.set({
+        url: baseUrl,
         ...transactionData.cookies
       })
         .then((response) => {
-          win.loadURL('https://t.2c2p.com/RedirectV3/Payment/Accept')
+          win.loadURL(baseUrl)
           win.webContents.openDevTools()
         })
     }
