@@ -118,7 +118,7 @@ export default {
       const electron = require('electron')
       const { BrowserWindow } = electron.remote
 
-      const baseUrl = `${Config.titan22.checkout}/RedirectV3/Payment/Accept`
+      const baseUrl = `${Config.services.titan22.checkout}/RedirectV3/Payment/Accept`
 
       const win = new BrowserWindow({
         width: 800,
