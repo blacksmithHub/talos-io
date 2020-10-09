@@ -9,7 +9,7 @@ const { http } = api
  * ===================
  */
 export default {
-  baseUrl: `${Config.api.url}/api`,
+  baseUrl: `${Config.services.api.url}/api`,
   url: 'place-order',
   http,
 

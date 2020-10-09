@@ -2,6 +2,8 @@
   "name": "titan-bot",
   "version": "0.1.0",
   "private": true,
+  "author": "Danniel Libor",
+  "license": "MIT",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
@@ -34,7 +36,6 @@
     "babel-eslint": "^10.1.0",
     "electron": "^9.0.0",
     "electron-devtools-installer": "^3.1.0",
-    "electron-packager": "^15.1.0",
     "eslint": "^6.7.2",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.20.1",
