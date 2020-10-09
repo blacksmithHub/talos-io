@@ -1,4 +1,5 @@
 import api from '../index'
+import Config from '@/config/app'
 
 const { http } = api
 
@@ -8,7 +9,7 @@ const { http } = api
  * ===================
  */
 export default {
-  baseUrl: `${window.location.origin}/rest/default/V1`,
+  baseUrl: `${Config.services.titan22.url}/rest/default/V1`,
   url: 'customers',
   http,
 

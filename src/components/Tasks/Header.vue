@@ -136,11 +136,6 @@ import { mapState, mapActions } from 'vuex'
 import Constant from '@/config/constant'
 
 export default {
-  data () {
-    return {
-      //
-    }
-  },
   computed: {
     ...mapState('task', { tasks: 'items' })
   },
@@ -154,7 +149,7 @@ export default {
     async startAll () {
       await this.tasks.forEach(async (task) => {
         this.updateTask({
-          id: task.id,
+          ...task,
           status: {
             id: Constant.TASK.STATUS.RUNNING,
             msg: 'running',
@@ -173,7 +168,7 @@ export default {
     async stopAll () {
       await this.tasks.forEach(async (task) => {
         this.updateTask({
-          id: task.id,
+          ...task,
           status: {
             id: Constant.TASK.STATUS.STOPPED,
             msg: 'stopped',

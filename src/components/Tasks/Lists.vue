@@ -1,5 +1,8 @@
 <template>
-  <v-list>
+  <v-list
+    v-if="tasks.length"
+    class="pa-0"
+  >
     <template v-for="(task, index) in tasks">
       <v-list-item
         :key="task.title"
@@ -13,7 +16,7 @@
               md="8"
               align-self="center"
               class="task"
-              @click="$emit('click:selectList', task)"
+              @click="$emit('click:editTask', task)"
             >
               <v-row no-gutters>
                 <v-col
@@ -67,7 +70,7 @@
                       class="mr-1"
                       v-text="'Sizes:'"
                     />
-                    <span v-text="task.sizes" />
+                    <span v-text="getSizes(task.sizes)" />
                   </small>
                 </v-col>
               </v-row>
@@ -75,15 +78,14 @@
 
             <v-col
               align-self="center"
-              class="text-center task"
+              class="text-center"
               cols="3"
               md="2"
             >
               <v-chip
                 v-if="task.status.msg"
-                :x-small="!$vuetify.breakpoint.lgAndUp"
-                :small="$vuetify.breakpoint.lgAndUp"
                 outlined
+                small
                 :color="task.status.class"
                 class="text-capitalize"
                 v-text="task.status.msg"
@@ -130,6 +132,14 @@
       />
     </template>
   </v-list>
+
+  <v-list v-else>
+    <v-list-item class="pa-0 list">
+      <v-list-item-content class="pa-2 text-center">
+        <small v-text="'No task found'" />
+      </v-list-item-content>
+    </v-list-item>
+  </v-list>
 </template>
 
 <script>
@@ -150,7 +160,7 @@ export default {
      */
     async onStart (task) {
       this.updateTask({
-        id: task.id,
+        ...task,
         status: {
           id: Constant.TASK.STATUS.RUNNING,
           msg: 'running',
@@ -167,7 +177,7 @@ export default {
      */
     async onStop (task) {
       await this.updateTask({
-        id: task.id,
+        ...task,
         status: {
           id: Constant.TASK.STATUS.STOPPED,
           msg: 'stopped',
@@ -184,6 +194,20 @@ export default {
       await this.onStop(task)
 
       this.deleteTask(key)
+    },
+
+    /**
+     * Return sizes.
+     *
+     */
+    getSizes (sizes) {
+      const list = []
+
+      sizes.forEach(element => {
+        list.push(element.label)
+      })
+
+      return list.join(' | ')
     }
   }
 }

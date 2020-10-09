@@ -7,11 +7,6 @@
 
 <script>
 export default {
-  data () {
-    return {
-      //
-    }
-  },
   mounted () {
     //  [App.vue specific] When App.vue is finish loading finish the progress bar
     this.$Progress.finish()
@@ -31,3 +26,9 @@ export default {
   }
 }
 </script>
+
+<style>
+html {
+  overflow: auto !important
+}
+</style>

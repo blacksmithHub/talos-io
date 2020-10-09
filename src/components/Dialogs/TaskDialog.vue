@@ -53,13 +53,15 @@
                   v-model="password"
                   label="Password"
                   required
-                  type="password"
+                  :type="showPassword ? 'text' : 'password'"
                   outlined
                   dense
                   :error-messages="passwordErrors"
                   hide-details="auto"
                   autocomplete="off"
+                  :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                   @blur="$v.password.$touch()"
+                  @click:append="showPassword = !showPassword"
                 />
               </v-col>
 
@@ -84,19 +86,21 @@
                 cols="12"
                 md="6"
               >
-                <v-select
+                <v-autocomplete
                   v-model="sizes"
+                  hide-details="auto"
+                  required
+                  :error-messages="sizesErrors"
+                  clearable
                   :items="availableSizes"
-                  label="Sizes"
-                  multiple
+                  outlined
+                  dense
                   chips
                   small-chips
-                  dense
-                  outlined
-                  required
-                  clearable
-                  :error-messages="sizesErrors"
-                  hide-details="auto"
+                  label="Sizes"
+                  multiple
+                  return-object
+                  item-text="label"
                   @blur="$v.sizes.$touch()"
                 />
               </v-col>
@@ -112,16 +116,18 @@
 
             <v-row>
               <v-col cols="12">
-                <v-select
+                <v-autocomplete
                   v-model="bank"
-                  :items="availableBanks"
-                  label="Bank"
-                  dense
-                  outlined
-                  required
-                  clearable
-                  :error-messages="bankErrors"
                   hide-details="auto"
+                  required
+                  :error-messages="bankErrors"
+                  clearable
+                  :items="availableBanks"
+                  outlined
+                  dense
+                  label="Bank"
+                  item-text="name"
+                  return-object
                   @blur="$v.bank.$touch()"
                 />
               </v-col>
@@ -214,7 +220,7 @@
             class="primary"
             rounded
             type="submit"
-            v-text="'Add'"
+            v-text="'Save'"
           />
         </v-card-actions>
       </v-card>
@@ -224,7 +230,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
-import { required, email, numeric, maxLength } from 'vuelidate/lib/validators'
+import { required, email, numeric, maxLength, requiredIf } from 'vuelidate/lib/validators'
 
 export default {
   props: {
@@ -241,22 +247,51 @@ export default {
       password: '',
       sku: '',
       sizes: [],
-      bank: '',
+      bank: {},
       cardHolder: '',
       cardNumber: '',
       expiry: '',
       cvv: '',
-      isGcash: false,
-
-      /**
-       * Todo: get these from vuex
-       */
-      availableSizes: ['7', '7.5', '8', '8.5', '9', '9.5', '10', '10.5', '11', '11.5', '12', '13'],
-      availableBanks: ['GCash', 'BPI', 'PNB', 'BDO']
+      showPassword: false
     }
   },
   computed: {
     ...mapState('task', { allTasks: 'items' }),
+    ...mapState('attribute', { attributes: 'items' }),
+    ...mapState('bank', { availableBanks: 'items' }),
+    /**
+     * Identify if the form is on edit mode.
+     *
+     */
+    isEditMode () {
+      return !!Object.keys(this.task).length
+    },
+    /**
+     * Return available sizes.
+     *
+     */
+    availableSizes () {
+      const sizes = []
+
+      if (this.attributes.length) {
+        this.attributes.forEach(element => {
+          if (element.sizes) {
+            element.sizes.forEach(size => {
+              sizes.push(size)
+            })
+          }
+        })
+      }
+
+      return sizes
+    },
+    /**
+     * Identify if bank is gcash.
+     *
+     */
+    isGcash () {
+      return (this.bank.id === 1)
+    },
     /**
      * Error messages for email.
      *
@@ -332,7 +367,7 @@ export default {
 
       if (!this.$v.cardHolder.$dirty) return errors
 
-      this.$v.cardHolder.required || errors.push('Required')
+      this.$v.cardHolder.requiredIf || errors.push('Required')
 
       return errors
     },
@@ -359,7 +394,7 @@ export default {
 
       if (!this.$v.expiry.$dirty) return errors
 
-      this.$v.expiry.required || errors.push('Required')
+      this.$v.expiry.requiredIf || errors.push('Required')
 
       return errors
     },
@@ -372,7 +407,7 @@ export default {
 
       if (!this.$v.cvv.$dirty) return errors
 
-      this.$v.cvv.required || errors.push('Required')
+      this.$v.cvv.requiredIf || errors.push('Required')
       this.$v.cvv.numeric || errors.push('Accepts only numerics')
       this.$v.cvv.maxLength || errors.push('Maximum length')
 
@@ -380,13 +415,6 @@ export default {
     }
   },
   watch: {
-    bank () {
-      if (this.bank === 'GCash') {
-        this.isGcash = true
-      } else {
-        this.isGcash = false
-      }
-    },
     task () {
       if (Object.keys(this.task).length) {
         this.taskName = this.task.name
@@ -394,22 +422,37 @@ export default {
         this.password = this.task.password
         this.sku = this.task.sku
         this.sizes = this.task.sizes
-        this.bank = (this.task.gcashNumber) ? 'GCash' : this.task.bank
-        this.cardNumber = this.task.gcashNumber || this.task.cardNumber
-        this.cardHolder = this.task.cardHolder
-        this.expiry = this.task.expiry
-        this.cvv = this.task.cvv
+        this.bank = {
+          id: this.task.bank.id,
+          name: this.task.bank.name
+        }
+        this.cardNumber = this.task.bank.cardNumber
+        this.cardHolder = this.task.bank.cardHolder
+        this.expiry = this.task.bank.expiry
+        this.cvv = this.task.bank.cvv
       }
     }
   },
   methods: {
-    ...mapActions('task', { addTask: 'addItem' }),
+    ...mapActions('task', { addTask: 'addItem', updateTask: 'updateItem' }),
     /**
      * On cancel event.
      *
      */
     onCancel () {
-      this.reset()
+      this.$v.$reset()
+
+      this.taskName = ''
+      this.email = ''
+      this.password = ''
+      this.sku = ''
+      this.sizes = []
+      this.bank = {}
+      this.cardHolder = ''
+      this.cardNumber = ''
+      this.expiry = ''
+      this.cvv = ''
+      this.showPassword = false
       this.dialog = false
     },
     /**
@@ -420,52 +463,83 @@ export default {
       this.$v.$touch()
 
       if (!this.$v.$invalid) {
-        this.addTask({
+        const sizes = []
+
+        this.sizes.forEach(element => {
+          const attr = this.attributes.find((val) => val.sizes.includes(element))
+
+          sizes.push({
+            attribute_id: attr.attribute_id,
+            value: element.value,
+            label: element.label
+          })
+        })
+
+        const params = {
           name: this.taskName,
           email: this.email,
           password: this.password,
           sku: this.sku,
-          sizes: this.sizes,
-          gcashNumber: 0,
-          cardNumber: this.cardNumber,
-          cardHolder: this.cardHolder,
-          expiry: this.expiry,
-          cvv: this.cvv,
-          bank: this.bank
-        })
+          sizes: sizes,
+          bank: {
+            ...this.bank,
+            cardNumber: this.cardNumber,
+            cardHolder: this.cardHolder,
+            expiry: this.expiry,
+            cvv: this.cvv
+          }
+        }
+
+        if (this.isEditMode) {
+          this.updateTask({
+            id: this.task.id,
+            ...params,
+            status: {
+              id: 1,
+              msg: 'stopped',
+              class: 'grey'
+            }
+          })
+        } else {
+          this.addTask({
+            ...params
+          })
+        }
 
         this.onCancel()
       }
-    },
-    /**
-     * Reset fields.
-     */
-    reset () {
-      this.$v.$reset()
-
-      this.taskName = ''
-      this.email = ''
-      this.password = ''
-      this.sku = ''
-      this.sizes = []
-      this.bank = ''
-      this.cardHolder = ''
-      this.cardNumber = ''
-      this.expiry = ''
-      this.cvv = ''
-      this.isGcash = false
     }
   },
   validations: {
-    email: { required, email },
+    email: {
+      required,
+      email
+    },
     password: { required },
     sku: { required },
     sizes: { required },
     bank: { required },
-    cardHolder: { required },
-    cardNumber: { required, numeric },
-    expiry: { required },
-    cvv: { required, numeric, maxLength: maxLength(3) }
+    cardHolder: {
+      requiredIf: requiredIf(function () {
+        return !this.isGcash
+      })
+    },
+    cardNumber: {
+      required,
+      numeric
+    },
+    expiry: {
+      requiredIf: requiredIf(function () {
+        return !this.isGcash
+      })
+    },
+    cvv: {
+      numeric,
+      maxLength: maxLength(3),
+      requiredIf: requiredIf(function () {
+        return !this.isGcash
+      })
+    }
   }
 }
 </script>

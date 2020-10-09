@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 
 // import Sidenav from '@/components/App/Sidenav'
 import Tasks from '@/components/Tasks'
@@ -22,13 +22,11 @@ export default {
   },
   beforeRouteEnter (to, from, next) {
     next(async vm => {
-      await vm.prepareAttributes()
+      if (!vm.attributes.length) await vm.prepareAttributes()
     })
   },
-  data () {
-    return {
-      //
-    }
+  computed: {
+    ...mapState('attribute', { attributes: 'items' })
   },
   methods: {
     ...mapActions('attribute', {
