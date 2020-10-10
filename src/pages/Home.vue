@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <!-- <Sidenav /> -->
+    <SideNav />
     <v-main>
       <Tasks />
     </v-main>
@@ -10,15 +10,15 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 
-// import Sidenav from '@/components/App/Sidenav'
 import Tasks from '@/components/Tasks'
 import productApi from '@/api/magento/titan22/product'
 import App from '@/config/app'
+import SideNav from '@/components/App/SideNav'
 
 export default {
   components: {
-    // Sidenav,
-    Tasks
+    Tasks,
+    SideNav
   },
   beforeRouteEnter (to, from, next) {
     next(async vm => {
