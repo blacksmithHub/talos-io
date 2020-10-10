@@ -27,6 +27,7 @@
     <v-list
       nav
       dense
+      rounded
     >
       <v-list-item
         link
@@ -38,7 +39,10 @@
         <v-list-item-title v-text="'Titan22'" />
       </v-list-item>
 
-      <v-list-item link>
+      <v-list-item
+        link
+        @click="launchSettings"
+      >
         <v-list-item-icon>
           <v-icon v-text="'mdi-tools'" />
         </v-list-item-icon>
@@ -55,6 +59,9 @@ export default {
   methods: {
     launchMonitor () {
       ipcRenderer.send('toggle-monitor', true)
+    },
+    launchSettings () {
+      ipcRenderer.send('toggle-settings')
     }
   }
 }

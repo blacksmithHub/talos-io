@@ -10,6 +10,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 // be closed automatically when the JavaScript object is garbage collected.
 let win
 let monitorWin
+let settingsWin
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -55,10 +56,31 @@ function createWindow () {
     }
   })
 
+  // Create monitor window.
+  settingsWin = new BrowserWindow({
+    width: 800,
+    height: 600,
+    minHeight: 600,
+    minWidth: 500,
+    parent: win,
+    show: false,
+    frame: false,
+    webPreferences: {
+      // Use pluginOptions.nodeIntegration, leave this alone
+      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+      enableRemoteModule: true,
+
+      // TODO: this should not be false.
+      webSecurity: false
+    }
+  })
+
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
     monitorWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/monitor`)
+    settingsWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/settings`)
 
     if (!process.env.IS_TEST) win.webContents.openDevTools()
   } else {
@@ -66,6 +88,7 @@ function createWindow () {
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
     monitorWin.loadURL('app://./index.html/#/monitor')
+    settingsWin.loadURL('app://./index.html/#/settings')
   }
 
   win.on('closed', () => {
@@ -76,6 +99,11 @@ function createWindow () {
     monitorWin.webContents.send('stop', true)
     e.preventDefault()
     monitorWin.hide()
+  })
+
+  settingsWin.on('close', (e) => {
+    e.preventDefault()
+    settingsWin.hide()
   })
 }
 
@@ -132,4 +160,10 @@ ipcMain.on('toggle-monitor', (event, arg) => {
   if (!process.env.IS_TEST) monitorWin.openDevTools()
 
   monitorWin.webContents.send('init', arg)
+})
+
+ipcMain.on('toggle-settings', (event, arg) => {
+  settingsWin.show()
+
+  if (!process.env.IS_TEST) settingsWin.openDevTools()
 })
