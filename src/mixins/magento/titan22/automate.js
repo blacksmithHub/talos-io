@@ -398,33 +398,3 @@ export default {
     }
   }
 }
-
-// /**
-//  * Search product by sku.
-//  *
-//  */
-// async searchProduct (task) {
-//   const params = {
-//     searchCriteria: {
-//       pageSize: 50,
-//       sortOrders: [
-//         {
-//           field: 'updated_at',
-//           direction: 'DESC'
-//         }
-//       ],
-//       filterGroups: [
-//         {
-//           filters: [
-//             {
-//               field: 'sku',
-//               value: task.sku
-//             }
-//           ]
-//         }
-//       ]
-//     }
-//   }
-
-//   return await productApi.search(params, App.services.titan22.token)
-// }
