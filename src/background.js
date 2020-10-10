@@ -37,8 +37,10 @@ function createWindow () {
 
   // Create monitor window.
   monitorWin = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1000,
+    height: 900,
+    minHeight: 600,
+    minWidth: 500,
     parent: win,
     show: false,
     frame: false,
@@ -71,7 +73,7 @@ function createWindow () {
   })
 
   monitorWin.on('close', (e) => {
-    // monitorWin.webContents.send('stop', true)
+    monitorWin.webContents.send('stop', true)
     e.preventDefault()
     monitorWin.hide()
   })
@@ -127,7 +129,7 @@ if (isDevelopment) {
 ipcMain.on('toggle-monitor', (event, arg) => {
   monitorWin.show()
 
-  // if (!process.env.IS_TEST) monitorWin.openDevTools()
+  if (!process.env.IS_TEST) monitorWin.openDevTools()
 
-  // monitorWin.webContents.send('init', arg)
+  monitorWin.webContents.send('init', arg)
 })
