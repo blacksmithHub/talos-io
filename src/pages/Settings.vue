@@ -11,7 +11,7 @@
               <v-list-item-content class="pa-2">
                 <v-list-item-title v-text="'Night Mode'" />
 
-                <v-list-item-subtitle v-text="'Appearance'" />
+                <v-list-item-subtitle v-text="'Restart application to take effect'" />
               </v-list-item-content>
 
               <v-list-item-action>
@@ -152,6 +152,13 @@
           <v-btn
             class="primary"
             rounded
+            @click="onCancel"
+            v-text="'cancel'"
+          />
+
+          <v-btn
+            class="primary"
+            rounded
             type="submit"
             v-text="'save'"
           />
@@ -195,11 +202,6 @@ export default {
       return errors
     }
   },
-  watch: {
-    settings () {
-      this.prepareDetails()
-    }
-  },
   created () {
     this.prepareDetails()
   },
@@ -237,6 +239,15 @@ export default {
 
         remote.getCurrentWindow().close()
       }
+    },
+    /**
+     * On cancel event.
+     *
+     */
+    onCancel () {
+      this.prepareDetails()
+
+      remote.getCurrentWindow().close()
     }
   },
   validations: {

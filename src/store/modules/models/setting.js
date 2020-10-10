@@ -9,7 +9,7 @@ export default {
           placeOrder: null,
           monitorInterval: null,
           webhook: null,
-          nightMode: false,
+          nightMode: true,
           sound: false,
           autoPay: false
         }

@@ -23,16 +23,37 @@ export default {
   beforeRouteEnter (to, from, next) {
     next(async vm => {
       if (!vm.attributes.length) await vm.prepareAttributes()
+
+      if (vm.tasks.length) await vm.prepareTasks()
     })
   },
   computed: {
-    ...mapState('attribute', { attributes: 'items' })
+    ...mapState('attribute', { attributes: 'items' }),
+    ...mapState('task', { tasks: 'items' })
   },
   methods: {
     ...mapActions('attribute', {
       setAttributes: 'setItems',
       reset: 'reset'
     }),
+    ...mapActions('task', { updateTask: 'updateItem' }),
+
+    /**
+     * Prepare all tasks.
+     *
+     */
+    prepareTasks () {
+      this.tasks.forEach(element => {
+        this.updateTask({
+          ...element,
+          status: {
+            id: 1,
+            msg: 'stopped',
+            class: 'greu'
+          }
+        })
+      })
+    },
 
     /**
      * Prepare attributes.

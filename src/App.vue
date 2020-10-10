@@ -7,11 +7,16 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 import SystemBar from '@/components/App/SystemBar'
 
 export default {
   components: {
     SystemBar
+  },
+  computed: {
+    ...mapState('setting', { settings: 'items' })
   },
   mounted () {
     //  [App.vue specific] When App.vue is finish loading finish the progress bar
@@ -29,6 +34,17 @@ export default {
     })
     //  hook the progress bar to finish after we've finished moving router-view
     this.$router.afterEach(() => this.$Progress.finish())
+
+    this.setTheme()
+  },
+  methods: {
+    /**
+     * set current theme.
+     *
+     */
+    setTheme () {
+      this.$vuetify.theme.dark = this.settings.nightMode
+    }
   }
 }
 </script>

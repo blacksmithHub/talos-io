@@ -58,7 +58,7 @@ function createWindow () {
 
   // Create monitor window.
   settingsWin = new BrowserWindow({
-    width: 800,
+    width: 500,
     height: 600,
     minHeight: 600,
     minWidth: 500,
@@ -82,7 +82,7 @@ function createWindow () {
     monitorWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/monitor`)
     settingsWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/settings`)
 
-    // if (!process.env.IS_TEST) win.webContents.openDevTools()
+    if (!process.env.IS_TEST) win.webContents.openDevTools()
   } else {
     createProtocol('app')
     // Load the index.html when not in development
@@ -157,7 +157,7 @@ if (isDevelopment) {
 ipcMain.on('toggle-monitor', (event, arg) => {
   monitorWin.show()
 
-  // if (!process.env.IS_TEST) monitorWin.openDevTools()
+  if (!process.env.IS_TEST) monitorWin.openDevTools()
 
   monitorWin.webContents.send('init', arg)
 })
@@ -165,5 +165,5 @@ ipcMain.on('toggle-monitor', (event, arg) => {
 ipcMain.on('toggle-settings', (event, arg) => {
   settingsWin.show()
 
-  // if (!process.env.IS_TEST) settingsWin.openDevTools()
+  if (!process.env.IS_TEST) settingsWin.openDevTools()
 })
