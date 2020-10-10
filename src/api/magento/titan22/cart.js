@@ -101,20 +101,5 @@ export default {
     } catch (error) {
       return false
     }
-  },
-
-  /**
-   * Places an order for a specified cart.
-   *
-   */
-  createOrder (params, token) {
-    try {
-      return this.http(this.baseUrl, token)
-        .post(`${this.url}/mine/payment-information`, params)
-        .then(({ data }) => data)
-        .catch(() => false)
-    } catch (error) {
-      return false
-    }
   }
 }

@@ -1,12 +1,18 @@
 <template>
   <v-app>
+    <SystemBar />
     <router-view />
     <vue-progress-bar />
   </v-app>
 </template>
 
 <script>
+import SystemBar from '@/components/App/SystemBar'
+
 export default {
+  components: {
+    SystemBar
+  },
   mounted () {
     //  [App.vue specific] When App.vue is finish loading finish the progress bar
     this.$Progress.finish()
@@ -30,5 +36,9 @@ export default {
 <style>
 html {
   overflow: auto !important
+}
+.titleBar {
+  -webkit-user-select: none !important;
+  -webkit-app-region: drag !important;
 }
 </style>
