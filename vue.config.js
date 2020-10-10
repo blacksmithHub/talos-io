@@ -1,5 +1,13 @@
 module.exports = {
-  "transpileDependencies": [
-    "vuetify"
-  ]
+  transpileDependencies: [
+    'vuetify'
+  ],
+  devServer: {
+    proxy: process.env.VUE_APP_TITAN_URL
+  },
+  pluginOptions: {
+    electronBuilder: {
+      nodeIntegration: true
+    }
+  }
 }
