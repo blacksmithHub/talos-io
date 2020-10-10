@@ -97,13 +97,13 @@ export default {
 
       const webhook = require('webhook-discord')
 
-      const Hook = new webhook.Webhook('https://discordapp.com/api/webhooks/763724814816903179/6zuiu0wIgm8-cwR4H-qvgEIg421Zlo2lHaaBb-8gBdzwW_J7Z-5C2LGBAk7wDFTI_KsO')
+      const Hook = new webhook.Webhook('https://discordapp.com/api/webhooks/764439184534405130/Y7LI0yWxVx9dnftQwsEIWAqAlfcZT4iPl8QC4TRFWtnFgfA6om-IzY6qLpYBqA5DfbKv')
 
       const msg = new webhook.MessageBuilder()
         .setAvatar('https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
         .setFooter('this is a footer', 'https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
         .setTime()
-        .setName('Baitlog')
+        .setName('Titan Bot')
         .setColor('#008000')
         .setTitle('Copped!')
         .setDescription(`

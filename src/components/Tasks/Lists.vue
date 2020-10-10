@@ -5,7 +5,7 @@
   >
     <template v-for="(task, index) in tasks">
       <v-list-item
-        :key="task.title"
+        :key="`${index}-item`"
         class="pa-0 list"
         :class="`${task.status.class}-left-border`"
       >
@@ -128,7 +128,7 @@
 
       <v-divider
         v-if="index < tasks.length - 1"
-        :key="index"
+        :key="`${index}-divider`"
       />
     </template>
   </v-list>
