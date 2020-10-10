@@ -136,10 +136,10 @@ export default {
   },
   methods: {
     init () {
-      // setInterval(() => (console.log('hello world')), 3000)
+      //
     },
     stop () {
-      // console.log('STOPPED')
+      //
     },
 
     /**
