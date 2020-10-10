@@ -6,10 +6,14 @@
         @click:startTask="startTask"
       />
       <br>
-      <Lists
-        @click:selectList="openEditTaskDialog"
-        @click:startTask="startTask"
-      />
+      <v-card>
+        <v-card-text style="max-height: 80vh; overflow: auto;">
+          <Lists
+            @click:startTask="startTask"
+            @click:editTask="openEditTaskDialog"
+          />
+        </v-card-text>
+      </v-card>
     </v-container>
 
     <TaskDialog
@@ -52,10 +56,8 @@ export default {
      *
      */
     openEditTaskDialog (task) {
-      if (task.status.id === Constant.TASK.STATUS.STOPPED) {
-        this.selectedTask = task
-        this.$refs.taskDialog.dialog = true
-      }
+      this.selectedTask = task
+      this.$refs.taskDialog.dialog = true
     },
     /**
      * Start task.
@@ -64,9 +66,11 @@ export default {
     async startTask (task) {
       const response = await this.init(task)
 
-      if (Object.keys(response).length) {
+      const currentTask = this.allTasks.find((data) => data.id === task.id)
+
+      if (response && (currentTask && currentTask.status.id === Constant.TASK.STATUS.RUNNING)) {
         this.updateTask({
-          id: task.id,
+          ...task,
           status: {
             id: Constant.TASK.STATUS.STOPPED,
             msg: 'copped!',
@@ -120,7 +124,7 @@ export default {
 
       const baseUrl = `${Config.services.titan22.checkout}/RedirectV3/Payment/Accept`
 
-      const win = new BrowserWindow({
+      let win = new BrowserWindow({
         width: 800,
         height: 600
       })
@@ -133,7 +137,12 @@ export default {
       })
         .then((response) => {
           win.loadURL(baseUrl)
-          win.webContents.openDevTools()
+
+          if (!process.env.IS_TEST) win.webContents.openDevTools()
+
+          win.on('closed', () => {
+            win = null
+          })
         })
     }
   }

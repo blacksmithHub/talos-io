@@ -3,84 +3,9 @@ export default {
   state () {
     return {
       loading: false,
-      items: [
-        {
-          id: 1,
-          name: 'Task 1',
-          email: 'qwertyiyan13@gmail.com',
-          password: 'Seiburner4923',
-          sku: '919712-006',
-          sizes: ['8'],
-          gcashNumber: 123456789,
-          cardNumber: null,
-          cardHolder: null,
-          expiry: null,
-          cvv: null,
-          bank: 'GCash',
-          status: {
-            id: 1,
-            msg: 'stopped',
-            class: 'grey'
-          }
-        },
-        {
-          id: 2,
-          name: 'Task 2',
-          email: 'bolrt@gmail.com',
-          password: 'Password123',
-          sku: 'AH7860-100',
-          sizes: ['6'],
-          gcashNumber: 123456789,
-          cardNumber: null,
-          cardHolder: null,
-          expiry: null,
-          cvv: null,
-          bank: 'GCash',
-          status: {
-            id: 1,
-            msg: 'stopped',
-            class: 'grey'
-          }
-        },
-        {
-          id: 3,
-          name: 'Task 3',
-          email: 'yanfour@gmail.com',
-          password: 'Seiburner4923',
-          sku: 'AH7860-100',
-          sizes: ['5'],
-          gcashNumber: 123456789,
-          cardNumber: null,
-          cardHolder: null,
-          expiry: null,
-          cvv: null,
-          bank: 'GCash',
-          status: {
-            id: 1,
-            msg: 'stopped',
-            class: 'grey'
-          }
-        },
-        {
-          id: 4,
-          name: 'Task 4',
-          email: 'burnmebitch@gmail.com',
-          password: 'Password123',
-          sku: 'AH7860-100',
-          sizes: ['5'],
-          gcashNumber: 123456789,
-          cardNumber: null,
-          cardHolder: null,
-          expiry: null,
-          cvv: null,
-          bank: 'GCash',
-          status: {
-            id: 1,
-            msg: 'stopped',
-            class: 'grey'
-          }
-        }
-      ]
+      items: localStorage.getItem('tasks')
+        ? JSON.parse(localStorage.getItem('tasks'))
+        : []
     }
   },
 
@@ -124,6 +49,7 @@ export default {
      */
     reset ({ commit }) {
       commit('RESET')
+      if (localStorage.getItem('tasks')) localStorage.removeItem('tasks')
     },
 
     /**
@@ -134,6 +60,7 @@ export default {
      */
     setItems ({ commit }, items) {
       commit('SET_ITEMS', items)
+      localStorage.setItem('tasks', JSON.stringify(items))
     },
 
     /**
@@ -145,19 +72,27 @@ export default {
     addItem ({ state, commit }, item) {
       const tasks = state.items.slice()
 
+      let lastItemId = tasks[tasks.length - 1]
+
+      if (lastItemId) {
+        lastItemId = lastItemId.id + 1
+      } else {
+        lastItemId = 1
+      }
+
       tasks.push({
-        id: tasks[tasks.length - 1].id + 1,
+        id: lastItemId,
         ...item,
+        name: item.name || `Task ${lastItemId}`,
         status: {
           id: 1,
           msg: 'stopped',
-          class: 'stopped'
+          class: 'grey'
         }
       })
 
-      console.log(item, tasks)
-
       commit('SET_ITEMS', tasks)
+      localStorage.setItem('tasks', JSON.stringify(tasks))
     },
 
     /**
@@ -166,11 +101,16 @@ export default {
      * @param {*} param
      */
     updateItem ({ state, commit }, params) {
-      const tasks = state.items.slice()
+      let tasks = state.items.slice()
 
-      tasks.find((val) => val.id === params.id).status = params.status
+      tasks = tasks.map((val) => {
+        if (val.id === params.id) val = params
+
+        return val
+      })
 
       commit('SET_ITEMS', tasks)
+      localStorage.setItem('tasks', JSON.stringify(tasks))
     },
 
     /**

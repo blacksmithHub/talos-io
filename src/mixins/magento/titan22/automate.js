@@ -28,9 +28,11 @@ export default {
      *
      */
     isRunning (id) {
-      const status = this.allTasks.find((data) => data.id === id).status.id
+      const task = this.allTasks.find((data) => data.id === id)
 
-      return (status === Constant.TASK.STATUS.RUNNING)
+      if (task) return (task.status.id === Constant.TASK.STATUS.RUNNING)
+
+      return false
     },
 
     /**
@@ -39,15 +41,28 @@ export default {
      * @param {*} task
      */
     async init (task) {
-      if (task.status.id === Constant.TASK.STATUS.STOPPED) return this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-
-      if (!this.validate(task)) return this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'invalid attributes', 'error')
+      if (!this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
 
       const user = await this.authenticate(task)
 
-      if (!this.isRunning(task.id)) return this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+      if (!this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
 
-      return await this.shop(task, user)
+      const response = await this.shop(task, user)
+
+      if (!this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
+
+      if (!Object.keys(response).length) return false
+
+      return response
     },
 
     /**
@@ -59,27 +74,18 @@ export default {
      * @param {*} attr
      */
     async setTaskStatus (id, status, msg, attr) {
-      await this.updateTask({
-        id: id,
-        status: {
-          id: status,
-          msg: msg,
-          class: attr
-        }
-      })
-    },
+      const task = this.allTasks.find((data) => data.id === id)
 
-    /**
-     * Validate task.
-     *
-     * @param {*} task
-     */
-    async validate (task) {
-      const attributes = JSON.parse(localStorage.getItem('attributes'))
-
-      const attr = await attributes.find((attr) => attr.sizes.find((size) => task.sizes.includes(size.label)))
-
-      return attr
+      if (task) {
+        await this.updateTask({
+          ...task,
+          status: {
+            id: status,
+            msg: msg,
+            class: attr
+          }
+        })
+      }
     },
 
     /**
@@ -224,29 +230,13 @@ export default {
      * @param {*} user
      */
     async prepareOrder (task, cart, user) {
-      const attributes = JSON.parse(localStorage.getItem('attributes'))
-
-      const attr = attributes.find((attr) => attr.sizes.find((size) => task.sizes.includes(size.label)))
-
-      return await this.addProductToCart(attr, task, user, cart)
-    },
-
-    /**
-     * Add product to cart.
-     *
-     * @param {*} attr
-     * @param {*} task
-     * @param {*} user
-     * @param {*} cart
-     */
-    async addProductToCart (attr, task, user, cart) {
       let response = {}
 
       while (!Object.keys(response).length && this.isRunning(task.id)) {
         for (var i = 0; i < task.sizes.length; ++i) {
           if (!this.isRunning(task.id)) break
 
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `trying size: ${task.sizes[i]}`, 'orange')
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `trying size: ${task.sizes[i].label}`, 'orange')
 
           const order = {
             cartItem: {
@@ -257,8 +247,8 @@ export default {
                 extension_attributes: {
                   configurable_item_options: [
                     {
-                      option_id: attr.attribute_id.toString(),
-                      option_value: parseInt(attr.sizes.find((size) => size.label === task.sizes[i]).value)
+                      option_id: task.sizes[i].attribute_id.toString(),
+                      option_value: parseInt(task.sizes[i].value)
                     }
                   ]
                 }
