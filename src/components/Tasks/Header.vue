@@ -154,7 +154,8 @@ export default {
             id: Constant.TASK.STATUS.RUNNING,
             msg: 'running',
             class: 'orange'
-          }
+          },
+          transactionData: {}
         })
 
         await this.$emit('click:startTask', task)

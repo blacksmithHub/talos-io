@@ -1,5 +1,6 @@
 import { mapState, mapActions } from 'vuex'
 
+import StopWatch from 'statman-stopwatch'
 import authApi from '@/api/magento/titan22/auth'
 import customerApi from '@/api/magento/titan22/customer'
 import cartApi from '@/api/magento/titan22/cart'
@@ -18,7 +19,8 @@ import Constant from '@/config/constant'
 
 export default {
   computed: {
-    ...mapState('task', { allTasks: 'items' })
+    ...mapState('task', { allTasks: 'items' }),
+    ...mapState('setting', { settings: 'items' })
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem' }),
@@ -48,19 +50,17 @@ export default {
 
       const user = await this.authenticate(task)
 
-      if (!this.isRunning(task.id)) {
+      if (!Object.keys(user).length || !this.isRunning(task.id)) {
         this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
         return false
       }
 
       const response = await this.shop(task, user)
 
-      if (!this.isRunning(task.id)) {
+      if (!Object.keys(response).length || !this.isRunning(task.id)) {
         this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
         return false
       }
-
-      if (!Object.keys(response).length) return false
 
       return response
     },
@@ -94,12 +94,11 @@ export default {
      * @param {*} task
      */
     async authenticate (task) {
-      task.status.msg = 'authenticating'
+      this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'authenticating', 'orange')
 
-      let success = false
       const user = {}
 
-      while (!success && this.isRunning(task.id)) {
+      while (!Object.keys(user).length && this.isRunning(task.id)) {
         const credentials = {
           username: task.email,
           password: task.password
@@ -109,23 +108,16 @@ export default {
 
         const token = await authApi.fetchToken(credentials)
 
-        if (!token) {
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'unauthenticated', 'error')
-          success = false
-        } else if (this.isRunning(task.id)) {
-          const response = await customerApi.profile(token)
+        if (!token) continue
 
-          if (!response || !response.addresses.length) {
-            this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'invalid address', 'error')
-            success = false
-          } else {
-            user.profile = response
-            user.token = token
-            success = true
-          }
-        } else {
-          break
-        }
+        if (!this.isRunning(task.id)) break
+
+        const response = await customerApi.profile(token)
+
+        if (!response || !response.addresses.length) continue
+
+        user.profile = response
+        user.token = token
       }
 
       return user
@@ -138,26 +130,33 @@ export default {
      * @param {*} user
      */
     async shop (task, user) {
-      const cart = await this.prepareCart(task, user)
-
-      if (!this.isRunning(task.id)) this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-
       let data = {}
 
       while (!Object.keys(data).length && this.isRunning(task.id)) {
+        const cart = await this.prepareCart(task, user)
+
+        if (!Object.keys(cart).length) continue
+
         const product = await this.prepareOrder(task, cart, user)
 
-        if (!this.isRunning(task.id)) break
+        if (!Object.keys(product).length || !this.isRunning(task.id)) break
 
         const order = await this.prepareShipping(task, user, product)
 
-        if (!this.isRunning(task.id)) break
+        if (!Object.keys(order).length || !this.isRunning(task.id)) break
+
+        if (!await this.timer()) continue
+
+        const sw = new StopWatch(true)
 
         const transactionData = await this.setPaymentInformation(task, order, user, cart)
+
+        sw.stop()
 
         if (!this.isRunning(task.id)) break
 
         data = transactionData
+        data.time = (sw.read() / 1000.0).toFixed(2)
       }
 
       return data
@@ -281,55 +280,72 @@ export default {
      * @param {*} product
      */
     async prepareShipping (task, user, product) {
+      const defaultShippingAddress = user.profile.addresses.find((val) => val.default_shipping)
+      const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
+
+      const shippingInfo = await this.getEstimateShipping(product, defaultShippingAddress, task, user)
+
+      const shippingAddress = this.setAddresses(defaultShippingAddress, user)
+      const billingAddress = this.setAddresses(defaultBillingAddress, user)
+
+      const shippingParams = {
+        addressInformation: {
+          shipping_address: shippingAddress,
+          billing_address: billingAddress,
+          shipping_carrier_code: shippingInfo.carrier_code,
+          shipping_method_code: shippingInfo.method_code
+        }
+      }
+
       let shipping = {}
 
       while (!Object.keys(shipping).length && this.isRunning(task.id)) {
-        const defaultShippingAddress = user.profile.addresses.find((val) => val.default_shipping)
-        const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
-
-        let shippingInfo = {
-          carrier_code: 'freeshipping',
-          method_code: 'freeshipping'
-        }
-
-        if (product.price < 5000) {
-          const estimateParams = {
-            addressId: defaultShippingAddress.id
-          }
-
-          if (!this.isRunning(task.id)) break
-
-          const apiResponse = await cartApi.estimateShipping(estimateParams, user.token)
-
-          if (!apiResponse) {
-            shippingInfo = apiResponse[0]
-            continue
-          }
-        }
-
-        const shippingAddress = this.setAddresses(defaultShippingAddress, user)
-        const billingAddress = this.setAddresses(defaultBillingAddress, user)
-
-        const shippingParams = {
-          addressInformation: {
-            shipping_address: shippingAddress,
-            billing_address: billingAddress,
-            shipping_carrier_code: shippingInfo.carrier_code,
-            shipping_method_code: shippingInfo.method_code
-          }
-        }
-
         if (!this.isRunning(task.id)) break
 
         const cartApiResponse = await cartApi.setShippingInformation(shippingParams, user.token)
 
-        if (cartApiResponse) {
-          shipping = cartApiResponse
-          break
-        }
+        if (!cartApiResponse) continue
+
+        shipping = cartApiResponse
+        break
       }
 
       return shipping
+    },
+
+    /**
+     * Get estimate shipping.
+     *
+     * @param {*} product
+     * @param {*} defaultShippingAddress
+     * @param {*} task
+     */
+    async getEstimateShipping (product, defaultShippingAddress, task, user) {
+      let shippingInfo = {
+        carrier_code: 'freeshipping',
+        method_code: 'freeshipping'
+      }
+
+      if (product.price < 5000) {
+        const estimateParams = {
+          addressId: defaultShippingAddress.id
+        }
+
+        let success = false
+
+        while (!success && this.isRunning(task.id)) {
+          if (!this.isRunning(task.id)) break
+
+          const apiResponse = await cartApi.estimateShipping(estimateParams, user.token)
+
+          if (!apiResponse) continue
+
+          shippingInfo = apiResponse[0]
+          success = true
+        }
+      }
+
+      return shippingInfo
     },
 
     /**
@@ -355,6 +371,19 @@ export default {
     },
 
     /**
+     * Set timer before placing of order.
+     *
+     */
+    async timer () {
+      if (!this.settings.placeOrder) return true
+
+      const timer = this.$moment(`${this.$moment().format('YYYY-MM-DD')} ${this.settings.placeOrder}`).format('hh:mm:ss a')
+      const current = this.$moment().format('hh:mm:ss a')
+
+      return (timer === current)
+    },
+
+    /**
      * Send payment information.
      *
      * @param {*} task
@@ -365,8 +394,6 @@ export default {
     async setPaymentInformation (task, order, user, cart) {
       const sizeLabel = JSON.parse(order.totals.items[0].options)[0].value
       this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${sizeLabel} - placing order`, 'orange')
-
-      let transactionData = {}
 
       const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
 
@@ -384,14 +411,18 @@ export default {
         token: user.token
       }
 
+      let transactionData = {}
+
       while (!Object.keys(transactionData).length && this.isRunning(task.id)) {
+        if (!this.isRunning(task.id)) break
+
         const apiResponse = await transactionApi.placeOrder(params)
 
-        if (apiResponse) {
-          transactionData = apiResponse
-          transactionData.order = order
-          break
-        }
+        if (!apiResponse) continue
+
+        transactionData = apiResponse
+        transactionData.order = order
+        break
       }
 
       return transactionData
