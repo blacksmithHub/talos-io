@@ -171,7 +171,7 @@
 <script>
 import { url } from 'vuelidate/lib/validators'
 import { mapState, mapActions } from 'vuex'
-import { remote } from 'electron'
+import { remote, ipcRenderer } from 'electron'
 
 export default {
   data () {
@@ -200,6 +200,11 @@ export default {
       this.$v.webhook.url || errors.push('Accepts only URL')
 
       return errors
+    }
+  },
+  watch: {
+    'settings.nightMode': function (nightMode) {
+      this.$vuetify.theme.dark = nightMode
     }
   },
   created () {
@@ -237,6 +242,7 @@ export default {
           autoPay: this.autoPay
         })
 
+        ipcRenderer.send('update-settings', this.settings)
         remote.getCurrentWindow().close()
       }
     },

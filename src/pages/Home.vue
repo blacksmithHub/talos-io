@@ -9,6 +9,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
+import { ipcRenderer } from 'electron'
 
 import Tasks from '@/components/Tasks'
 import productApi from '@/api/magento/titan22/product'
@@ -29,7 +30,18 @@ export default {
   },
   computed: {
     ...mapState('attribute', { attributes: 'items' }),
-    ...mapState('task', { tasks: 'items' })
+    ...mapState('task', { tasks: 'items' }),
+    ...mapState('setting', { settings: 'items' })
+  },
+  watch: {
+    'settings.nightMode': function (nightMode) {
+      this.$vuetify.theme.dark = nightMode
+    }
+  },
+  created () {
+    ipcRenderer.on('updateSettings', (event, arg) => {
+      this.setSettings(arg)
+    })
   },
   methods: {
     ...mapActions('attribute', {
@@ -37,6 +49,7 @@ export default {
       reset: 'reset'
     }),
     ...mapActions('task', { updateTask: 'updateItem' }),
+    ...mapActions('setting', { setSettings: 'setItems' }),
 
     /**
      * Prepare all tasks.
@@ -49,8 +62,9 @@ export default {
           status: {
             id: 1,
             msg: 'stopped',
-            class: 'greu'
-          }
+            class: 'grey'
+          },
+          transactionData: {}
         })
       })
     },

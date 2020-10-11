@@ -498,7 +498,8 @@ export default {
               id: 1,
               msg: 'stopped',
               class: 'grey'
-            }
+            },
+            transactionData: {}
           })
         } else {
           this.addTask({

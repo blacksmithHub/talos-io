@@ -167,3 +167,8 @@ ipcMain.on('toggle-settings', (event, arg) => {
 
   if (!process.env.IS_TEST) settingsWin.openDevTools()
 })
+
+ipcMain.on('update-settings', (event, arg) => {
+  win.webContents.send('updateSettings', arg)
+  monitorWin.webContents.send('updateSettings', arg)
+})

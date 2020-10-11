@@ -2,17 +2,9 @@ export default {
   namespaced: true,
   state () {
     return {
-      loading: false,
       items: localStorage.getItem('settings')
         ? JSON.parse(localStorage.getItem('settings'))
-        : {
-          placeOrder: null,
-          monitorInterval: null,
-          webhook: null,
-          nightMode: true,
-          sound: false,
-          autoPay: false
-        }
+        : {}
     }
   },
 
@@ -23,8 +15,14 @@ export default {
      * @param {*} state
      */
     RESET (state) {
-      state.items = {}
-      state.loading = false
+      state.items = {
+        placeOrder: null,
+        monitorInterval: null,
+        webhook: null,
+        nightMode: true,
+        sound: true,
+        autoPay: false
+      }
     },
 
     /**
@@ -44,9 +42,9 @@ export default {
      *
      * @param {*} param
      */
-    reset ({ commit }) {
+    reset ({ state, commit }) {
       commit('RESET')
-      if (localStorage.getItem('settings')) localStorage.removeItem('settings')
+      localStorage.setItem('settings', JSON.stringify(state.items))
     },
 
     /**

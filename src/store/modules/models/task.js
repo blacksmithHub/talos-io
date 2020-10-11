@@ -2,10 +2,123 @@ export default {
   namespaced: true,
   state () {
     return {
-      loading: false,
-      items: localStorage.getItem('tasks')
-        ? JSON.parse(localStorage.getItem('tasks'))
-        : []
+      // items: localStorage.getItem('tasks')
+      //   ? JSON.parse(localStorage.getItem('tasks'))
+      //   : []
+      items: [
+        {
+          id: 1,
+          name: 'Task 1',
+          email: 'qwertyiyan13@gmail.com',
+          password: 'Seiburner4923',
+          sku: 'DB6537-113',
+          sizes: [
+            {
+              attribute_id: 139,
+              value: '163',
+              label: '10'
+            }
+          ],
+          bank: {
+            id: 1,
+            name: 'GCash',
+            cardNumber: 123456789,
+            cardHolder: null,
+            expiry: null,
+            cvv: null
+          },
+          status: {
+            id: 1,
+            msg: 'stopped',
+            class: 'grey'
+          },
+          transactionData: {}
+        },
+        {
+          id: 2,
+          name: 'Task 2',
+          email: 'bolrt@gmail.com',
+          password: 'Password123',
+          sku: '919712-006',
+          sizes: [
+            {
+              attribute_id: 139,
+              value: '156',
+              label: '6'
+            }
+          ],
+          bank: {
+            id: 1,
+            name: 'GCash',
+            cardNumber: 123456789,
+            cardHolder: null,
+            expiry: null,
+            cvv: null
+          },
+          status: {
+            id: 1,
+            msg: 'stopped',
+            class: 'grey'
+          },
+          transactionData: {}
+        },
+        {
+          id: 3,
+          name: 'Task 3',
+          email: 'yanfour@gmail.com',
+          password: 'Password123',
+          sku: '919712-006',
+          sizes: [
+            {
+              attribute_id: 139,
+              value: '156',
+              label: '6'
+            }
+          ],
+          bank: {
+            id: 1,
+            name: 'GCash',
+            cardNumber: 123456789,
+            cardHolder: null,
+            expiry: null,
+            cvv: null
+          },
+          status: {
+            id: 1,
+            msg: 'stopped',
+            class: 'grey'
+          },
+          transactionData: {}
+        },
+        {
+          id: 4,
+          name: 'Task 4',
+          email: 'burnmebitch@gmail.com',
+          password: 'Password123',
+          sku: 'DB6537-113',
+          sizes: [
+            {
+              attribute_id: 139,
+              value: '162',
+              label: '9'
+            }
+          ],
+          bank: {
+            id: 1,
+            name: 'GCash',
+            cardNumber: 123456789,
+            cardHolder: null,
+            expiry: null,
+            cvv: null
+          },
+          status: {
+            id: 1,
+            msg: 'stopped',
+            class: 'grey'
+          },
+          transactionData: {}
+        }
+      ]
     }
   },
 
@@ -17,7 +130,6 @@ export default {
      */
     RESET (state) {
       state.items = []
-      state.loading = false
     },
 
     /**
@@ -88,7 +200,8 @@ export default {
           id: 1,
           msg: 'stopped',
           class: 'grey'
-        }
+        },
+        transactionData: {}
       })
 
       commit('SET_ITEMS', tasks)

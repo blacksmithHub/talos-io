@@ -68,6 +68,7 @@
 
 <script>
 import { ipcRenderer } from 'electron'
+import { mapState, mapActions } from 'vuex'
 
 import moment from '@/mixins/moment'
 import App from '@/config/app'
@@ -123,7 +124,19 @@ export default {
       products: []
     }
   },
+  computed: {
+    ...mapState('setting', { settings: 'items' })
+  },
+  watch: {
+    'settings.nightMode': function (nightMode) {
+      this.$vuetify.theme.dark = nightMode
+    }
+  },
   created () {
+    ipcRenderer.on('updateSettings', (event, arg) => {
+      this.setSettings(arg)
+    })
+
     ipcRenderer.on('init', (event, arg) => {
       if (arg) this.init()
     })
@@ -135,6 +148,8 @@ export default {
     this.searchProduct()
   },
   methods: {
+    ...mapActions('setting', { setSettings: 'setItems' }),
+
     init () {
       //
     },

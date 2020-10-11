@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 
 import SystemBar from '@/components/App/SystemBar'
 
@@ -35,13 +35,12 @@ export default {
     //  hook the progress bar to finish after we've finished moving router-view
     this.$router.afterEach(() => this.$Progress.finish())
 
+    if (!Object.keys(this.settings).length) this.resetSettings()
+
     this.setTheme()
   },
   methods: {
-    /**
-     * set current theme.
-     *
-     */
+    ...mapActions('setting', { resetSettings: 'reset' }),
     setTheme () {
       this.$vuetify.theme.dark = this.settings.nightMode
     }

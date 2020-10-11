@@ -11,6 +11,7 @@
           <Lists
             @click:startTask="startTask"
             @click:editTask="openEditTaskDialog"
+            @click:checkout="redirectToCheckout"
           />
         </v-card-text>
       </v-card>
@@ -24,6 +25,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 import Lists from '@/components/Tasks/Lists'
 import Header from '@/components/Tasks/Header'
 import TaskDialog from '@/components/Dialogs/TaskDialog'
@@ -43,6 +46,9 @@ export default {
       selectedTask: {}
     }
   },
+  computed: {
+    ...mapState('setting', { settings: 'items' })
+  },
   methods: {
     /**
      * Open add mode.
@@ -60,6 +66,13 @@ export default {
       this.$refs.taskDialog.dialog = true
     },
     /**
+     * Redirect to checkout page.
+     *
+     */
+    redirectToCheckout (task) {
+      this.launchWindow(task.transactionData)
+    },
+    /**
      * Start task.
      *
      */
@@ -75,8 +88,14 @@ export default {
             id: Constant.TASK.STATUS.STOPPED,
             msg: 'copped!',
             class: 'success'
-          }
+          },
+          transactionData: response
         })
+
+        if (this.settings.sound) {
+          var audio = new Audio(require('@/assets/success.mp3'))
+          audio.play()
+        }
 
         this.$toast.open({
           message: '<strong style="font-family: Arial; text-transform: uppercase">checked out</strong>',
@@ -84,8 +103,9 @@ export default {
           duration: 3000
         })
 
-        this.webhook(response.order, task)
-        this.launchWindow(response)
+        if (this.settings.webhook) this.webhook(response.order, task)
+
+        if (this.settings.autoPay) this.launchWindow(response)
       }
     },
     /**
@@ -97,7 +117,7 @@ export default {
 
       const webhook = require('webhook-discord')
 
-      const Hook = new webhook.Webhook('https://discordapp.com/api/webhooks/764439184534405130/Y7LI0yWxVx9dnftQwsEIWAqAlfcZT4iPl8QC4TRFWtnFgfA6om-IzY6qLpYBqA5DfbKv')
+      const Hook = new webhook.Webhook(this.settings.webhook)
 
       const msg = new webhook.MessageBuilder()
         .setAvatar('https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
