@@ -11,6 +11,7 @@
           <Lists
             @click:startTask="startTask"
             @click:editTask="openEditTaskDialog"
+            @click:checkout="redirectToCheckout"
           />
         </v-card-text>
       </v-card>
@@ -24,6 +25,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 import Lists from '@/components/Tasks/Lists'
 import Header from '@/components/Tasks/Header'
 import TaskDialog from '@/components/Dialogs/TaskDialog'
@@ -43,6 +46,9 @@ export default {
       selectedTask: {}
     }
   },
+  computed: {
+    ...mapState('setting', { settings: 'items' })
+  },
   methods: {
     /**
      * Open add mode.
@@ -60,6 +66,13 @@ export default {
       this.$refs.taskDialog.dialog = true
     },
     /**
+     * Redirect to checkout page.
+     *
+     */
+    redirectToCheckout (task) {
+      this.launchWindow(task.transactionData)
+    },
+    /**
      * Start task.
      *
      */
@@ -75,8 +88,14 @@ export default {
             id: Constant.TASK.STATUS.STOPPED,
             msg: 'copped!',
             class: 'success'
-          }
+          },
+          transactionData: response
         })
+
+        if (this.settings.sound) {
+          var audio = new Audio(require('@/assets/success.mp3'))
+          audio.play()
+        }
 
         this.$toast.open({
           message: '<strong style="font-family: Arial; text-transform: uppercase">checked out</strong>',
@@ -84,32 +103,34 @@ export default {
           duration: 3000
         })
 
-        this.webhook(response.order, task)
-        this.launchWindow(response)
+        if (this.settings.webhook) this.webhook(response, task)
+
+        if (this.settings.autoPay) this.launchWindow(response)
       }
     },
     /**
      * Send discord webhook.
      *
      */
-    webhook (order, task) {
-      const purchased = order.totals.items[0]
+    webhook (data, task) {
+      const purchased = data.order.totals.items[0]
 
       const webhook = require('webhook-discord')
 
-      const Hook = new webhook.Webhook('https://discordapp.com/api/webhooks/763724814816903179/6zuiu0wIgm8-cwR4H-qvgEIg421Zlo2lHaaBb-8gBdzwW_J7Z-5C2LGBAk7wDFTI_KsO')
+      const Hook = new webhook.Webhook(this.settings.webhook)
 
       const msg = new webhook.MessageBuilder()
         .setAvatar('https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
         .setFooter('this is a footer', 'https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
         .setTime()
-        .setName('Baitlog')
+        .setName('Titan Bot')
         .setColor('#008000')
         .setTitle('Copped!')
         .setDescription(`
           **Product:** ${purchased.name}\n
           **Size:** ${JSON.parse(purchased.options)[0].value}\n
-          **Task:** ${task.name}
+          **Task:** ${task.name}\n
+          **Checkout Time:** ${data.time} secs
         `)
 
       Hook.send(msg)

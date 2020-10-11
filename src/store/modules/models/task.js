@@ -2,7 +2,6 @@ export default {
   namespaced: true,
   state () {
     return {
-      loading: false,
       items: localStorage.getItem('tasks')
         ? JSON.parse(localStorage.getItem('tasks'))
         : []
@@ -17,7 +16,6 @@ export default {
      */
     RESET (state) {
       state.items = []
-      state.loading = false
     },
 
     /**
@@ -88,7 +86,8 @@ export default {
           id: 1,
           msg: 'stopped',
           class: 'grey'
-        }
+        },
+        transactionData: {}
       })
 
       commit('SET_ITEMS', tasks)

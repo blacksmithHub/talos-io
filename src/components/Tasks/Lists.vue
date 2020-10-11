@@ -5,7 +5,7 @@
   >
     <template v-for="(task, index) in tasks">
       <v-list-item
-        :key="task.title"
+        :key="`${index}-item`"
         class="pa-0 list"
         :class="`${task.status.class}-left-border`"
       >
@@ -83,12 +83,22 @@
               md="2"
             >
               <v-chip
-                v-if="task.status.msg"
+                v-if="settings.autoPay"
                 outlined
                 small
                 :color="task.status.class"
                 class="text-capitalize"
                 v-text="task.status.msg"
+              />
+
+              <v-chip
+                v-else
+                outlined
+                small
+                :color="task.status.class"
+                class="text-capitalize"
+                @click="$emit('click:checkout', task)"
+                v-text="'click me!'"
               />
             </v-col>
 
@@ -128,7 +138,7 @@
 
       <v-divider
         v-if="index < tasks.length - 1"
-        :key="index"
+        :key="`${index}-divider`"
       />
     </template>
   </v-list>
@@ -149,7 +159,8 @@ import Constant from '@/config/constant'
 
 export default {
   computed: {
-    ...mapState('task', { tasks: 'items' })
+    ...mapState('task', { tasks: 'items' }),
+    ...mapState('setting', { settings: 'items' })
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem', deleteTask: 'deleteItem' }),
@@ -165,7 +176,8 @@ export default {
           id: Constant.TASK.STATUS.RUNNING,
           msg: 'running',
           class: 'orange'
-        }
+        },
+        transactionData: {}
       })
 
       await this.$emit('click:startTask', task)
@@ -182,7 +194,8 @@ export default {
           id: Constant.TASK.STATUS.STOPPED,
           msg: 'stopped',
           class: 'grey'
-        }
+        },
+        transactionData: {}
       })
     },
 
