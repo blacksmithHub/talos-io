@@ -85,7 +85,8 @@
                       outlined
                       readonly
                       v-bind="attrs"
-                      style="width: 15vh"
+                      style="width: 20vh"
+                      clearable
                       v-on="on"
                     />
                   </template>
@@ -115,10 +116,12 @@
                 <v-text-field
                   v-model="monitorInterval"
                   dense
-                  hide-details
                   outlined
                   type="number"
                   style="width: 15vh"
+                  hide-details
+                  :error-messages="monitorIntervalErrors"
+                  @blur="$v.monitorInterval.$touch()"
                 />
               </v-list-item-action>
             </v-list-item>
@@ -141,6 +144,7 @@
                   hide-details="auto"
                   outlined
                   :error-messages="webhookErrors"
+                  clearable
                   @blur="$v.webhook.$touch()"
                 />
               </v-list-item-content>
@@ -169,7 +173,7 @@
 </template>
 
 <script>
-import { url } from 'vuelidate/lib/validators'
+import { url, minValue } from 'vuelidate/lib/validators'
 import { mapState, mapActions } from 'vuex'
 import { remote, ipcRenderer } from 'electron'
 
@@ -198,6 +202,22 @@ export default {
       if (!this.$v.webhook.$dirty) return errors
 
       this.$v.webhook.url || errors.push('Accepts only URL')
+
+      return errors
+    },
+
+    /**
+     * Error messages for monitorInterval.
+     *
+     */
+    monitorIntervalErrors () {
+      const errors = []
+
+      if (!this.$v.monitorInterval.$dirty) return errors
+
+      this.$v.monitorInterval.minValue || errors.push('Invalid input')
+
+      console.log(errors)
 
       return errors
     }
@@ -257,7 +277,8 @@ export default {
     }
   },
   validations: {
-    webhook: { url }
+    webhook: { url },
+    monitorInterval: { minValue: minValue(0) }
   }
 }
 </script>

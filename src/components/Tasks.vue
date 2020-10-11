@@ -103,7 +103,7 @@ export default {
           duration: 3000
         })
 
-        if (this.settings.webhook) this.webhook(response.order, task)
+        if (this.settings.webhook) this.webhook(response, task)
 
         if (this.settings.autoPay) this.launchWindow(response)
       }
@@ -112,8 +112,8 @@ export default {
      * Send discord webhook.
      *
      */
-    webhook (order, task) {
-      const purchased = order.totals.items[0]
+    webhook (data, task) {
+      const purchased = data.order.totals.items[0]
 
       const webhook = require('webhook-discord')
 
@@ -129,7 +129,8 @@ export default {
         .setDescription(`
           **Product:** ${purchased.name}\n
           **Size:** ${JSON.parse(purchased.options)[0].value}\n
-          **Task:** ${task.name}
+          **Task:** ${task.name}\n
+          **Checkout Time:** ${data.time} secs
         `)
 
       Hook.send(msg)

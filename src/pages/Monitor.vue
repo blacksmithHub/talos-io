@@ -25,19 +25,19 @@
           :no-data-text="'No data found'"
         >
           <template v-slot:item.name="{ value }">
-            <small>{{ value }}</small>
+            <small v-text="value" />
           </template>
 
           <template v-slot:item.sku="{ value }">
-            <small>{{ value }}</small>
+            <small v-text="value" />
           </template>
 
           <template v-slot:item.size="{ value }">
-            <small>{{ value }}</small>
+            <small v-text="value" />
           </template>
 
           <template v-slot:item.price="{ value }">
-            <small>{{ value }}</small>
+            <small v-text="value" />
           </template>
 
           <template v-slot:item.link="{ value }">
@@ -58,7 +58,7 @@
           </template>
 
           <template v-slot:item.last_update="{ value }">
-            <small>{{ value }}</small>
+            <small v-text="value" />
           </template>
         </v-data-table>
       </v-card-text>
@@ -78,6 +78,7 @@ export default {
   mixins: [moment],
   data () {
     return {
+      active: false,
       loading: false,
       search: '',
       headers: [
@@ -125,7 +126,14 @@ export default {
     }
   },
   computed: {
-    ...mapState('setting', { settings: 'items' })
+    ...mapState('setting', { settings: 'items' }),
+    /**
+     * set interval value.
+     *
+     */
+    val () {
+      return this.settings.monitorInterval * 1000
+    }
   },
   watch: {
     'settings.nightMode': function (nightMode) {
@@ -138,23 +146,44 @@ export default {
     })
 
     ipcRenderer.on('init', (event, arg) => {
-      if (arg) this.init()
+      if (arg) {
+        this.active = true
+        this.init()
+      }
     })
 
     ipcRenderer.on('stop', (event, arg) => {
       if (arg) this.stop()
     })
-
-    this.searchProduct()
   },
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
 
+    /**
+     * Initiate monitor.
+     *
+     */
     init () {
-      //
+      let time = this.val
+      const vm = this
+
+      const loop = setInterval(function () {
+        if (vm.active) vm.searchProduct()
+
+        if (time !== vm.val) {
+          clearInterval(loop)
+          time = vm.val
+          vm.init()
+        }
+      }, time)
     },
+
+    /**
+     * Stop monitor.
+     *
+     */
     stop () {
-      //
+      this.active = false
     },
 
     /**
@@ -183,9 +212,13 @@ export default {
         }
       }
 
+      this.loading = true
+
       const response = await productApi.search(params, App.services.titan22.token)
 
       if (response) {
+        this.products = []
+
         response.items.forEach(element => {
           const sku = element.sku.split('-')
 
@@ -200,6 +233,8 @@ export default {
           })
         })
       }
+
+      this.loading = false
     }
   }
 }

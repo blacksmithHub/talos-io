@@ -1,5 +1,6 @@
 import { mapState, mapActions } from 'vuex'
 
+import StopWatch from 'statman-stopwatch'
 import authApi from '@/api/magento/titan22/auth'
 import customerApi from '@/api/magento/titan22/customer'
 import cartApi from '@/api/magento/titan22/cart'
@@ -146,11 +147,16 @@ export default {
 
         if (!await this.timer()) continue
 
+        const sw = new StopWatch(true)
+
         const transactionData = await this.setPaymentInformation(task, order, user, cart)
+
+        sw.stop()
 
         if (!this.isRunning(task.id)) break
 
         data = transactionData
+        data.time = (sw.read() / 1000.0).toFixed(2)
       }
 
       return data
@@ -369,6 +375,8 @@ export default {
      *
      */
     async timer () {
+      if (!this.settings.placeOrder) return true
+
       const timer = this.$moment(`${this.$moment().format('YYYY-MM-DD')} ${this.settings.placeOrder}`).format('hh:mm:ss a')
       const current = this.$moment().format('hh:mm:ss a')
 

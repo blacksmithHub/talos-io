@@ -466,7 +466,7 @@ export default {
         const sizes = []
 
         this.sizes.forEach(element => {
-          const attr = this.attributes.find((val) => val.sizes.includes(element))
+          const attr = this.attributes.find((val) => val.sizes.find((data) => data.value === element.value))
 
           sizes.push({
             attribute_id: attr.attribute_id,
