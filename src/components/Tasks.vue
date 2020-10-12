@@ -150,6 +150,8 @@ export default {
         height: 600
       })
 
+      win.removeMenu()
+
       const ses = win.webContents.session
 
       ses.cookies.set({
@@ -158,8 +160,6 @@ export default {
       })
         .then((response) => {
           win.loadURL(baseUrl)
-
-          if (!process.env.IS_TEST) win.webContents.openDevTools()
 
           win.on('closed', () => {
             win = null
