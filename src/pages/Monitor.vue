@@ -224,7 +224,7 @@ export default {
 
           this.products.push({
             name: element.name,
-            sku: `${sku[0]}-${sku[1]}`,
+            sku: (sku.length > 1) ? `${sku[0]}-${sku[1]}` : element.sku,
             size: sku[2],
             price: element.price,
             link: element.custom_attributes.find((val) => val.attribute_code === 'url_key').value,

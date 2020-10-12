@@ -11,7 +11,7 @@
               <v-list-item-content class="pa-2">
                 <v-list-item-title v-text="'Night Mode'" />
 
-                <v-list-item-subtitle v-text="'Restart application to take effect'" />
+                <v-list-item-subtitle v-text="'appearance'" />
               </v-list-item-content>
 
               <v-list-item-action>
@@ -148,6 +148,14 @@
                   @blur="$v.webhook.$touch()"
                 />
               </v-list-item-content>
+
+              <v-list-item-action>
+                <v-btn
+                  class="primary"
+                  @click="testWebhook"
+                  v-text="'test'"
+                />
+              </v-list-item-action>
             </v-list-item>
           </v-list>
         </v-card-text>
@@ -217,8 +225,6 @@ export default {
 
       this.$v.monitorInterval.minValue || errors.push('Invalid input')
 
-      console.log(errors)
-
       return errors
     }
   },
@@ -245,6 +251,37 @@ export default {
       this.sound = this.settings.sound
       this.autoPay = this.settings.autoPay
     },
+
+    /**
+     * Trigger test webhook event.
+     *
+     */
+    testWebhook () {
+      this.$v.$touch()
+
+      if (!this.$v.$invalid && this.webhook) {
+        const webhook = require('webhook-discord')
+
+        const Hook = new webhook.Webhook(this.webhook)
+
+        const msg = new webhook.MessageBuilder()
+          .setAvatar('https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
+          .setFooter('this is a footer', 'https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
+          .setTime()
+          .setName('Titan Bot')
+          .setColor('#008000')
+          .setTitle('Copped!')
+          .setDescription(`
+          **Product:** Test Product\n
+          **Size:** N/A\n
+          **Task:** N/A\n
+          **Checkout Time:** N/A
+        `)
+
+        Hook.send(msg)
+      }
+    },
+
     /**
      * On submit event.
      *
