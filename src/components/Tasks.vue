@@ -4,6 +4,7 @@
       <Header
         @click:AddTask="openAddTaskDialog"
         @click:startTask="startTask"
+        @click:editAll="editAll"
       />
       <br>
       <v-card>
@@ -21,6 +22,7 @@
       ref="taskDialog"
       :task="selectedTask"
     />
+    <MassEditDialog ref="massEditDialog" />
   </div>
 </template>
 
@@ -30,6 +32,7 @@ import { mapState } from 'vuex'
 import Lists from '@/components/Tasks/Lists'
 import Header from '@/components/Tasks/Header'
 import TaskDialog from '@/components/Dialogs/TaskDialog'
+import MassEditDialog from '@/components/Dialogs/MassEditDialog'
 import Constant from '@/config/constant'
 import automate from '@/mixins/magento/titan22/automate'
 import Config from '@/config/app'
@@ -38,7 +41,8 @@ export default {
   components: {
     Lists,
     Header,
-    TaskDialog
+    TaskDialog,
+    MassEditDialog
   },
   mixins: [automate],
   data () {
@@ -50,6 +54,13 @@ export default {
     ...mapState('setting', { settings: 'items' })
   },
   methods: {
+    /**
+     * Open mass edit dialog.
+     *
+     */
+    editAll () {
+      this.$refs.massEditDialog.dialog = true
+    },
     /**
      * Open add mode.
      *

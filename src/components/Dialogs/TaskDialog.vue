@@ -98,6 +98,7 @@
                   dense
                   append-icon=""
                   :error-messages="sizesErrors"
+                  hint="Press Enter per input to apply"
                   @blur="$v.sizes.$touch()"
                   @input="filterSizes"
                 />
@@ -263,25 +264,6 @@ export default {
      */
     isEditMode () {
       return !!Object.keys(this.task).length
-    },
-    /**
-     * Return available sizes.
-     *
-     */
-    availableSizes () {
-      const sizes = []
-
-      if (this.attributes.length) {
-        this.attributes.forEach(element => {
-          if (element.sizes) {
-            element.sizes.forEach(size => {
-              sizes.push(size)
-            })
-          }
-        })
-      }
-
-      return sizes
     },
     /**
      * Identify if bank is gcash.
