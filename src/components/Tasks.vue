@@ -5,6 +5,7 @@
         @click:AddTask="openAddTaskDialog"
         @click:startTask="startTask"
         @click:editAll="editAll"
+        @click:ImportTasks="importTasks"
       />
       <br>
       <v-card>
@@ -23,6 +24,7 @@
       :task="selectedTask"
     />
     <MassEditDialog ref="massEditDialog" />
+    <ImportTaskDialog ref="importTaskDialog" />
   </div>
 </template>
 
@@ -33,6 +35,7 @@ import Lists from '@/components/Tasks/Lists'
 import Header from '@/components/Tasks/Header'
 import TaskDialog from '@/components/Dialogs/TaskDialog'
 import MassEditDialog from '@/components/Dialogs/MassEditDialog'
+import ImportTaskDialog from '@/components/Dialogs/ImportTaskDialog'
 import Constant from '@/config/constant'
 import automate from '@/mixins/magento/titan22/automate'
 import Config from '@/config/app'
@@ -42,7 +45,8 @@ export default {
     Lists,
     Header,
     TaskDialog,
-    MassEditDialog
+    MassEditDialog,
+    ImportTaskDialog
   },
   mixins: [automate],
   data () {
@@ -54,6 +58,13 @@ export default {
     ...mapState('setting', { settings: 'items' })
   },
   methods: {
+    /**
+     * Open import task dialog.
+     *
+     */
+    importTasks () {
+      this.$refs.importTaskDialog.dialog = true
+    },
     /**
      * Open mass edit dialog.
      *
