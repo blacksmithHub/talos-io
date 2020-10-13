@@ -18,6 +18,13 @@
             <v-file-input
               v-model="csv"
               label="File input"
+              accept=".csv"
+              :error-messages="fileErrors"
+              outlined
+              dense
+              prepend-icon=""
+              hide-details="auto"
+              @change="fileErrors = []"
             />
           </v-container>
         </v-card-text>
@@ -48,7 +55,8 @@ export default {
   data () {
     return {
       dialog: false,
-      csv: null
+      csv: null,
+      fileErrors: []
     }
   },
   computed: {
@@ -71,74 +79,82 @@ export default {
      *
      */
     submit () {
-      const csvToJson = require('convert-csv-to-json')
+      if (this.csv) {
+        const a = this.csv.name.split('.')
 
-      const json = csvToJson.getJsonFromCsv(this.csv.path)
+        if (a[a.length - 1] !== 'csv') {
+          this.fileErrors.push('Invalid file')
+        } else {
+          const csvToJson = require('convert-csv-to-json')
 
-      const result = []
+          const json = csvToJson.getJsonFromCsv(this.csv.path)
 
-      json.forEach(element => {
-        for (const [key, value] of Object.entries(element)) {
-          const columns = key.split(',')
-          const rows = value.split(',')
+          const result = []
 
-          const parse = {}
+          json.forEach(element => {
+            for (const [key, value] of Object.entries(element)) {
+              const columns = key.split(',')
+              const rows = value.split(',')
 
-          columns.forEach((clm, i) => {
-            parse[clm] = rows[i]
-          })
+              const parse = {}
 
-          result.push(parse)
-        }
-      })
-
-      const newTasks = []
-
-      result.forEach(element => {
-        const bank = this.banks.find((val) => val.name.toLowerCase() === element.bank.toLowerCase())
-
-        const csvSizes = element.sizes.split('+')
-
-        if (bank && csvSizes.length && element.cardNumber && element.email && element.password && element.sku) {
-          const sizes = []
-
-          csvSizes.forEach((data) => {
-            const attr = this.attributes.find((val) => val.sizes.find((size) => size.label.toLowerCase() === data.toLowerCase()))
-
-            if (attr) {
-              const size = attr.sizes.find((val) => val.label.toLowerCase() === data.toLowerCase())
-
-              sizes.push({
-                attribute_id: attr.attribute_id,
-                label: size.label,
-                value: size.value
+              columns.forEach((clm, i) => {
+                parse[clm] = rows[i]
               })
+
+              result.push(parse)
             }
           })
 
-          if (sizes.length) {
-            newTasks.push({
-              bank: {
-                cardHolder: element.cardHolder || null,
-                cardNumber: parseInt(element.cardNumber),
-                cvv: element.cvv || null,
-                expiry: element.expiry || null,
-                name: bank.name,
-                id: bank.id
-              },
-              email: element.email,
-              password: element.password,
-              name: element.name || null,
-              sku: element.sku,
-              sizes: sizes
-            })
-          }
+          const newTasks = []
+
+          result.forEach(element => {
+            const bank = this.banks.find((val) => val.name.toLowerCase() === element.bank.toLowerCase())
+
+            const csvSizes = element.sizes.split('+')
+
+            if (bank && csvSizes.length && element.cardNumber && element.email && element.password && element.sku) {
+              const sizes = []
+
+              csvSizes.forEach((data) => {
+                const attr = this.attributes.find((val) => val.sizes.find((size) => size.label.toLowerCase() === data.toLowerCase()))
+
+                if (attr) {
+                  const size = attr.sizes.find((val) => val.label.toLowerCase() === data.toLowerCase())
+
+                  sizes.push({
+                    attribute_id: attr.attribute_id,
+                    label: size.label,
+                    value: size.value
+                  })
+                }
+              })
+
+              if (sizes.length) {
+                newTasks.push({
+                  bank: {
+                    cardHolder: element.cardHolder || null,
+                    cardNumber: parseInt(element.cardNumber),
+                    cvv: element.cvv || null,
+                    expiry: element.expiry || null,
+                    name: bank.name,
+                    id: bank.id
+                  },
+                  email: element.email,
+                  password: element.password,
+                  name: element.name || null,
+                  sku: element.sku,
+                  sizes: sizes
+                })
+              }
+            }
+          })
+
+          newTasks.forEach(element => this.addTask(element))
+
+          this.onCancel()
         }
-      })
-
-      newTasks.forEach(element => this.addTask(element))
-
-      this.onCancel()
+      }
     }
   }
 }

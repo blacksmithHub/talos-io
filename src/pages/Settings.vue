@@ -152,9 +152,33 @@
               <v-list-item-action>
                 <v-btn
                   class="primary"
+                  rounded
                   @click="testWebhook"
                   v-text="'test'"
                 />
+              </v-list-item-action>
+            </v-list-item>
+
+            <v-divider />
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
+                <v-list-item-title v-text="'Backup all Tasks'" />
+
+                <v-list-item-subtitle v-text="'All tasks will export in a .csv file'" />
+              </v-list-item-content>
+
+              <v-list-item-action>
+                <download-csv
+                  :data="backupTasks"
+                  name="tasks.csv"
+                >
+                  <v-btn
+                    class="primary"
+                    rounded
+                    v-text="'Export'"
+                  />
+                </download-csv>
               </v-list-item-action>
             </v-list-item>
           </v-list>
@@ -194,11 +218,13 @@ export default {
       webhook: '',
       nightMode: false,
       sound: false,
-      autoPay: false
+      autoPay: false,
+      backupTasks: []
     }
   },
   computed: {
     ...mapState('setting', { settings: 'items' }),
+    ...mapState('task', { tasks: 'items' }),
 
     /**
      * Error messages for webhook.
@@ -234,10 +260,43 @@ export default {
     }
   },
   created () {
+    this.exportTasks(this.tasks)
+
+    ipcRenderer.on('updateTasks', (event, arg) => {
+      this.exportTasks(arg)
+    })
+
     this.prepareDetails()
   },
   methods: {
     ...mapActions('setting', { updateSettings: 'setItems' }),
+
+    /**
+     * Prepare jsons for exporting.
+     *
+     */
+    exportTasks (tasks) {
+      const jsons = []
+
+      tasks.forEach(element => {
+        const sizes = element.sizes.slice().map((val) => val.label).join('+')
+
+        jsons.push({
+          name: element.name,
+          email: element.email,
+          password: element.password,
+          sku: element.sku,
+          sizes: sizes,
+          bank: element.bank.name,
+          cardHolder: element.bank.cardHolder,
+          cardNumber: element.bank.cardNumber,
+          expiry: element.bank.expiry,
+          cvv: element.bank.cvv
+        })
+      })
+
+      this.backupTasks = jsons
+    },
 
     /**
      * Set all saved settings.
