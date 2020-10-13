@@ -212,6 +212,7 @@
           <v-btn
             rounded
             class="primary"
+            small
             @click="onCancel"
             v-text="'Cancel'"
           />
@@ -219,6 +220,7 @@
             class="primary"
             rounded
             type="submit"
+            small
             v-text="'Save'"
           />
         </v-card-actions>

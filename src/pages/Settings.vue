@@ -130,6 +130,30 @@
 
             <v-list-item class="pa-0">
               <v-list-item-content class="pa-2">
+                <v-list-item-title v-text="'Backup all Tasks'" />
+
+                <v-list-item-subtitle v-text="'All tasks will export in a .csv file'" />
+              </v-list-item-content>
+
+              <v-list-item-action>
+                <download-csv
+                  :data="backupTasks"
+                  name="tasks.csv"
+                >
+                  <v-btn
+                    class="primary"
+                    rounded
+                    small
+                    v-text="'Export'"
+                  />
+                </download-csv>
+              </v-list-item-action>
+            </v-list-item>
+
+            <v-divider />
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
                 <v-list-item-title v-text="'Discord Webhook'" />
 
                 <v-list-item-subtitle v-text="'Set custom discord webhook'" />
@@ -153,32 +177,10 @@
                 <v-btn
                   class="primary"
                   rounded
+                  small
                   @click="testWebhook"
                   v-text="'test'"
                 />
-              </v-list-item-action>
-            </v-list-item>
-
-            <v-divider />
-
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Backup all Tasks'" />
-
-                <v-list-item-subtitle v-text="'All tasks will export in a .csv file'" />
-              </v-list-item-content>
-
-              <v-list-item-action>
-                <download-csv
-                  :data="backupTasks"
-                  name="tasks.csv"
-                >
-                  <v-btn
-                    class="primary"
-                    rounded
-                    v-text="'Export'"
-                  />
-                </download-csv>
               </v-list-item-action>
             </v-list-item>
           </v-list>
@@ -188,6 +190,7 @@
           <v-btn
             class="primary"
             rounded
+            small
             @click="onCancel"
             v-text="'cancel'"
           />
@@ -196,6 +199,7 @@
             class="primary"
             rounded
             type="submit"
+            small
             v-text="'save'"
           />
         </v-card-actions>
