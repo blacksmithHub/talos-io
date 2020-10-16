@@ -36,6 +36,9 @@ export default {
   watch: {
     'settings.nightMode': function (nightMode) {
       this.$vuetify.theme.dark = nightMode
+    },
+    tasks () {
+      ipcRenderer.send('update-tasks', this.tasks)
     }
   },
   created () {

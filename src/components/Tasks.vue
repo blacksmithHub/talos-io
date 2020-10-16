@@ -4,6 +4,8 @@
       <Header
         @click:AddTask="openAddTaskDialog"
         @click:startTask="startTask"
+        @click:editAll="editAll"
+        @click:ImportTasks="importTasks"
       />
       <br>
       <v-card>
@@ -21,6 +23,8 @@
       ref="taskDialog"
       :task="selectedTask"
     />
+    <MassEditDialog ref="massEditDialog" />
+    <ImportTaskDialog ref="importTaskDialog" />
   </div>
 </template>
 
@@ -30,6 +34,8 @@ import { mapState } from 'vuex'
 import Lists from '@/components/Tasks/Lists'
 import Header from '@/components/Tasks/Header'
 import TaskDialog from '@/components/Dialogs/TaskDialog'
+import MassEditDialog from '@/components/Dialogs/MassEditDialog'
+import ImportTaskDialog from '@/components/Dialogs/ImportTaskDialog'
 import Constant from '@/config/constant'
 import automate from '@/mixins/magento/titan22/automate'
 import Config from '@/config/app'
@@ -38,7 +44,9 @@ export default {
   components: {
     Lists,
     Header,
-    TaskDialog
+    TaskDialog,
+    MassEditDialog,
+    ImportTaskDialog
   },
   mixins: [automate],
   data () {
@@ -50,6 +58,20 @@ export default {
     ...mapState('setting', { settings: 'items' })
   },
   methods: {
+    /**
+     * Open import task dialog.
+     *
+     */
+    importTasks () {
+      this.$refs.importTaskDialog.dialog = true
+    },
+    /**
+     * Open mass edit dialog.
+     *
+     */
+    editAll () {
+      this.$refs.massEditDialog.dialog = true
+    },
     /**
      * Open add mode.
      *
@@ -105,7 +127,7 @@ export default {
 
         if (this.settings.webhook) this.webhook(response, task)
 
-        if (this.settings.autoPay) this.launchWindow(response)
+        if (this.settings.autoPay) this.launchWindow(response, task)
       }
     },
     /**
@@ -139,7 +161,7 @@ export default {
      * Launch the payment window.
      *
      */
-    launchWindow (transactionData) {
+    launchWindow (transactionData, task) {
       const electron = require('electron')
       const { BrowserWindow } = electron.remote
 
@@ -150,6 +172,8 @@ export default {
         height: 600
       })
 
+      win.removeMenu()
+
       const ses = win.webContents.session
 
       ses.cookies.set({
@@ -159,7 +183,29 @@ export default {
         .then((response) => {
           win.loadURL(baseUrl)
 
-          if (!process.env.IS_TEST) win.webContents.openDevTools()
+          if (this.settings.autoPay) {
+            let script = ''
+
+            switch (task.bank.id) {
+              case Constant.BANK.GCASH.id:
+                // TODO: auto fill.
+                script = 'document.getElementById(\'btnGCashSubmit\').click()'
+                break
+
+              default:
+                // TODO: expiry fields
+                script = `document.getElementById('credit_card_number').value = '${task.bank.cardNumber}'
+                document.getElementById('credit_card_holder_name').value = '${task.bank.cardHolder}'
+                document.getElementById('credit_card_expiry_month').value = '02'
+                document.getElementById('credit_card_expiry_year').value = '2020'
+                document.getElementById('credit_card_cvv').value = '${task.bank.cvv}'
+                document.getElementById('credit_card_issuing_bank_name').value = '${task.bank.name}'
+                document.getElementById('btnCCSubmit').click()`
+                break
+            }
+
+            win.webContents.executeJavaScript(script)
+          }
 
           win.on('closed', () => {
             win = null

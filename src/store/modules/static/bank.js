@@ -1,23 +1,25 @@
+import Config from '@/config/constant'
+
 export default {
   namespaced: true,
   state () {
     return {
       items: [
         {
-          id: 1,
-          name: 'GCash'
+          id: Config.BANK.GCASH.id,
+          name: Config.BANK.GCASH.name
         },
         {
-          id: 2,
-          name: 'BPI'
+          id: Config.BANK.BPI.id,
+          name: Config.BANK.BPI.name
         },
         {
-          id: 3,
-          name: 'BDO'
+          id: Config.BANK.BDO.id,
+          name: Config.BANK.BDO.name
         },
         {
-          id: 4,
-          name: 'PNB'
+          id: Config.BANK.PNB.id,
+          name: Config.BANK.PNB.name
         }
       ]
     }

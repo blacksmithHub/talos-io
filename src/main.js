@@ -5,12 +5,15 @@ import VueMoment from 'vue-moment'
 import moment from 'moment-timezone'
 import VueToast from 'vue-toast-notification'
 import 'vue-toast-notification/dist/theme-sugar.css'
+import JsonCSV from 'vue-json-csv'
 
 import App from './App.vue'
 import store from './store'
 import router from './router'
 import vuetify from './plugins/vuetify'
 import vueProgressBar from './plugins/vue-progress-bar'
+
+Vue.component('downloadCsv', JsonCSV)
 
 Vue.use(VueProgressBar, vueProgressBar)
 

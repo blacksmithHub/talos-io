@@ -59,7 +59,7 @@ function createWindow () {
   // Create monitor window.
   settingsWin = new BrowserWindow({
     width: 500,
-    height: 600,
+    height: 660,
     minHeight: 600,
     minWidth: 500,
     parent: win,
@@ -171,4 +171,8 @@ ipcMain.on('toggle-settings', (event, arg) => {
 ipcMain.on('update-settings', (event, arg) => {
   win.webContents.send('updateSettings', arg)
   monitorWin.webContents.send('updateSettings', arg)
+})
+
+ipcMain.on('update-tasks', (event, arg) => {
+  settingsWin.webContents.send('updateTasks', arg)
 })
