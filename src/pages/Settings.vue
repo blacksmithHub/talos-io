@@ -97,6 +97,7 @@
                     ampm-in-title
                     format="ampm"
                     use-seconds
+                    color="primary"
                     @click:second="$refs.placeOrderMenu.save(placeOrder)"
                   />
                 </v-menu>

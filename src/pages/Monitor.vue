@@ -141,6 +141,8 @@ export default {
     }
   },
   created () {
+    this.searchProduct()
+
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
     })
