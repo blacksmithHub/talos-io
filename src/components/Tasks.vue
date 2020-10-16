@@ -36,9 +36,7 @@ import Header from '@/components/Tasks/Header'
 import TaskDialog from '@/components/Dialogs/TaskDialog'
 import MassEditDialog from '@/components/Dialogs/MassEditDialog'
 import ImportTaskDialog from '@/components/Dialogs/ImportTaskDialog'
-import Constant from '@/config/constant'
 import automate from '@/mixins/magento/titan22/automate'
-import Config from '@/config/app'
 
 export default {
   components: {
@@ -99,118 +97,7 @@ export default {
      *
      */
     async startTask (task) {
-      const response = await this.init(task)
-
-      const currentTask = this.allTasks.find((data) => data.id === task.id)
-
-      if (response && (currentTask && currentTask.status.id === Constant.TASK.STATUS.RUNNING)) {
-        this.updateTask({
-          ...task,
-          status: {
-            id: Constant.TASK.STATUS.STOPPED,
-            msg: 'copped!',
-            class: 'success'
-          },
-          transactionData: response
-        })
-
-        if (this.settings.sound) {
-          var audio = new Audio(require('@/assets/success.mp3'))
-          audio.play()
-        }
-
-        this.$toast.open({
-          message: '<strong style="font-family: Arial; text-transform: uppercase">checked out</strong>',
-          type: 'success',
-          duration: 3000
-        })
-
-        if (this.settings.webhook) this.webhook(response, task)
-
-        if (this.settings.autoPay) this.launchWindow(response, task)
-      }
-    },
-    /**
-     * Send discord webhook.
-     *
-     */
-    webhook (data, task) {
-      const purchased = data.order.totals.items[0]
-
-      const webhook = require('webhook-discord')
-
-      const Hook = new webhook.Webhook(this.settings.webhook)
-
-      const msg = new webhook.MessageBuilder()
-        .setAvatar('https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
-        .setFooter('this is a footer', 'https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
-        .setTime()
-        .setName('Titan Bot')
-        .setColor('#008000')
-        .setTitle('Copped!')
-        .setDescription(`
-          **Product:** ${purchased.name}\n
-          **Size:** ${JSON.parse(purchased.options)[0].value}\n
-          **Task:** ${task.name}\n
-          **Checkout Time:** ${data.time} secs
-        `)
-
-      Hook.send(msg)
-    },
-    /**
-     * Launch the payment window.
-     *
-     */
-    launchWindow (transactionData, task) {
-      const electron = require('electron')
-      const { BrowserWindow } = electron.remote
-
-      const baseUrl = `${Config.services.titan22.checkout}/RedirectV3/Payment/Accept`
-
-      let win = new BrowserWindow({
-        width: 800,
-        height: 600
-      })
-
-      win.removeMenu()
-
-      const ses = win.webContents.session
-
-      ses.cookies.set({
-        url: baseUrl,
-        ...transactionData.cookies
-      })
-        .then((response) => {
-          win.loadURL(baseUrl)
-
-          if (this.settings.autoPay) {
-            let script = ''
-
-            switch (task.bank.id) {
-              case Constant.BANK.GCASH.id:
-                // TODO: auto fill.
-                script = 'document.getElementById(\'btnGCashSubmit\').click()'
-                break
-
-              default:
-                // TODO: expiry fields
-                script = `document.getElementById('credit_card_number').value = '${task.bank.cardNumber}'
-                document.getElementById('credit_card_holder_name').value = '${task.bank.cardHolder}'
-                document.getElementById('credit_card_expiry_month').value = '02'
-                document.getElementById('credit_card_expiry_year').value = '2020'
-                document.getElementById('credit_card_cvv').value = '${task.bank.cvv}'
-                document.getElementById('credit_card_issuing_bank_name').value = '${task.bank.name}'
-                document.getElementById('btnCCSubmit').click()`
-                break
-            }
-
-            win.webContents.executeJavaScript(script)
-          }
-
-          win.on('closed', () => {
-            win = null
-          })
-        })
+      await this.init(task)
     }
   }
 }
