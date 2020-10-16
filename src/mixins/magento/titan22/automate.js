@@ -7,6 +7,7 @@ import cartApi from '@/api/magento/titan22/cart'
 import transactionApi from '@/api/magento/titan22/transaction'
 import Constant from '@/config/constant'
 import Config from '@/config/app'
+import webhook from '@/mixins/webhook'
 
 /**
  * ===============================================
@@ -19,6 +20,7 @@ import Config from '@/config/app'
  */
 
 export default {
+  mixins: [webhook],
   computed: {
     ...mapState('task', { allTasks: 'items' }),
     ...mapState('setting', { settings: 'items' })
@@ -67,15 +69,11 @@ export default {
      * @param {*} task
      */
     async init (task) {
-      if (!this.isRunning(task.id)) {
+      if (this.isRunning(task.id)) {
+        await this.shopping(task)
+      } else {
         this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-        return {}
       }
-
-      return await this.shopping(task)
-        .then((response) => {
-          if (!Object.keys(response).length) this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-        })
     },
 
     /**
@@ -95,7 +93,10 @@ export default {
 
       await this.authenticate(task, (response) => { tokenData = response })
 
-      if (!tokenData || !this.isRunning(task.id)) return {}
+      if (!tokenData || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
 
       /**
        * Step 2: get profile
@@ -106,7 +107,10 @@ export default {
 
       await this.getProfile(task, tokenData, (response) => { userData = response })
 
-      if (!Object.keys(userData).length || !this.isRunning(task.id)) return {}
+      if (!Object.keys(userData).length || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
 
       /**
        * Step 3: create cart
@@ -124,7 +128,10 @@ export default {
 
       await this.createCart(task, user, (response) => { cartId = response })
 
-      if (!cartId || !this.isRunning(task.id)) return {}
+      if (!cartId || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
 
       /**
        * Step 4: get cart
@@ -135,7 +142,10 @@ export default {
 
       await this.getCart(task, user, (response) => { cartData = response })
 
-      if (!Object.keys(cartData).length || !this.isRunning(task.id)) return {}
+      if (!Object.keys(cartData).length || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
 
       /**
        * Step 5: clean cart
@@ -146,7 +156,10 @@ export default {
 
       await this.cleanCart(task, cartData, user, (response) => { cleanCartData = response })
 
-      if (!cleanCartData || !this.isRunning(task.id)) return {}
+      if (!cleanCartData || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
 
       /**
        * Step 6: add item to cart
@@ -157,7 +170,10 @@ export default {
 
       await this.addItemToCart(task, cartData, user, (response) => { productData = response })
 
-      if (!Object.keys(productData).length || !this.isRunning(task.id)) return {}
+      if (!Object.keys(productData).length || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
 
       /**
        * Step 7: set shipping info
@@ -168,14 +184,17 @@ export default {
 
       await this.setShippingInfo(task, user, productData, (response) => { shippingData = response })
 
-      if (!Object.keys(shippingData).length || !this.isRunning(task.id)) return {}
+      if (!Object.keys(shippingData).length || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
 
       /**
        * Step 8: place order
        *
        * place order
        */
-      return await this.placeOrder(task, shippingData, user, cartData)
+      await this.placeOrder(task, shippingData, user, cartData, productData)
     },
 
     /**
@@ -460,7 +479,7 @@ export default {
      * @param {*} user
      * @param {*} cartData
      */
-    async placeOrder (task, shippingData, user, cartData) {
+    async placeOrder (task, shippingData, user, cartData, productData) {
       const sizeLabel = JSON.parse(shippingData.totals.items[0].options)[0].value
 
       const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
@@ -482,11 +501,9 @@ export default {
       let transactionData = {}
       const vm = this
 
-      const sw = new StopWatch()
-
       await this.timer(task, sizeLabel, async (response) => {
         if (response) {
-          sw.start()
+          const sw = new StopWatch(true)
 
           while (!Object.keys(transactionData).length && vm.isRunning(task.id)) {
             vm.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${sizeLabel} - placing order`, 'orange')
@@ -499,14 +516,15 @@ export default {
           }
 
           sw.stop()
+
+          if (!Object.keys(transactionData).length || !vm.isRunning(task.id)) {
+            vm.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            return false
+          }
+
+          vm.onSuccess(task, transactionData, shippingData, (sw.read() / 1000.0).toFixed(2), productData)
         }
       })
-
-      if (!Object.keys(transactionData).length || !this.isRunning(task.id)) return {}
-
-      this.onSuccess(task, transactionData, shippingData, (sw.read() / 1000.0).toFixed(2))
-
-      return transactionData
     },
 
     /**
@@ -553,7 +571,7 @@ export default {
      * @param {*} shippingData
      * @param {*} time
      */
-    onSuccess (task, transactionData, shippingData, time) {
+    onSuccess (task, transactionData, shippingData, time, productData) {
       this.updateTask({
         ...task,
         status: {
@@ -576,45 +594,17 @@ export default {
       })
 
       if (this.settings.webhook) {
-        const webhookDetails = {
-          order: shippingData,
-          time: time,
-          task: task
-        }
+        const url = this.settings.webhook
+        const productImg = `${Config.services.titan22.static}${productData.extension_attributes.image_product}`
+        const productName = shippingData.totals.items[0].name
+        const productSize = JSON.parse(shippingData.totals.items[0].options)[0].value
+        const profile = task.name
+        const secs = `${time} secs`
 
-        this.webhook(webhookDetails)
+        this.sendWebhook(url, productImg, productName, productSize, profile, secs)
       }
 
       if (this.settings.autoPay) this.launchWindow(transactionData, task)
-    },
-
-    /**
-     * Send webhook.
-     *
-     * @param {*} data
-     */
-    webhook (data) {
-      const purchased = data.order.totals.items[0]
-
-      const webhook = require('webhook-discord')
-
-      const Hook = new webhook.Webhook(this.settings.webhook)
-
-      const msg = new webhook.MessageBuilder()
-        .setAvatar('https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
-        .setFooter('Titan Bot', 'https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
-        .setTime()
-        .setName('Titan Bot')
-        .setColor('#008000')
-        .setTitle('Copped!')
-        .setDescription(`
-          **Product:** ${purchased.name}\n
-          **Size:** ${JSON.parse(purchased.options)[0].value}\n
-          **Task:** ${data.task.name}\n
-          **Checkout Time:** ${data.time} secs
-        `)
-
-      Hook.send(msg)
     },
 
     /**

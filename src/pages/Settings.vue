@@ -213,8 +213,11 @@
 import { url, minValue } from 'vuelidate/lib/validators'
 import { mapState, mapActions } from 'vuex'
 import { remote, ipcRenderer } from 'electron'
+import Config from '@/config/app'
+import webhook from '@/mixins/webhook'
 
 export default {
+  mixins: [webhook],
   data () {
     return {
       placeOrder: '',
@@ -324,25 +327,9 @@ export default {
       this.$v.$touch()
 
       if (!this.$v.$invalid && this.webhook) {
-        const webhook = require('webhook-discord')
+        const productImg = 'https://image-cdn.hypb.st/https%3A%2F%2Fhypebeast.com%2Fimage%2F2020%2F07%2Foff-white-air-jordan-4-sail-official-images-001.jpg?q=75&w=800&cbr=1&fit=max'
 
-        const Hook = new webhook.Webhook(this.webhook)
-
-        const msg = new webhook.MessageBuilder()
-          .setAvatar('https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
-          .setFooter('this is a footer', 'https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
-          .setTime()
-          .setName('Titan Bot')
-          .setColor('#008000')
-          .setTitle('Copped!')
-          .setDescription(`
-          **Product:** Test Product\n
-          **Size:** N/A\n
-          **Task:** N/A\n
-          **Checkout Time:** N/A
-        `)
-
-        Hook.send(msg)
+        this.sendWebhook(this.webhook, productImg, 'Air Jordan 4 Off-White Sail', '9', Config.bot.name, '2')
       }
     },
 
