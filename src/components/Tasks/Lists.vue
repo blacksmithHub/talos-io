@@ -83,22 +83,21 @@
               md="2"
             >
               <v-chip
-                v-if="settings.autoPay"
+                v-if="task.status.class === 'success' && !settings.autoPay"
                 outlined
                 small
-                :color="task.status.class"
+                color="success"
                 class="text-capitalize"
-                v-text="task.status.msg"
+                @click="$emit('click:checkout', task)"
+                v-text="'click me!'"
               />
-
               <v-chip
                 v-else
                 outlined
                 small
                 :color="task.status.class"
                 class="text-capitalize"
-                @click="$emit('click:checkout', task)"
-                v-text="'click me!'"
+                v-text="task.status.msg"
               />
             </v-col>
 

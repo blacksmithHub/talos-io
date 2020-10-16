@@ -11,7 +11,7 @@
               <v-list-item-content class="pa-2">
                 <v-list-item-title v-text="'Night Mode'" />
 
-                <v-list-item-subtitle v-text="'Restart application to take effect'" />
+                <v-list-item-subtitle v-text="'appearance'" />
               </v-list-item-content>
 
               <v-list-item-action>
@@ -97,6 +97,7 @@
                     ampm-in-title
                     format="ampm"
                     use-seconds
+                    color="primary"
                     @click:second="$refs.placeOrderMenu.save(placeOrder)"
                   />
                 </v-menu>
@@ -130,6 +131,30 @@
 
             <v-list-item class="pa-0">
               <v-list-item-content class="pa-2">
+                <v-list-item-title v-text="'Backup all Tasks'" />
+
+                <v-list-item-subtitle v-text="'All tasks will export in a .csv file'" />
+              </v-list-item-content>
+
+              <v-list-item-action>
+                <download-csv
+                  :data="backupTasks"
+                  name="tasks.csv"
+                >
+                  <v-btn
+                    class="primary"
+                    rounded
+                    small
+                    v-text="'Export'"
+                  />
+                </download-csv>
+              </v-list-item-action>
+            </v-list-item>
+
+            <v-divider />
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
                 <v-list-item-title v-text="'Discord Webhook'" />
 
                 <v-list-item-subtitle v-text="'Set custom discord webhook'" />
@@ -148,6 +173,16 @@
                   @blur="$v.webhook.$touch()"
                 />
               </v-list-item-content>
+
+              <v-list-item-action>
+                <v-btn
+                  class="primary"
+                  rounded
+                  small
+                  @click="testWebhook"
+                  v-text="'test'"
+                />
+              </v-list-item-action>
             </v-list-item>
           </v-list>
         </v-card-text>
@@ -156,6 +191,7 @@
           <v-btn
             class="primary"
             rounded
+            small
             @click="onCancel"
             v-text="'cancel'"
           />
@@ -164,6 +200,7 @@
             class="primary"
             rounded
             type="submit"
+            small
             v-text="'save'"
           />
         </v-card-actions>
@@ -186,11 +223,13 @@ export default {
       webhook: '',
       nightMode: false,
       sound: false,
-      autoPay: false
+      autoPay: false,
+      backupTasks: []
     }
   },
   computed: {
     ...mapState('setting', { settings: 'items' }),
+    ...mapState('task', { tasks: 'items' }),
 
     /**
      * Error messages for webhook.
@@ -217,8 +256,6 @@ export default {
 
       this.$v.monitorInterval.minValue || errors.push('Invalid input')
 
-      console.log(errors)
-
       return errors
     }
   },
@@ -228,10 +265,43 @@ export default {
     }
   },
   created () {
+    this.exportTasks(this.tasks)
+
+    ipcRenderer.on('updateTasks', (event, arg) => {
+      this.exportTasks(arg)
+    })
+
     this.prepareDetails()
   },
   methods: {
     ...mapActions('setting', { updateSettings: 'setItems' }),
+
+    /**
+     * Prepare jsons for exporting.
+     *
+     */
+    exportTasks (tasks) {
+      const jsons = []
+
+      tasks.forEach(element => {
+        const sizes = element.sizes.slice().map((val) => val.label).join('+')
+
+        jsons.push({
+          name: element.name,
+          email: element.email,
+          password: element.password,
+          sku: element.sku,
+          sizes: sizes,
+          bank: element.bank.name,
+          cardHolder: element.bank.cardHolder,
+          cardNumber: element.bank.cardNumber,
+          expiry: element.bank.expiry,
+          cvv: element.bank.cvv
+        })
+      })
+
+      this.backupTasks = jsons
+    },
 
     /**
      * Set all saved settings.
@@ -245,6 +315,37 @@ export default {
       this.sound = this.settings.sound
       this.autoPay = this.settings.autoPay
     },
+
+    /**
+     * Trigger test webhook event.
+     *
+     */
+    testWebhook () {
+      this.$v.$touch()
+
+      if (!this.$v.$invalid && this.webhook) {
+        const webhook = require('webhook-discord')
+
+        const Hook = new webhook.Webhook(this.webhook)
+
+        const msg = new webhook.MessageBuilder()
+          .setAvatar('https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
+          .setFooter('this is a footer', 'https://neilpatel.com/wp-content/uploads/2019/08/google.jpg')
+          .setTime()
+          .setName('Titan Bot')
+          .setColor('#008000')
+          .setTitle('Copped!')
+          .setDescription(`
+          **Product:** Test Product\n
+          **Size:** N/A\n
+          **Task:** N/A\n
+          **Checkout Time:** N/A
+        `)
+
+        Hook.send(msg)
+      }
+    },
+
     /**
      * On submit event.
      *

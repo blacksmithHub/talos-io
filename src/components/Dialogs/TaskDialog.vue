@@ -86,22 +86,21 @@
                 cols="12"
                 md="6"
               >
-                <v-autocomplete
+                <v-combobox
                   v-model="sizes"
-                  hide-details="auto"
-                  required
-                  :error-messages="sizesErrors"
-                  clearable
-                  :items="availableSizes"
-                  outlined
-                  dense
                   chips
                   small-chips
+                  deletable-chips
+                  clearable
                   label="Sizes"
                   multiple
-                  return-object
-                  item-text="label"
+                  outlined
+                  dense
+                  append-icon=""
+                  :error-messages="sizesErrors"
+                  hint="Press Enter per input to apply"
                   @blur="$v.sizes.$touch()"
+                  @input="filterSizes"
                 />
               </v-col>
             </v-row>
@@ -213,6 +212,7 @@
           <v-btn
             rounded
             class="primary"
+            small
             @click="onCancel"
             v-text="'Cancel'"
           />
@@ -220,6 +220,7 @@
             class="primary"
             rounded
             type="submit"
+            small
             v-text="'Save'"
           />
         </v-card-actions>
@@ -265,25 +266,6 @@ export default {
      */
     isEditMode () {
       return !!Object.keys(this.task).length
-    },
-    /**
-     * Return available sizes.
-     *
-     */
-    availableSizes () {
-      const sizes = []
-
-      if (this.attributes.length) {
-        this.attributes.forEach(element => {
-          if (element.sizes) {
-            element.sizes.forEach(size => {
-              sizes.push(size)
-            })
-          }
-        })
-      }
-
-      return sizes
     },
     /**
      * Identify if bank is gcash.
@@ -417,11 +399,13 @@ export default {
   watch: {
     task () {
       if (Object.keys(this.task).length) {
+        const sizes = this.task.sizes.slice().map((val) => val.label)
+
         this.taskName = this.task.name
         this.email = this.task.email
         this.password = this.task.password
         this.sku = this.task.sku
-        this.sizes = this.task.sizes
+        this.sizes = sizes
         this.bank = {
           id: this.task.bank.id,
           name: this.task.bank.name
@@ -435,6 +419,23 @@ export default {
   },
   methods: {
     ...mapActions('task', { addTask: 'addItem', updateTask: 'updateItem' }),
+    /**
+     * Filter input sizes.
+     *
+     */
+    filterSizes () {
+      if (this.sizes.length) {
+        const sizes = []
+
+        this.sizes.forEach(element => {
+          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label === element))
+
+          if (attr) sizes.push(element)
+        })
+
+        this.sizes = sizes
+      }
+    },
     /**
      * On cancel event.
      *
@@ -466,12 +467,14 @@ export default {
         const sizes = []
 
         this.sizes.forEach(element => {
-          const attr = this.attributes.find((val) => val.sizes.find((data) => data.value === element.value))
+          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label === element))
+
+          const size = attr.sizes.find((data) => data.label === element)
 
           sizes.push({
             attribute_id: attr.attribute_id,
-            value: element.value,
-            label: element.label
+            value: size.value,
+            label: size.label
           })
         })
 

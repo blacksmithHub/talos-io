@@ -118,8 +118,9 @@ export default {
      * @param {*} param
      * @param {*} key
      */
-    deleteItem ({ commit }, key) {
+    deleteItem ({ state, commit }, key) {
       commit('DELETE_ITEM', key)
+      localStorage.setItem('tasks', JSON.stringify(state.items))
     }
   }
 }
