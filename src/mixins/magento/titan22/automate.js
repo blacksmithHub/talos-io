@@ -8,6 +8,8 @@ import transactionApi from '@/api/magento/titan22/transaction'
 import Constant from '@/config/constant'
 import Config from '@/config/app'
 import webhook from '@/mixins/webhook'
+import SuccessEffect from '@/assets/success.mp3'
+import { Howl } from 'howler'
 
 /**
  * ===============================================
@@ -332,7 +334,7 @@ export default {
 
           const order = {
             cartItem: {
-              sku: task.sku,
+              sku: `${task.sku}-SZ${task.sizes[i].label.replace('.', 'P')}`,
               qty: 1,
               quote_id: cart.id.toString(),
               product_option: {
@@ -349,13 +351,21 @@ export default {
             }
           }
 
-          if (!this.isRunning(task.id)) break
-
           const apiResponse = await cartApi.store(order, user.token)
+
+          if (!this.isRunning(task.id)) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            break
+          }
 
           if (apiResponse) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${task.sizes[i].label} - carted`, 'orange')
-            response = apiResponse
+
+            response = {
+              ...apiResponse,
+              sizeLabel: task.sizes[i].label
+            }
+
             break
           }
         }
@@ -397,9 +407,12 @@ export default {
       let shipping = {}
 
       while (!Object.keys(shipping).length && this.isRunning(task.id)) {
-        if (!this.isRunning(task.id)) break
-
         const cartApiResponse = await cartApi.setShippingInformation(shippingParams, user.token)
+
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        }
 
         this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'set shipping info', 'orange')
 
@@ -433,9 +446,12 @@ export default {
         let success = false
 
         while (!success && this.isRunning(task.id)) {
-          if (!this.isRunning(task.id)) break
-
           const apiResponse = await cartApi.estimateShipping(estimateParams, user.token)
+
+          if (!this.isRunning(task.id)) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            break
+          }
 
           this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'estimate shipping', 'orange')
 
@@ -480,8 +496,6 @@ export default {
      * @param {*} cartData
      */
     async placeOrder (task, shippingData, user, cartData, productData) {
-      const sizeLabel = JSON.parse(shippingData.totals.items[0].options)[0].value
-
       const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
 
       const params = {
@@ -501,12 +515,12 @@ export default {
       let transactionData = {}
       const vm = this
 
-      await this.timer(task, sizeLabel, async (response) => {
+      await this.timer(task, productData.sizeLabel, async (response) => {
         if (response) {
           const sw = new StopWatch(true)
 
           while (!Object.keys(transactionData).length && vm.isRunning(task.id)) {
-            vm.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${sizeLabel} - placing order`, 'orange')
+            vm.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
 
             const apiResponse = await transactionApi.placeOrder(params)
 
@@ -583,8 +597,11 @@ export default {
       })
 
       if (this.settings.sound) {
-        var audio = new Audio(require('@/assets/success.mp3'))
-        audio.play()
+        const sound = new Howl({
+          src: [SuccessEffect]
+        })
+
+        sound.play()
       }
 
       this.$toast.open({
@@ -595,13 +612,12 @@ export default {
 
       if (this.settings.webhook) {
         const url = this.settings.webhook
-        const productImg = `${Config.services.titan22.static}${productData.extension_attributes.image_product}`
         const productName = shippingData.totals.items[0].name
-        const productSize = JSON.parse(shippingData.totals.items[0].options)[0].value
+        const productSize = productData.sizeLabel
         const profile = task.name
         const secs = `${time} secs`
 
-        this.sendWebhook(url, productImg, productName, productSize, profile, secs)
+        this.sendWebhook(url, productName, productSize, profile, secs)
       }
 
       if (this.settings.autoPay) this.launchWindow(transactionData, task)

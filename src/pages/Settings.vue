@@ -373,11 +373,7 @@ export default {
     testWebhook () {
       this.$v.$touch()
 
-      if (!this.$v.$invalid && this.webhook) {
-        const productImg = 'https://image-cdn.hypb.st/https%3A%2F%2Fhypebeast.com%2Fimage%2F2020%2F07%2Foff-white-air-jordan-4-sail-official-images-001.jpg?q=75&w=800&cbr=1&fit=max'
-
-        this.sendWebhook(this.webhook, productImg, 'Air Jordan 4 Off-White Sail', '9', Config.bot.name, '2')
-      }
+      if (!this.$v.$invalid && this.webhook) this.sendWebhook(this.webhook, 'Air Jordan 4 Off-White Sail', '9', Config.bot.name, '2')
     },
 
     /**

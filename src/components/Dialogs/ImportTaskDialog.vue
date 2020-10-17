@@ -112,11 +112,11 @@ export default {
           const newTasks = []
 
           result.forEach(element => {
-            const bank = this.banks.find((val) => val.name.toLowerCase() === element.bank.toLowerCase())
+            const bank = this.banks.find((val) => val.name.toLowerCase() === element.bank.toLowerCase().trim())
 
-            const csvSizes = element.sizes.split('+')
+            const csvSizes = element.sizes.trim().split('+')
 
-            if (bank && csvSizes.length && element.cardNumber && element.email && element.password && element.sku) {
+            if (bank && csvSizes.length && parseInt(element.cardNumber) && element.email && element.password && element.sku) {
               const sizes = []
 
               csvSizes.forEach((data) => {
@@ -136,17 +136,17 @@ export default {
               if (sizes.length) {
                 newTasks.push({
                   bank: {
-                    cardHolder: element.cardHolder || null,
+                    cardHolder: element.cardHolder.trim() || null,
                     cardNumber: parseInt(element.cardNumber),
-                    cvv: element.cvv || null,
+                    cvv: parseInt(element.cvv) || null,
                     expiry: element.expiry || null,
                     name: bank.name,
                     id: bank.id
                   },
-                  email: element.email,
-                  password: element.password,
-                  name: element.name || null,
-                  sku: element.sku,
+                  email: element.email.trim(),
+                  password: element.password.trim(),
+                  name: element.name.trim() || null,
+                  sku: element.sku.trim(),
                   sizes: sizes
                 })
               }

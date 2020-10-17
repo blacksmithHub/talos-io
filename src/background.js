@@ -20,7 +20,7 @@ protocol.registerSchemesAsPrivileged([
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 500,
+    width: 720,
     height: 900,
     minWidth: 500,
     minHeight: 600,
@@ -59,7 +59,7 @@ function createWindow () {
   // Create monitor window.
   settingsWin = new BrowserWindow({
     width: 500,
-    height: 660,
+    height: 720,
     minHeight: 600,
     minWidth: 500,
     parent: win,

@@ -234,12 +234,6 @@ import { mapState, mapActions } from 'vuex'
 import { required, email, numeric, maxLength, requiredIf } from 'vuelidate/lib/validators'
 
 export default {
-  props: {
-    task: {
-      type: Object,
-      default: Object
-    }
-  },
   data () {
     return {
       dialog: false,
@@ -253,7 +247,9 @@ export default {
       cardNumber: '',
       expiry: '',
       cvv: '',
-      showPassword: false
+      showPassword: false,
+      isEditMode: false,
+      selectedTask: {}
     }
   },
   computed: {
@@ -267,13 +263,6 @@ export default {
      */
     header () {
       return this.isEditMode ? 'Edit' : 'New'
-    },
-    /**
-     * Identify if the form is on edit mode.
-     *
-     */
-    isEditMode () {
-      return !!Object.keys(this.task).length
     },
     /**
      * Identify if bank is gcash.
@@ -404,29 +393,37 @@ export default {
       return errors
     }
   },
-  watch: {
-    task () {
-      if (Object.keys(this.task).length) {
-        const sizes = this.task.sizes.slice().map((val) => val.label)
-
-        this.taskName = this.task.name
-        this.email = this.task.email
-        this.password = this.task.password
-        this.sku = this.task.sku
-        this.sizes = sizes
-        this.bank = {
-          id: this.task.bank.id,
-          name: this.task.bank.name
-        }
-        this.cardNumber = this.task.bank.cardNumber
-        this.cardHolder = this.task.bank.cardHolder
-        this.expiry = this.task.bank.expiry
-        this.cvv = this.task.bank.cvv
-      }
-    }
-  },
   methods: {
     ...mapActions('task', { addTask: 'addItem', updateTask: 'updateItem' }),
+
+    /**
+     * Map selected task.
+     *
+     */
+    mapData (task) {
+      if (Object.keys(task).length) {
+        this.selectedTask = task
+
+        const sizes = task.sizes.slice().map((val) => val.label)
+
+        this.taskName = task.name
+        this.email = task.email
+        this.password = task.password
+        this.sku = task.sku
+        this.sizes = sizes
+        this.bank = {
+          id: task.bank.id,
+          name: task.bank.name
+        }
+        this.cardNumber = task.bank.cardNumber
+        this.cardHolder = task.bank.cardHolder
+        this.expiry = task.bank.expiry
+        this.cvv = task.bank.cvv
+
+        this.isEditMode = true
+        this.dialog = true
+      }
+    },
     /**
      * Filter input sizes.
      *
@@ -463,6 +460,7 @@ export default {
       this.cvv = ''
       this.showPassword = false
       this.dialog = false
+      this.isEditMode = false
     },
     /**
      * On submit event.
@@ -487,15 +485,15 @@ export default {
         })
 
         const params = {
-          name: this.taskName,
+          name: this.taskName.trim(),
           email: this.email,
           password: this.password,
-          sku: this.sku,
+          sku: this.sku.trim(),
           sizes: sizes,
           bank: {
             ...this.bank,
             cardNumber: this.cardNumber,
-            cardHolder: this.cardHolder,
+            cardHolder: this.cardHolder.trim(),
             expiry: this.expiry,
             cvv: this.cvv
           }
@@ -503,7 +501,7 @@ export default {
 
         if (this.isEditMode) {
           this.updateTask({
-            id: this.task.id,
+            id: this.selectedTask.id,
             ...params,
             status: {
               id: 1,

@@ -42,10 +42,7 @@
       </v-card>
     </v-container>
 
-    <TaskDialog
-      ref="taskDialog"
-      :task="selectedTask"
-    />
+    <TaskDialog ref="taskDialog" />
     <MassEditDialog ref="massEditDialog" />
     <ImportTaskDialog ref="importTaskDialog" />
   </div>
@@ -70,11 +67,6 @@ export default {
     ImportTaskDialog
   },
   mixins: [automate],
-  data () {
-    return {
-      selectedTask: {}
-    }
-  },
   computed: {
     ...mapState('setting', { settings: 'items' }),
     ...mapState('task', { tasks: 'items' }),
@@ -110,8 +102,7 @@ export default {
      *
      */
     openEditTaskDialog (task) {
-      this.selectedTask = task
-      this.$refs.taskDialog.dialog = true
+      this.$refs.taskDialog.mapData(task)
     },
     /**
      * Redirect to checkout page.
