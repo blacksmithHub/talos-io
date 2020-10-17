@@ -6,6 +6,10 @@ import customerApi from '@/api/magento/titan22/customer'
 import cartApi from '@/api/magento/titan22/cart'
 import transactionApi from '@/api/magento/titan22/transaction'
 import Constant from '@/config/constant'
+import Config from '@/config/app'
+import webhook from '@/mixins/webhook'
+import SuccessEffect from '@/assets/success.mp3'
+import { Howl } from 'howler'
 
 /**
  * ===============================================
@@ -18,6 +22,7 @@ import Constant from '@/config/constant'
  */
 
 export default {
+  mixins: [webhook],
   computed: {
     ...mapState('task', { allTasks: 'items' }),
     ...mapState('setting', { settings: 'items' })
@@ -35,34 +40,6 @@ export default {
       if (task) return (task.status.id === Constant.TASK.STATUS.RUNNING)
 
       return false
-    },
-
-    /**
-     * Initialize automation.
-     *
-     * @param {*} task
-     */
-    async init (task) {
-      if (!this.isRunning(task.id)) {
-        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-        return false
-      }
-
-      const user = await this.authenticate(task)
-
-      if (!Object.keys(user).length || !this.isRunning(task.id)) {
-        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-        return false
-      }
-
-      const response = await this.shop(task, user)
-
-      if (!Object.keys(response).length || !this.isRunning(task.id)) {
-        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-        return false
-      }
-
-      return response
     },
 
     /**
@@ -89,122 +66,243 @@ export default {
     },
 
     /**
-     * Perform authorization process.
+     * Initialize automation.
      *
      * @param {*} task
      */
-    async authenticate (task) {
+    async init (task) {
+      if (this.isRunning(task.id)) {
+        await this.shopping(task)
+      } else {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+      }
+    },
+
+    /**
+     * Start shopping sequence.
+     *
+     * @param {*} task
+     */
+    async shopping (task) {
+      /**
+       * Step 1: authenticate
+       *
+       * get user token
+       */
       this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'authenticating', 'orange')
 
-      const user = {}
+      let tokenData = null
 
-      while (!Object.keys(user).length && this.isRunning(task.id)) {
-        const credentials = {
-          username: task.email,
-          password: task.password
-        }
+      await this.authenticate(task, (response) => { tokenData = response })
 
-        if (!this.isRunning(task.id)) break
-
-        const token = await authApi.fetchToken(credentials)
-
-        if (!token) continue
-
-        if (!this.isRunning(task.id)) break
-
-        const response = await customerApi.profile(token)
-
-        if (!response || !response.addresses.length) continue
-
-        user.profile = response
-        user.token = token
+      if (!tokenData || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
       }
 
-      return user
-    },
+      /**
+       * Step 2: get profile
+       *
+       * get profile data
+       */
+      let userData = {}
 
-    /**
-     * Perform shop sequence.
-     *
-     * @param {*} task
-     * @param {*} user
-     */
-    async shop (task, user) {
-      let data = {}
+      await this.getProfile(task, tokenData, (response) => { userData = response })
 
-      while (!Object.keys(data).length && this.isRunning(task.id)) {
-        const cart = await this.prepareCart(task, user)
-
-        if (!Object.keys(cart).length) continue
-
-        const product = await this.prepareOrder(task, cart, user)
-
-        if (!Object.keys(product).length || !this.isRunning(task.id)) break
-
-        const order = await this.prepareShipping(task, user, product)
-
-        if (!Object.keys(order).length || !this.isRunning(task.id)) break
-
-        if (!await this.timer()) continue
-
-        const sw = new StopWatch(true)
-
-        const transactionData = await this.setPaymentInformation(task, order, user, cart)
-
-        sw.stop()
-
-        if (!this.isRunning(task.id)) break
-
-        data = transactionData
-        data.time = (sw.read() / 1000.0).toFixed(2)
+      if (!Object.keys(userData).length || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
       }
 
-      return data
-    },
-
-    /**
-     * Create a quote.
-     *
-     * @param {*} task
-     * @param {*} user
-     */
-    async prepareCart (task, user) {
+      /**
+       * Step 3: create cart
+       *
+       * create cart
+       */
       this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'initializing cart', 'orange')
 
+      const user = {
+        profile: userData,
+        token: tokenData
+      }
+
+      let cartId = null
+
+      await this.createCart(task, user, (response) => { cartId = response })
+
+      if (!cartId || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
+
+      /**
+       * Step 4: get cart
+       *
+       * get active cart
+       */
+      let cartData = {}
+
+      await this.getCart(task, user, (response) => { cartData = response })
+
+      if (!Object.keys(cartData).length || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
+
+      /**
+       * Step 5: clean cart
+       *
+       * remove items inside cart
+       */
+      let cleanCartData = false
+
+      await this.cleanCart(task, cartData, user, (response) => { cleanCartData = response })
+
+      if (!cleanCartData || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
+
+      /**
+       * Step 6: add item to cart
+       *
+       * add item to cart
+       */
+      let productData = {}
+
+      await this.addItemToCart(task, cartData, user, (response) => { productData = response })
+
+      if (!Object.keys(productData).length || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
+
+      /**
+       * Step 7: set shipping info
+       *
+       * set shipping details
+       */
+      let shippingData = {}
+
+      await this.setShippingInfo(task, user, productData, (response) => { shippingData = response })
+
+      if (!Object.keys(shippingData).length || !this.isRunning(task.id)) {
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return false
+      }
+
+      /**
+       * Step 8: place order
+       *
+       * place order
+       */
+      await this.placeOrder(task, shippingData, user, cartData, productData)
+    },
+
+    /**
+     * Authentication process.
+     *
+     * @param {*} task
+     * @param {*} callback
+     */
+    async authenticate (task, callback) {
+      let token = null
+
+      const credentials = {
+        username: task.email,
+        password: task.password
+      }
+
+      while (!token && this.isRunning(task.id)) {
+        const apiResponse = await authApi.fetchToken(credentials)
+
+        if (!apiResponse) continue
+
+        token = apiResponse
+      }
+
+      callback(token)
+    },
+
+    /**
+     * Fetch customer profile.
+     *
+     * @param {*} task
+     * @param {*} token
+     * @param {*} callback
+     */
+    async getProfile (task, token, callback) {
+      let user = {}
+
+      while (!Object.keys(user).length && this.isRunning(task.id)) {
+        const apiResponse = await customerApi.profile(token)
+
+        if (!apiResponse || !apiResponse.addresses.length) continue
+
+        user = apiResponse
+      }
+
+      callback(user)
+    },
+
+    /**
+     * Create cart instance.
+     *
+     * @param {*} task
+     * @param {*} user
+     * @param {*} callback
+     */
+    async createCart (task, user, callback) {
+      let cartId = null
+
+      while (!cartId && this.isRunning(task.id)) {
+        const apiResponse = await cartApi.create(user.token)
+
+        if (!apiResponse) continue
+
+        cartId = apiResponse
+      }
+
+      callback(cartId)
+    },
+
+    /**
+     * Fetch customer cart.
+     *
+     * @param {*} task
+     * @param {*} user
+     * @param {*} callback
+     */
+    async getCart (task, user, callback) {
       let cart = {}
 
       while (!Object.keys(cart).length && this.isRunning(task.id)) {
-        if (!this.isRunning(task.id)) break
+        const apiResponse = await cartApi.get(user.token)
 
-        const cartCreateResponse = await cartApi.create(user.token)
+        if (!apiResponse) continue
 
-        if (!cartCreateResponse) continue
-
-        cart = await this.cleanCart(task, user)
+        cart = apiResponse
       }
 
-      return cart
+      callback(cart)
     },
 
     /**
-     * Clean current cart.
+     * Remove existing items in cart.
      *
+     * @param {*} task
+     * @param {*} cart
      * @param {*} user
+     * @param {*} callback
      */
-    async cleanCart (task, user) {
+    async cleanCart (task, cart, user, callback) {
       let success = false
-      let cart = {}
 
       while (!success && this.isRunning(task.id)) {
-        if (!this.isRunning(task.id)) break
-
-        const cartGetResponse = await cartApi.get(user.token)
-
-        if (!cartGetResponse) continue
-
-        cart = cartGetResponse
-
-        if (!cart.items.length) break
+        if (!cart.items.length) {
+          success = true
+          break
+        }
 
         const promises = []
 
@@ -213,33 +311,30 @@ export default {
         })
 
         await Promise.all(promises)
-          .then((values) => {
-            if (!values.includes(false)) success = true
-          })
+          .then((values) => { success = !values.includes(false) })
       }
 
-      return cart
+      callback(success)
     },
 
     /**
-     * Prepare order.
+     * Add item to cart.
      *
      * @param {*} task
      * @param {*} cart
      * @param {*} user
+     * @param {*} callback
      */
-    async prepareOrder (task, cart, user) {
+    async addItemToCart (task, cart, user, callback) {
       let response = {}
 
       while (!Object.keys(response).length && this.isRunning(task.id)) {
         for (var i = 0; i < task.sizes.length; ++i) {
-          if (!this.isRunning(task.id)) break
-
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `trying size: ${task.sizes[i].label}`, 'orange')
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${task.sizes[i].label} - trying`, 'orange')
 
           const order = {
             cartItem: {
-              sku: task.sku,
+              sku: `${task.sku}-SZ${task.sizes[i].label.replace('.', 'P')}`,
               qty: 1,
               quote_id: cart.id.toString(),
               product_option: {
@@ -256,12 +351,21 @@ export default {
             }
           }
 
-          if (!this.isRunning(task.id)) break
-
           const apiResponse = await cartApi.store(order, user.token)
 
+          if (!this.isRunning(task.id)) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            break
+          }
+
           if (apiResponse) {
-            response = apiResponse
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${task.sizes[i].label} - carted`, 'orange')
+
+            response = {
+              ...apiResponse,
+              sizeLabel: task.sizes[i].label
+            }
+
             break
           }
         }
@@ -269,21 +373,24 @@ export default {
         if (Object.keys(response).length) break
       }
 
-      return response
+      callback(response)
     },
 
     /**
-     * Prepare for checkout.
+     * Set shipping info.
      *
      * @param {*} task
      * @param {*} user
      * @param {*} product
+     * @param {*} callback
      */
-    async prepareShipping (task, user, product) {
+    async setShippingInfo (task, user, product, callback) {
       const defaultShippingAddress = user.profile.addresses.find((val) => val.default_shipping)
       const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
 
-      const shippingInfo = await this.getEstimateShipping(product, defaultShippingAddress, task, user)
+      let shippingInfo = {}
+
+      await this.getEstimateShipping(product, defaultShippingAddress, task, user, (response) => { shippingInfo = response })
 
       const shippingAddress = this.setAddresses(defaultShippingAddress, user)
       const billingAddress = this.setAddresses(defaultBillingAddress, user)
@@ -300,9 +407,14 @@ export default {
       let shipping = {}
 
       while (!Object.keys(shipping).length && this.isRunning(task.id)) {
-        if (!this.isRunning(task.id)) break
-
         const cartApiResponse = await cartApi.setShippingInformation(shippingParams, user.token)
+
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        }
+
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'set shipping info', 'orange')
 
         if (!cartApiResponse) continue
 
@@ -310,7 +422,7 @@ export default {
         break
       }
 
-      return shipping
+      callback(shipping)
     },
 
     /**
@@ -319,24 +431,29 @@ export default {
      * @param {*} product
      * @param {*} defaultShippingAddress
      * @param {*} task
+     * @param {*} user
+     * @param {*} callback
      */
-    async getEstimateShipping (product, defaultShippingAddress, task, user) {
+    async getEstimateShipping (product, defaultShippingAddress, task, user, callback) {
       let shippingInfo = {
         carrier_code: 'freeshipping',
         method_code: 'freeshipping'
       }
 
       if (product.price < 5000) {
-        const estimateParams = {
-          addressId: defaultShippingAddress.id
-        }
+        const estimateParams = { addressId: defaultShippingAddress.id }
 
         let success = false
 
         while (!success && this.isRunning(task.id)) {
-          if (!this.isRunning(task.id)) break
-
           const apiResponse = await cartApi.estimateShipping(estimateParams, user.token)
+
+          if (!this.isRunning(task.id)) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            break
+          }
+
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'estimate shipping', 'orange')
 
           if (!apiResponse) continue
 
@@ -345,11 +462,11 @@ export default {
         }
       }
 
-      return shippingInfo
+      callback(shippingInfo)
     },
 
     /**
-     * Return addresses.
+     * Set addresses parameters.
      *
      * @param {*} address
      * @param {*} user
@@ -371,40 +488,24 @@ export default {
     },
 
     /**
-     * Set timer before placing of order.
-     *
-     */
-    async timer () {
-      if (!this.settings.placeOrder) return true
-
-      const timer = this.$moment(`${this.$moment().format('YYYY-MM-DD')} ${this.settings.placeOrder}`).format('hh:mm:ss a')
-      const current = this.$moment().format('hh:mm:ss a')
-
-      return (timer === current)
-    },
-
-    /**
-     * Send payment information.
+     * Place order.
      *
      * @param {*} task
-     * @param {*} order
+     * @param {*} shippingData
      * @param {*} user
-     * @param {*} cart
+     * @param {*} cartData
      */
-    async setPaymentInformation (task, order, user, cart) {
-      const sizeLabel = JSON.parse(order.totals.items[0].options)[0].value
-      this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${sizeLabel} - placing order`, 'orange')
-
+    async placeOrder (task, shippingData, user, cartData, productData) {
       const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
 
       const params = {
         payload: {
           amcheckout: {},
           billingAddress: this.setAddresses(defaultBillingAddress, user),
-          cartId: cart.id.toString(),
+          cartId: cartData.id.toString(),
           paymentMethod: {
             additional_data: null,
-            method: order.payment_methods[0].code,
+            method: shippingData.payment_methods[0].code,
             po_number: null
           }
         },
@@ -412,20 +513,172 @@ export default {
       }
 
       let transactionData = {}
+      const vm = this
 
-      while (!Object.keys(transactionData).length && this.isRunning(task.id)) {
-        if (!this.isRunning(task.id)) break
+      await this.timer(task, productData.sizeLabel, async (response) => {
+        if (response) {
+          const sw = new StopWatch(true)
 
-        const apiResponse = await transactionApi.placeOrder(params)
+          while (!Object.keys(transactionData).length && vm.isRunning(task.id)) {
+            vm.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
 
-        if (!apiResponse) continue
+            const apiResponse = await transactionApi.placeOrder(params)
 
-        transactionData = apiResponse
-        transactionData.order = order
-        break
+            if (!apiResponse) continue
+
+            transactionData = apiResponse
+          }
+
+          sw.stop()
+
+          if (!Object.keys(transactionData).length || !vm.isRunning(task.id)) {
+            vm.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            return false
+          }
+
+          vm.onSuccess(task, transactionData, shippingData, (sw.read() / 1000.0).toFixed(2), productData)
+        }
+      })
+    },
+
+    /**
+     * Trigger timer, wait to proceed.
+     *
+     * @param {*} task
+     * @param {*} sizeLabel
+     * @param {*} callback
+     */
+    timer (task, sizeLabel, callback) {
+      let proceed = false
+      const vm = this
+
+      const loop = setInterval(function () {
+        if (!vm.isRunning(task.id)) {
+          clearInterval(loop)
+          callback(proceed)
+        }
+
+        if (vm.settings.placeOrder) {
+          vm.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${sizeLabel} - waiting to place order`, 'orange')
+
+          const timer = vm.$moment(`${vm.$moment().format('YYYY-MM-DD')} ${vm.settings.placeOrder}`).format('hh:mm:ss a')
+          const current = vm.$moment().format('hh:mm:ss a')
+
+          if (timer === current) {
+            proceed = true
+            clearInterval(loop)
+            callback(proceed)
+          }
+        } else {
+          proceed = true
+          clearInterval(loop)
+          callback(proceed)
+        }
+      }, 1000)
+    },
+
+    /**
+     * Trigger on success event.
+     *
+     * @param {*} task
+     * @param {*} transactionData
+     * @param {*} shippingData
+     * @param {*} time
+     */
+    onSuccess (task, transactionData, shippingData, time, productData) {
+      this.updateTask({
+        ...task,
+        status: {
+          id: Constant.TASK.STATUS.STOPPED,
+          msg: 'copped!',
+          class: 'success'
+        },
+        transactionData: transactionData
+      })
+
+      if (this.settings.sound) {
+        const sound = new Howl({
+          src: [SuccessEffect]
+        })
+
+        sound.play()
       }
 
-      return transactionData
+      this.$toast.open({
+        message: '<strong style="font-family: Arial; text-transform: uppercase">checked out</strong>',
+        type: 'success',
+        duration: 3000
+      })
+
+      if (this.settings.webhook) {
+        const url = this.settings.webhook
+        const productName = shippingData.totals.items[0].name
+        const productSize = productData.sizeLabel
+        const profile = task.name
+        const secs = `${time} secs`
+
+        this.sendWebhook(url, productName, productSize, profile, secs)
+      }
+
+      if (this.settings.autoPay) this.launchWindow(transactionData, task)
+    },
+
+    /**
+     * Launch 2c2p payment window.
+     *
+     * @param {*} transactionData
+     * @param {*} task
+     */
+    launchWindow (transactionData, task) {
+      const electron = require('electron')
+      const { BrowserWindow } = electron.remote
+
+      const baseUrl = `${Config.services.titan22.checkout}/RedirectV3/Payment/Accept`
+
+      let win = new BrowserWindow({
+        width: 800,
+        height: 600
+      })
+
+      win.removeMenu()
+
+      const ses = win.webContents.session
+
+      ses.cookies.set({
+        url: baseUrl,
+        ...transactionData.cookies
+      })
+        .then(() => {
+          win.loadURL(baseUrl)
+
+          if (this.settings.autoPay) {
+            let script = ''
+
+            switch (task.bank.id) {
+              case Constant.BANK.GCASH.id:
+                // TODO: auto fill.
+                script = 'document.getElementById(\'btnGCashSubmit\').click()'
+                break
+
+              default:
+                // TODO: expiry fields
+                script = `document.getElementById('credit_card_number').value = '${task.bank.cardNumber}'
+                document.getElementById('credit_card_holder_name').value = '${task.bank.cardHolder}'
+                document.getElementById('credit_card_expiry_month').value = '02'
+                document.getElementById('credit_card_expiry_year').value = '2020'
+                document.getElementById('credit_card_cvv').value = '${task.bank.cvv}'
+                document.getElementById('credit_card_issuing_bank_name').value = '${task.bank.name}'
+                document.getElementById('btnCCSubmit').click()`
+                break
+            }
+
+            win.webContents.executeJavaScript(script)
+          }
+
+          win.on('closed', () => {
+            win = null
+          })
+        })
     }
   }
 }
