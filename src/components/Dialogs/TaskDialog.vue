@@ -9,7 +9,7 @@
         <v-card-title>
           <span
             class="headline"
-            v-text="'New Task'"
+            v-text="`${header} Task`"
           />
         </v-card-title>
 
@@ -260,6 +260,14 @@ export default {
     ...mapState('task', { allTasks: 'items' }),
     ...mapState('attribute', { attributes: 'items' }),
     ...mapState('bank', { availableBanks: 'items' }),
+
+    /**
+     * Set modal header.
+     *
+     */
+    header () {
+      return this.isEditMode ? 'Edit' : 'New'
+    },
     /**
      * Identify if the form is on edit mode.
      *

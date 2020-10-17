@@ -16,6 +16,29 @@
             @click:checkout="redirectToCheckout"
           />
         </v-card-text>
+
+        <v-card-actions>
+          <v-row no-gutters>
+            <v-col cols="6">
+              <small
+                style="max-width: 100%"
+                class="text-capitalize text-truncate d-inline-block"
+                v-text="`total: ${tasks.length}`"
+              />
+            </v-col>
+
+            <v-col
+              cols="6"
+              class="text-right"
+            >
+              <small
+                style="max-width: 100%"
+                class="text-capitalize text-truncate d-inline-block success--text"
+                v-text="`success: ${allSuccess}`"
+              />
+            </v-col>
+          </v-row>
+        </v-card-actions>
       </v-card>
     </v-container>
 
@@ -53,7 +76,12 @@ export default {
     }
   },
   computed: {
-    ...mapState('setting', { settings: 'items' })
+    ...mapState('setting', { settings: 'items' }),
+    ...mapState('task', { tasks: 'items' }),
+
+    allSuccess () {
+      return this.tasks.slice().filter((val) => val.status.class === 'success').length
+    }
   },
   methods: {
     /**

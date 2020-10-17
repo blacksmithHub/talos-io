@@ -155,6 +155,26 @@
 
             <v-list-item class="pa-0">
               <v-list-item-content class="pa-2">
+                <v-list-item-title v-text="'Clear Local Storage'" />
+
+                <v-list-item-subtitle v-text="'All saved records will be removed'" />
+              </v-list-item-content>
+
+              <v-list-item-action>
+                <v-btn
+                  class="primary"
+                  rounded
+                  small
+                  @click="clearLocalStorage"
+                  v-text="'Clear'"
+                />
+              </v-list-item-action>
+            </v-list-item>
+
+            <v-divider />
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
                 <v-list-item-title v-text="'Discord Webhook'" />
 
                 <v-list-item-subtitle v-text="'Set custom discord webhook'" />
@@ -280,28 +300,55 @@ export default {
     ...mapActions('setting', { updateSettings: 'setItems' }),
 
     /**
+     * Clear all local storage.
+     *
+     */
+    clearLocalStorage () {
+      localStorage.removeItem('attributes')
+      localStorage.removeItem('settings')
+      localStorage.removeItem('tasks')
+
+      ipcRenderer.send('clear-localStorage')
+    },
+
+    /**
      * Prepare jsons for exporting.
      *
      */
     exportTasks (tasks) {
       const jsons = []
 
-      tasks.forEach(element => {
-        const sizes = element.sizes.slice().map((val) => val.label).join('+')
+      if (tasks.length) {
+        tasks.forEach(element => {
+          const sizes = element.sizes.slice().map((val) => val.label).join('+')
 
-        jsons.push({
-          name: element.name,
-          email: element.email,
-          password: element.password,
-          sku: element.sku,
-          sizes: sizes,
-          bank: element.bank.name,
-          cardHolder: element.bank.cardHolder,
-          cardNumber: element.bank.cardNumber,
-          expiry: element.bank.expiry,
-          cvv: element.bank.cvv
+          jsons.push({
+            name: element.name,
+            email: element.email,
+            password: element.password,
+            sku: element.sku,
+            sizes: sizes,
+            bank: element.bank.name,
+            cardHolder: element.bank.cardHolder,
+            cardNumber: element.bank.cardNumber,
+            expiry: element.bank.expiry,
+            cvv: element.bank.cvv
+          })
         })
-      })
+      } else {
+        jsons.push({
+          name: '',
+          email: '',
+          password: '',
+          sku: '',
+          sizes: '',
+          bank: '',
+          cardHolder: '',
+          cardNumber: '',
+          expiry: '',
+          cvv: ''
+        })
+      }
 
       this.backupTasks = jsons
     },

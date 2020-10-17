@@ -176,3 +176,9 @@ ipcMain.on('update-settings', (event, arg) => {
 ipcMain.on('update-tasks', (event, arg) => {
   settingsWin.webContents.send('updateTasks', arg)
 })
+
+ipcMain.on('clear-localStorage', (event, arg) => {
+  win.reload()
+  monitorWin.reload()
+  settingsWin.reload()
+})

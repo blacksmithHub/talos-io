@@ -24,6 +24,7 @@
               dense
               prepend-icon=""
               hide-details="auto"
+              hint="Import .csv file only"
               @change="fileErrors = []"
             />
           </v-container>
