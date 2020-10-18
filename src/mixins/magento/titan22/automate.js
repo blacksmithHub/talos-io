@@ -615,7 +615,7 @@ export default {
         const productName = shippingData.totals.items[0].name
         const productSize = productData.sizeLabel
         const profile = task.name
-        const secs = `${time} secs`
+        const secs = time
 
         this.sendWebhook(url, productName, productSize, profile, secs)
       }

@@ -24,13 +24,5 @@ export default {
       checkout: process.env.VUE_APP_2C2P_URL,
       static: process.env.VUE_APP_TITAN_STATIC_URL
     }
-  },
-
-  /**
-   * Bot Configuration
-   */
-  bot: {
-    avatar: process.env.VUE_APP_AVATAR_URL,
-    name: process.env.VUE_APP_BOT_NAME
   }
 }

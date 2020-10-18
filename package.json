@@ -1,8 +1,10 @@
 {
-  "name": "titan-bot",
+  "name": "titan-destroyer-io",
+  "productName": "Titan Destroyer IO",
+  "description": "Titan22 Bot",
   "version": "0.2.2",
   "private": true,
-  "author": "Danniel Libor",
+  "author": "The Blacksmith",
   "license": "MIT",
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -38,7 +40,7 @@
     "@vue/cli-plugin-eslint": "^4.5.0",
     "@vue/cli-service": "^4.5.0",
     "babel-eslint": "^10.1.0",
-    "electron": "^9.0.0",
+    "electron": "^9.3.2",
     "electron-devtools-installer": "^3.1.0",
     "eslint": "^6.7.2",
     "eslint-config-standard": "^14.1.1",
