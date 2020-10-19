@@ -1,3 +1,5 @@
+import Config from '@/config/app'
+
 export default {
   methods: {
     /**
@@ -15,16 +17,16 @@ export default {
       const Hook = new webhook.Webhook(url)
 
       const msg = new webhook.MessageBuilder()
-        .setAvatar('https://i.imgur.com/Pw2BaF4.png?2')
-        .setFooter('Titan Destroyer IO', 'https://i.imgur.com/vbQJk8Q.png')
+        .setAvatar(Config.bot.avatar)
+        .setFooter(`${Config.bot.name} ${Config.bot.version}`, Config.bot.footer)
         .setTime()
-        .setName('Titan Destroyer IO')
+        .setName(Config.bot.name)
         .setColor('#f7b586')
         .setTitle('Copped!')
         .addField('', product)
         .addField('**Size**', size)
         .addField('**Profile**', `||${profile}||`)
-        .addField('**Checkout Time**', `${secs} secs`)
+        .addField('**Checkout Time**', `${secs}s`)
 
       Hook.send(msg)
     }

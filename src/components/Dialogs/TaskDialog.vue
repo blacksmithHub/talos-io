@@ -487,13 +487,13 @@ export default {
         const params = {
           name: this.taskName.trim(),
           email: this.email,
-          password: this.password,
+          password: this.password.trim(),
           sku: this.sku.trim(),
           sizes: sizes,
           bank: {
             ...this.bank,
             cardNumber: this.cardNumber,
-            cardHolder: this.cardHolder.trim(),
+            cardHolder: (this.cardHolder) ? this.cardHolder.trim() : null,
             expiry: this.expiry,
             cvv: this.cvv
           }

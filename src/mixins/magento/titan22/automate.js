@@ -334,7 +334,7 @@ export default {
 
           const order = {
             cartItem: {
-              sku: `${task.sku}-SZ${task.sizes[i].label.replace('.', 'P')}`,
+              sku: `${task.sku}-SZ${task.sizes[i].label.replace('.', 'P').toUpperCase()}`,
               qty: 1,
               quote_id: cart.id.toString(),
               product_option: {
@@ -610,17 +610,21 @@ export default {
         duration: 3000
       })
 
-      if (this.settings.webhook) {
-        const url = this.settings.webhook
-        const productName = shippingData.totals.items[0].name
-        const productSize = productData.sizeLabel
-        const profile = task.name
-        const secs = time
-
-        this.sendWebhook(url, productName, productSize, profile, secs)
-      }
-
       if (this.settings.autoPay) this.launchWindow(transactionData, task)
+
+      const url = this.settings.webhook
+      const productName = shippingData.totals.items[0].name
+      const productSize = productData.sizeLabel
+      const profile = task.name
+      const secs = time
+
+      if (this.settings.webhook) {
+        this.sendWebhook(url, productName, productSize, profile, secs)
+
+        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs)
+      } else {
+        this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs)
+      }
     },
 
     /**

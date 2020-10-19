@@ -21,8 +21,18 @@ export default {
     titan22: {
       url: process.env.VUE_APP_TITAN_URL,
       token: process.env.VUE_APP_TITAN_ADMIN_TOKEN,
-      checkout: process.env.VUE_APP_2C2P_URL,
-      static: process.env.VUE_APP_TITAN_STATIC_URL
+      checkout: process.env.VUE_APP_2C2P_URL
     }
+  },
+
+  /**
+   * Bot Configuration
+   */
+  bot: {
+    avatar: process.env.VUE_APP_BOT_AVATAR,
+    name: process.env.VUE_APP_BOT_NAME,
+    version: process.env.VUE_APP_BOT_VERSION,
+    footer: process.env.VUE_APP_BOT_FOOTER,
+    webhook: process.env.VUE_APP_BOT_WEBHOOK
   }
 }
