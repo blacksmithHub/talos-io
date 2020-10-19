@@ -10,6 +10,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 // be closed automatically when the JavaScript object is garbage collected.
 let win
 let monitorWin
+let profileWin
 let settingsWin
 
 // Scheme must be registered before the app is ready
@@ -17,8 +18,10 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
+/**
+ *  Create main window
+ */
 function createWindow () {
-  // Create the browser window.
   win = new BrowserWindow({
     width: 720,
     height: 900,
@@ -26,17 +29,34 @@ function createWindow () {
     minHeight: 600,
     frame: false,
     webPreferences: {
-      // Use pluginOptions.nodeIntegration, leave this alone
-      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       enableRemoteModule: true,
-
-      // TODO: this should not be false.
       webSecurity: false
     }
   })
 
-  // Create monitor window.
+  createMonitorWindow()
+  createProfileWindow()
+  createSettingWindow()
+
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+
+    if (isDevelopment) win.webContents.openDevTools()
+  } else {
+    createProtocol('app')
+    win.loadURL('app://./index.html')
+  }
+
+  win.on('closed', () => {
+    win = null
+  })
+}
+
+/**
+ * Create monitor window
+ */
+function createMonitorWindow () {
   monitorWin = new BrowserWindow({
     width: 1000,
     height: 900,
@@ -46,60 +66,87 @@ function createWindow () {
     show: false,
     frame: false,
     webPreferences: {
-      // Use pluginOptions.nodeIntegration, leave this alone
-      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       enableRemoteModule: true,
-
-      // TODO: this should not be false.
-      webSecurity: false
-    }
-  })
-
-  // Create monitor window.
-  settingsWin = new BrowserWindow({
-    width: 500,
-    height: 720,
-    minHeight: 600,
-    minWidth: 500,
-    parent: win,
-    show: false,
-    frame: false,
-    webPreferences: {
-      // Use pluginOptions.nodeIntegration, leave this alone
-      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
-      enableRemoteModule: true,
-
-      // TODO: this should not be false.
       webSecurity: false
     }
   })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
-    // Load the url of the dev server if in development mode
-    win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
     monitorWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/monitor`)
-    settingsWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/settings`)
 
     if (isDevelopment) win.webContents.openDevTools()
   } else {
     createProtocol('app')
-    // Load the index.html when not in development
-    win.loadURL('app://./index.html')
     monitorWin.loadURL('app://./index.html/#/monitor')
-    settingsWin.loadURL('app://./index.html/#/settings')
   }
-
-  win.on('closed', () => {
-    win = null
-  })
 
   monitorWin.on('close', (e) => {
     monitorWin.webContents.send('stop', true)
     e.preventDefault()
     monitorWin.hide()
   })
+}
+
+/**
+ * Create monitor window
+ */
+function createProfileWindow () {
+  profileWin = new BrowserWindow({
+    width: 1000,
+    height: 900,
+    minHeight: 600,
+    minWidth: 500,
+    parent: win,
+    show: false,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+      enableRemoteModule: true,
+      webSecurity: false
+    }
+  })
+
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    profileWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/profiles`)
+
+    if (isDevelopment) win.webContents.openDevTools()
+  } else {
+    createProtocol('app')
+    profileWin.loadURL('app://./index.html/#/profiles')
+  }
+
+  profileWin.on('close', (e) => {
+    e.preventDefault()
+    profileWin.hide()
+  })
+}
+
+/**
+ * Create settings window
+ */
+function createSettingWindow () {
+  settingsWin = new BrowserWindow({
+    width: 500,
+    height: 710,
+    minHeight: 600,
+    minWidth: 500,
+    parent: win,
+    show: false,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+      enableRemoteModule: true,
+      webSecurity: false
+    }
+  })
+
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    settingsWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/settings`)
+  } else {
+    createProtocol('app')
+    settingsWin.loadURL('app://./index.html/#/settings')
+  }
 
   settingsWin.on('close', (e) => {
     e.preventDefault()
@@ -154,6 +201,10 @@ if (isDevelopment) {
   }
 }
 
+/**
+ * Navigation
+ */
+
 ipcMain.on('toggle-monitor', (event, arg) => {
   monitorWin.show()
 
@@ -162,11 +213,21 @@ ipcMain.on('toggle-monitor', (event, arg) => {
   monitorWin.webContents.send('init', arg)
 })
 
+ipcMain.on('toggle-profiles', (event, arg) => {
+  profileWin.show()
+
+  if (isDevelopment) profileWin.openDevTools()
+})
+
 ipcMain.on('toggle-settings', (event, arg) => {
   settingsWin.show()
 
-  if (isDevelopment) settingsWin.openDevTools()
+  if (isDevelopment) monitorWin.openDevTools()
 })
+
+/**
+ * Events
+ */
 
 ipcMain.on('update-settings', (event, arg) => {
   win.webContents.send('updateSettings', arg)

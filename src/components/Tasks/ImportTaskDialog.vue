@@ -63,7 +63,7 @@ export default {
     }
   },
   computed: {
-    ...mapState('bank', { banks: 'items' }),
+    ...mapState('staticBank', { banks: 'items' }),
     ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' })
   },

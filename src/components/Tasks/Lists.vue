@@ -6,7 +6,7 @@
     <template v-for="(task, index) in tasks">
       <v-list-item
         :key="`${index}-item`"
-        class="pa-0 list"
+        class="pa-0"
         :class="`${task.status.class}-left-border`"
       >
         <v-list-item-content class="pa-2">
@@ -143,7 +143,7 @@
   </v-list>
 
   <v-list v-else>
-    <v-list-item class="pa-0 list">
+    <v-list-item class="pa-0">
       <v-list-item-content class="pa-2 text-center">
         <small v-text="'No task found'" />
       </v-list-item-content>

@@ -255,7 +255,7 @@ export default {
   computed: {
     ...mapState('task', { allTasks: 'items' }),
     ...mapState('attribute', { attributes: 'items' }),
-    ...mapState('bank', { availableBanks: 'items' }),
+    ...mapState('staticBank', { availableBanks: 'items' }),
 
     /**
      * Set modal header.

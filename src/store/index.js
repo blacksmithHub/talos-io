@@ -4,10 +4,12 @@ import Vuex from 'vuex'
 import core from './modules/core'
 
 import task from './modules/models/task'
+import user from './modules/models/user'
+import bank from './modules/models/bank'
 import setting from './modules/models/setting'
 
 import attribute from './modules/static/attribute'
-import bank from './modules/static/bank'
+import staticBank from './modules/static/bank'
 
 Vue.use(Vuex)
 
@@ -17,8 +19,10 @@ export default new Vuex.Store({
 
     task,
     setting,
+    user,
+    bank,
 
     attribute,
-    bank
+    staticBank
   }
 })

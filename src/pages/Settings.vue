@@ -1,5 +1,5 @@
 <template>
-  <v-container class="mt-8">
+  <v-container class="mt-6">
     <v-form @submit.prevent="submit">
       <v-card>
         <v-card-text>
