@@ -73,6 +73,13 @@ export default {
     ImportTaskDialog
   },
   mixins: [automate],
+  beforeRouteEnter (to, from, next) {
+    next(async vm => {
+      if (!vm.attributes.length) await vm.prepareAttributes()
+
+      if (vm.tasks.length) await vm.prepareTasks()
+    })
+  },
   computed: {
     ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
@@ -112,10 +119,11 @@ export default {
       setAttributes: 'setItems',
       reset: 'reset'
     }),
-    ...mapActions('task', { updateTask: 'updateItem' }),
+    ...mapActions('task', { updateTask: 'updateItem', prepareTasks: 'initializeItems' }),
     ...mapActions('setting', { setSettings: 'setItems' }),
     ...mapActions('profile', { setProfiles: 'setItems' }),
     ...mapActions('bank', { setBanks: 'setItems' }),
+    ...mapActions('attribute', { prepareAttributes: 'initializeItems' }),
 
     /**
      * Open import task dialog.

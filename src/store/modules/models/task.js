@@ -121,6 +121,30 @@ export default {
     deleteItem ({ state, commit }, key) {
       commit('DELETE_ITEM', key)
       localStorage.setItem('tasks', JSON.stringify(state.items))
+    },
+
+    /**
+     * Initialize items.
+     *
+     * @param {*} param
+     */
+    initializeItems ({ state, commit }) {
+      let tasks = state.items.slice()
+
+      tasks = tasks.map(element => {
+        element.status = {
+          id: 1,
+          msg: 'stopped',
+          class: 'grey'
+        }
+
+        element.transactionData = {}
+
+        return element
+      })
+
+      commit('SET_ITEMS', tasks)
+      localStorage.setItem('tasks', JSON.stringify(tasks))
     }
   }
 }

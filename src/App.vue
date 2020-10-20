@@ -10,21 +10,12 @@
 import { mapState, mapActions } from 'vuex'
 
 import SystemBar from '@/components/App/SystemBar'
-import productApi from '@/api/magento/titan22/product'
-import App from '@/config/app'
 
 export default {
   components: { SystemBar },
   computed: {
     ...mapState('setting', { settings: 'items' }),
     ...mapState('task', { tasks: 'items' })
-  },
-  beforeRouteEnter (to, from, next) {
-    next(async vm => {
-      if (!vm.attributes.length) await vm.prepareAttributes()
-
-      if (vm.tasks.length) await vm.prepareTasks()
-    })
   },
   mounted () {
     //  [App.vue specific] When App.vue is finish loading finish the progress bar
@@ -56,78 +47,6 @@ export default {
      */
     setTheme () {
       this.$vuetify.theme.dark = this.settings.nightMode
-    },
-
-    /**
-     * Prepare all tasks.
-     *
-     */
-    prepareTasks () {
-      this.tasks.forEach(element => {
-        this.updateTask({
-          ...element,
-          status: {
-            id: 1,
-            msg: 'stopped',
-            class: 'grey'
-          },
-          transactionData: {}
-        })
-      })
-    },
-
-    /**
-     * Prepare attributes.
-     *
-     */
-    async prepareAttributes () {
-      this.reset()
-
-      const token = App.services.titan22.token
-
-      const footwears = await this.fetchAttributes('m_footwear_size', token)
-
-      const apparels = await this.fetchAttributes('m_apparel_size', token)
-
-      const attributes = [footwears, apparels]
-
-      this.setAttributes(attributes)
-    },
-
-    /**
-     * Fetch attributes.
-     *
-     */
-    async fetchAttributes (value, token) {
-      const attribute = await productApi.attribute({
-        searchCriteria: {
-          filterGroups: [
-            {
-              filters: [
-                {
-                  field: 'attribute_code',
-                  value: value
-                }
-              ]
-            }
-          ]
-        }
-      }, token)
-
-      if (!attribute) return {}
-
-      const sizes = attribute.items[0].options.filter((data) => data.value).map((item) => {
-        item.label = item.label.toLowerCase()
-
-        return item
-      })
-
-      const response = {
-        attribute_id: attribute.items[0].attribute_id,
-        sizes: sizes
-      }
-
-      return response
     }
   }
 }
