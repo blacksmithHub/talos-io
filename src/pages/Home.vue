@@ -2,7 +2,51 @@
   <v-app>
     <SideNav />
     <v-main>
-      <Tasks />
+      <v-container>
+        <Header
+          @click:AddTask="openAddTaskDialog"
+          @click:startTask="startTask"
+          @click:editAll="editAll"
+          @click:ImportTasks="importTasks"
+        />
+        <br>
+        <v-card>
+          <v-card-text style="max-height: 80vh; overflow: auto;">
+            <Lists
+              @click:startTask="startTask"
+              @click:editTask="openEditTaskDialog"
+              @click:checkout="redirectToCheckout"
+            />
+          </v-card-text>
+
+          <v-card-actions>
+            <v-row no-gutters>
+              <v-col cols="6">
+                <small
+                  style="max-width: 100%"
+                  class="text-capitalize text-truncate d-inline-block"
+                  v-text="`total: ${tasks.length}`"
+                />
+              </v-col>
+
+              <v-col
+                cols="6"
+                class="text-right"
+              >
+                <small
+                  style="max-width: 100%"
+                  class="text-capitalize text-truncate d-inline-block success--text"
+                  v-text="`success: ${allSuccess}`"
+                />
+              </v-col>
+            </v-row>
+          </v-card-actions>
+        </v-card>
+      </v-container>
+
+      <TaskDialog ref="taskDialog" />
+      <MassEditDialog ref="massEditDialog" />
+      <ImportTaskDialog ref="importTaskDialog" />
     </v-main>
   </v-app>
 </template>
@@ -11,27 +55,36 @@
 import { mapState, mapActions } from 'vuex'
 import { ipcRenderer } from 'electron'
 
-import Tasks from '@/components/Tasks'
-import productApi from '@/api/magento/titan22/product'
-import App from '@/config/app'
 import SideNav from '@/components/App/SideNav'
+import Lists from '@/components/Tasks/Lists'
+import Header from '@/components/Tasks/Header'
+import TaskDialog from '@/components/Tasks/TaskDialog'
+import MassEditDialog from '@/components/Tasks/MassEditDialog'
+import ImportTaskDialog from '@/components/Tasks/ImportTaskDialog'
+import automate from '@/mixins/magento/titan22/automate'
 
 export default {
   components: {
-    Tasks,
-    SideNav
+    SideNav,
+    Lists,
+    Header,
+    TaskDialog,
+    MassEditDialog,
+    ImportTaskDialog
   },
-  beforeRouteEnter (to, from, next) {
-    next(async vm => {
-      if (!vm.attributes.length) await vm.prepareAttributes()
-
-      if (vm.tasks.length) await vm.prepareTasks()
-    })
-  },
+  mixins: [automate],
   computed: {
     ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
-    ...mapState('setting', { settings: 'items' })
+    ...mapState('setting', { settings: 'items' }),
+
+    /**
+     * Return success count.
+     *
+     */
+    allSuccess () {
+      return this.tasks.slice().filter((val) => val.status.class === 'success').length
+    }
   },
   watch: {
     'settings.nightMode': function (nightMode) {
@@ -55,75 +108,46 @@ export default {
     ...mapActions('setting', { setSettings: 'setItems' }),
 
     /**
-     * Prepare all tasks.
+     * Open import task dialog.
      *
      */
-    prepareTasks () {
-      this.tasks.forEach(element => {
-        this.updateTask({
-          ...element,
-          status: {
-            id: 1,
-            msg: 'stopped',
-            class: 'grey'
-          },
-          transactionData: {}
-        })
-      })
+    importTasks () {
+      this.$refs.importTaskDialog.dialog = true
     },
-
     /**
-     * Prepare attributes.
+     * Open mass edit dialog.
      *
      */
-    async prepareAttributes () {
-      this.reset()
-
-      const token = App.services.titan22.token
-
-      const footwears = await this.fetchAttributes('m_footwear_size', token)
-
-      const apparels = await this.fetchAttributes('m_apparel_size', token)
-
-      const attributes = [footwears, apparels]
-
-      this.setAttributes(attributes)
+    editAll () {
+      this.$refs.massEditDialog.dialog = true
     },
-
     /**
-     * Fetch attributes.
+     * Open add mode.
      *
      */
-    async fetchAttributes (value, token) {
-      const attribute = await productApi.attribute({
-        searchCriteria: {
-          filterGroups: [
-            {
-              filters: [
-                {
-                  field: 'attribute_code',
-                  value: value
-                }
-              ]
-            }
-          ]
-        }
-      }, token)
-
-      if (!attribute) return {}
-
-      const sizes = attribute.items[0].options.filter((data) => data.value).map((item) => {
-        item.label = item.label.toLowerCase()
-
-        return item
-      })
-
-      const response = {
-        attribute_id: attribute.items[0].attribute_id,
-        sizes: sizes
-      }
-
-      return response
+    openAddTaskDialog () {
+      this.$refs.taskDialog.dialog = true
+    },
+    /**
+     * Open edit mode.
+     *
+     */
+    openEditTaskDialog (task) {
+      this.$refs.taskDialog.mapData(task)
+    },
+    /**
+     * Redirect to checkout page.
+     *
+     */
+    redirectToCheckout (task) {
+      this.launchWindow(task.transactionData)
+    },
+    /**
+     * Start task.
+     *
+     */
+    async startTask (task) {
+      await this.init(task)
     }
   }
 }

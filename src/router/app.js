@@ -1,5 +1,6 @@
 const Home = () => import('../pages/Home')
 const Monitor = () => import('../pages/Monitor')
+const Profiles = () => import('../pages/Profiles')
 const Settings = () => import('../pages/Settings')
 
 /**
@@ -24,6 +25,11 @@ export default {
       path: '/monitor',
       name: 'Monitor',
       component: Monitor
+    },
+    {
+      path: '/profiles',
+      name: 'Profiles',
+      component: Profiles
     },
     {
       path: '/settings',
