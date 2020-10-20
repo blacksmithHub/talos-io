@@ -15,34 +15,46 @@
         :key="n"
       >
         <v-container>
-          <UserList v-if="n === 1" />
+          <ProfileList v-if="n === 1" />
           <BankList v-else />
         </v-container>
       </v-tab-item>
     </v-tabs>
-
-    <!-- <UserDialog />
-    <BankDialog /> -->
   </v-container>
 </template>
 
 <script>
-import UserList from '@/components/Profiles/UserList'
+import { mapState, mapActions } from 'vuex'
+import { ipcRenderer } from 'electron'
+
+import ProfileList from '@/components/Profiles/ProfileList'
 import BankList from '@/components/Profiles/BankList'
-// import UserDialog from '@/components/Profiles/UserDialog'
-// import BankDialog from '@/components/Profiles/BankDialog'
 
 export default {
   components: {
-    UserList,
+    ProfileList,
     BankList
-    // UserDialog,
-    // BankDialog
   },
   data () {
     return {
-      tabs: ['Users', 'Banks']
+      tabs: ['Profiles', 'Banks']
     }
+  },
+  computed: {
+    ...mapState('setting', { settings: 'items' })
+  },
+  watch: {
+    'settings.nightMode': function (nightMode) {
+      this.$vuetify.theme.dark = nightMode
+    }
+  },
+  created () {
+    ipcRenderer.on('updateSettings', (event, arg) => {
+      this.setSettings(arg)
+    })
+  },
+  methods: {
+    ...mapActions('setting', { setSettings: 'setItems' })
   }
 }
 </script>

@@ -93,7 +93,7 @@ function createMonitorWindow () {
  */
 function createProfileWindow () {
   profileWin = new BrowserWindow({
-    width: 1000,
+    width: 500,
     height: 900,
     minHeight: 600,
     minWidth: 500,
@@ -232,6 +232,7 @@ ipcMain.on('toggle-settings', (event, arg) => {
 ipcMain.on('update-settings', (event, arg) => {
   win.webContents.send('updateSettings', arg)
   monitorWin.webContents.send('updateSettings', arg)
+  profileWin.webContents.send('updateSettings', arg)
 })
 
 ipcMain.on('update-tasks', (event, arg) => {
@@ -242,4 +243,5 @@ ipcMain.on('clear-localStorage', (event, arg) => {
   win.reload()
   monitorWin.reload()
   settingsWin.reload()
+  profileWin.reload()
 })

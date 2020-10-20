@@ -307,6 +307,7 @@ export default {
       localStorage.removeItem('attributes')
       localStorage.removeItem('settings')
       localStorage.removeItem('tasks')
+      localStorage.removeItem('profiles')
 
       ipcRenderer.send('clear-localStorage')
     },

@@ -8,8 +8,11 @@ export default {
       items: [
         {
           id: 1,
-          name: 'Bank 1',
-          bank: 'GCash',
+          nickname: 'Bank 1',
+          bank: {
+            id: 1,
+            name: 'GCash'
+          },
           number: 9569354060,
           holder: null,
           expiry: null,
@@ -17,8 +20,11 @@ export default {
         },
         {
           id: 2,
-          name: 'Bank 2',
-          bank: 'GCash',
+          nickname: 'Bank 2',
+          bank: {
+            id: 1,
+            name: 'GCash'
+          },
           number: 9569354060,
           holder: null,
           expiry: null,
@@ -26,8 +32,11 @@ export default {
         },
         {
           id: 3,
-          name: 'Bank 3',
-          bank: 'GCash',
+          nickname: 'Bank 3',
+          bank: {
+            id: 1,
+            name: 'GCash'
+          },
           number: 9569354060,
           holder: null,
           expiry: null,
@@ -35,8 +44,11 @@ export default {
         },
         {
           id: 4,
-          name: 'Bank 3',
-          bank: 'GCash',
+          nickname: 'Bank 4',
+          bank: {
+            id: 1,
+            name: 'GCash'
+          },
           number: 9569354060,
           holder: null,
           expiry: null,
@@ -119,7 +131,7 @@ export default {
       banks.push({
         id: lastItemId,
         ...item,
-        name: item.name || `Bank ${lastItemId}`
+        nickname: item.nickname || `Bank ${lastItemId}`
       })
 
       commit('SET_ITEMS', banks)

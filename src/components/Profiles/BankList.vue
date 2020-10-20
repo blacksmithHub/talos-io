@@ -18,6 +18,7 @@
             :small="$vuetify.breakpoint.lgAndUp"
             :x-small="!$vuetify.breakpoint.lgAndUp"
             class="primary"
+            @click="addNewBank"
           >
             <v-icon
               :left="$vuetify.breakpoint.lgAndUp"
@@ -40,6 +41,7 @@
             :small="$vuetify.breakpoint.lgAndUp"
             :x-small="!$vuetify.breakpoint.lgAndUp"
             class="primary"
+            @click="importBanks"
           >
             <v-icon
               :left="$vuetify.breakpoint.lgAndUp"
@@ -62,6 +64,7 @@
             :small="$vuetify.breakpoint.lgAndUp"
             :x-small="!$vuetify.breakpoint.lgAndUp"
             class="primary"
+            @click="reset"
           >
             <v-icon
               :left="$vuetify.breakpoint.lgAndUp"
@@ -86,21 +89,32 @@
           :key="`${index}-item`"
           class="pa-0"
         >
-          <v-list-item-content class="pa-2">
-            <v-list-item-title v-text="bank.name" />
+          <v-list-item-content
+            class="pa-2 bank"
+            @click="editBank(bank)"
+          >
+            <v-list-item-title v-text="bank.nickname" />
 
             <v-list-item-subtitle>
               <strong
                 class="text-capitalize"
-                v-text="'bank:'"
+                v-text="'Bank:'"
               />
-              {{ bank.bank }}
+              {{ bank.bank.name }}
             </v-list-item-subtitle>
 
             <v-list-item-subtitle>
               <strong
                 class="text-capitalize"
-                v-text="'card #:'"
+                v-text="'Holder:'"
+              />
+              {{ bank.holder || 'N/A' }}
+            </v-list-item-subtitle>
+
+            <v-list-item-subtitle>
+              <strong
+                class="text-capitalize"
+                v-text="'Number:'"
               />
               <input
                 :value="bank.number"
@@ -113,7 +127,10 @@
           </v-list-item-content>
 
           <v-list-item-action>
-            <v-btn icon>
+            <v-btn
+              icon
+              @click="deleteBank(index)"
+            >
               <v-icon
                 color="primary"
                 v-text="'mdi-delete'"
@@ -136,18 +153,53 @@
         </v-list-item-content>
       </v-list-item>
     </v-list>
+
+    <BankDialog ref="bankDialog" />
+    <ImportBankDialog ref="importBankDialog" />
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'vuex'
 
+import BankDialog from '@/components/Profiles/BankDialog'
+import ImportBankDialog from '@/components/Profiles/ImportBankDialog'
+
 export default {
+  components: {
+    BankDialog,
+    ImportBankDialog
+  },
   computed: {
     ...mapState('bank', { banks: 'items' })
   },
   methods: {
-    ...mapActions('bank', { deletebank: 'deleteItem' })
+    ...mapActions('bank', { deleteBank: 'deleteItem', reset: 'reset' }),
+
+    /**
+     * Trigger add new bank dialog event.
+     */
+    addNewBank () {
+      this.$refs.bankDialog.dialog = true
+    },
+    /**
+     * Trigger edit bank dialog event.
+     */
+    editBank (bank) {
+      this.$refs.bankDialog.mapData(bank)
+    },
+    /**
+     * Trigger import bank dialog event.
+     */
+    importBanks () {
+      this.$refs.importBankDialog.dialog = true
+    }
   }
 }
 </script>
+
+<style scoped>
+.bank:hover {
+  cursor: pointer;
+}
+</style>

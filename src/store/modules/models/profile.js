@@ -2,31 +2,31 @@ export default {
   namespaced: true,
   state () {
     return {
-      // items: localStorage.getItem('users')
-      //   ? JSON.parse(localStorage.getItem('users'))
+      // items: localStorage.getItem('profiles')
+      //   ? JSON.parse(localStorage.getItem('profiles'))
       //   : []
       items: [
         {
           id: 1,
-          name: 'User 1',
+          name: 'Profile 1',
           email: 'qwertyiyan13@gmail.com',
           password: 'Seiburner4923'
         },
         {
           id: 2,
-          name: 'User 2',
+          name: 'Profile 2',
           email: 'bolrt@gmail.com',
           password: 'Password123'
         },
         {
           id: 3,
-          name: 'User 3',
+          name: 'Profile 3',
           email: 'yanfour@gmail.com',
           password: 'Password123'
         },
         {
           id: 4,
-          name: 'User 3',
+          name: 'Profile 4',
           email: 'burnmebitch@gmail.com',
           password: 'Password123'
         }
@@ -73,7 +73,7 @@ export default {
      */
     reset ({ commit }) {
       commit('RESET')
-      if (localStorage.getItem('users')) localStorage.removeItem('users')
+      if (localStorage.getItem('profiles')) localStorage.removeItem('profiles')
     },
 
     /**
@@ -84,7 +84,7 @@ export default {
      */
     setItems ({ commit }, items) {
       commit('SET_ITEMS', items)
-      localStorage.setItem('users', JSON.stringify(items))
+      localStorage.setItem('profiles', JSON.stringify(items))
     },
 
     /**
@@ -94,9 +94,9 @@ export default {
      * @param {*} item
      */
     addItem ({ state, commit }, item) {
-      const users = state.items.slice()
+      const profiles = state.items.slice()
 
-      let lastItemId = users[users.length - 1]
+      let lastItemId = profiles[profiles.length - 1]
 
       if (lastItemId) {
         lastItemId = lastItemId.id + 1
@@ -104,14 +104,14 @@ export default {
         lastItemId = 1
       }
 
-      users.push({
+      profiles.push({
         id: lastItemId,
         ...item,
-        name: item.name || `User ${lastItemId}`
+        name: item.name || `Profile ${lastItemId}`
       })
 
-      commit('SET_ITEMS', users)
-      localStorage.setItem('users', JSON.stringify(users))
+      commit('SET_ITEMS', profiles)
+      localStorage.setItem('profiles', JSON.stringify(profiles))
     },
 
     /**
@@ -120,16 +120,16 @@ export default {
      * @param {*} param
      */
     updateItem ({ state, commit }, params) {
-      let users = state.items.slice()
+      let profiles = state.items.slice()
 
-      users = users.map((val) => {
+      profiles = profiles.map((val) => {
         if (val.id === params.id) val = params
 
         return val
       })
 
-      commit('SET_ITEMS', users)
-      localStorage.setItem('users', JSON.stringify(users))
+      commit('SET_ITEMS', profiles)
+      localStorage.setItem('profiles', JSON.stringify(profiles))
     },
 
     /**
@@ -140,7 +140,7 @@ export default {
      */
     deleteItem ({ state, commit }, key) {
       commit('DELETE_ITEM', key)
-      localStorage.setItem('users', JSON.stringify(state.items))
+      localStorage.setItem('profiles', JSON.stringify(state.items))
     }
   }
 }

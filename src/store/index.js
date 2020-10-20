@@ -4,7 +4,7 @@ import Vuex from 'vuex'
 import core from './modules/core'
 
 import task from './modules/models/task'
-import user from './modules/models/user'
+import profile from './modules/models/profile'
 import bank from './modules/models/bank'
 import setting from './modules/models/setting'
 
@@ -19,7 +19,7 @@ export default new Vuex.Store({
 
     task,
     setting,
-    user,
+    profile,
     bank,
 
     attribute,
