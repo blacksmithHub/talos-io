@@ -655,7 +655,7 @@ export default {
         .then(() => {
           win.loadURL(baseUrl)
 
-          if (this.settings.autoPay) {
+          if (this.settings.autoPay && Object.keys(task.bank).length) {
             let script = ''
 
             switch (task.bank.id) {
