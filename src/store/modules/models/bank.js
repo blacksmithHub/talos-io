@@ -2,59 +2,9 @@ export default {
   namespaced: true,
   state () {
     return {
-      // items: localStorage.getItem('banks')
-      //   ? JSON.parse(localStorage.getItem('banks'))
-      //   : []
-      items: [
-        {
-          id: 1,
-          nickname: 'Bank 1',
-          bank: {
-            id: 1,
-            name: 'GCash'
-          },
-          number: 9569354060,
-          holder: null,
-          expiry: null,
-          cvv: null
-        },
-        {
-          id: 2,
-          nickname: 'Bank 2',
-          bank: {
-            id: 1,
-            name: 'GCash'
-          },
-          number: 9569354060,
-          holder: null,
-          expiry: null,
-          cvv: null
-        },
-        {
-          id: 3,
-          nickname: 'Bank 3',
-          bank: {
-            id: 1,
-            name: 'GCash'
-          },
-          number: 9569354060,
-          holder: null,
-          expiry: null,
-          cvv: null
-        },
-        {
-          id: 4,
-          nickname: 'Bank 4',
-          bank: {
-            id: 1,
-            name: 'GCash'
-          },
-          number: 9569354060,
-          holder: null,
-          expiry: null,
-          cvv: null
-        }
-      ]
+      items: localStorage.getItem('banks')
+        ? JSON.parse(localStorage.getItem('banks'))
+        : []
     }
   },
 

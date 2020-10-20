@@ -2,35 +2,9 @@ export default {
   namespaced: true,
   state () {
     return {
-      // items: localStorage.getItem('profiles')
-      //   ? JSON.parse(localStorage.getItem('profiles'))
-      //   : []
-      items: [
-        {
-          id: 1,
-          name: 'Profile 1',
-          email: 'qwertyiyan13@gmail.com',
-          password: 'Seiburner4923'
-        },
-        {
-          id: 2,
-          name: 'Profile 2',
-          email: 'bolrt@gmail.com',
-          password: 'Password123'
-        },
-        {
-          id: 3,
-          name: 'Profile 3',
-          email: 'yanfour@gmail.com',
-          password: 'Password123'
-        },
-        {
-          id: 4,
-          name: 'Profile 4',
-          email: 'burnmebitch@gmail.com',
-          password: 'Password123'
-        }
-      ]
+      items: localStorage.getItem('profiles')
+        ? JSON.parse(localStorage.getItem('profiles'))
+        : []
     }
   },
 
