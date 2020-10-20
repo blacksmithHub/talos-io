@@ -18,15 +18,15 @@ export default {
 
       const msg = new webhook.MessageBuilder()
         .setAvatar(Config.bot.avatar)
-        .setFooter(Config.bot.name, Config.bot.avatar)
+        .setFooter(`${Config.bot.name} ${Config.bot.version}`, Config.bot.footer)
         .setTime()
         .setName(Config.bot.name)
-        .setColor('#008000')
+        .setColor('#f7b586')
         .setTitle('Copped!')
         .addField('', product)
         .addField('**Size**', size)
         .addField('**Profile**', `||${profile}||`)
-        .addField('**Checkout Time**', `${secs} secs`)
+        .addField('**Checkout Time**', `${secs}s`)
 
       Hook.send(msg)
     }

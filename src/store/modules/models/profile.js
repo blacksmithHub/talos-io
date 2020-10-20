@@ -2,8 +2,8 @@ export default {
   namespaced: true,
   state () {
     return {
-      items: localStorage.getItem('tasks')
-        ? JSON.parse(localStorage.getItem('tasks'))
+      items: localStorage.getItem('profiles')
+        ? JSON.parse(localStorage.getItem('profiles'))
         : []
     }
   },
@@ -47,7 +47,7 @@ export default {
      */
     reset ({ commit }) {
       commit('RESET')
-      if (localStorage.getItem('tasks')) localStorage.removeItem('tasks')
+      if (localStorage.getItem('profiles')) localStorage.removeItem('profiles')
     },
 
     /**
@@ -58,7 +58,7 @@ export default {
      */
     setItems ({ commit }, items) {
       commit('SET_ITEMS', items)
-      localStorage.setItem('tasks', JSON.stringify(items))
+      localStorage.setItem('profiles', JSON.stringify(items))
     },
 
     /**
@@ -68,9 +68,9 @@ export default {
      * @param {*} item
      */
     addItem ({ state, commit }, item) {
-      const tasks = state.items.slice()
+      const profiles = state.items.slice()
 
-      let lastItemId = tasks[tasks.length - 1]
+      let lastItemId = profiles[profiles.length - 1]
 
       if (lastItemId) {
         lastItemId = lastItemId.id + 1
@@ -78,20 +78,14 @@ export default {
         lastItemId = 1
       }
 
-      tasks.push({
+      profiles.push({
         id: lastItemId,
         ...item,
-        name: item.name || `Task ${lastItemId}`,
-        status: {
-          id: 1,
-          msg: 'stopped',
-          class: 'grey'
-        },
-        transactionData: {}
+        name: item.name || `Profile ${lastItemId}`
       })
 
-      commit('SET_ITEMS', tasks)
-      localStorage.setItem('tasks', JSON.stringify(tasks))
+      commit('SET_ITEMS', profiles)
+      localStorage.setItem('profiles', JSON.stringify(profiles))
     },
 
     /**
@@ -100,16 +94,16 @@ export default {
      * @param {*} param
      */
     updateItem ({ state, commit }, params) {
-      let tasks = state.items.slice()
+      let profiles = state.items.slice()
 
-      tasks = tasks.map((val) => {
+      profiles = profiles.map((val) => {
         if (val.id === params.id) val = params
 
         return val
       })
 
-      commit('SET_ITEMS', tasks)
-      localStorage.setItem('tasks', JSON.stringify(tasks))
+      commit('SET_ITEMS', profiles)
+      localStorage.setItem('profiles', JSON.stringify(profiles))
     },
 
     /**
@@ -120,31 +114,7 @@ export default {
      */
     deleteItem ({ state, commit }, key) {
       commit('DELETE_ITEM', key)
-      localStorage.setItem('tasks', JSON.stringify(state.items))
-    },
-
-    /**
-     * Initialize items.
-     *
-     * @param {*} param
-     */
-    initializeItems ({ state, commit }) {
-      let tasks = state.items.slice()
-
-      tasks = tasks.map(element => {
-        element.status = {
-          id: 1,
-          msg: 'stopped',
-          class: 'grey'
-        }
-
-        element.transactionData = {}
-
-        return element
-      })
-
-      commit('SET_ITEMS', tasks)
-      localStorage.setItem('tasks', JSON.stringify(tasks))
+      localStorage.setItem('profiles', JSON.stringify(state.items))
     }
   }
 }

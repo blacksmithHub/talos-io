@@ -12,11 +12,10 @@ import { mapState, mapActions } from 'vuex'
 import SystemBar from '@/components/App/SystemBar'
 
 export default {
-  components: {
-    SystemBar
-  },
+  components: { SystemBar },
   computed: {
-    ...mapState('setting', { settings: 'items' })
+    ...mapState('setting', { settings: 'items' }),
+    ...mapState('task', { tasks: 'items' })
   },
   mounted () {
     //  [App.vue specific] When App.vue is finish loading finish the progress bar
@@ -41,6 +40,11 @@ export default {
   },
   methods: {
     ...mapActions('setting', { resetSettings: 'reset' }),
+
+    /**
+     * Set app theme.
+     *
+     */
     setTheme () {
       this.$vuetify.theme.dark = this.settings.nightMode
     }

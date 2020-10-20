@@ -1,0 +1,68 @@
+<template>
+  <v-container>
+    <v-tabs
+      class="mt-5"
+      grow
+    >
+      <v-tab
+        v-for="(tab, index) in tabs"
+        :key="index"
+        v-text="tab"
+      />
+
+      <v-tab-item
+        v-for="n in tabs.length"
+        :key="n"
+      >
+        <v-container>
+          <ProfileList v-if="n === 1" />
+          <BankList v-else />
+        </v-container>
+      </v-tab-item>
+    </v-tabs>
+  </v-container>
+</template>
+
+<script>
+import { mapState, mapActions } from 'vuex'
+import { ipcRenderer } from 'electron'
+
+import ProfileList from '@/components/Profiles/ProfileList'
+import BankList from '@/components/Profiles/BankList'
+
+export default {
+  components: {
+    ProfileList,
+    BankList
+  },
+  data () {
+    return {
+      tabs: ['Profiles', 'Banks']
+    }
+  },
+  computed: {
+    ...mapState('setting', { settings: 'items' }),
+    ...mapState('profile', { profiles: 'items' }),
+    ...mapState('bank', { banks: 'items' })
+  },
+  watch: {
+    'settings.nightMode': function (nightMode) {
+      this.$vuetify.theme.dark = nightMode
+    },
+    profiles () {
+      ipcRenderer.send('update-profiles', this.profiles)
+    },
+    banks () {
+      ipcRenderer.send('update-banks', this.banks)
+    }
+  },
+  created () {
+    ipcRenderer.on('updateSettings', (event, arg) => {
+      this.setSettings(arg)
+    })
+  },
+  methods: {
+    ...mapActions('setting', { setSettings: 'setItems' })
+  }
+}
+</script>

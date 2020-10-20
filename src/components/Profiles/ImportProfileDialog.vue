@@ -9,7 +9,7 @@
         <v-card-title>
           <span
             class="headline"
-            v-text="'Import Tasks'"
+            v-text="'Import Profiles'"
           />
         </v-card-title>
 
@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapActions } from 'vuex'
 
 export default {
   data () {
@@ -62,13 +62,8 @@ export default {
       fileErrors: []
     }
   },
-  computed: {
-    ...mapState('bank', { banks: 'items' }),
-    ...mapState('attribute', { attributes: 'items' }),
-    ...mapState('task', { tasks: 'items' })
-  },
   methods: {
-    ...mapActions('task', { addTask: 'addItem' }),
+    ...mapActions('profile', { addProfile: 'addItem' }),
     /**
      * On cancel event.
      *
@@ -83,9 +78,9 @@ export default {
      */
     submit () {
       if (this.csv) {
-        const a = this.csv.name.split('.')
+        const ext = this.csv.name.split('.')
 
-        if (a[a.length - 1] !== 'csv') {
+        if (ext[ext.length - 1] !== 'csv') {
           this.fileErrors.push('Invalid file')
         } else {
           const csvToJson = require('convert-csv-to-json')
@@ -109,51 +104,19 @@ export default {
             }
           })
 
-          const newTasks = []
+          const newProfiles = []
 
           result.forEach(element => {
-            const bank = this.banks.find((val) => val.name.toLowerCase() === element.bank.toLowerCase().trim())
-
-            const csvSizes = element.sizes.trim().split('+')
-
-            if (bank && csvSizes.length && parseInt(element.cardNumber) && element.email && element.password && element.sku) {
-              const sizes = []
-
-              csvSizes.forEach((data) => {
-                const attr = this.attributes.find((val) => val.sizes.find((size) => size.label.toLowerCase() === data.toLowerCase()))
-
-                if (attr) {
-                  const size = attr.sizes.find((val) => val.label.toLowerCase() === data.toLowerCase())
-
-                  sizes.push({
-                    attribute_id: attr.attribute_id,
-                    label: size.label,
-                    value: size.value
-                  })
-                }
+            if (element.email && element.password) {
+              newProfiles.push({
+                name: element.name.trim() || null,
+                email: element.email.trim(),
+                password: element.password.trim()
               })
-
-              if (sizes.length) {
-                newTasks.push({
-                  bank: {
-                    cardHolder: element.cardHolder.trim() || null,
-                    cardNumber: parseInt(element.cardNumber),
-                    cvv: parseInt(element.cvv) || null,
-                    expiry: element.expiry || null,
-                    name: bank.name,
-                    id: bank.id
-                  },
-                  email: element.email.trim(),
-                  password: element.password.trim(),
-                  name: element.name.trim() || null,
-                  sku: element.sku.trim(),
-                  sizes: sizes
-                })
-              }
             }
           })
 
-          newTasks.forEach(element => this.addTask(element))
+          newProfiles.forEach(element => this.addProfile(element))
 
           this.onCancel()
         }

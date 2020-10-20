@@ -7,7 +7,11 @@
       align="center"
     >
       <v-col align-self="center">
-        <span v-text="'Titan Bot'" />
+        <v-img
+          :src="require(`@/assets/header-${$vuetify.theme.dark ? 'light' : 'dark'}.png`)"
+          width="140"
+          contain
+        />
       </v-col>
     </v-row>
 
