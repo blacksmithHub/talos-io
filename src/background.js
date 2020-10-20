@@ -241,10 +241,12 @@ ipcMain.on('update-tasks', (event, arg) => {
 
 ipcMain.on('update-profiles', (event, arg) => {
   settingsWin.webContents.send('updateProfiles', arg)
+  win.webContents.send('updateProfiles', arg)
 })
 
 ipcMain.on('update-banks', (event, arg) => {
   settingsWin.webContents.send('updateBanks', arg)
+  win.webContents.send('updateBanks', arg)
 })
 
 ipcMain.on('clear-localStorage', (event, arg) => {

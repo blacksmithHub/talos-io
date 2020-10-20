@@ -98,6 +98,14 @@ export default {
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
     })
+
+    ipcRenderer.on('updateBanks', (event, arg) => {
+      this.setBanks(arg)
+    })
+
+    ipcRenderer.on('updateProfiles', (event, arg) => {
+      this.setProfiles(arg)
+    })
   },
   methods: {
     ...mapActions('attribute', {
@@ -106,6 +114,8 @@ export default {
     }),
     ...mapActions('task', { updateTask: 'updateItem' }),
     ...mapActions('setting', { setSettings: 'setItems' }),
+    ...mapActions('profile', { setProfiles: 'setItems' }),
+    ...mapActions('bank', { setBanks: 'setItems' }),
 
     /**
      * Open import task dialog.
