@@ -41,11 +41,19 @@ export default {
     }
   },
   computed: {
-    ...mapState('setting', { settings: 'items' })
+    ...mapState('setting', { settings: 'items' }),
+    ...mapState('profile', { profiles: 'items' }),
+    ...mapState('bank', { banks: 'items' })
   },
   watch: {
     'settings.nightMode': function (nightMode) {
       this.$vuetify.theme.dark = nightMode
+    },
+    profiles () {
+      ipcRenderer.send('update-profiles', this.profiles)
+    },
+    banks () {
+      ipcRenderer.send('update-banks', this.banks)
     }
   },
   created () {

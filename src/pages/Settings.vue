@@ -131,6 +131,26 @@
 
             <v-list-item class="pa-0">
               <v-list-item-content class="pa-2">
+                <v-list-item-title v-text="'Clear Local Storage'" />
+
+                <v-list-item-subtitle v-text="'All saved records will be removed'" />
+              </v-list-item-content>
+
+              <v-list-item-action>
+                <v-btn
+                  class="primary"
+                  rounded
+                  small
+                  @click="clearLocalStorage"
+                  v-text="'Clear'"
+                />
+              </v-list-item-action>
+            </v-list-item>
+
+            <v-divider />
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
                 <v-list-item-title v-text="'Backup all Tasks'" />
 
                 <v-list-item-subtitle v-text="'All tasks will export in a .csv file'" />
@@ -155,19 +175,47 @@
 
             <v-list-item class="pa-0">
               <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Clear Local Storage'" />
+                <v-list-item-title v-text="'Backup all Profiles'" />
 
-                <v-list-item-subtitle v-text="'All saved records will be removed'" />
+                <v-list-item-subtitle v-text="'All profiles will export in a .csv file'" />
               </v-list-item-content>
 
               <v-list-item-action>
-                <v-btn
-                  class="primary"
-                  rounded
-                  small
-                  @click="clearLocalStorage"
-                  v-text="'Clear'"
-                />
+                <download-csv
+                  :data="backupProfiles"
+                  name="profiles.csv"
+                >
+                  <v-btn
+                    class="primary"
+                    rounded
+                    small
+                    v-text="'Export'"
+                  />
+                </download-csv>
+              </v-list-item-action>
+            </v-list-item>
+
+            <v-divider />
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
+                <v-list-item-title v-text="'Backup all Banks'" />
+
+                <v-list-item-subtitle v-text="'All banks will export in a .csv file'" />
+              </v-list-item-content>
+
+              <v-list-item-action>
+                <download-csv
+                  :data="backupBanks"
+                  name="banks.csv"
+                >
+                  <v-btn
+                    class="primary"
+                    rounded
+                    small
+                    v-text="'Export'"
+                  />
+                </download-csv>
               </v-list-item-action>
             </v-list-item>
 
@@ -247,12 +295,16 @@ export default {
       nightMode: false,
       sound: false,
       autoPay: false,
-      backupTasks: []
+      backupTasks: [],
+      backupProfiles: [],
+      backupBanks: []
     }
   },
   computed: {
     ...mapState('setting', { settings: 'items' }),
     ...mapState('task', { tasks: 'items' }),
+    ...mapState('profile', { profiles: 'items' }),
+    ...mapState('bank', { banks: 'items' }),
 
     /**
      * Error messages for webhook.
@@ -289,9 +341,19 @@ export default {
   },
   created () {
     this.exportTasks(this.tasks)
+    this.exportProfiles(this.profiles)
+    this.exportBanks(this.banks)
 
     ipcRenderer.on('updateTasks', (event, arg) => {
       this.exportTasks(arg)
+    })
+
+    ipcRenderer.on('updateProfiles', (event, arg) => {
+      this.exportProfiles(arg)
+    })
+
+    ipcRenderer.on('updateBanks', (event, arg) => {
+      this.exportBanks(arg)
     })
 
     this.prepareDetails()
@@ -352,6 +414,64 @@ export default {
       }
 
       this.backupTasks = jsons
+    },
+
+    /**
+     * Prepare jsons for exporting.
+     *
+     */
+    exportProfiles (profiles) {
+      const jsons = []
+
+      if (profiles.length) {
+        profiles.forEach(element => {
+          jsons.push({
+            name: element.name,
+            email: element.email,
+            password: element.password
+          })
+        })
+      } else {
+        jsons.push({
+          name: '',
+          email: '',
+          password: ''
+        })
+      }
+
+      this.backupProfiles = jsons
+    },
+
+    /**
+     * Prepare jsons for exporting.
+     *
+     */
+    exportBanks (banks) {
+      const jsons = []
+
+      if (banks.length) {
+        banks.forEach(element => {
+          jsons.push({
+            name: element.name,
+            bank: element.bank.name,
+            cardHolder: element.holder,
+            cardNumber: element.number,
+            expiry: element.expiry,
+            cvv: element.cvv
+          })
+        })
+      } else {
+        jsons.push({
+          name: '',
+          bank: '',
+          cardHolder: '',
+          cardNumber: '',
+          expiry: '',
+          cvv: ''
+        })
+      }
+
+      this.backupBanks = jsons
     },
 
     /**

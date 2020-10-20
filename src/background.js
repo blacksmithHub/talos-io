@@ -128,7 +128,7 @@ function createProfileWindow () {
 function createSettingWindow () {
   settingsWin = new BrowserWindow({
     width: 500,
-    height: 710,
+    height: 840,
     minHeight: 600,
     minWidth: 500,
     parent: win,
@@ -237,6 +237,14 @@ ipcMain.on('update-settings', (event, arg) => {
 
 ipcMain.on('update-tasks', (event, arg) => {
   settingsWin.webContents.send('updateTasks', arg)
+})
+
+ipcMain.on('update-profiles', (event, arg) => {
+  settingsWin.webContents.send('updateProfiles', arg)
+})
+
+ipcMain.on('update-banks', (event, arg) => {
+  settingsWin.webContents.send('updateBanks', arg)
 })
 
 ipcMain.on('clear-localStorage', (event, arg) => {
