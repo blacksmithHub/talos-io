@@ -154,6 +154,7 @@ export default {
       this.name = ''
       this.email = ''
       this.password = ''
+      this.selectedProfile = {}
 
       this.showPassword = false
       this.dialog = false

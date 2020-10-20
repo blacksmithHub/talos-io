@@ -281,6 +281,7 @@ export default {
       this.number = ''
       this.expiry = ''
       this.cvv = ''
+      this.selectedBank = {}
 
       this.dialog = false
       this.isEditMode = false

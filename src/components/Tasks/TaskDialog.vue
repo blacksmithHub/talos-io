@@ -225,6 +225,9 @@ export default {
       this.name = ''
       this.sku = ''
       this.sizes = []
+      this.bank = {}
+      this.profile = {}
+      this.selectedTask = {}
 
       this.dialog = false
       this.isEditMode = false
@@ -256,8 +259,11 @@ export default {
           email: this.profile.email,
           password: this.profile.password,
           sku: this.sku.trim(),
-          sizes: sizes,
-          bank: {
+          sizes: sizes
+        }
+
+        if (Object.keys(this.bank).length) {
+          params.bank = {
             id: this.bank.bank.id,
             name: this.bank.bank.name,
             cardNumber: this.bank.number,
@@ -265,6 +271,8 @@ export default {
             expiry: this.bank.expiry,
             cvv: this.bank.cvv
           }
+        } else {
+          params.bank = {}
         }
 
         if (this.isEditMode) {
