@@ -85,17 +85,37 @@
                 cols="12"
                 md="6"
               >
-                <v-text-field
-                  v-model="expiry"
-                  label="Expiry date"
-                  required
-                  outlined
-                  dense
-                  :error-messages="expiryErrors"
-                  hide-details="auto"
-                  autocomplete="off"
-                  @blur="$v.expiry.$touch()"
-                />
+                <v-row>
+                  <v-col class="pt-0 pb-0">
+                    <v-text-field
+                      v-model="month"
+                      label="Month"
+                      required
+                      outlined
+                      dense
+                      :error-messages="monthErrors"
+                      hide-details="auto"
+                      type="number"
+                      autocomplete="off"
+                      @blur="$v.month.$touch()"
+                    />
+                  </v-col>
+
+                  <v-col class="pt-0 pb-0">
+                    <v-text-field
+                      v-model="year"
+                      label="Year"
+                      required
+                      outlined
+                      dense
+                      :error-messages="yearErrors"
+                      hide-details="auto"
+                      type="number"
+                      autocomplete="off"
+                      @blur="$v.year.$touch()"
+                    />
+                  </v-col>
+                </v-row>
               </v-col>
 
               <v-col
@@ -144,7 +164,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
-import { required, numeric, maxLength, requiredIf } from 'vuelidate/lib/validators'
+import { required, maxLength, requiredIf, maxValue, minValue } from 'vuelidate/lib/validators'
 
 export default {
   data () {
@@ -156,7 +176,8 @@ export default {
       bank: {},
       holder: '',
       number: '',
-      expiry: '',
+      month: '',
+      year: '',
       cvv: ''
     }
   },
@@ -213,20 +234,37 @@ export default {
       if (!this.$v.number.$dirty) return errors
 
       this.$v.number.required || errors.push('Required')
-      this.$v.number.numeric || errors.push('Accepts only numerics')
 
       return errors
     },
     /**
-     * Error messages for expiry.
+     * Error messages for month.
      *
      */
-    expiryErrors () {
+    monthErrors () {
       const errors = []
 
-      if (!this.$v.expiry.$dirty) return errors
+      if (!this.$v.month.$dirty) return errors
 
-      this.$v.expiry.requiredIf || errors.push('Required')
+      this.$v.month.requiredIf || errors.push('Required')
+      this.$v.month.maxLength || errors.push('Maximum length')
+      this.$v.month.minValue || errors.push('Invalid input')
+      this.$v.month.maxValue || errors.push('Invalid input')
+
+      return errors
+    },
+    /**
+     * Error messages for year.
+     *
+     */
+    yearErrors () {
+      const errors = []
+
+      if (!this.$v.year.$dirty) return errors
+
+      this.$v.year.requiredIf || errors.push('Required')
+      this.$v.year.maxLength || errors.push('Maximum length')
+      this.$v.year.minValue || errors.push('Invalid input')
 
       return errors
     },
@@ -240,8 +278,8 @@ export default {
       if (!this.$v.cvv.$dirty) return errors
 
       this.$v.cvv.requiredIf || errors.push('Required')
-      this.$v.cvv.numeric || errors.push('Accepts only numerics')
       this.$v.cvv.maxLength || errors.push('Maximum length')
+      this.$v.cvv.minValue || errors.push('Invalid input')
 
       return errors
     }
@@ -261,7 +299,8 @@ export default {
         this.nickname = bank.nickname
         this.number = bank.number
         this.holder = bank.holder
-        this.expiry = bank.expiry
+        this.month = bank.month
+        this.year = bank.year
         this.cvv = bank.cvv
 
         this.isEditMode = true
@@ -279,7 +318,8 @@ export default {
       this.bank = {}
       this.holder = ''
       this.number = ''
-      this.expiry = ''
+      this.month = ''
+      this.year = ''
       this.cvv = ''
       this.selectedBank = {}
 
@@ -299,7 +339,8 @@ export default {
           bank: this.bank,
           holder: this.holder,
           number: this.number,
-          expiry: this.expiry,
+          month: this.month,
+          year: this.year,
           cvv: this.cvv
         }
 
@@ -323,17 +364,24 @@ export default {
         return !this.isGcash
       })
     },
-    number: {
-      required,
-      numeric
-    },
-    expiry: {
+    number: { required },
+    month: {
       requiredIf: requiredIf(function () {
         return !this.isGcash
-      })
+      }),
+      maxLength: maxLength(2),
+      maxValue: maxValue(12),
+      minValue: minValue(1)
+    },
+    year: {
+      requiredIf: requiredIf(function () {
+        return !this.isGcash
+      }),
+      maxLength: maxLength(4),
+      minValue: minValue(1000)
     },
     cvv: {
-      numeric,
+      minValue: minValue(0),
       maxLength: maxLength(3),
       requiredIf: requiredIf(function () {
         return !this.isGcash

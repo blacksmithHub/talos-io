@@ -665,14 +665,15 @@ export default {
                 break
 
               default:
-                // TODO: expiry fields
+
                 script = `document.getElementById('credit_card_number').value = '${task.bank.cardNumber}'
                 document.getElementById('credit_card_holder_name').value = '${task.bank.cardHolder}'
-                document.getElementById('credit_card_expiry_month').value = '02'
-                document.getElementById('credit_card_expiry_year').value = '2020'
+                document.getElementById('credit_card_expiry_month').value = '${task.bank.month}'
+                document.getElementById('credit_card_expiry_year').value = '${task.bank.year}'
                 document.getElementById('credit_card_cvv').value = '${task.bank.cvv}'
                 document.getElementById('credit_card_issuing_bank_name').value = '${task.bank.name}'
                 document.getElementById('btnCCSubmit').click()`
+
                 break
             }
 

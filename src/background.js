@@ -183,6 +183,7 @@ app.on('ready', async () => {
       console.error('Vue Devtools failed to install:', e.toString())
     }
   }
+
   createWindow()
 })
 
@@ -222,7 +223,7 @@ ipcMain.on('toggle-profiles', (event, arg) => {
 ipcMain.on('toggle-settings', (event, arg) => {
   settingsWin.show()
 
-  if (isDevelopment) monitorWin.openDevTools()
+  if (isDevelopment) settingsWin.openDevTools()
 })
 
 /**

@@ -394,7 +394,8 @@ export default {
             bank: element.bank.name,
             cardHolder: element.bank.cardHolder,
             cardNumber: element.bank.cardNumber,
-            expiry: element.bank.expiry,
+            expiryMonth: element.bank.month,
+            expiryYear: element.bank.year,
             cvv: element.bank.cvv
           })
         })
@@ -408,7 +409,8 @@ export default {
           bank: '',
           cardHolder: '',
           cardNumber: '',
-          expiry: '',
+          expiryMonth: '',
+          expiryYear: '',
           cvv: ''
         })
       }
@@ -456,7 +458,8 @@ export default {
             bank: element.bank.name,
             cardHolder: element.holder,
             cardNumber: element.number,
-            expiry: element.expiry,
+            expiryMonth: element.month,
+            expiryYear: element.year,
             cvv: element.cvv
           })
         })
@@ -466,7 +469,8 @@ export default {
           bank: '',
           cardHolder: '',
           cardNumber: '',
-          expiry: '',
+          expiryMonth: '',
+          expiryYear: '',
           cvv: ''
         })
       }

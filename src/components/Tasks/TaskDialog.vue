@@ -268,7 +268,8 @@ export default {
             name: this.bank.bank.name,
             cardNumber: this.bank.number,
             cardHolder: this.bank.holder,
-            expiry: this.bank.expiry,
+            month: this.bank.month,
+            year: this.bank.year,
             cvv: this.bank.cvv
           }
         } else {

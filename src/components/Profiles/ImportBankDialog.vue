@@ -117,7 +117,8 @@ export default {
                 holder: element.cardHolder.trim() || null,
                 number: parseInt(element.cardNumber),
                 cvv: parseInt(element.cvv) || null,
-                expiry: element.expiry || null,
+                month: element.expiryMonth || null,
+                year: element.expiryYear || null,
                 bank: {
                   id: bank.id,
                   name: bank.name
