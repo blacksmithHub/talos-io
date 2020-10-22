@@ -499,7 +499,7 @@ export default {
       this.$v.$touch()
 
       if (!this.$v.$invalid && this.webhook) {
-        this.sendWebhook(this.webhook, 'Air Jordan 4 Off-White Sail', '9', Config.bot.name, '1')
+        this.sendWebhook(this.webhook, 'Air Jordan 4 Retro Off-White Sail', '9', Config.bot.name, '1.20', 'CV9388-100')
       }
     },
 

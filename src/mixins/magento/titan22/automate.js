@@ -617,13 +617,14 @@ export default {
       const productSize = productData.sizeLabel
       const profile = task.name
       const secs = time
+      const sku = task.sku
 
       if (this.settings.webhook) {
-        this.sendWebhook(url, productName, productSize, profile, secs)
+        this.sendWebhook(url, productName, productSize, profile, secs, sku)
 
-        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs)
+        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs, sku)
       } else {
-        this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs)
+        this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs, sku)
       }
     },
 

@@ -11,7 +11,7 @@ export default {
      * @param {*} profile
      * @param {*} secs
      */
-    sendWebhook (url, product, size, profile, secs) {
+    sendWebhook (url, product, size, profile, secs, sku) {
       const webhook = require('webhook-discord')
 
       const Hook = new webhook.Webhook(url)
@@ -23,7 +23,7 @@ export default {
         .setName(Config.bot.name)
         .setColor('#f7b586')
         .setTitle('Copped!')
-        .addField('', product)
+        .addField(product, sku)
         .addField('**Size**', size)
         .addField('**Profile**', `||${profile}||`)
         .addField('**Checkout Time**', `${secs}s`)
