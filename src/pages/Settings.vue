@@ -387,15 +387,15 @@ export default {
 
           jsons.push({
             name: element.name,
-            email: element.email,
-            password: element.password,
+            email: element.profile.email,
+            password: element.profile.password,
             sku: element.sku,
             sizes: sizes,
-            bank: element.bank.name,
+            bank: element.bank.bank.name,
             cardHolder: element.bank.cardHolder,
             cardNumber: element.bank.cardNumber,
-            expiryMonth: element.bank.month,
-            expiryYear: element.bank.year,
+            expiryMonth: element.bank.expiryMonth,
+            expiryYear: element.bank.expiryYear,
             cvv: element.bank.cvv
           })
         })
@@ -454,18 +454,18 @@ export default {
       if (banks.length) {
         banks.forEach(element => {
           jsons.push({
-            name: element.name,
+            nickname: element.nickname,
             bank: element.bank.name,
-            cardHolder: element.holder,
-            cardNumber: element.number,
-            expiryMonth: element.month,
-            expiryYear: element.year,
+            cardHolder: element.cardHolder,
+            cardNumber: element.cardNumber,
+            expiryMonth: element.expiryMonth,
+            expiryYear: element.expiryYear,
             cvv: element.cvv
           })
         })
       } else {
         jsons.push({
-          name: '',
+          nickname: '',
           bank: '',
           cardHolder: '',
           cardNumber: '',

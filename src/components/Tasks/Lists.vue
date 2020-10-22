@@ -18,59 +18,86 @@
               class="task"
               @click="$emit('click:editTask', task)"
             >
-              <v-row no-gutters>
+              <v-row
+                align="center"
+                no-gutters
+              >
                 <v-col
                   cols="12"
-                  md="3"
+                  align-self="center"
                 >
-                  <h4 v-text="task.name" />
+                  <h4
+                    class="d-inline-block text-truncate"
+                    style="max-width: 20vh"
+                    v-text="`${task.name}`"
+                  />
                 </v-col>
 
                 <v-col
                   cols="12"
                   md="3"
+                  align-self="center"
                 >
                   <small
                     class="d-inline-block text-truncate"
-                    style="max-width: 100%"
+                    style="max-width: 15vh"
                   >
                     <strong
                       class="mr-1"
-                      v-text="'Email:'"
+                      v-text="'Profile:'"
                     />
-                    <span v-text="task.email" />
+                    <span v-text="`${task.profile.name}`" />
                   </small>
                 </v-col>
 
                 <v-col
                   cols="12"
-                  md="2"
+                  md="3"
+                  align-self="center"
                 >
                   <small
                     class="d-inline-block text-truncate"
-                    style="max-width: 100%"
+                    style="max-width: 15vh"
+                  >
+                    <strong
+                      class="mr-1"
+                      v-text="'Bank:'"
+                    />
+                    <span v-text="`${task.bank.nickname || 'N/A'}`" />
+                  </small>
+                </v-col>
+
+                <v-col
+                  cols="12"
+                  md="3"
+                  align-self="center"
+                >
+                  <small
+                    class="d-inline-block text-truncate"
+                    style="max-width: 15vh"
                   >
                     <strong
                       class="mr-1"
                       v-text="'SKU:'"
                     />
-                    <span v-text="task.sku" />
+                    <span v-text="`${task.sku}`" />
                   </small>
                 </v-col>
 
                 <v-col
                   cols="12"
-                  md="2"
+                  md="3"
+                  align-self="center"
                 >
                   <small
                     class="d-inline-block text-truncate"
-                    style="max-width: 100%"
+                    style="max-width: 15vh"
                   >
                     <strong
                       class="mr-1"
                       v-text="'Sizes:'"
                     />
-                    <span v-text="getSizes(task.sizes)" />
+                    <span v-text="`${getSizes(task.sizes)}`" />
                   </small>
                 </v-col>
               </v-row>

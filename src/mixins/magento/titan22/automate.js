@@ -209,8 +209,8 @@ export default {
       let token = null
 
       const credentials = {
-        username: task.email,
-        password: task.password
+        username: task.profile.email,
+        password: task.profile.password
       }
 
       while (!token && this.isRunning(task.id)) {
@@ -655,10 +655,10 @@ export default {
         .then(() => {
           win.loadURL(baseUrl)
 
-          if (this.settings.autoPay && Object.keys(task.bank).length) {
+          if (this.settings.autoPay) {
             let script = ''
 
-            switch (task.bank.id) {
+            switch (task.bank.bank.id) {
               case Constant.BANK.GCASH.id:
                 // TODO: auto fill.
                 script = 'document.getElementById(\'btnGCashSubmit\').click()'
@@ -666,12 +666,12 @@ export default {
 
               default:
 
-                script = `document.getElementById('credit_card_number').value = '${task.bank.cardNumber}'
-                document.getElementById('credit_card_holder_name').value = '${task.bank.cardHolder}'
-                document.getElementById('credit_card_expiry_month').value = '${task.bank.month}'
-                document.getElementById('credit_card_expiry_year').value = '${task.bank.year}'
-                document.getElementById('credit_card_cvv').value = '${task.bank.cvv}'
-                document.getElementById('credit_card_issuing_bank_name').value = '${task.bank.name}'
+                script = `document.getElementById('credit_card_number').value = "${task.bank.cardNumber || ''}"
+                document.getElementById('credit_card_holder_name').value = "${task.bank.cardHolder || ''}"
+                document.getElementById('credit_card_expiry_month').value = "${task.bank.expiryMonth || ''}"
+                document.getElementById('credit_card_expiry_year').value = "${task.bank.expiryYear || ''}"
+                document.getElementById('credit_card_cvv').value = "${task.bank.cvv || ''}"
+                document.getElementById('credit_card_issuing_bank_name').value = "${task.bank.bank.name || ''}"
                 document.getElementById('btnCCSubmit').click()`
 
                 break

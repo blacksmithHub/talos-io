@@ -63,7 +63,6 @@ export default {
     }
   },
   computed: {
-    ...mapState('staticBank', { banks: 'items' }),
     ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' })
   },
@@ -112,11 +111,9 @@ export default {
           const newTasks = []
 
           result.forEach(element => {
-            const bank = this.banks.find((val) => val.name.toLowerCase() === element.bank.toLowerCase().trim())
-
             const csvSizes = element.sizes.trim().split('+')
 
-            if (bank && csvSizes.length && parseInt(element.cardNumber) && element.email && element.password && element.sku) {
+            if (csvSizes.length && element.email && element.password && element.sku) {
               const sizes = []
 
               csvSizes.forEach((data) => {
@@ -137,15 +134,23 @@ export default {
                 newTasks.push({
                   bank: {
                     cardHolder: element.cardHolder.trim() || null,
-                    cardNumber: parseInt(element.cardNumber),
+                    cardNumber: parseInt(element.cardNumber) || null,
                     cvv: parseInt(element.cvv) || null,
-                    month: element.expiryMonth || null,
-                    year: element.expiryYear || null,
-                    name: bank.name,
-                    id: bank.id
+                    expiryMonth: element.expiryMonth || null,
+                    expiryYear: element.expiryYear || null,
+                    bank: {
+                      id: null,
+                      name: element.bank.trim() || null
+                    },
+                    nickname: element.bank.trim() || null,
+                    id: null
                   },
-                  email: element.email.trim(),
-                  password: element.password.trim(),
+                  profile: {
+                    id: null,
+                    name: element.email.trim(),
+                    email: element.email.trim(),
+                    password: element.password.trim()
+                  },
                   name: element.name.trim() || null,
                   sku: element.sku.trim(),
                   sizes: sizes

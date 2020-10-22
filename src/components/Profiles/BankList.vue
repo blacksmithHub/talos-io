@@ -106,18 +106,18 @@
             <v-list-item-subtitle>
               <strong
                 class="text-capitalize"
-                v-text="'Holder:'"
+                v-text="'Card Holder:'"
               />
-              {{ bank.holder || 'N/A' }}
+              {{ bank.cardHolder || 'N/A' }}
             </v-list-item-subtitle>
 
             <v-list-item-subtitle>
               <strong
                 class="text-capitalize"
-                v-text="'Number:'"
+                v-text="'Card Number:'"
               />
               <input
-                :value="bank.number"
+                :value="bank.cardNumber"
                 class="ml-1 grey--text"
                 readonly
                 disabled

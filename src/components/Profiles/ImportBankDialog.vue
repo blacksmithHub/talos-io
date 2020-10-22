@@ -114,16 +114,16 @@ export default {
 
             if (bank && parseInt(element.cardNumber)) {
               newBanks.push({
-                holder: element.cardHolder.trim() || null,
-                number: parseInt(element.cardNumber),
+                cardHolder: element.cardHolder.trim() || null,
+                cardNumber: parseInt(element.cardNumber),
                 cvv: parseInt(element.cvv) || null,
-                month: element.expiryMonth || null,
-                year: element.expiryYear || null,
+                expiryMonth: element.expiryMonth || null,
+                expiryYear: element.expiryYear || null,
                 bank: {
                   id: bank.id,
                   name: bank.name
                 },
-                nickname: element.name.trim() || null
+                nickname: element.nickname.trim() || null
               })
             }
           })
