@@ -21,7 +21,9 @@ export default {
         webhook: null,
         nightMode: true,
         sound: true,
-        autoPay: false
+        autoPay: false,
+        autoFill: false,
+        manual: true
       }
     },
 

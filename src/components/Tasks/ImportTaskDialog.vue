@@ -131,18 +131,18 @@ export default {
               })
 
               if (sizes.length) {
-                newTasks.push({
+                const object = {
                   bank: {
-                    cardHolder: element.cardHolder.trim() || null,
+                    cardHolder: (element.cardHolder) ? element.cardHolder.trim() : null,
                     cardNumber: parseInt(element.cardNumber) || null,
                     cvv: parseInt(element.cvv) || null,
                     expiryMonth: element.expiryMonth || null,
                     expiryYear: element.expiryYear || null,
                     bank: {
                       id: null,
-                      name: element.bank.trim() || null
+                      name: (element.bank) ? element.bank.trim() : null
                     },
-                    nickname: element.bank.trim() || null,
+                    nickname: (element.bank) ? element.bank.trim() : null,
                     id: null
                   },
                   profile: {
@@ -151,10 +151,19 @@ export default {
                     email: element.email.trim(),
                     password: element.password.trim()
                   },
-                  name: element.name.trim() || null,
+                  name: (element.name) ? element.name.trim() : null,
                   sku: element.sku.trim(),
                   sizes: sizes
-                })
+                }
+
+                if (element.aco) {
+                  object.name = (element.id) ? element.id.trim() : null
+                  object.profile.name = (element.id) ? element.id.trim() : null
+                  object.aco = true
+                  object.webhook = (element.webhook) ? element.webhook.trim() : null
+                }
+
+                newTasks.push(object)
               }
             }
           })

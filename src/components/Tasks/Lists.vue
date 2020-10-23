@@ -109,15 +109,32 @@
               cols="3"
               md="2"
             >
+              <input
+                :id="`link_${index}`"
+                type="hidden"
+                :value="setCookie(task.transactionData)"
+              >
+
               <v-chip
-                v-if="task.status.class === 'success' && !settings.autoPay"
+                v-if="task.status.class === 'success' && task.aco"
+                outlined
+                small
+                color="success"
+                class="text-capitalize"
+                @click="copyCookie(index)"
+                v-text="'copy checkout cookie!'"
+              />
+
+              <v-chip
+                v-else-if="task.status.class === 'success' && !settings.autoPay"
                 outlined
                 small
                 color="success"
                 class="text-capitalize"
                 @click="$emit('click:checkout', task)"
-                v-text="'click me!'"
+                v-text="'proceed to checkout!'"
               />
+
               <v-chip
                 v-else
                 outlined
@@ -190,6 +207,33 @@ export default {
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem', deleteTask: 'deleteItem' }),
+
+    /**
+     *  Get shareable cookie
+     */
+    copyCookie (index) {
+      const copyText = document.querySelector(`#link_${index}`)
+      copyText.setAttribute('type', 'text')
+      copyText.select()
+      document.execCommand('copy')
+      copyText.setAttribute('type', 'hidden')
+
+      this.$toast.open({
+        message: '<strong style="font-family: Arial; text-transform: uppercase">copied to clipboard</strong>',
+        type: 'info',
+        duration: 3000,
+        position: 'bottom-left'
+      })
+    },
+
+    /**
+     *  Set shareable cookie
+     */
+    setCookie (transactionData) {
+      if (Object.keys(transactionData).length) return transactionData.cookies.value
+
+      return ''
+    },
 
     /**
      * Perform on start event.

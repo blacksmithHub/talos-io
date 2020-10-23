@@ -11,7 +11,7 @@ export default {
      * @param {*} profile
      * @param {*} secs
      */
-    sendWebhook (url, product, size, profile, secs, sku) {
+    sendWebhook (url, product, size, profile, secs, sku, cookie) {
       const webhook = require('webhook-discord')
 
       const Hook = new webhook.Webhook(url)
@@ -27,6 +27,8 @@ export default {
         .addField('**Size**', size)
         .addField('**Profile**', `||${profile}||`)
         .addField('**Checkout Time**', `${secs}s`)
+
+      if (cookie) msg.addField('**Cookie**', `||${cookie}||`)
 
       Hook.send(msg)
     }
