@@ -158,7 +158,7 @@ export default {
      *
      */
     redirectToCheckout (task) {
-      this.launchWindow(task.transactionData)
+      this.launchWindow(task.transactionData, task)
     },
     /**
      * Start task.

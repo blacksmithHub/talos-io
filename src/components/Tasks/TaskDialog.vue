@@ -194,6 +194,9 @@ export default {
         this.sku = task.sku
         this.sizes = sizes
 
+        this.profile = task.profile
+        this.bank = task.bank
+
         this.isEditMode = true
         this.dialog = true
       }
@@ -256,23 +259,10 @@ export default {
 
         const params = {
           name: this.name.trim(),
-          email: this.profile.email,
-          password: this.profile.password,
           sku: this.sku.trim(),
-          sizes: sizes
-        }
-
-        if (Object.keys(this.bank).length) {
-          params.bank = {
-            id: this.bank.bank.id,
-            name: this.bank.bank.name,
-            cardNumber: this.bank.number,
-            cardHolder: this.bank.holder,
-            expiry: this.bank.expiry,
-            cvv: this.bank.cvv
-          }
-        } else {
-          params.bank = {}
+          sizes: sizes,
+          profile: this.profile,
+          bank: this.bank || {}
         }
 
         if (this.isEditMode) {

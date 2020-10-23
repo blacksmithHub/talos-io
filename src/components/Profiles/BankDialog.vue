@@ -50,15 +50,15 @@
                 md="6"
               >
                 <v-text-field
-                  v-model="holder"
+                  v-model="cardHolder"
                   label="Card holder"
                   required
                   outlined
                   dense
-                  :error-messages="holderErrors"
+                  :error-messages="cardHolderErrors"
                   hide-details="auto"
                   autocomplete="off"
-                  @blur="$v.holder.$touch()"
+                  @blur="$v.cardHolder.$touch()"
                 />
               </v-col>
 
@@ -67,16 +67,16 @@
                 :md="isGcash ? 12 : 6"
               >
                 <v-text-field
-                  v-model="number"
+                  v-model="cardNumber"
                   label="Card number"
                   required
                   outlined
                   dense
-                  :error-messages="numberErrors"
+                  :error-messages="cardNumberErrors"
                   hide-details="auto"
                   type="number"
                   autocomplete="off"
-                  @blur="$v.number.$touch()"
+                  @blur="$v.cardNumber.$touch()"
                 />
               </v-col>
 
@@ -85,17 +85,37 @@
                 cols="12"
                 md="6"
               >
-                <v-text-field
-                  v-model="expiry"
-                  label="Expiry date"
-                  required
-                  outlined
-                  dense
-                  :error-messages="expiryErrors"
-                  hide-details="auto"
-                  autocomplete="off"
-                  @blur="$v.expiry.$touch()"
-                />
+                <v-row>
+                  <v-col class="pt-0 pb-0">
+                    <v-text-field
+                      v-model="expiryMonth"
+                      label="Expiry month"
+                      required
+                      outlined
+                      dense
+                      :error-messages="expiryMonthErrors"
+                      hide-details="auto"
+                      type="number"
+                      autocomplete="off"
+                      @blur="$v.expiryMonth.$touch()"
+                    />
+                  </v-col>
+
+                  <v-col class="pt-0 pb-0">
+                    <v-text-field
+                      v-model="expiryYear"
+                      label="Expiry year"
+                      required
+                      outlined
+                      dense
+                      :error-messages="expiryYearErrors"
+                      hide-details="auto"
+                      type="number"
+                      autocomplete="off"
+                      @blur="$v.expiryYear.$touch()"
+                    />
+                  </v-col>
+                </v-row>
               </v-col>
 
               <v-col
@@ -144,7 +164,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
-import { required, numeric, maxLength, requiredIf } from 'vuelidate/lib/validators'
+import { required, maxLength, requiredIf, maxValue, minValue } from 'vuelidate/lib/validators'
 
 export default {
   data () {
@@ -154,9 +174,10 @@ export default {
       selectedBank: {},
       nickname: '',
       bank: {},
-      holder: '',
-      number: '',
-      expiry: '',
+      cardHolder: '',
+      cardNumber: '',
+      expiryMonth: '',
+      expiryYear: '',
       cvv: ''
     }
   },
@@ -191,42 +212,59 @@ export default {
       return errors
     },
     /**
-     * Error messages for holder.
+     * Error messages for cardHolder.
      *
      */
-    holderErrors () {
+    cardHolderErrors () {
       const errors = []
 
-      if (!this.$v.holder.$dirty) return errors
+      if (!this.$v.cardHolder.$dirty) return errors
 
-      this.$v.holder.requiredIf || errors.push('Required')
+      this.$v.cardHolder.requiredIf || errors.push('Required')
 
       return errors
     },
     /**
-     * Error messages for number.
+     * Error messages for cardNumber.
      *
      */
-    numberErrors () {
+    cardNumberErrors () {
       const errors = []
 
-      if (!this.$v.number.$dirty) return errors
+      if (!this.$v.cardNumber.$dirty) return errors
 
-      this.$v.number.required || errors.push('Required')
-      this.$v.number.numeric || errors.push('Accepts only numerics')
+      this.$v.cardNumber.required || errors.push('Required')
 
       return errors
     },
     /**
-     * Error messages for expiry.
+     * Error messages for expiryMonth.
      *
      */
-    expiryErrors () {
+    expiryMonthErrors () {
       const errors = []
 
-      if (!this.$v.expiry.$dirty) return errors
+      if (!this.$v.expiryMonth.$dirty) return errors
 
-      this.$v.expiry.requiredIf || errors.push('Required')
+      this.$v.expiryMonth.requiredIf || errors.push('Required')
+      this.$v.expiryMonth.maxLength || errors.push('Maximum length')
+      this.$v.expiryMonth.minValue || errors.push('Invalid input')
+      this.$v.expiryMonth.maxValue || errors.push('Invalid input')
+
+      return errors
+    },
+    /**
+     * Error messages for expiryYear.
+     *
+     */
+    expiryYearErrors () {
+      const errors = []
+
+      if (!this.$v.expiryYear.$dirty) return errors
+
+      this.$v.expiryYear.requiredIf || errors.push('Required')
+      this.$v.expiryYear.maxLength || errors.push('Maximum length')
+      this.$v.expiryYear.minValue || errors.push('Invalid input')
 
       return errors
     },
@@ -240,8 +278,8 @@ export default {
       if (!this.$v.cvv.$dirty) return errors
 
       this.$v.cvv.requiredIf || errors.push('Required')
-      this.$v.cvv.numeric || errors.push('Accepts only numerics')
       this.$v.cvv.maxLength || errors.push('Maximum length')
+      this.$v.cvv.minValue || errors.push('Invalid input')
 
       return errors
     }
@@ -259,9 +297,10 @@ export default {
 
         this.bank = bank.bank
         this.nickname = bank.nickname
-        this.number = bank.number
-        this.holder = bank.holder
-        this.expiry = bank.expiry
+        this.cardNumber = bank.cardNumber
+        this.cardHolder = bank.cardHolder
+        this.expiryMonth = bank.expiryMonth
+        this.expiryYear = bank.expiryYear
         this.cvv = bank.cvv
 
         this.isEditMode = true
@@ -277,9 +316,10 @@ export default {
 
       this.nickname = ''
       this.bank = {}
-      this.holder = ''
-      this.number = ''
-      this.expiry = ''
+      this.cardHolder = ''
+      this.cardNumber = ''
+      this.expiryMonth = ''
+      this.expiryYear = ''
       this.cvv = ''
       this.selectedBank = {}
 
@@ -297,9 +337,10 @@ export default {
         const params = {
           nickname: this.nickname,
           bank: this.bank,
-          holder: this.holder,
-          number: this.number,
-          expiry: this.expiry,
+          cardHolder: this.cardHolder,
+          cardNumber: this.cardNumber,
+          expiryMonth: this.expiryMonth,
+          expiryYear: this.expiryYear,
           cvv: this.cvv
         }
 
@@ -318,22 +359,29 @@ export default {
   },
   validations: {
     bank: { required },
-    holder: {
+    cardHolder: {
       requiredIf: requiredIf(function () {
         return !this.isGcash
       })
     },
-    number: {
-      required,
-      numeric
-    },
-    expiry: {
+    cardNumber: { required },
+    expiryMonth: {
       requiredIf: requiredIf(function () {
         return !this.isGcash
-      })
+      }),
+      maxLength: maxLength(2),
+      maxValue: maxValue(12),
+      minValue: minValue(1)
+    },
+    expiryYear: {
+      requiredIf: requiredIf(function () {
+        return !this.isGcash
+      }),
+      maxLength: maxLength(4),
+      minValue: minValue(1000)
     },
     cvv: {
-      numeric,
+      minValue: minValue(0),
       maxLength: maxLength(3),
       requiredIf: requiredIf(function () {
         return !this.isGcash
