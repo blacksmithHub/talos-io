@@ -128,7 +128,7 @@ export default {
             }
           })
 
-          newBanks.forEach(element => this.addTask(element))
+          newBanks.forEach(element => this.addBank(element))
 
           this.onCancel()
         }

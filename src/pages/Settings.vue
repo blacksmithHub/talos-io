@@ -409,6 +409,15 @@ export default {
     }
   },
   watch: {
+    banks () {
+      this.exportBanks(this.banks)
+    },
+    profiles () {
+      this.exportProfiles(this.profiles)
+    },
+    tasks () {
+      this.exportTasks(this.tasks)
+    },
     'settings.nightMode': function (nightMode) {
       this.$vuetify.theme.dark = nightMode
     },
@@ -456,6 +465,7 @@ export default {
       localStorage.removeItem('settings')
       localStorage.removeItem('tasks')
       localStorage.removeItem('profiles')
+      localStorage.removeItem('banks')
 
       ipcRenderer.send('clear-localStorage')
 
