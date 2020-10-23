@@ -209,8 +209,8 @@ export default {
       let token = null
 
       const credentials = {
-        username: task.email,
-        password: task.password
+        username: task.profile.email,
+        password: task.profile.password
       }
 
       while (!token && this.isRunning(task.id)) {
@@ -610,21 +610,25 @@ export default {
         duration: 3000
       })
 
-      if (this.settings.autoPay) this.launchWindow(transactionData, task)
+      if ((this.settings.autoPay || this.settings.autoFill) && !task.aco) this.launchWindow(transactionData, task)
 
       const url = this.settings.webhook
       const productName = shippingData.totals.items[0].name
       const productSize = productData.sizeLabel
-      const profile = task.name
+      const profile = task.profile.name
       const secs = time
+      const sku = task.sku
+      const cookie = transactionData.cookies.value
 
       if (this.settings.webhook) {
-        this.sendWebhook(url, productName, productSize, profile, secs)
+        this.sendWebhook(url, productName, productSize, profile, secs, sku)
 
-        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs)
+        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs, sku)
       } else {
-        this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs)
+        this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs, sku)
       }
+
+      if (task.aco && task.webhook) this.sendWebhook(task.webhook, productName, productSize, profile, secs, sku, cookie)
     },
 
     /**
@@ -655,29 +659,36 @@ export default {
         .then(() => {
           win.loadURL(baseUrl)
 
-          if (this.settings.autoPay && Object.keys(task.bank).length) {
-            let script = ''
+          let script = ''
 
-            switch (task.bank.id) {
-              case Constant.BANK.GCASH.id:
-                // TODO: auto fill.
-                script = 'document.getElementById(\'btnGCashSubmit\').click()'
-                break
+          switch (task.bank.bank.id) {
+            case Constant.BANK.GCASH.id:
+              if (this.settings.autoPay || this.settings.autoFill) script = 'document.getElementById(\'btnGCashSubmit\').click()'
+              break
 
-              default:
-                // TODO: expiry fields
-                script = `document.getElementById('credit_card_number').value = '${task.bank.cardNumber}'
-                document.getElementById('credit_card_holder_name').value = '${task.bank.cardHolder}'
-                document.getElementById('credit_card_expiry_month').value = '02'
-                document.getElementById('credit_card_expiry_year').value = '2020'
-                document.getElementById('credit_card_cvv').value = '${task.bank.cvv}'
-                document.getElementById('credit_card_issuing_bank_name').value = '${task.bank.name}'
+            default:
+
+              if (this.settings.autoPay) {
+                script = `document.getElementById('credit_card_number').value = "${task.bank.cardNumber || ''}"
+                document.getElementById('credit_card_holder_name').value = "${task.bank.cardHolder || ''}"
+                document.getElementById('credit_card_expiry_month').value = "${task.bank.expiryMonth || ''}"
+                document.getElementById('credit_card_expiry_year').value = "${task.bank.expiryYear || ''}"
+                document.getElementById('credit_card_cvv').value = "${task.bank.cvv || ''}"
+                document.getElementById('credit_card_issuing_bank_name').value = "${task.bank.bank.name || ''}"
                 document.getElementById('btnCCSubmit').click()`
-                break
-            }
+              } else if (this.settings.autoFill) {
+                script = `document.getElementById('credit_card_number').value = "${task.bank.cardNumber || ''}"
+                document.getElementById('credit_card_holder_name').value = "${task.bank.cardHolder || ''}"
+                document.getElementById('credit_card_expiry_month').value = "${task.bank.expiryMonth || ''}"
+                document.getElementById('credit_card_expiry_year').value = "${task.bank.expiryYear || ''}"
+                document.getElementById('credit_card_cvv').value = "${task.bank.cvv || ''}"
+                document.getElementById('credit_card_issuing_bank_name').value = "${task.bank.bank.name || ''}"`
+              }
 
-            win.webContents.executeJavaScript(script)
+              break
           }
+
+          win.webContents.executeJavaScript(script)
 
           win.on('closed', () => {
             win = null

@@ -32,10 +32,6 @@
             <small v-text="value" />
           </template>
 
-          <template v-slot:item.size="{ value }">
-            <small v-text="value" />
-          </template>
-
           <template v-slot:item.price="{ value }">
             <small v-text="value" />
           </template>
@@ -91,12 +87,7 @@ export default {
         {
           text: 'SKU',
           value: 'sku',
-          width: '5%'
-        },
-        {
-          text: 'Size',
-          value: 'size',
-          width: '3%'
+          width: '8%'
         },
         {
           text: 'Price',
@@ -222,12 +213,9 @@ export default {
         this.products = []
 
         response.items.forEach(element => {
-          const sku = element.sku.split('-')
-
           this.products.push({
             name: element.name,
-            sku: (sku.length > 1) ? `${sku[0]}-${sku[1]}` : element.sku,
-            size: sku[2],
+            sku: element.sku,
             price: element.price,
             link: element.custom_attributes.find((val) => val.attribute_code === 'url_key').value,
             status: element.extension_attributes.out_of_stock,

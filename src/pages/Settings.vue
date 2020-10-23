@@ -6,6 +6,7 @@
           <v-list
             class="pa-0"
             two-line
+            dense
           >
             <v-list-item class="pa-0">
               <v-list-item-content class="pa-2">
@@ -43,14 +44,48 @@
 
             <v-list-item class="pa-0">
               <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Auto Pay'" />
+                <v-list-item-title v-text="'Auto Fill + Auto Pay'" />
 
-                <v-list-item-subtitle v-text="'Enable this will automate payment process'" />
+                <v-list-item-subtitle v-text="'Enable this to submit payment automatically upon success'" />
               </v-list-item-content>
 
               <v-list-item-action>
                 <v-switch
                   v-model="autoPay"
+                  inset
+                />
+              </v-list-item-action>
+            </v-list-item>
+
+            <v-divider />
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
+                <v-list-item-title v-text="'Auto Fill'" />
+
+                <v-list-item-subtitle v-text="'Enable this to fill up bank details automatically upon success'" />
+              </v-list-item-content>
+
+              <v-list-item-action>
+                <v-switch
+                  v-model="autoFill"
+                  inset
+                />
+              </v-list-item-action>
+            </v-list-item>
+
+            <v-divider />
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
+                <v-list-item-title v-text="'Manual Checkout'" />
+
+                <v-list-item-subtitle v-text="'Launch checkout page manually upon success'" />
+              </v-list-item-content>
+
+              <v-list-item-action>
+                <v-switch
+                  v-model="manual"
                   inset
                 />
               </v-list-item-action>
@@ -123,26 +158,6 @@
                   hide-details
                   :error-messages="monitorIntervalErrors"
                   @blur="$v.monitorInterval.$touch()"
-                />
-              </v-list-item-action>
-            </v-list-item>
-
-            <v-divider />
-
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Clear Local Storage'" />
-
-                <v-list-item-subtitle v-text="'All saved records will be removed'" />
-              </v-list-item-content>
-
-              <v-list-item-action>
-                <v-btn
-                  class="primary"
-                  rounded
-                  small
-                  @click="clearLocalStorage"
-                  v-text="'Clear'"
                 />
               </v-list-item-action>
             </v-list-item>
@@ -252,6 +267,26 @@
                 />
               </v-list-item-action>
             </v-list-item>
+
+            <v-divider />
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
+                <v-list-item-title v-text="'Clear Local Storage'" />
+
+                <v-list-item-subtitle v-text="'All saved records will be removed'" />
+              </v-list-item-content>
+
+              <v-list-item-action>
+                <v-btn
+                  class="primary"
+                  rounded
+                  small
+                  @click="dialog = true"
+                  v-text="'Clear'"
+                />
+              </v-list-item-action>
+            </v-list-item>
           </v-list>
         </v-card-text>
 
@@ -274,6 +309,42 @@
         </v-card-actions>
       </v-card>
     </v-form>
+
+    <v-dialog
+      v-model="dialog"
+      persistent
+      max-width="290"
+    >
+      <v-card>
+        <v-card-title class="headline">
+          Confirmation
+        </v-card-title>
+
+        <v-card-text>
+          Do you wish to clear all saved records?
+        </v-card-text>
+
+        <v-card-actions class="justify-end">
+          <v-btn
+            class="primary"
+            rounded
+            small
+            @click="dialog = false"
+          >
+            Disagree
+          </v-btn>
+
+          <v-btn
+            small
+            class="primary"
+            rounded
+            @click="clearLocalStorage"
+          >
+            Agree
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -288,6 +359,7 @@ export default {
   mixins: [webhook],
   data () {
     return {
+      dialog: false,
       placeOrder: '',
       placeOrderMenu: false,
       monitorInterval: 1,
@@ -295,6 +367,8 @@ export default {
       nightMode: false,
       sound: false,
       autoPay: false,
+      autoFill: false,
+      manual: false,
       backupTasks: [],
       backupProfiles: [],
       backupBanks: []
@@ -337,6 +411,18 @@ export default {
   watch: {
     'settings.nightMode': function (nightMode) {
       this.$vuetify.theme.dark = nightMode
+    },
+    manual () {
+      if (this.manual) {
+        this.autoPay = false
+        this.autoFill = false
+      }
+    },
+    autoPay () {
+      if (this.autoPay) this.manual = false
+    },
+    autoFill () {
+      if (this.autoFill) this.manual = false
     }
   },
   created () {
@@ -372,6 +458,8 @@ export default {
       localStorage.removeItem('profiles')
 
       ipcRenderer.send('clear-localStorage')
+
+      this.dialog = false
     },
 
     /**
@@ -387,14 +475,15 @@ export default {
 
           jsons.push({
             name: element.name,
-            email: element.email,
-            password: element.password,
+            email: element.profile.email,
+            password: element.profile.password,
             sku: element.sku,
             sizes: sizes,
-            bank: element.bank.name,
+            bank: element.bank.bank.name,
             cardHolder: element.bank.cardHolder,
             cardNumber: element.bank.cardNumber,
-            expiry: element.bank.expiry,
+            expiryMonth: element.bank.expiryMonth,
+            expiryYear: element.bank.expiryYear,
             cvv: element.bank.cvv
           })
         })
@@ -408,7 +497,8 @@ export default {
           bank: '',
           cardHolder: '',
           cardNumber: '',
-          expiry: '',
+          expiryMonth: '',
+          expiryYear: '',
           cvv: ''
         })
       }
@@ -452,21 +542,23 @@ export default {
       if (banks.length) {
         banks.forEach(element => {
           jsons.push({
-            name: element.name,
+            nickname: element.nickname,
             bank: element.bank.name,
-            cardHolder: element.holder,
-            cardNumber: element.number,
-            expiry: element.expiry,
+            cardHolder: element.cardHolder,
+            cardNumber: element.cardNumber,
+            expiryMonth: element.expiryMonth,
+            expiryYear: element.expiryYear,
             cvv: element.cvv
           })
         })
       } else {
         jsons.push({
-          name: '',
+          nickname: '',
           bank: '',
           cardHolder: '',
           cardNumber: '',
-          expiry: '',
+          expiryMonth: '',
+          expiryYear: '',
           cvv: ''
         })
       }
@@ -479,12 +571,15 @@ export default {
      *
      */
     prepareDetails () {
+      this.dialog = false
       this.placeOrder = this.settings.placeOrder
       this.monitorInterval = this.settings.monitorInterval
       this.webhook = this.settings.webhook
       this.nightMode = this.settings.nightMode
       this.sound = this.settings.sound
       this.autoPay = this.settings.autoPay
+      this.autoFill = this.settings.autoFill
+      this.manual = this.settings.manual
     },
 
     /**
@@ -495,7 +590,7 @@ export default {
       this.$v.$touch()
 
       if (!this.$v.$invalid && this.webhook) {
-        this.sendWebhook(this.webhook, 'Air Jordan 4 Off-White Sail', '9', Config.bot.name, '1')
+        this.sendWebhook(this.webhook, 'Air Jordan 4 Retro Off-White Sail', '9', Config.bot.name, '1.20', 'CV9388-100')
       }
     },
 
@@ -513,7 +608,9 @@ export default {
           webhook: this.webhook,
           nightMode: this.nightMode,
           sound: this.sound,
-          autoPay: this.autoPay
+          autoPay: this.autoPay,
+          autoFill: this.autoFill,
+          manual: this.manual
         })
 
         ipcRenderer.send('update-settings', this.settings)
