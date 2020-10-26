@@ -11,13 +11,131 @@
         />
         <br>
         <v-card>
-          <v-card-text style="max-height: 80vh; overflow: auto;">
+          <v-card-title>
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  v-bind="attrs"
+                  :fab="!$vuetify.breakpoint.lgAndUp"
+                  :rounded="$vuetify.breakpoint.lgAndUp"
+                  :small="$vuetify.breakpoint.lgAndUp"
+                  :x-small="!$vuetify.breakpoint.lgAndUp"
+                  class="primary mr-3"
+                  v-on="on"
+                  @click="verifyAll"
+                >
+                  <v-icon
+                    :left="$vuetify.breakpoint.lgAndUp"
+                    :small="$vuetify.breakpoint.lgAndUp"
+                    v-text="'mdi-shield-search'"
+                  />
+                  <span
+                    v-if="$vuetify.breakpoint.lgAndUp"
+                    v-text="'verify all tasks'"
+                  />
+                </v-btn>
+              </template>
+              <span v-text="'Verify all tasks'" />
+            </v-tooltip>
+
+            <v-spacer />
+
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  v-bind="attrs"
+                  :fab="!$vuetify.breakpoint.lgAndUp"
+                  :rounded="$vuetify.breakpoint.lgAndUp"
+                  :small="$vuetify.breakpoint.lgAndUp"
+                  :x-small="!$vuetify.breakpoint.lgAndUp"
+                  class="primary mr-3"
+                  v-on="on"
+                  @click="startAll"
+                >
+                  <v-icon
+                    :left="$vuetify.breakpoint.lgAndUp"
+                    :small="$vuetify.breakpoint.lgAndUp"
+                    v-text="'mdi-play'"
+                  />
+                  <span
+                    v-if="$vuetify.breakpoint.lgAndUp"
+                    v-text="'start all'"
+                  />
+                </v-btn>
+              </template>
+              <span v-text="'Start all task'" />
+            </v-tooltip>
+
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  v-bind="attrs"
+                  :fab="!$vuetify.breakpoint.lgAndUp"
+                  :rounded="$vuetify.breakpoint.lgAndUp"
+                  :small="$vuetify.breakpoint.lgAndUp"
+                  :x-small="!$vuetify.breakpoint.lgAndUp"
+                  class="primary mr-3"
+                  v-on="on"
+                  @click="stopAll"
+                >
+                  <v-icon
+                    :left="$vuetify.breakpoint.lgAndUp"
+                    :small="$vuetify.breakpoint.lgAndUp"
+                    v-text="'mdi-stop'"
+                  />
+                  <span
+                    v-if="$vuetify.breakpoint.lgAndUp"
+                    v-text="'stop all'"
+                  />
+                </v-btn>
+              </template>
+              <span v-text="'Stop all tasks'" />
+            </v-tooltip>
+
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  v-bind="attrs"
+                  :fab="!$vuetify.breakpoint.lgAndUp"
+                  :rounded="$vuetify.breakpoint.lgAndUp"
+                  :small="$vuetify.breakpoint.lgAndUp"
+                  :x-small="!$vuetify.breakpoint.lgAndUp"
+                  class="primary"
+                  v-on="on"
+                  @click="deleteAll"
+                >
+                  <v-icon
+                    :left="$vuetify.breakpoint.lgAndUp"
+                    :small="$vuetify.breakpoint.lgAndUp"
+                    v-text="'mdi-delete'"
+                  />
+                  <span
+                    v-if="$vuetify.breakpoint.lgAndUp"
+                    v-text="'delete all'"
+                  />
+                </v-btn>
+              </template>
+              <span v-text="'Delete all tasks'" />
+            </v-tooltip>
+          </v-card-title>
+
+          <v-divider />
+
+          <v-card-text
+            style="max-height: 75vh; overflow: auto"
+            class="pa-0"
+          >
             <Lists
               @click:startTask="startTask"
+              @click:stopTask="stopTask"
+              @click:deleteTask="deleteTask"
               @click:editTask="openEditTaskDialog"
               @click:checkout="redirectToCheckout"
+              @click:verifyTask="verifyTask"
             />
           </v-card-text>
+
+          <v-divider />
 
           <v-card-actions>
             <v-row no-gutters>
@@ -62,6 +180,8 @@ import TaskDialog from '@/components/Tasks/TaskDialog'
 import MassEditDialog from '@/components/Tasks/MassEditDialog'
 import ImportTaskDialog from '@/components/Tasks/ImportTaskDialog'
 import automate from '@/mixins/magento/titan22/automate'
+import Constant from '@/config/constant'
+import verify from '@/mixins/magento/titan22/verify'
 
 export default {
   components: {
@@ -72,7 +192,7 @@ export default {
     MassEditDialog,
     ImportTaskDialog
   },
-  mixins: [automate],
+  mixins: [automate, verify],
   beforeRouteEnter (to, from, next) {
     next(async vm => {
       if (!vm.attributes.length) await vm.prepareAttributes()
@@ -119,7 +239,12 @@ export default {
       setAttributes: 'setItems',
       reset: 'reset'
     }),
-    ...mapActions('task', { updateTask: 'updateItem', prepareTasks: 'initializeItems' }),
+    ...mapActions('task', {
+      updateTask: 'updateItem',
+      prepareTasks: 'initializeItems',
+      resetTask: 'reset',
+      removeTask: 'deleteItem'
+    }),
     ...mapActions('setting', { setSettings: 'setItems' }),
     ...mapActions('profile', { setProfiles: 'setItems' }),
     ...mapActions('bank', { setBanks: 'setItems' }),
@@ -165,7 +290,96 @@ export default {
      *
      */
     async startTask (task) {
-      await this.init(task)
+      if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
+        this.updateTask({
+          ...task,
+          status: {
+            id: Constant.TASK.STATUS.RUNNING,
+            msg: 'running',
+            class: 'orange'
+          }
+        })
+
+        await this.init(task)
+      }
+    },
+
+    /**
+     * delete task
+     *
+     */
+    async deleteTask (task, key) {
+      await this.stopTask(task)
+      await this.removeTask(key)
+    },
+
+    /**
+     * Perform on start all event.
+     *
+     */
+    async startAll () {
+      await this.tasks.forEach((task) => {
+        if (task.status.class !== 'error') this.startTask(task)
+      })
+    },
+
+    /**
+     * Perform on stop all event.
+     *
+     */
+    async stopAll () {
+      await this.tasks.forEach((task) => this.stopTask(task))
+    },
+    /**
+     * Stop task
+     *
+     */
+    async stopTask (task) {
+      this.updateTask({
+        ...task,
+        status: {
+          id: Constant.TASK.STATUS.STOPPED,
+          msg: 'stopped',
+          class: 'grey'
+        },
+        transactionData: {}
+      })
+    },
+
+    /**
+     * Perform on delete all event.
+     *
+     */
+    async deleteAll () {
+      await this.stopAll()
+      await this.resetTask()
+    },
+
+    /**
+     * verify all tasks
+     *
+     */
+    async verifyAll () {
+      await this.tasks.forEach((task) => this.verifyTask(task))
+    },
+    /**
+     * verify task
+     *
+     */
+    async verifyTask (task) {
+      if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
+        this.updateTask({
+          ...task,
+          status: {
+            id: Constant.TASK.STATUS.RUNNING,
+            msg: 'validating',
+            class: 'cyan'
+          },
+          transactionData: {}
+        })
+
+        await this.verify(task)
+      }
     }
   }
 }

@@ -2,13 +2,34 @@
   <v-container>
     <v-card class="mt-5">
       <v-card-title>
-        <v-text-field
-          v-model="search"
-          append-icon="mdi-magnify"
-          label="Search"
-          single-line
-          hide-details
-        />
+        <v-row>
+          <v-col align-self="center">
+            <v-text-field
+              v-model="search"
+              append-icon="mdi-magnify"
+              label="Search"
+              hide-details
+              outlined
+              dense
+            />
+          </v-col>
+
+          <v-col
+            align-self="center"
+            cols="3"
+          >
+            <v-select
+              v-model="filter"
+              :items="items"
+              outlined
+              dense
+              hide-details
+              item-text="title"
+              item-value="value"
+              label="Filter By"
+            />
+          </v-col>
+        </v-row>
       </v-card-title>
 
       <v-card-text style="max-height: 80vh; overflow: auto;">
@@ -74,7 +95,12 @@ export default {
   mixins: [moment],
   data () {
     return {
-      active: false,
+      items: [
+        { title: 'Last created', value: 'created_at' },
+        { title: 'Last update', value: 'updated_at' }
+      ],
+      filter: 'updated_at',
+      interval: null,
       loading: false,
       search: '',
       headers: [
@@ -113,18 +139,12 @@ export default {
           width: '10%'
         }
       ],
-      products: []
+      products: [],
+      active: false
     }
   },
   computed: {
-    ...mapState('setting', { settings: 'items' }),
-    /**
-     * set interval value.
-     *
-     */
-    val () {
-      return this.settings.monitorInterval * 1000
-    }
+    ...mapState('setting', { settings: 'items' })
   },
   watch: {
     'settings.nightMode': function (nightMode) {
@@ -132,8 +152,6 @@ export default {
     }
   },
   created () {
-    this.searchProduct()
-
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
     })
@@ -141,43 +159,16 @@ export default {
     ipcRenderer.on('init', (event, arg) => {
       if (arg) {
         this.active = true
-        this.init()
+        this.searchProduct()
       }
     })
 
     ipcRenderer.on('stop', (event, arg) => {
-      if (arg) this.stop()
+      if (arg) this.active = false
     })
   },
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
-
-    /**
-     * Initiate monitor.
-     *
-     */
-    init () {
-      let time = this.val
-      const vm = this
-
-      const loop = setInterval(function () {
-        if (vm.active) vm.searchProduct()
-
-        if (time !== vm.val) {
-          clearInterval(loop)
-          time = vm.val
-          vm.init()
-        }
-      }, time)
-    },
-
-    /**
-     * Stop monitor.
-     *
-     */
-    stop () {
-      this.active = false
-    },
 
     /**
      * Redirect to product link.
@@ -192,39 +183,54 @@ export default {
      * Search product API.
      *
      */
-    async searchProduct () {
-      const params = {
-        searchCriteria: {
-          pageSize: 100,
-          sortOrders: [
-            {
-              field: 'updated_at',
-              direction: 'DESC'
-            }
-          ]
+    async searchProduct (callback) {
+      let status = this.active
+      let interval = this.settings.monitorInterval
+
+      while (status) {
+        interval = this.settings.monitorInterval
+
+        await new Promise(resolve => setTimeout(resolve, interval))
+
+        status = this.active
+
+        if (!status) break
+
+        const params = {
+          searchCriteria: {
+            pageSize: 100,
+            sortOrders: [
+              {
+                field: this.filter,
+                direction: 'DESC'
+              }
+            ]
+          }
         }
-      }
 
-      this.loading = true
+        this.loading = true
 
-      const response = await productApi.search(params, App.services.titan22.token)
+        const response = await productApi.search(params, App.services.titan22.token)
 
-      if (response) {
-        this.products = []
+        if (response) {
+          this.products = []
 
-        response.items.forEach(element => {
-          this.products.push({
-            name: element.name,
-            sku: element.sku,
-            price: element.price,
-            link: element.custom_attributes.find((val) => val.attribute_code === 'url_key').value,
-            status: element.extension_attributes.out_of_stock,
-            last_update: this.formatDate(element.updated_at)
+          response.items.forEach(element => {
+            this.products.push({
+              name: element.name,
+              sku: element.sku,
+              price: element.price,
+              link: element.custom_attributes.find((val) => val.attribute_code === 'url_key').value,
+              status: element.extension_attributes.out_of_stock,
+              last_update: this.formatDate(element.updated_at)
+            })
           })
-        })
+        }
+
+        this.loading = false
       }
 
-      this.loading = false
+      callback(this.active)
     }
   }
 }

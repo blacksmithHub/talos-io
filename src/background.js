@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, globalShortcut } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
@@ -24,7 +24,7 @@ protocol.registerSchemesAsPrivileged([
 function createWindow () {
   win = new BrowserWindow({
     width: 720,
-    height: 900,
+    height: 925,
     minWidth: 500,
     minHeight: 600,
     frame: false,
@@ -175,6 +175,12 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
+  if (!isDevelopment) {
+    globalShortcut.register('ctrl+r', () => {
+      return false
+    })
+  }
+
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {

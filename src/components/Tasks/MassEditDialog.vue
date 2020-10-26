@@ -40,8 +40,62 @@
                   dense
                   append-icon=""
                   hint="Press Enter per input to apply"
+                  hide-details="auto"
                   @input="filterSizes"
                 />
+              </v-col>
+
+              <v-col cols="6">
+                <v-text-field
+                  v-model="delay"
+                  dense
+                  outlined
+                  type="number"
+                  hide-details="auto"
+                  :error-messages="delayErrors"
+                  label="Delays"
+                  hint="Input value in milliseconds"
+                  @blur="$v.delay.$touch()"
+                />
+              </v-col>
+
+              <v-col cols="6">
+                <v-menu
+                  ref="placeOrderMenu"
+                  v-model="placeOrderMenu"
+                  :close-on-content-click="false"
+                  :nudge-right="40"
+                  :return-value.sync="placeOrder"
+                  transition="scale-transition"
+                  offset-y
+                  max-width="350px"
+                  min-width="350px"
+                >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="placeOrder"
+                      dense
+                      hide-details
+                      outlined
+                      readonly
+                      v-bind="attrs"
+                      style="width: 20vh"
+                      clearable
+                      label="Place Order At"
+                      v-on="on"
+                    />
+                  </template>
+                  <v-time-picker
+                    v-if="placeOrderMenu"
+                    v-model="placeOrder"
+                    full-width
+                    ampm-in-title
+                    format="ampm"
+                    use-seconds
+                    color="primary"
+                    @click:second="$refs.placeOrderMenu.save(placeOrder)"
+                  />
+                </v-menu>
               </v-col>
             </v-row>
           </v-container>
@@ -70,19 +124,35 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
-import Constant from '@/config/constant'
+import { minValue } from 'vuelidate/lib/validators'
 
 export default {
   data () {
     return {
       dialog: false,
       sizes: [],
-      sku: ''
+      sku: '',
+      delay: 1000,
+      placeOrder: '',
+      placeOrderMenu: false
     }
   },
   computed: {
     ...mapState('attribute', { attributes: 'items' }),
-    ...mapState('task', { tasks: 'items' })
+    ...mapState('task', { tasks: 'items' }),
+    /**
+     * Error messages for delay.
+     *
+     */
+    delayErrors () {
+      const errors = []
+
+      if (!this.$v.delay.$dirty) return errors
+
+      this.$v.delay.minValue || errors.push('Invalid input')
+
+      return errors
+    }
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem' }),
@@ -112,6 +182,9 @@ export default {
       this.sizes = []
       this.sku = ''
       this.dialog = false
+      this.delay = 1000
+      this.placeOrder = ''
+      this.placeOrderMenu = false
     },
 
     /**
@@ -120,17 +193,13 @@ export default {
      */
     submit () {
       this.tasks.forEach(element => {
-        if (this.sku) {
-          this.updateTask({
-            ...element,
-            sku: this.sku,
-            status: {
-              id: Constant.TASK.STATUS.STOPPED,
-              msg: 'stopped',
-              class: 'grey'
-            }
-          })
-        }
+        const params = element
+
+        if (this.delay) params.delay = this.delay
+
+        if (this.sku) params.sku = this.sku
+
+        if (this.placeOrder) params.placeOrder = this.placeOrder
 
         if (this.sizes.length) {
           const sizes = []
@@ -147,20 +216,17 @@ export default {
             })
           })
 
-          this.updateTask({
-            ...element,
-            sizes: sizes,
-            status: {
-              id: Constant.TASK.STATUS.STOPPED,
-              msg: 'stopped',
-              class: 'grey'
-            }
-          })
+          params.sizes = sizes
         }
+
+        this.updateTask(params)
       })
 
       this.onCancel()
     }
+  },
+  validations: {
+    delay: { minValue: minValue(0) }
   }
 }
 </script>

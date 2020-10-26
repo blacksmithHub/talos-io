@@ -95,57 +95,9 @@
 
             <v-list-item class="pa-0">
               <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Place Order At'" />
-
-                <v-list-item-subtitle v-text="'Set specific time before placing of order'" />
-              </v-list-item-content>
-
-              <v-list-item-action>
-                <v-menu
-                  ref="placeOrderMenu"
-                  v-model="placeOrderMenu"
-                  :close-on-content-click="false"
-                  :nudge-right="40"
-                  :return-value.sync="placeOrder"
-                  transition="scale-transition"
-                  offset-y
-                  max-width="350px"
-                  min-width="350px"
-                >
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-text-field
-                      v-model="placeOrder"
-                      dense
-                      hide-details
-                      outlined
-                      readonly
-                      v-bind="attrs"
-                      style="width: 20vh"
-                      clearable
-                      v-on="on"
-                    />
-                  </template>
-                  <v-time-picker
-                    v-if="placeOrderMenu"
-                    v-model="placeOrder"
-                    full-width
-                    ampm-in-title
-                    format="ampm"
-                    use-seconds
-                    color="primary"
-                    @click:second="$refs.placeOrderMenu.save(placeOrder)"
-                  />
-                </v-menu>
-              </v-list-item-action>
-            </v-list-item>
-
-            <v-divider />
-
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
                 <v-list-item-title v-text="'Monitor Refresh Interval'" />
 
-                <v-list-item-subtitle v-text="'Set monitor refresh interval in second/s'" />
+                <v-list-item-subtitle v-text="'Set monitor refresh interval in milliseconds'" />
               </v-list-item-content>
 
               <v-list-item-action>
@@ -360,8 +312,6 @@ export default {
   data () {
     return {
       dialog: false,
-      placeOrder: '',
-      placeOrderMenu: false,
       monitorInterval: 1,
       webhook: '',
       nightMode: false,
@@ -422,16 +372,16 @@ export default {
       this.$vuetify.theme.dark = nightMode
     },
     manual () {
-      if (this.manual) {
-        this.autoPay = false
+      if (this.manual) this.autoPay = false
+    },
+    autoPay () {
+      if (this.autoPay) {
+        this.manual = false
         this.autoFill = false
       }
     },
-    autoPay () {
-      if (this.autoPay) this.manual = false
-    },
     autoFill () {
-      if (this.autoFill) this.manual = false
+      if (this.autoFill) this.autoPay = false
     }
   },
   created () {
@@ -494,7 +444,9 @@ export default {
             cardNumber: element.bank.cardNumber,
             expiryMonth: element.bank.expiryMonth,
             expiryYear: element.bank.expiryYear,
-            cvv: element.bank.cvv
+            cvv: element.bank.cvv,
+            delay: element.delay,
+            placeOrder: element.placeOrder
           })
         })
       } else {
@@ -509,7 +461,8 @@ export default {
           cardNumber: '',
           expiryMonth: '',
           expiryYear: '',
-          cvv: ''
+          cvv: '',
+          delay: 1000
         })
       }
 
@@ -582,7 +535,6 @@ export default {
      */
     prepareDetails () {
       this.dialog = false
-      this.placeOrder = this.settings.placeOrder
       this.monitorInterval = this.settings.monitorInterval
       this.webhook = this.settings.webhook
       this.nightMode = this.settings.nightMode
@@ -613,7 +565,6 @@ export default {
 
       if (!this.$v.$invalid) {
         this.updateSettings({
-          placeOrder: this.placeOrder,
           monitorInterval: this.monitorInterval,
           webhook: this.webhook,
           nightMode: this.nightMode,

@@ -64,7 +64,9 @@ export default {
   },
   computed: {
     ...mapState('attribute', { attributes: 'items' }),
-    ...mapState('task', { tasks: 'items' })
+    ...mapState('task', { tasks: 'items' }),
+    ...mapState('profile', { profiles: 'items' }),
+    ...mapState('bank', { banks: 'items' })
   },
   methods: {
     ...mapActions('task', { addTask: 'addItem' }),
@@ -131,36 +133,61 @@ export default {
               })
 
               if (sizes.length) {
-                const object = {
-                  bank: {
-                    cardHolder: (element.cardHolder) ? element.cardHolder.trim() : null,
-                    cardNumber: parseInt(element.cardNumber) || null,
-                    cvv: parseInt(element.cvv) || null,
-                    expiryMonth: element.expiryMonth || null,
-                    expiryYear: element.expiryYear || null,
-                    bank: {
-                      id: null,
-                      name: (element.bank) ? element.bank.trim() : null
-                    },
-                    nickname: (element.bank) ? element.bank.trim() : null,
-                    id: null
-                  },
-                  profile: {
+                let profile = this.profiles.slice().find((data) => {
+                  return data.email === element.email.trim() && data.password === element.password.trim()
+                })
+
+                if (!profile) {
+                  profile = {
                     id: null,
                     name: element.email.trim(),
                     email: element.email.trim(),
                     password: element.password.trim()
-                  },
-                  name: (element.name) ? element.name.trim() : null,
+                  }
+                }
+
+                let bank = this.banks.slice().find((data) => {
+                  return (
+                    data.cardHolder.toLowerCase() === ((element.cardHolder) ? element.cardHolder.trim().toLowerCase() : '') &&
+                    data.cardNumber === (element.cardNumber || '') &&
+                    data.cvv === (parseInt(element.cvv) || '') &&
+                    data.expiryMonth === (element.expiryMonth || '') &&
+                    data.expiryYear === (element.expiryYear || '') &&
+                    data.bank.name.toLowerCase() === ((element.bank) ? element.bank.trim().toLowerCase() : null)
+                  )
+                })
+
+                if (!bank) {
+                  bank = {
+                    cardHolder: (element.cardHolder) ? element.cardHolder.trim() : '',
+                    cardNumber: parseInt(element.cardNumber) || '',
+                    cvv: parseInt(element.cvv) || '',
+                    expiryMonth: element.expiryMonth || '',
+                    expiryYear: element.expiryYear || '',
+                    bank: {
+                      id: '',
+                      name: (element.bank) ? element.bank.trim() : ''
+                    },
+                    nickname: (element.bank) ? element.bank.trim() : '',
+                    id: ''
+                  }
+                }
+
+                const object = {
+                  bank: bank,
+                  profile: profile,
+                  name: (element.name) ? element.name.trim() : '',
                   sku: element.sku.trim(),
-                  sizes: sizes
+                  sizes: sizes,
+                  delay: element.delay || 1000,
+                  placeOrder: element.placeOrder || ''
                 }
 
                 if (element.aco) {
-                  object.name = (element.id) ? element.id.trim() : null
-                  object.profile.name = (element.id) ? element.id.trim() : null
+                  object.name = (element.id) ? element.id.trim() : ''
+                  object.profile.name = (element.id) ? element.id.trim() : ''
                   object.aco = true
-                  object.webhook = (element.webhook) ? element.webhook.trim() : null
+                  object.webhook = (element.webhook) ? element.webhook.trim() : ''
                 }
 
                 newTasks.push(object)
