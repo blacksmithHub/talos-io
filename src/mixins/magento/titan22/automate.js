@@ -303,7 +303,10 @@ export default {
 
         const apiResponse = await authApi.fetchToken(credentials)
 
-        if (apiResponse.status === 200) {
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        } else if (apiResponse.status === 200) {
           token = apiResponse.data
 
           this.updateTask({
@@ -339,7 +342,10 @@ export default {
 
         const apiResponse = await customerApi.profile(token)
 
-        if (apiResponse.status === 200 && apiResponse.data.addresses.length) {
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        } else if (apiResponse.status === 200 && apiResponse.data.addresses.length) {
           user = apiResponse.data
 
           this.updateTask({
@@ -378,7 +384,10 @@ export default {
 
         const apiResponse = await cartApi.create(user.token)
 
-        if (apiResponse.status === 200) {
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        } else if (apiResponse.status === 200) {
           cartId = apiResponse.data
           break
         } else if (apiResponse.status === 401) {
@@ -408,7 +417,10 @@ export default {
 
         const apiResponse = await cartApi.get(user.token)
 
-        if (apiResponse.status === 200) {
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        } else if (apiResponse.status === 200) {
           cart = apiResponse.data
           break
         } else if (apiResponse.status === 401) {
@@ -443,11 +455,17 @@ export default {
           for (let index = 0; index < cart.items.length; index++) {
             await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
-            if (!this.isRunning(task.id)) break
+            if (!this.isRunning(task.id)) {
+              this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+              break
+            }
 
             const apiResponse = await cartApi.delete(cart.items[index].item_id, user.token)
 
-            if (apiResponse.status === 200) {
+            if (!this.isRunning(task.id)) {
+              this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+              break
+            } else if (apiResponse.status === 200) {
               responses.push(apiResponse.data)
             } else if (apiResponse.status === 401) {
               authorized = false
@@ -709,7 +727,7 @@ export default {
 
           sw.stop()
 
-          if (apiResponse.status !== 200 && apiResponse.data.cookies && vm.isRunning(task.id)) {
+          if (apiResponse.status === 200 && apiResponse.data.cookies && vm.isRunning(task.id)) {
             transactionData = apiResponse.data
             transactionData.time = (sw.read() / 1000.0).toFixed(2)
             transactionData.order = productData
