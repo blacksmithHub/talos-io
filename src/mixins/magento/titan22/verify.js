@@ -120,9 +120,12 @@ export default {
         let cartId = null
         await this.makeCart(task, user, (response) => { cartId = response })
 
-        if (!cartId || !this.isTaskRunning(task.id)) {
+        if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           return false
+        } else if (!cartId) {
+          this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'ready', 'light-blue')
+          return true
         }
 
         /**
@@ -133,9 +136,12 @@ export default {
         let cart = {}
         await this.fetchCart(task, user, (response) => { cart = response })
 
-        if (!Object.keys(cart).length || !this.isTaskRunning(task.id)) {
+        if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           return false
+        } else if (!Object.keys(cart).length) {
+          this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'ready', 'light-blue')
+          return true
         }
 
         /**
@@ -252,25 +258,21 @@ export default {
     async makeCart (task, user, callback) {
       let cartId = null
 
-      while (this.isTaskRunning(task.id)) {
+      if (this.isTaskRunning(task.id)) {
         await new Promise(resolve => setTimeout(resolve, this.getActiveTask(task).delay))
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
+          callback(cartId)
+          return false
         }
 
         const apiResponse = await cartApi.create(user.token)
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
         } else if (apiResponse.status === 200) {
           cartId = apiResponse.data
-
-          break
-        } else if (apiResponse.status === 500) {
-          continue
         }
       }
 
@@ -287,25 +289,21 @@ export default {
     async fetchCart (task, user, callback) {
       let cart = {}
 
-      while (this.isTaskRunning(task.id)) {
+      if (this.isTaskRunning(task.id)) {
         await new Promise(resolve => setTimeout(resolve, this.getActiveTask(task).delay))
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
+          callback(cart)
+          return false
         }
 
         const apiResponse = await cartApi.get(user.token)
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
         } else if (apiResponse.status === 200) {
           cart = apiResponse.data
-
-          break
-        } else if (apiResponse.status === 500) {
-          continue
         }
       }
 
