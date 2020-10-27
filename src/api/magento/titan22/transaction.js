@@ -18,13 +18,9 @@ export default {
    *
    */
   placeOrder (params) {
-    try {
-      return this.http(this.baseUrl)
-        .post(`${this.url}`, params)
-        .then(({ data }) => data)
-        .catch(() => false)
-    } catch (error) {
-      return false
-    }
+    return this.http(this.baseUrl)
+      .post(`${this.url}`, params)
+      .then(response => response)
+      .catch(({ response }) => response)
   }
 }

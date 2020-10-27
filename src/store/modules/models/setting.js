@@ -16,8 +16,7 @@ export default {
      */
     RESET (state) {
       state.items = {
-        placeOrder: null,
-        monitorInterval: 60,
+        monitorInterval: 5000,
         webhook: null,
         nightMode: true,
         sound: true,

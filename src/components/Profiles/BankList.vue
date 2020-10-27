@@ -22,6 +22,7 @@
           >
             <v-icon
               :left="$vuetify.breakpoint.lgAndUp"
+              :small="$vuetify.breakpoint.lgAndUp"
               v-text="'mdi-plus'"
             />
             <span
@@ -45,7 +46,8 @@
           >
             <v-icon
               :left="$vuetify.breakpoint.lgAndUp"
-              v-text="'mdi-playlist-plus'"
+              :small="$vuetify.breakpoint.lgAndUp"
+              v-text="'mdi-upload'"
             />
             <span
               v-if="$vuetify.breakpoint.lgAndUp"
@@ -68,6 +70,7 @@
           >
             <v-icon
               :left="$vuetify.breakpoint.lgAndUp"
+              :small="$vuetify.breakpoint.lgAndUp"
               v-text="'mdi-delete'"
             />
             <span

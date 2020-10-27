@@ -12,11 +12,11 @@
         <v-list-item-content class="pa-2">
           <v-row no-gutters>
             <v-col
-              cols="5"
+              cols="4"
               md="8"
               align-self="center"
               class="task"
-              @click="$emit('click:editTask', task)"
+              @click="(task.status.class === 'error') ? '' : $emit('click:editTask', task)"
             >
               <v-row
                 align="center"
@@ -28,7 +28,7 @@
                 >
                   <h4
                     class="d-inline-block text-truncate"
-                    style="max-width: 20vh"
+                    style="max-width: 15vh"
                     v-text="`${task.name}`"
                   />
                 </v-col>
@@ -40,7 +40,7 @@
                 >
                   <small
                     class="d-inline-block text-truncate"
-                    style="max-width: 15vh"
+                    style="max-width: 14vh"
                   >
                     <strong
                       class="mr-1"
@@ -57,7 +57,7 @@
                 >
                   <small
                     class="d-inline-block text-truncate"
-                    style="max-width: 15vh"
+                    style="max-width: 14vh"
                   >
                     <strong
                       class="mr-1"
@@ -74,7 +74,7 @@
                 >
                   <small
                     class="d-inline-block text-truncate"
-                    style="max-width: 15vh"
+                    style="max-width: 14vh"
                   >
                     <strong
                       class="mr-1"
@@ -91,7 +91,7 @@
                 >
                   <small
                     class="d-inline-block text-truncate"
-                    style="max-width: 15vh"
+                    style="max-width: 14vh"
                   >
                     <strong
                       class="mr-1"
@@ -114,6 +114,21 @@
                 type="hidden"
                 :value="setCookie(task.transactionData)"
               >
+
+              <p
+                v-if="task.delay"
+                class="mb-1"
+              >
+                <v-icon
+                  left
+                  x-small
+                  v-text="'mdi-timelapse'"
+                />
+                <small
+                  class="text-capitalize"
+                  v-text="`${task.delay}ms`"
+                />
+              </p>
 
               <v-chip
                 v-if="task.status.class === 'success' && task.aco"
@@ -143,18 +158,39 @@
                 class="text-capitalize"
                 v-text="task.status.msg"
               />
+
+              <p
+                v-if="task.placeOrder"
+                class="mb-0 mt-1"
+              >
+                <v-icon
+                  left
+                  x-small
+                  v-text="'mdi-alarm-check'"
+                />
+                <small v-text="$moment(`${$moment().format('YYYY/MM/DD')} ${task.placeOrder}`).format('h:mm:ss a')" />
+              </p>
             </v-col>
 
             <v-col
               align-self="center"
-              cols="4"
+              cols="5"
               md="2"
               class="text-right"
             >
               <v-btn
                 icon
                 color="primary"
-                @click="onStart(task)"
+                @click="$emit('click:verifyTask', task)"
+              >
+                <v-icon v-text="'mdi-shield-search'" />
+              </v-btn>
+
+              <v-btn
+                v-if="task.status.class !== 'error'"
+                icon
+                color="primary"
+                @click="$emit('click:startTask', task)"
               >
                 <v-icon v-text="'mdi-play'" />
               </v-btn>
@@ -162,7 +198,7 @@
               <v-btn
                 icon
                 color="primary"
-                @click="onStop(task)"
+                @click="$emit('click:stopTask', task)"
               >
                 <v-icon v-text="'mdi-stop'" />
               </v-btn>
@@ -170,7 +206,7 @@
               <v-btn
                 icon
                 color="primary"
-                @click="onDelete(task, index)"
+                @click="$emit('click:deleteTask', task, index)"
               >
                 <v-icon v-text="'mdi-delete'" />
               </v-btn>
@@ -196,9 +232,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
-
-import Constant from '@/config/constant'
+import { mapState } from 'vuex'
 
 export default {
   computed: {
@@ -206,8 +240,6 @@ export default {
     ...mapState('setting', { settings: 'items' })
   },
   methods: {
-    ...mapActions('task', { updateTask: 'updateItem', deleteTask: 'deleteItem' }),
-
     /**
      *  Get shareable cookie
      */
@@ -230,53 +262,9 @@ export default {
      *  Set shareable cookie
      */
     setCookie (transactionData) {
-      if (Object.keys(transactionData).length) return transactionData.cookies.value
+      if (Object.keys(transactionData).length && transactionData.cookies) return transactionData.cookies.value
 
       return ''
-    },
-
-    /**
-     * Perform on start event.
-     *
-     */
-    async onStart (task) {
-      this.updateTask({
-        ...task,
-        status: {
-          id: Constant.TASK.STATUS.RUNNING,
-          msg: 'running',
-          class: 'orange'
-        },
-        transactionData: {}
-      })
-
-      await this.$emit('click:startTask', task)
-    },
-
-    /**
-     * Perform on stop event.
-     *
-     */
-    async onStop (task) {
-      await this.updateTask({
-        ...task,
-        status: {
-          id: Constant.TASK.STATUS.STOPPED,
-          msg: 'stopped',
-          class: 'grey'
-        },
-        transactionData: {}
-      })
-    },
-
-    /**
-     * Perform on delete event.
-     *
-     */
-    async onDelete (task, key) {
-      await this.onStop(task)
-
-      this.deleteTask(key)
     },
 
     /**
@@ -298,16 +286,22 @@ export default {
 
 <style scoped>
 .orange-left-border {
-  border-left: 5px solid orange
+  border-left: 3px solid orange
 }
 .grey-left-border {
-  border-left: 5px solid grey
+  border-left: 3px solid grey
 }
 .error-left-border {
-  border-left: 5px solid red
+  border-left: 3px solid red
 }
 .success-left-border {
-  border-left: 5px solid green
+  border-left: 3px solid green
+}
+.cyan-left-border {
+  border-left: 3px solid cyan
+}
+.light-blue-left-border {
+  border-left: 3px solid lightblue
 }
 
 .task:hover {

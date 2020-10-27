@@ -66,6 +66,17 @@ export default {
     },
 
     /**
+     * Return active task
+     *
+     * @param {*} task
+     */
+    activeTask (task) {
+      const runningTask = this.allTasks.find((data) => data.id === task.id)
+
+      return runningTask || {}
+    },
+
+    /**
      * Initialize automation.
      *
      * @param {*} task
@@ -84,6 +95,8 @@ export default {
      * @param {*} task
      */
     async shopping (task) {
+      let isAuthorized = true
+
       /**
        * Step 1: authenticate
        *
@@ -107,9 +120,21 @@ export default {
        */
       let userData = {}
 
-      await this.getProfile(task, tokenData, (response) => { userData = response })
+      await this.getProfile(task, tokenData, (response, authorized) => {
+        isAuthorized = authorized
+        userData = response
+      })
 
-      if (!Object.keys(userData).length || !this.isRunning(task.id)) {
+      if (!isAuthorized) {
+        this.updateTask({
+          ...this.activeTask(task),
+          transactionData: {}
+        })
+
+        this.init(this.activeTask(task))
+
+        return false
+      } else if (!Object.keys(userData).length || !this.isRunning(task.id)) {
         this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
         return false
       }
@@ -128,9 +153,21 @@ export default {
 
       let cartId = null
 
-      await this.createCart(task, user, (response) => { cartId = response })
+      await this.createCart(task, user, (response, authorized) => {
+        isAuthorized = authorized
+        cartId = response
+      })
 
-      if (!cartId || !this.isRunning(task.id)) {
+      if (!isAuthorized) {
+        this.updateTask({
+          ...this.activeTask(task),
+          transactionData: {}
+        })
+
+        this.init(this.activeTask(task))
+
+        return false
+      } else if (!cartId || !this.isRunning(task.id)) {
         this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
         return false
       }
@@ -142,9 +179,21 @@ export default {
        */
       let cartData = {}
 
-      await this.getCart(task, user, (response) => { cartData = response })
+      await this.getCart(task, user, (response, authorized) => {
+        isAuthorized = authorized
+        cartData = response
+      })
 
-      if (!Object.keys(cartData).length || !this.isRunning(task.id)) {
+      if (!isAuthorized) {
+        this.updateTask({
+          ...this.activeTask(task),
+          transactionData: {}
+        })
+
+        this.init(this.activeTask(task))
+
+        return false
+      } else if (!Object.keys(cartData).length || !this.isRunning(task.id)) {
         this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
         return false
       }
@@ -156,9 +205,21 @@ export default {
        */
       let cleanCartData = false
 
-      await this.cleanCart(task, cartData, user, (response) => { cleanCartData = response })
+      await this.cleanCart(task, cartData, user, (response, authorized) => {
+        isAuthorized = authorized
+        cleanCartData = response
+      })
 
-      if (!cleanCartData || !this.isRunning(task.id)) {
+      if (!isAuthorized) {
+        this.updateTask({
+          ...this.activeTask(task),
+          transactionData: {}
+        })
+
+        this.init(this.activeTask(task))
+
+        return false
+      } else if (!cleanCartData || !this.isRunning(task.id)) {
         this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
         return false
       }
@@ -170,9 +231,21 @@ export default {
        */
       let productData = {}
 
-      await this.addItemToCart(task, cartData, user, (response) => { productData = response })
+      await this.addItemToCart(task, cartData, user, (response, authorized) => {
+        isAuthorized = authorized
+        productData = response
+      })
 
-      if (!Object.keys(productData).length || !this.isRunning(task.id)) {
+      if (!isAuthorized) {
+        this.updateTask({
+          ...this.activeTask(task),
+          transactionData: {}
+        })
+
+        this.init(this.activeTask(task))
+
+        return false
+      } else if (!Object.keys(productData).length || !this.isRunning(task.id)) {
         this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
         return false
       }
@@ -184,9 +257,21 @@ export default {
        */
       let shippingData = {}
 
-      await this.setShippingInfo(task, user, productData, (response) => { shippingData = response })
+      await this.setShippingInfo(task, user, productData, (response, authorized) => {
+        isAuthorized = authorized
+        shippingData = response
+      })
 
-      if (!Object.keys(shippingData).length || !this.isRunning(task.id)) {
+      if (!isAuthorized) {
+        this.updateTask({
+          ...this.activeTask(task),
+          transactionData: {}
+        })
+
+        this.init(this.activeTask(task))
+
+        return false
+      } else if (!Object.keys(shippingData).length || !this.isRunning(task.id)) {
         this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
         return false
       }
@@ -206,19 +291,36 @@ export default {
      * @param {*} callback
      */
     async authenticate (task, callback) {
-      let token = null
-
-      const credentials = {
-        username: task.profile.email,
-        password: task.profile.password
-      }
+      let token = this.activeTask(task).transactionData.token
 
       while (!token && this.isRunning(task.id)) {
+        await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
+        const credentials = {
+          username: this.activeTask(task).profile.email,
+          password: this.activeTask(task).profile.password
+        }
+
         const apiResponse = await authApi.fetchToken(credentials)
 
-        if (!apiResponse) continue
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        } else if (apiResponse.status === 200) {
+          token = apiResponse.data
 
-        token = apiResponse
+          this.updateTask({
+            ...this.activeTask(task),
+            transactionData: {
+              ...this.activeTask(task).transactionData,
+              token: token
+            }
+          })
+
+          break
+        } else {
+          continue
+        }
       }
 
       callback(token)
@@ -232,17 +334,38 @@ export default {
      * @param {*} callback
      */
     async getProfile (task, token, callback) {
-      let user = {}
+      let user = this.activeTask(task).transactionData.user || {}
+      let authorized = true
 
       while (!Object.keys(user).length && this.isRunning(task.id)) {
+        await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
         const apiResponse = await customerApi.profile(token)
 
-        if (!apiResponse || !apiResponse.addresses.length) continue
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        } else if (apiResponse.status === 200 && apiResponse.data.addresses.length) {
+          user = apiResponse.data
 
-        user = apiResponse
+          this.updateTask({
+            ...this.activeTask(task),
+            transactionData: {
+              ...this.activeTask(task).transactionData,
+              user: user
+            }
+          })
+
+          break
+        } else if (apiResponse.status === 401) {
+          authorized = false
+          break
+        } else {
+          continue
+        }
       }
 
-      callback(user)
+      callback(user, authorized)
     },
 
     /**
@@ -254,16 +377,28 @@ export default {
      */
     async createCart (task, user, callback) {
       let cartId = null
+      let authorized = true
 
       while (!cartId && this.isRunning(task.id)) {
+        await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
         const apiResponse = await cartApi.create(user.token)
 
-        if (!apiResponse) continue
-
-        cartId = apiResponse
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        } else if (apiResponse.status === 200) {
+          cartId = apiResponse.data
+          break
+        } else if (apiResponse.status === 401) {
+          authorized = false
+          break
+        } else {
+          continue
+        }
       }
 
-      callback(cartId)
+      callback(cartId, authorized)
     },
 
     /**
@@ -275,16 +410,28 @@ export default {
      */
     async getCart (task, user, callback) {
       let cart = {}
+      let authorized = true
 
       while (!Object.keys(cart).length && this.isRunning(task.id)) {
+        await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
         const apiResponse = await cartApi.get(user.token)
 
-        if (!apiResponse) continue
-
-        cart = apiResponse
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        } else if (apiResponse.status === 200) {
+          cart = apiResponse.data
+          break
+        } else if (apiResponse.status === 401) {
+          authorized = false
+          break
+        } else {
+          continue
+        }
       }
 
-      callback(cart)
+      callback(cart, authorized)
     },
 
     /**
@@ -297,24 +444,42 @@ export default {
      */
     async cleanCart (task, cart, user, callback) {
       let success = false
+      const responses = []
+      let authorized = true
 
-      while (!success && this.isRunning(task.id)) {
-        if (!cart.items.length) {
-          success = true
-          break
+      if (!cart.items.length) {
+        success = true
+        callback(success, authorized)
+      } else {
+        while (!success && this.isRunning(task.id)) {
+          for (let index = 0; index < cart.items.length; index++) {
+            await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
+            if (!this.isRunning(task.id)) {
+              this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+              break
+            }
+
+            const apiResponse = await cartApi.delete(cart.items[index].item_id, user.token)
+
+            if (!this.isRunning(task.id)) {
+              this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+              break
+            } else if (apiResponse.status === 200) {
+              responses.push(apiResponse.data)
+            } else if (apiResponse.status === 401) {
+              authorized = false
+              break
+            } else {
+              continue
+            }
+          }
+
+          if (responses.length === cart.items.length && !responses.includes(false)) success = true
         }
 
-        const promises = []
-
-        Object.keys(cart.items).forEach(async (item) => {
-          await promises.push(cartApi.delete(cart.items.[item].item_id, user.token))
-        })
-
-        await Promise.all(promises)
-          .then((values) => { success = !values.includes(false) })
+        callback(success, authorized)
       }
-
-      callback(success)
     },
 
     /**
@@ -327,22 +492,27 @@ export default {
      */
     async addItemToCart (task, cart, user, callback) {
       let response = {}
+      let authorized = true
 
       while (!Object.keys(response).length && this.isRunning(task.id)) {
-        for (var i = 0; i < task.sizes.length; ++i) {
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${task.sizes[i].label} - trying`, 'orange')
+        for (var i = 0; i < this.activeTask(task).sizes.length; ++i) {
+          await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
+          if (!this.isRunning(task.id)) break
+
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - trying`, 'orange')
 
           const order = {
             cartItem: {
-              sku: `${task.sku}-SZ${task.sizes[i].label.replace('.', 'P').toUpperCase()}`,
+              sku: `${this.activeTask(task).sku}-SZ${this.activeTask(task).sizes[i].label.replace('.', 'P').toUpperCase()}`,
               qty: 1,
               quote_id: cart.id.toString(),
               product_option: {
                 extension_attributes: {
                   configurable_item_options: [
                     {
-                      option_id: task.sizes[i].attribute_id.toString(),
-                      option_value: parseInt(task.sizes[i].value)
+                      option_id: this.activeTask(task).sizes[i].attribute_id.toString(),
+                      option_value: parseInt(this.activeTask(task).sizes[i].value)
                     }
                   ]
                 }
@@ -356,24 +526,27 @@ export default {
           if (!this.isRunning(task.id)) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
             break
-          }
-
-          if (apiResponse) {
-            this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${task.sizes[i].label} - carted`, 'orange')
+          } else if (apiResponse.status === 200) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - carted`, 'orange')
 
             response = {
-              ...apiResponse,
-              sizeLabel: task.sizes[i].label
+              ...apiResponse.data,
+              sizeLabel: this.activeTask(task).sizes[i].label
             }
 
             break
+          } else if (apiResponse.status === 401) {
+            authorized = false
+            break
+          } else {
+            continue
           }
         }
 
         if (Object.keys(response).length) break
       }
 
-      callback(response)
+      callback(response, authorized)
     },
 
     /**
@@ -390,7 +563,12 @@ export default {
 
       let shippingInfo = {}
 
-      await this.getEstimateShipping(product, defaultShippingAddress, task, user, (response) => { shippingInfo = response })
+      let isAuthorized = true
+
+      await this.getEstimateShipping(product, defaultShippingAddress, task, user, (response, authorized) => {
+        isAuthorized = authorized
+        shippingInfo = response
+      })
 
       const shippingAddress = this.setAddresses(defaultShippingAddress, user)
       const billingAddress = this.setAddresses(defaultBillingAddress, user)
@@ -406,23 +584,30 @@ export default {
 
       let shipping = {}
 
-      while (!Object.keys(shipping).length && this.isRunning(task.id)) {
+      while (!Object.keys(shipping).length && this.isRunning(task.id) && isAuthorized) {
+        await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
+        if (!this.isRunning(task.id)) break
+
+        this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'set shipping info', 'orange')
+
         const cartApiResponse = await cartApi.setShippingInformation(shippingParams, user.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
+        } else if (cartApiResponse.status === 200 && cartApiResponse.data.payment_methods.length) {
+          shipping = cartApiResponse.data
+          break
+        } else if (cartApiResponse.status === 401) {
+          isAuthorized = false
+          break
+        } else {
+          continue
         }
-
-        this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'set shipping info', 'orange')
-
-        if (!cartApiResponse) continue
-
-        shipping = cartApiResponse
-        break
       }
 
-      callback(shipping)
+      callback(shipping, isAuthorized)
     },
 
     /**
@@ -439,6 +624,7 @@ export default {
         carrier_code: 'freeshipping',
         method_code: 'freeshipping'
       }
+      let authorized = true
 
       if (product.price < 5000) {
         const estimateParams = { addressId: defaultShippingAddress.id }
@@ -446,23 +632,31 @@ export default {
         let success = false
 
         while (!success && this.isRunning(task.id)) {
+          await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
+          if (!this.isRunning(task.id)) break
+
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'estimate shipping', 'orange')
+
           const apiResponse = await cartApi.estimateShipping(estimateParams, user.token)
 
           if (!this.isRunning(task.id)) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
             break
+          } else if (apiResponse.status === 200) {
+            shippingInfo = apiResponse.data[0]
+            success = true
+            break
+          } else if (apiResponse.status === 401) {
+            authorized = false
+            break
+          } else {
+            continue
           }
-
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'estimate shipping', 'orange')
-
-          if (!apiResponse) continue
-
-          shippingInfo = apiResponse[0]
-          success = true
         }
       }
 
-      callback(shippingInfo)
+      callback(shippingInfo, authorized)
     },
 
     /**
@@ -512,31 +706,36 @@ export default {
         token: user.token
       }
 
-      let transactionData = {}
       const vm = this
 
       await this.timer(task, productData.sizeLabel, async (response) => {
-        if (response) {
-          const sw = new StopWatch(true)
+        if (response && vm.isRunning(task.id)) {
+          let transactionData = {}
 
-          while (!Object.keys(transactionData).length && vm.isRunning(task.id)) {
-            vm.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
+          await new Promise(resolve => setTimeout(resolve, vm.activeTask(task).delay))
 
-            const apiResponse = await transactionApi.placeOrder(params)
-
-            if (!apiResponse) continue
-
-            transactionData = apiResponse
-          }
-
-          sw.stop()
-
-          if (!Object.keys(transactionData).length || !vm.isRunning(task.id)) {
+          if (!vm.isRunning(task.id)) {
             vm.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
             return false
           }
 
-          vm.onSuccess(task, transactionData, shippingData, (sw.read() / 1000.0).toFixed(2), productData)
+          vm.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
+
+          const sw = new StopWatch(true)
+
+          const apiResponse = await transactionApi.placeOrder(params)
+
+          sw.stop()
+
+          if (apiResponse.status === 200 && apiResponse.data.cookies && vm.isRunning(task.id)) {
+            transactionData = apiResponse.data
+            transactionData.time = (sw.read() / 1000.0).toFixed(2)
+            transactionData.order = productData
+
+            vm.onSuccess(task, transactionData, shippingData, productData)
+          } else {
+            vm.init(vm.activeTask(task))
+          }
         }
       })
     },
@@ -549,19 +748,20 @@ export default {
      * @param {*} callback
      */
     timer (task, sizeLabel, callback) {
+      this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${sizeLabel} - waiting to place order`, 'orange')
+
       let proceed = false
       const vm = this
 
       const loop = setInterval(function () {
         if (!vm.isRunning(task.id)) {
+          vm.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           clearInterval(loop)
           callback(proceed)
         }
 
-        if (vm.settings.placeOrder) {
-          vm.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${sizeLabel} - waiting to place order`, 'orange')
-
-          const timer = vm.$moment(`${vm.$moment().format('YYYY-MM-DD')} ${vm.settings.placeOrder}`).format('hh:mm:ss a')
+        if (vm.activeTask(task).placeOrder) {
+          const timer = vm.$moment(`${vm.$moment().format('YYYY-MM-DD')} ${vm.activeTask(task).placeOrder}`).format('hh:mm:ss a')
           const current = vm.$moment().format('hh:mm:ss a')
 
           if (timer === current) {
@@ -585,7 +785,7 @@ export default {
      * @param {*} shippingData
      * @param {*} time
      */
-    onSuccess (task, transactionData, shippingData, time, productData) {
+    onSuccess (task, transactionData, shippingData, productData) {
       this.updateTask({
         ...task,
         status: {
@@ -593,7 +793,10 @@ export default {
           msg: 'copped!',
           class: 'success'
         },
-        transactionData: transactionData
+        transactionData: {
+          ...transactionData,
+          ...this.activeTask(task).transactionData
+        }
       })
 
       if (this.settings.sound) {
@@ -610,14 +813,14 @@ export default {
         duration: 3000
       })
 
-      if ((this.settings.autoPay || this.settings.autoFill) && !task.aco) this.launchWindow(transactionData, task)
+      if (this.settings.autoPay && !this.activeTask(task).aco) this.launchWindow(transactionData, task)
 
       const url = this.settings.webhook
       const productName = shippingData.totals.items[0].name
       const productSize = productData.sizeLabel
-      const profile = task.profile.name
-      const secs = time
-      const sku = task.sku
+      const profile = this.activeTask(task).profile.name
+      const secs = transactionData.time
+      const sku = this.activeTask(task).sku
       const cookie = transactionData.cookies.value
 
       if (this.settings.webhook) {
@@ -628,7 +831,7 @@ export default {
         this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs, sku)
       }
 
-      if (task.aco && task.webhook) this.sendWebhook(task.webhook, productName, productSize, profile, secs, sku, cookie)
+      if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie)
     },
 
     /**
@@ -661,7 +864,7 @@ export default {
 
           let script = ''
 
-          switch (task.bank.bank.id) {
+          switch (this.activeTask(task).bank.bank.id) {
             case Constant.BANK.GCASH.id:
               if (this.settings.autoPay || this.settings.autoFill) script = 'document.getElementById(\'btnGCashSubmit\').click()'
               break
@@ -669,24 +872,54 @@ export default {
             default:
 
               if (this.settings.autoPay) {
-                script = `document.getElementById('credit_card_number').value = "${task.bank.cardNumber || ''}"
-                document.getElementById('credit_card_holder_name').value = "${task.bank.cardHolder || ''}"
-                document.getElementById('credit_card_expiry_month').value = "${task.bank.expiryMonth || ''}"
-                document.getElementById('credit_card_expiry_year').value = "${task.bank.expiryYear || ''}"
-                document.getElementById('credit_card_cvv').value = "${task.bank.cvv || ''}"
-                document.getElementById('credit_card_issuing_bank_name').value = "${task.bank.bank.name || ''}"
-                document.getElementById('btnCCSubmit').click()`
+                script = `
+                (function($) {
+                  $(function() {
+                    document.getElementById('credit_card_number').value = "${this.activeTask(task).bank.cardNumber || ''}";
+                    document.getElementById('credit_card_holder_name').value = "${this.activeTask(task).bank.cardHolder || ''}";
+                    document.getElementById('credit_card_expiry_month').value = "${this.activeTask(task).bank.expiryMonth || ''}";
+                    document.getElementById('credit_card_expiry_year').value = "${this.activeTask(task).bank.expiryYear || ''}";
+                    document.getElementById('credit_card_cvv').value = "${this.activeTask(task).bank.cvv || ''}";
+                    document.getElementById('credit_card_issuing_bank_name').value = "${this.activeTask(task).bank.bank.name || ''}";
+                    document.getElementById('btnCCSubmit').click();
+                  });
+                })(window.$);`
               } else if (this.settings.autoFill) {
-                script = `document.getElementById('credit_card_number').value = "${task.bank.cardNumber || ''}"
-                document.getElementById('credit_card_holder_name').value = "${task.bank.cardHolder || ''}"
-                document.getElementById('credit_card_expiry_month').value = "${task.bank.expiryMonth || ''}"
-                document.getElementById('credit_card_expiry_year').value = "${task.bank.expiryYear || ''}"
-                document.getElementById('credit_card_cvv').value = "${task.bank.cvv || ''}"
-                document.getElementById('credit_card_issuing_bank_name').value = "${task.bank.bank.name || ''}"`
+                script = `
+                (function($) {
+                  $(function() {
+                    document.getElementById('credit_card_number').value = "${this.activeTask(task).bank.cardNumber || ''}";
+                    document.getElementById('credit_card_holder_name').value = "${this.activeTask(task).bank.cardHolder || ''}";
+                    document.getElementById('credit_card_expiry_month').value = "${this.activeTask(task).bank.expiryMonth || ''}";
+                    document.getElementById('credit_card_expiry_year').value = "${this.activeTask(task).bank.expiryYear || ''}";
+                    document.getElementById('credit_card_cvv').value = "${this.activeTask(task).bank.cvv || ''}";
+                    document.getElementById('credit_card_issuing_bank_name').value = "${this.activeTask(task).bank.bank.name || ''}";
+                  });
+                })(window.$);`
               }
 
               break
           }
+
+          const orderDetails = `
+          (function($) {
+            $(function() {
+              $(".navbar-inner").append("<p><strong>Task:</strong> ${this.activeTask(task).name}</p>");
+              $(".navbar-inner").append("<p><strong>Profile:</strong> ${this.activeTask(task).profile.name}</p>");
+              $(".navbar-inner").append("<p><strong>Product name:</strong> ${transactionData.order.name}</p>");
+              $(".navbar-inner").append("<p><strong>Product SKU:</strong> ${transactionData.order.sku}</p>");
+              $(".navbar-inner").append("<p><strong>Size:</strong> ${transactionData.order.sizeLabel}</p>");
+              $(".navbar-inner").append("<p><strong>Price:</strong> ${transactionData.order.price}</p>");
+            });
+          })(window.$);`
+
+          if (script) {
+            script.concat(orderDetails)
+          } else {
+            script = orderDetails
+          }
+
+          win.webContents.openDevTools()
 
           win.webContents.executeJavaScript(script)
 
