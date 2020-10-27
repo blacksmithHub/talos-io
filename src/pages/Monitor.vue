@@ -74,7 +74,7 @@
             />
           </template>
 
-          <template v-slot:item.last_update="{ value }">
+          <template v-slot:item.date="{ value }">
             <small v-text="value" />
           </template>
         </v-data-table>
@@ -134,8 +134,8 @@ export default {
           align: 'center'
         },
         {
-          text: 'Last Update',
-          value: 'last_update',
+          text: 'Date',
+          value: 'date',
           width: '10%'
         }
       ],
@@ -198,13 +198,13 @@ export default {
 
         const params = {
           searchCriteria: {
-            pageSize: 100,
             sortOrders: [
               {
                 field: this.filter,
                 direction: 'DESC'
               }
-            ]
+            ],
+            pageSize: 100
           }
         }
 
@@ -222,7 +222,7 @@ export default {
               price: element.price,
               link: element.custom_attributes.find((val) => val.attribute_code === 'url_key').value,
               status: element.extension_attributes.out_of_stock,
-              last_update: this.formatDate(element.updated_at)
+              date: this.formatDate(element.updated_at)
             })
           })
         }

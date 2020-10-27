@@ -20,6 +20,10 @@ export default {
         {
           id: Config.BANK.PNB.id,
           name: Config.BANK.PNB.name
+        },
+        {
+          id: Config.BANK.CITIBANK.id,
+          name: Config.BANK.CITIBANK.name
         }
       ]
     }

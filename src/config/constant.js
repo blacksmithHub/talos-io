@@ -21,6 +21,10 @@ export default {
     PNB: {
       id: 4,
       name: 'PNB'
+    },
+    CITIBANK: {
+      id: 4,
+      name: 'Citibank'
     }
   }
 }
