@@ -38,7 +38,7 @@
           :headers="headers"
           :items="products"
           :search="search"
-          :loading="loading"
+          :loading="loading || !products.length"
           hide-default-footer
           loading-text="Loading... Please wait"
           :items-per-page="products.length"
