@@ -919,8 +919,6 @@ export default {
             script = orderDetails
           }
 
-          win.webContents.openDevTools()
-
           win.webContents.executeJavaScript(script)
 
           win.on('closed', () => {
