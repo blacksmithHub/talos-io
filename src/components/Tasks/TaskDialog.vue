@@ -82,6 +82,60 @@
               @blur="$v.sizes.$touch()"
               @input="filterSizes"
             />
+
+            <v-row>
+              <v-col>
+                <v-text-field
+                  v-model="delay"
+                  dense
+                  outlined
+                  type="number"
+                  hide-details="auto"
+                  :error-messages="delayErrors"
+                  label="Delays"
+                  hint="Input value in milliseconds"
+                  @blur="$v.delay.$touch()"
+                />
+              </v-col>
+
+              <v-col>
+                <v-menu
+                  ref="placeOrderMenu"
+                  v-model="placeOrderMenu"
+                  :close-on-content-click="false"
+                  :nudge-right="40"
+                  :return-value.sync="placeOrder"
+                  transition="scale-transition"
+                  offset-y
+                  max-width="350px"
+                  min-width="350px"
+                >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="placeOrder"
+                      dense
+                      hide-details
+                      outlined
+                      readonly
+                      v-bind="attrs"
+                      clearable
+                      label="Place Order At"
+                      v-on="on"
+                    />
+                  </template>
+                  <v-time-picker
+                    v-if="placeOrderMenu"
+                    v-model="placeOrder"
+                    full-width
+                    ampm-in-title
+                    format="ampm"
+                    use-seconds
+                    color="primary"
+                    @click:second="$refs.placeOrderMenu.save(placeOrder)"
+                  />
+                </v-menu>
+              </v-col>
+            </v-row>
           </v-container>
         </v-card-text>
 
@@ -109,7 +163,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
-import { required } from 'vuelidate/lib/validators'
+import { required, minValue } from 'vuelidate/lib/validators'
 
 export default {
   data () {
@@ -121,7 +175,10 @@ export default {
       profile: {},
       bank: {},
       isEditMode: false,
-      selectedTask: {}
+      selectedTask: {},
+      delay: 1000,
+      placeOrder: '',
+      placeOrderMenu: false
     }
   },
   computed: {
@@ -175,6 +232,19 @@ export default {
       this.$v.sizes.required || errors.push('Required')
 
       return errors
+    },
+    /**
+     * Error messages for delay.
+     *
+     */
+    delayErrors () {
+      const errors = []
+
+      if (!this.$v.delay.$dirty) return errors
+
+      this.$v.delay.minValue || errors.push('Invalid input')
+
+      return errors
     }
   },
   methods: {
@@ -193,6 +263,8 @@ export default {
         this.name = task.name
         this.sku = task.sku
         this.sizes = sizes
+        this.delay = task.delay
+        this.placeOrder = task.placeOrder
 
         this.profile = task.profile
         this.bank = task.bank
@@ -231,6 +303,9 @@ export default {
       this.bank = {}
       this.profile = {}
       this.selectedTask = {}
+      this.delay = 1000
+      this.placeOrder = ''
+      this.placeOrderMenu = false
 
       this.dialog = false
       this.isEditMode = false
@@ -262,19 +337,15 @@ export default {
           sku: this.sku.trim(),
           sizes: sizes,
           profile: this.profile,
-          bank: this.bank || {}
+          bank: this.bank || {},
+          delay: this.delay,
+          placeOrder: this.placeOrder
         }
 
         if (this.isEditMode) {
           this.updateTask({
-            id: this.selectedTask.id,
-            ...params,
-            status: {
-              id: 1,
-              msg: 'stopped',
-              class: 'grey'
-            },
-            transactionData: {}
+            ...this.selectedTask,
+            ...params
           })
         } else {
           this.addTask({
@@ -289,7 +360,8 @@ export default {
   validations: {
     profile: { required },
     sku: { required },
-    sizes: { required }
+    sizes: { required },
+    delay: { minValue: minValue(0) }
   }
 }
 </script>

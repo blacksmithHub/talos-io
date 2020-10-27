@@ -6,12 +6,22 @@
       justify="center"
       align="center"
     >
-      <v-col align-self="center">
+      <v-col
+        cols="6"
+        align-self="center"
+      >
         <v-img
           :src="require(`@/assets/header-${$vuetify.theme.dark ? 'light' : 'dark'}.png`)"
           width="140"
           contain
         />
+      </v-col>
+
+      <v-col
+        cols="6"
+        align-self="center"
+      >
+        <strong v-text="time" />
       </v-col>
     </v-row>
 
@@ -59,7 +69,23 @@
 import { remote } from 'electron'
 
 export default {
+  data () {
+    return {
+      time: ''
+    }
+  },
+  created () {
+    this.timer()
+  },
   methods: {
+    timer () {
+      const vm = this
+      const loop = setTimeout(() => {
+        vm.time = vm.$moment().format('h:mm:ss a')
+        clearTimeout(loop)
+        vm.timer()
+      }, 1000)
+    },
     onClose () {
       remote.getCurrentWindow().close()
     },
