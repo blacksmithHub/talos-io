@@ -763,8 +763,13 @@ export default {
         if (vm.activeTask(task).placeOrder) {
           const timer = vm.$moment(`${vm.$moment().format('YYYY-MM-DD')} ${vm.activeTask(task).placeOrder}`).format('hh:mm:ss a')
           const current = vm.$moment().format('hh:mm:ss a')
-
+          console.log(timer, current)
           if (timer === current) {
+            vm.updateTask({
+              ...vm.activeTask(task),
+              placeOrder: ''
+            })
+
             proceed = true
             clearInterval(loop)
             callback(proceed)
@@ -787,7 +792,7 @@ export default {
      */
     onSuccess (task, transactionData, shippingData, productData) {
       this.updateTask({
-        ...task,
+        ...this.activeTask(task),
         status: {
           id: Constant.TASK.STATUS.STOPPED,
           msg: 'copped!',
@@ -914,7 +919,7 @@ export default {
           })(window.$);`
 
           if (script) {
-            script.concat(orderDetails)
+            script = `${script} ${orderDetails}`
           } else {
             script = orderDetails
           }
