@@ -301,12 +301,17 @@ export default {
           password: this.activeTask(task).profile.password
         }
 
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        }
+
         const apiResponse = await authApi.fetchToken(credentials)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
-        } else if (apiResponse.status === 200) {
+        } else if (apiResponse.status === 200 && apiResponse.data) {
           token = apiResponse.data
 
           this.updateTask({
@@ -340,12 +345,17 @@ export default {
       while (!Object.keys(user).length && this.isRunning(task.id)) {
         await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        }
+
         const apiResponse = await customerApi.profile(token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
-        } else if (apiResponse.status === 200 && apiResponse.data.addresses.length) {
+        } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length && apiResponse.data.addresses.length) {
           user = apiResponse.data
 
           this.updateTask({
@@ -382,12 +392,17 @@ export default {
       while (!cartId && this.isRunning(task.id)) {
         await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        }
+
         const apiResponse = await cartApi.create(user.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
-        } else if (apiResponse.status === 200) {
+        } else if (apiResponse.status === 200 && apiResponse.data) {
           cartId = apiResponse.data
           break
         } else if (apiResponse.status === 401) {
@@ -415,12 +430,17 @@ export default {
       while (!Object.keys(cart).length && this.isRunning(task.id)) {
         await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        }
+
         const apiResponse = await cartApi.get(user.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
-        } else if (apiResponse.status === 200) {
+        } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
           cart = apiResponse.data
           break
         } else if (apiResponse.status === 401) {
@@ -465,7 +485,7 @@ export default {
             if (!this.isRunning(task.id)) {
               this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
               break
-            } else if (apiResponse.status === 200) {
+            } else if (apiResponse.status === 200 && apiResponse.data) {
               responses.push(apiResponse.data)
             } else if (apiResponse.status === 401) {
               authorized = false
@@ -498,10 +518,6 @@ export default {
         for (var i = 0; i < this.activeTask(task).sizes.length; ++i) {
           await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
-          if (!this.isRunning(task.id)) break
-
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - trying`, 'orange')
-
           const order = {
             cartItem: {
               sku: `${this.activeTask(task).sku}-SZ${this.activeTask(task).sizes[i].label.replace('.', 'P').toUpperCase()}`,
@@ -521,12 +537,19 @@ export default {
             }
           }
 
+          if (!this.isRunning(task.id)) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            break
+          } else {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - trying`, 'orange')
+          }
+
           const apiResponse = await cartApi.store(order, user.token)
 
           if (!this.isRunning(task.id)) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
             break
-          } else if (apiResponse.status === 200) {
+          } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - carted`, 'orange')
 
             response = {
@@ -634,16 +657,19 @@ export default {
         while (!success && this.isRunning(task.id)) {
           await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
-          if (!this.isRunning(task.id)) break
-
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'estimate shipping', 'orange')
+          if (!this.isRunning(task.id)) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            break
+          } else {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'estimate shipping', 'orange')
+          }
 
           const apiResponse = await cartApi.estimateShipping(estimateParams, user.token)
 
           if (!this.isRunning(task.id)) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
             break
-          } else if (apiResponse.status === 200) {
+          } else if (apiResponse.status === 200 && apiResponse.data.length) {
             shippingInfo = apiResponse.data[0]
             success = true
             break
@@ -717,24 +743,24 @@ export default {
           if (!vm.isRunning(task.id)) {
             vm.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
             return false
-          }
-
-          vm.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
-
-          const sw = new StopWatch(true)
-
-          const apiResponse = await transactionApi.placeOrder(params)
-
-          sw.stop()
-
-          if (apiResponse.status === 200 && apiResponse.data.cookies && vm.isRunning(task.id)) {
-            transactionData = apiResponse.data
-            transactionData.time = (sw.read() / 1000.0).toFixed(2)
-            transactionData.order = productData
-
-            vm.onSuccess(task, transactionData, shippingData, productData)
           } else {
-            vm.init(vm.activeTask(task))
+            vm.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
+
+            const sw = new StopWatch(true)
+
+            const apiResponse = await transactionApi.placeOrder(params)
+
+            sw.stop()
+
+            if (apiResponse.status === 200 && apiResponse.data.cookies && vm.isRunning(task.id)) {
+              transactionData = apiResponse.data
+              transactionData.time = (sw.read() / 1000.0).toFixed(2)
+              transactionData.order = productData
+
+              vm.onSuccess(task, transactionData, shippingData, productData)
+            } else {
+              vm.init(vm.activeTask(task))
+            }
           }
         }
       })
@@ -758,26 +784,26 @@ export default {
           vm.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           clearInterval(loop)
           callback(proceed)
-        }
+        } else {
+          if (vm.activeTask(task).placeOrder) {
+            const timer = vm.$moment(`${vm.$moment().format('YYYY-MM-DD')} ${vm.activeTask(task).placeOrder}`).format('hh:mm:ss a')
+            const current = vm.$moment().format('hh:mm:ss a')
 
-        if (vm.activeTask(task).placeOrder) {
-          const timer = vm.$moment(`${vm.$moment().format('YYYY-MM-DD')} ${vm.activeTask(task).placeOrder}`).format('hh:mm:ss a')
-          const current = vm.$moment().format('hh:mm:ss a')
-          console.log(timer, current)
-          if (timer === current) {
-            vm.updateTask({
-              ...vm.activeTask(task),
-              placeOrder: ''
-            })
+            if (timer === current) {
+              vm.updateTask({
+                ...vm.activeTask(task),
+                placeOrder: ''
+              })
 
+              proceed = true
+              clearInterval(loop)
+              callback(proceed)
+            }
+          } else {
             proceed = true
             clearInterval(loop)
             callback(proceed)
           }
-        } else {
-          proceed = true
-          clearInterval(loop)
-          callback(proceed)
         }
       }, 1000)
     },
@@ -791,13 +817,10 @@ export default {
      * @param {*} time
      */
     onSuccess (task, transactionData, shippingData, productData) {
+      this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'copped!', 'success')
+
       this.updateTask({
         ...this.activeTask(task),
-        status: {
-          id: Constant.TASK.STATUS.STOPPED,
-          msg: 'copped!',
-          class: 'success'
-        },
         transactionData: {
           ...transactionData,
           ...this.activeTask(task).transactionData

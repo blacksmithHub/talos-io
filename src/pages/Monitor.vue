@@ -42,8 +42,8 @@
           hide-default-footer
           loading-text="Loading... Please wait"
           :items-per-page="products.length"
-          :no-results-text="'No result found'"
-          :no-data-text="'No data found'"
+          :no-results-text="'Nothing to display'"
+          :no-data-text="'Nothing to display'"
         >
           <template v-slot:item.name="{ value }">
             <small v-text="value" />

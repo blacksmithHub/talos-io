@@ -152,7 +152,7 @@
     <v-list v-else>
       <v-list-item class="pa-0 list">
         <v-list-item-content class="pa-2 text-center">
-          <small v-text="'No task found'" />
+          <small v-text="'Nothing to display'" />
         </v-list-item-content>
       </v-list-item>
     </v-list>
