@@ -188,10 +188,6 @@ export default {
       let interval = this.settings.monitorInterval
 
       while (status) {
-        interval = this.settings.monitorInterval
-
-        await new Promise(resolve => setTimeout(resolve, interval))
-
         status = this.active
 
         if (!status) break
@@ -228,6 +224,10 @@ export default {
         }
 
         this.loading = false
+
+        interval = this.settings.monitorInterval
+
+        await new Promise(resolve => setTimeout(resolve, interval))
       }
 
       callback(this.active)
