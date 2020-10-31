@@ -10,10 +10,9 @@
         cols="6"
         align-self="center"
       >
-        <v-img
-          :src="require(`@/assets/header-${$vuetify.theme.dark ? 'light' : 'dark'}.png`)"
-          width="140"
-          contain
+        <span
+          class="text-uppercase"
+          v-text="'talos io'"
         />
       </v-col>
 
