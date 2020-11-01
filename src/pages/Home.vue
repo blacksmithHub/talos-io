@@ -186,6 +186,7 @@
             </v-row>
           </v-card-actions>
         </v-card>
+        {{ test }}
       </v-container>
 
       <TaskDialog ref="taskDialog" />
@@ -222,6 +223,11 @@ export default {
     Footer
   },
   mixins: [automate, verify],
+  data () {
+    return {
+      test: ''
+    }
+  },
   beforeRouteEnter (to, from, next) {
     next(async vm => {
       if (!vm.attributes.length) await vm.prepareAttributes()
@@ -261,6 +267,10 @@ export default {
 
     ipcRenderer.on('updateProfiles', (event, arg) => {
       this.setProfiles(arg)
+    })
+
+    ipcRenderer.on('autoupdate', (event, arg) => {
+      this.test = arg
     })
   },
   methods: {
