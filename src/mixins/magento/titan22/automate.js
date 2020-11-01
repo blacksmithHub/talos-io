@@ -1,5 +1,7 @@
-import { mapState, mapActions } from 'vuex'
+/* global __static */
 
+import { mapState, mapActions } from 'vuex'
+import { Howl } from 'howler'
 import StopWatch from 'statman-stopwatch'
 import authApi from '@/api/magento/titan22/auth'
 import customerApi from '@/api/magento/titan22/customer'
@@ -9,7 +11,8 @@ import Constant from '@/config/constant'
 import Config from '@/config/app'
 import webhook from '@/mixins/webhook'
 import SuccessEffect from '@/assets/success.mp3'
-import { Howl } from 'howler'
+import path from 'path'
+import electron from 'electron'
 
 /**
  * ===============================================
@@ -1218,14 +1221,14 @@ export default {
      * @param {*} task
      */
     launchWindow (transactionData, task) {
-      const electron = require('electron')
       const { BrowserWindow } = electron.remote
 
       const baseUrl = `${Config.services.titan22.checkout}/RedirectV3/Payment/Accept`
 
       let win = new BrowserWindow({
         width: 800,
-        height: 600
+        height: 600,
+        icon: path.join(__static, 'icon.png')
       })
 
       win.removeMenu()

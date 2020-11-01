@@ -305,7 +305,6 @@ import { url, minValue } from 'vuelidate/lib/validators'
 import { mapState, mapActions } from 'vuex'
 import { remote, ipcRenderer } from 'electron'
 import webhook from '@/mixins/webhook'
-import Config from '@/config/app'
 
 export default {
   mixins: [webhook],
@@ -552,7 +551,7 @@ export default {
       this.$v.$touch()
 
       if (!this.$v.$invalid && this.webhook) {
-        this.sendWebhook(this.webhook, 'Air Jordan 4 Retro Off-White Sail', '9', Config.bot.name, '1.20', 'CV9388-100')
+        this.sendWebhook(this.webhook, 'Air Jordan 4 Retro Off-White Sail', '9', 'Test Profile', '1.20', 'CV9388-100')
       }
     },
 
