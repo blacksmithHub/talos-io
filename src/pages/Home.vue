@@ -4,12 +4,12 @@
     <v-main>
       <v-container>
         <Header
+          class="mb-3"
           @click:AddTask="openAddTaskDialog"
           @click:startTask="startTask"
           @click:editAll="editAll"
           @click:ImportTasks="importTasks"
         />
-        <br>
         <v-card>
           <v-card-title>
             <v-tooltip top>
@@ -36,6 +36,32 @@
                 </v-btn>
               </template>
               <span v-text="'Verify all tasks'" />
+            </v-tooltip>
+
+            <v-tooltip top>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  v-bind="attrs"
+                  :fab="!$vuetify.breakpoint.lgAndUp"
+                  :rounded="$vuetify.breakpoint.lgAndUp"
+                  :small="$vuetify.breakpoint.lgAndUp"
+                  :x-small="!$vuetify.breakpoint.lgAndUp"
+                  class="primary"
+                  v-on="on"
+                  @click="openLogs"
+                >
+                  <v-icon
+                    :left="$vuetify.breakpoint.lgAndUp"
+                    :small="$vuetify.breakpoint.lgAndUp"
+                    v-text="'mdi-information-outline'"
+                  />
+                  <span
+                    v-if="$vuetify.breakpoint.lgAndUp"
+                    v-text="'see all logs'"
+                  />
+                </v-btn>
+              </template>
+              <span v-text="'See all logs'" />
             </v-tooltip>
 
             <v-spacer />
@@ -122,7 +148,7 @@
           <v-divider />
 
           <v-card-text
-            style="max-height: 75vh; overflow: auto"
+            style="max-height: 70vh; overflow: auto"
             class="pa-0"
           >
             <Lists
@@ -166,6 +192,7 @@
       <MassEditDialog ref="massEditDialog" />
       <ImportTaskDialog ref="importTaskDialog" />
     </v-main>
+    <Footer />
   </v-app>
 </template>
 
@@ -182,6 +209,7 @@ import ImportTaskDialog from '@/components/Tasks/ImportTaskDialog'
 import automate from '@/mixins/magento/titan22/automate'
 import Constant from '@/config/constant'
 import verify from '@/mixins/magento/titan22/verify'
+import Footer from '@/components/App/Footer'
 
 export default {
   components: {
@@ -190,7 +218,8 @@ export default {
     Header,
     TaskDialog,
     MassEditDialog,
-    ImportTaskDialog
+    ImportTaskDialog,
+    Footer
   },
   mixins: [automate, verify],
   beforeRouteEnter (to, from, next) {
@@ -286,18 +315,29 @@ export default {
       this.launchWindow(task.transactionData, task)
     },
     /**
+     * Open logs
+     */
+    openLogs () {
+      ipcRenderer.send('toggle-logs')
+    },
+    /**
      * Start task.
      *
      */
     async startTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
+        const logs = task.logs
+
+        logs.push({ msg: 'started', color: 'success' })
+
         this.updateTask({
           ...task,
           status: {
             id: Constant.TASK.STATUS.RUNNING,
             msg: 'running',
             class: 'orange'
-          }
+          },
+          logs: logs
         })
 
         await this.init(task)
@@ -334,7 +374,11 @@ export default {
      * Stop task
      *
      */
-    async stopTask (task) {
+    stopTask (task) {
+      const logs = task.logs
+
+      logs.push({ msg: 'stopped', color: 'red' })
+
       this.updateTask({
         ...task,
         status: {
@@ -342,7 +386,8 @@ export default {
           msg: 'stopped',
           class: 'grey'
         },
-        transactionData: {}
+        transactionData: {},
+        logs: logs
       })
     },
 
@@ -368,6 +413,10 @@ export default {
      */
     async verifyTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
+        const logs = task.logs
+
+        logs.push({ msg: 'verifying', color: 'cyan' })
+
         this.updateTask({
           ...task,
           status: {
@@ -375,7 +424,8 @@ export default {
             msg: 'validating',
             class: 'cyan'
           },
-          transactionData: {}
+          transactionData: {},
+          logs: logs
         })
 
         await this.verify(task)

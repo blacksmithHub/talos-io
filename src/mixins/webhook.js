@@ -1,4 +1,5 @@
 import Config from '@/config/app'
+import webhook from 'webhook-discord'
 
 export default {
   methods: {
@@ -12,8 +13,6 @@ export default {
      * @param {*} secs
      */
     sendWebhook (url, product, size, profile, secs, sku, cookie) {
-      const webhook = require('webhook-discord')
-
       const Hook = new webhook.Webhook(url)
 
       const msg = new webhook.MessageBuilder()

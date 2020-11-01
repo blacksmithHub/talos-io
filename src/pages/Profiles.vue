@@ -1,26 +1,26 @@
 <template>
-  <v-container>
-    <v-tabs
-      class="mt-5"
-      grow
-    >
-      <v-tab
-        v-for="(tab, index) in tabs"
-        :key="index"
-        v-text="tab"
-      />
+  <v-app>
+    <v-main>
+      <v-container>
+        <v-tabs grow>
+          <v-tab
+            v-for="(tab, index) in tabs"
+            :key="index"
+            v-text="tab"
+          />
 
-      <v-tab-item
-        v-for="n in tabs.length"
-        :key="n"
-      >
-        <v-container>
-          <ProfileList v-if="n === 1" />
-          <BankList v-else />
-        </v-container>
-      </v-tab-item>
-    </v-tabs>
-  </v-container>
+          <v-tab-item
+            v-for="n in tabs.length"
+            :key="n"
+          >
+            <ProfileList v-if="n === 1" />
+            <BankList v-else />
+          </v-tab-item>
+        </v-tabs>
+      </v-container>
+    </v-main>
+    <Footer />
+  </v-app>
 </template>
 
 <script>
@@ -29,11 +29,13 @@ import { ipcRenderer } from 'electron'
 
 import ProfileList from '@/components/Profiles/ProfileList'
 import BankList from '@/components/Profiles/BankList'
+import Footer from '@/components/App/Footer'
 
 export default {
   components: {
     ProfileList,
-    BankList
+    BankList,
+    Footer
   },
   data () {
     return {
