@@ -1,7 +1,6 @@
 <template>
   <v-footer
     padless
-    app
     inset
     class="transparent"
   >

@@ -4,12 +4,12 @@
     <v-main>
       <v-container>
         <Header
+          class="mb-3"
           @click:AddTask="openAddTaskDialog"
           @click:startTask="startTask"
           @click:editAll="editAll"
           @click:ImportTasks="importTasks"
         />
-        <br>
         <v-card>
           <v-card-title>
             <v-tooltip top>
@@ -148,7 +148,7 @@
           <v-divider />
 
           <v-card-text
-            style="max-height: 75vh; overflow: auto"
+            style="max-height: 70vh; overflow: auto"
             class="pa-0"
           >
             <Lists
@@ -192,6 +192,7 @@
       <MassEditDialog ref="massEditDialog" />
       <ImportTaskDialog ref="importTaskDialog" />
     </v-main>
+    <Footer />
   </v-app>
 </template>
 
@@ -208,6 +209,7 @@ import ImportTaskDialog from '@/components/Tasks/ImportTaskDialog'
 import automate from '@/mixins/magento/titan22/automate'
 import Constant from '@/config/constant'
 import verify from '@/mixins/magento/titan22/verify'
+import Footer from '@/components/App/Footer'
 
 export default {
   components: {
@@ -216,7 +218,8 @@ export default {
     Header,
     TaskDialog,
     MassEditDialog,
-    ImportTaskDialog
+    ImportTaskDialog,
+    Footer
   },
   mixins: [automate, verify],
   beforeRouteEnter (to, from, next) {

@@ -25,7 +25,7 @@ protocol.registerSchemesAsPrivileged([
 function createWindow () {
   win = new BrowserWindow({
     width: 720,
-    height: 925,
+    height: 870,
     minWidth: 500,
     minHeight: 600,
     frame: false,
@@ -60,8 +60,8 @@ function createWindow () {
  */
 function createMonitorWindow () {
   monitorWin = new BrowserWindow({
-    width: 1000,
-    height: 900,
+    width: 955,
+    height: 800,
     minHeight: 600,
     minWidth: 500,
     parent: win,
@@ -96,7 +96,7 @@ function createMonitorWindow () {
 function createProfileWindow () {
   profileWin = new BrowserWindow({
     width: 500,
-    height: 900,
+    height: 800,
     minHeight: 600,
     minWidth: 500,
     parent: win,
@@ -130,7 +130,7 @@ function createProfileWindow () {
 function createSettingWindow () {
   settingsWin = new BrowserWindow({
     width: 500,
-    height: 900,
+    height: 700,
     minHeight: 600,
     minWidth: 500,
     parent: win,
@@ -162,7 +162,7 @@ function createSettingWindow () {
 function createLogWindow () {
   logWin = new BrowserWindow({
     width: 500,
-    height: 900,
+    height: 800,
     minHeight: 600,
     minWidth: 500,
     parent: win,

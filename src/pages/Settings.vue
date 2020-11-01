@@ -1,303 +1,308 @@
 <template>
-  <v-container class="mt-6">
-    <v-form @submit.prevent="submit">
-      <v-card>
-        <v-card-text>
-          <v-list
-            class="pa-0"
-            two-line
-            dense
-          >
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Night Mode'" />
+  <v-app>
+    <v-main>
+      <v-container>
+        <v-form @submit.prevent="submit">
+          <v-card>
+            <v-card-text style="max-height: 80vh; overflow: auto">
+              <v-list
+                class="pa-0"
+                two-line
+                dense
+              >
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-list-item-title v-text="'Night Mode'" />
 
-                <v-list-item-subtitle v-text="'appearance'" />
-              </v-list-item-content>
+                    <v-list-item-subtitle v-text="'appearance'" />
+                  </v-list-item-content>
 
-              <v-list-item-action>
-                <v-switch
-                  v-model="nightMode"
-                  inset
-                />
-              </v-list-item-action>
-            </v-list-item>
+                  <v-list-item-action>
+                    <v-switch
+                      v-model="nightMode"
+                      inset
+                    />
+                  </v-list-item-action>
+                </v-list-item>
 
-            <v-divider />
+                <v-divider />
 
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Sound on Success'" />
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-list-item-title v-text="'Sound on Success'" />
 
-                <v-list-item-subtitle v-text="'Receive sound alert each success notification'" />
-              </v-list-item-content>
+                    <v-list-item-subtitle v-text="'Receive sound alert each success notification'" />
+                  </v-list-item-content>
 
-              <v-list-item-action>
-                <v-switch
-                  v-model="sound"
-                  inset
-                />
-              </v-list-item-action>
-            </v-list-item>
+                  <v-list-item-action>
+                    <v-switch
+                      v-model="sound"
+                      inset
+                    />
+                  </v-list-item-action>
+                </v-list-item>
 
-            <v-divider />
+                <v-divider />
 
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Auto Fill + Auto Pay'" />
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-list-item-title v-text="'Auto Fill + Auto Pay'" />
 
-                <v-list-item-subtitle v-text="'Enable this to submit payment automatically upon success'" />
-              </v-list-item-content>
+                    <v-list-item-subtitle v-text="'Enable this to submit payment automatically upon success'" />
+                  </v-list-item-content>
 
-              <v-list-item-action>
-                <v-switch
-                  v-model="autoPay"
-                  inset
-                />
-              </v-list-item-action>
-            </v-list-item>
+                  <v-list-item-action>
+                    <v-switch
+                      v-model="autoPay"
+                      inset
+                    />
+                  </v-list-item-action>
+                </v-list-item>
 
-            <v-divider />
+                <v-divider />
 
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Auto Fill'" />
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-list-item-title v-text="'Auto Fill'" />
 
-                <v-list-item-subtitle v-text="'Enable this to fill up bank details automatically upon success'" />
-              </v-list-item-content>
+                    <v-list-item-subtitle v-text="'Enable this to fill up bank details automatically upon success'" />
+                  </v-list-item-content>
 
-              <v-list-item-action>
-                <v-switch
-                  v-model="autoFill"
-                  inset
-                />
-              </v-list-item-action>
-            </v-list-item>
+                  <v-list-item-action>
+                    <v-switch
+                      v-model="autoFill"
+                      inset
+                    />
+                  </v-list-item-action>
+                </v-list-item>
 
-            <v-divider />
+                <v-divider />
 
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Manual Checkout'" />
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-list-item-title v-text="'Manual Checkout'" />
 
-                <v-list-item-subtitle v-text="'Launch checkout page manually upon success'" />
-              </v-list-item-content>
+                    <v-list-item-subtitle v-text="'Launch checkout page manually upon success'" />
+                  </v-list-item-content>
 
-              <v-list-item-action>
-                <v-switch
-                  v-model="manual"
-                  inset
-                />
-              </v-list-item-action>
-            </v-list-item>
+                  <v-list-item-action>
+                    <v-switch
+                      v-model="manual"
+                      inset
+                    />
+                  </v-list-item-action>
+                </v-list-item>
 
-            <v-divider />
+                <v-divider />
 
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Monitor Refresh Interval'" />
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-list-item-title v-text="'Monitor Refresh Interval'" />
 
-                <v-list-item-subtitle v-text="'Set monitor refresh interval in milliseconds'" />
-              </v-list-item-content>
+                    <v-list-item-subtitle v-text="'Set monitor refresh interval in milliseconds'" />
+                  </v-list-item-content>
 
-              <v-list-item-action>
-                <v-text-field
-                  v-model="monitorInterval"
-                  dense
-                  outlined
-                  type="number"
-                  style="width: 15vh"
-                  hide-details
-                  :error-messages="monitorIntervalErrors"
-                  @blur="$v.monitorInterval.$touch()"
-                />
-              </v-list-item-action>
-            </v-list-item>
+                  <v-list-item-action>
+                    <v-text-field
+                      v-model="monitorInterval"
+                      dense
+                      outlined
+                      type="number"
+                      style="width: 15vh"
+                      hide-details
+                      :error-messages="monitorIntervalErrors"
+                      @blur="$v.monitorInterval.$touch()"
+                    />
+                  </v-list-item-action>
+                </v-list-item>
 
-            <v-divider />
+                <v-divider />
 
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Backup all Tasks'" />
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-list-item-title v-text="'Backup all Tasks'" />
 
-                <v-list-item-subtitle v-text="'All tasks will export in a .csv file'" />
-              </v-list-item-content>
+                    <v-list-item-subtitle v-text="'All tasks will export in a .csv file'" />
+                  </v-list-item-content>
 
-              <v-list-item-action>
-                <download-csv
-                  :data="backupTasks"
-                  name="tasks.csv"
-                >
-                  <v-btn
-                    class="primary"
-                    rounded
-                    small
-                    v-text="'Export'"
-                  />
-                </download-csv>
-              </v-list-item-action>
-            </v-list-item>
+                  <v-list-item-action>
+                    <download-csv
+                      :data="backupTasks"
+                      name="tasks.csv"
+                    >
+                      <v-btn
+                        class="primary"
+                        rounded
+                        small
+                        v-text="'Export'"
+                      />
+                    </download-csv>
+                  </v-list-item-action>
+                </v-list-item>
 
-            <v-divider />
+                <v-divider />
 
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Backup all Profiles'" />
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-list-item-title v-text="'Backup all Profiles'" />
 
-                <v-list-item-subtitle v-text="'All profiles will export in a .csv file'" />
-              </v-list-item-content>
+                    <v-list-item-subtitle v-text="'All profiles will export in a .csv file'" />
+                  </v-list-item-content>
 
-              <v-list-item-action>
-                <download-csv
-                  :data="backupProfiles"
-                  name="profiles.csv"
-                >
-                  <v-btn
-                    class="primary"
-                    rounded
-                    small
-                    v-text="'Export'"
-                  />
-                </download-csv>
-              </v-list-item-action>
-            </v-list-item>
+                  <v-list-item-action>
+                    <download-csv
+                      :data="backupProfiles"
+                      name="profiles.csv"
+                    >
+                      <v-btn
+                        class="primary"
+                        rounded
+                        small
+                        v-text="'Export'"
+                      />
+                    </download-csv>
+                  </v-list-item-action>
+                </v-list-item>
 
-            <v-divider />
+                <v-divider />
 
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Backup all Banks'" />
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-list-item-title v-text="'Backup all Banks'" />
 
-                <v-list-item-subtitle v-text="'All banks will export in a .csv file'" />
-              </v-list-item-content>
+                    <v-list-item-subtitle v-text="'All banks will export in a .csv file'" />
+                  </v-list-item-content>
 
-              <v-list-item-action>
-                <download-csv
-                  :data="backupBanks"
-                  name="banks.csv"
-                >
-                  <v-btn
-                    class="primary"
-                    rounded
-                    small
-                    v-text="'Export'"
-                  />
-                </download-csv>
-              </v-list-item-action>
-            </v-list-item>
+                  <v-list-item-action>
+                    <download-csv
+                      :data="backupBanks"
+                      name="banks.csv"
+                    >
+                      <v-btn
+                        class="primary"
+                        rounded
+                        small
+                        v-text="'Export'"
+                      />
+                    </download-csv>
+                  </v-list-item-action>
+                </v-list-item>
 
-            <v-divider />
+                <v-divider />
 
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Discord Webhook'" />
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-list-item-title v-text="'Discord Webhook'" />
 
-                <v-list-item-subtitle v-text="'Set custom discord webhook'" />
-              </v-list-item-content>
-            </v-list-item>
+                    <v-list-item-subtitle v-text="'Set custom discord webhook'" />
+                  </v-list-item-content>
+                </v-list-item>
 
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-text-field
-                  v-model="webhook"
-                  dense
-                  hide-details="auto"
-                  outlined
-                  :error-messages="webhookErrors"
-                  clearable
-                  @blur="$v.webhook.$touch()"
-                />
-              </v-list-item-content>
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-text-field
+                      v-model="webhook"
+                      dense
+                      hide-details="auto"
+                      outlined
+                      :error-messages="webhookErrors"
+                      clearable
+                      @blur="$v.webhook.$touch()"
+                    />
+                  </v-list-item-content>
 
-              <v-list-item-action>
-                <v-btn
-                  class="primary"
-                  rounded
-                  small
-                  @click="testWebhook"
-                  v-text="'test'"
-                />
-              </v-list-item-action>
-            </v-list-item>
+                  <v-list-item-action>
+                    <v-btn
+                      class="primary"
+                      rounded
+                      small
+                      @click="testWebhook"
+                      v-text="'test'"
+                    />
+                  </v-list-item-action>
+                </v-list-item>
 
-            <v-divider />
+                <v-divider />
 
-            <v-list-item class="pa-0">
-              <v-list-item-content class="pa-2">
-                <v-list-item-title v-text="'Clear Local Storage'" />
+                <v-list-item class="pa-0">
+                  <v-list-item-content class="pa-2">
+                    <v-list-item-title v-text="'Clear Local Storage'" />
 
-                <v-list-item-subtitle v-text="'All saved records will be removed'" />
-              </v-list-item-content>
+                    <v-list-item-subtitle v-text="'All saved records will be removed'" />
+                  </v-list-item-content>
 
-              <v-list-item-action>
-                <v-btn
-                  class="primary"
-                  rounded
-                  small
-                  @click="dialog = true"
-                  v-text="'Clear'"
-                />
-              </v-list-item-action>
-            </v-list-item>
-          </v-list>
-        </v-card-text>
+                  <v-list-item-action>
+                    <v-btn
+                      class="primary"
+                      rounded
+                      small
+                      @click="dialog = true"
+                      v-text="'Clear'"
+                    />
+                  </v-list-item-action>
+                </v-list-item>
+              </v-list>
+            </v-card-text>
 
-        <v-card-actions class="justify-end">
-          <v-btn
-            class="primary"
-            rounded
-            small
-            @click="onCancel"
-            v-text="'cancel'"
-          />
+            <v-card-actions class="justify-end">
+              <v-btn
+                class="primary"
+                rounded
+                small
+                @click="onCancel"
+                v-text="'cancel'"
+              />
 
-          <v-btn
-            class="primary"
-            rounded
-            type="submit"
-            small
-            v-text="'save'"
-          />
-        </v-card-actions>
-      </v-card>
-    </v-form>
+              <v-btn
+                class="primary"
+                rounded
+                type="submit"
+                small
+                v-text="'save'"
+              />
+            </v-card-actions>
+          </v-card>
+        </v-form>
 
-    <v-dialog
-      v-model="dialog"
-      persistent
-      max-width="290"
-    >
-      <v-card>
-        <v-card-title class="headline">
-          Confirmation
-        </v-card-title>
+        <v-dialog
+          v-model="dialog"
+          persistent
+          max-width="290"
+        >
+          <v-card>
+            <v-card-title class="headline">
+              Confirmation
+            </v-card-title>
 
-        <v-card-text>
-          Do you wish to clear all saved records?
-        </v-card-text>
+            <v-card-text>
+              Do you wish to clear all saved records?
+            </v-card-text>
 
-        <v-card-actions class="justify-end">
-          <v-btn
-            class="primary"
-            rounded
-            small
-            @click="dialog = false"
-          >
-            Disagree
-          </v-btn>
+            <v-card-actions class="justify-end">
+              <v-btn
+                class="primary"
+                rounded
+                small
+                @click="dialog = false"
+              >
+                Disagree
+              </v-btn>
 
-          <v-btn
-            small
-            class="primary"
-            rounded
-            @click="clearLocalStorage"
-          >
-            Agree
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-container>
+              <v-btn
+                small
+                class="primary"
+                rounded
+                @click="clearLocalStorage"
+              >
+                Agree
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </v-container>
+    </v-main>
+    <Footer />
+  </v-app>
 </template>
 
 <script>
@@ -305,8 +310,10 @@ import { url, minValue } from 'vuelidate/lib/validators'
 import { mapState, mapActions } from 'vuex'
 import { remote, ipcRenderer } from 'electron'
 import webhook from '@/mixins/webhook'
+import Footer from '@/components/App/Footer'
 
 export default {
+  components: { Footer },
   mixins: [webhook],
   data () {
     return {
