@@ -7,16 +7,14 @@
  *
  * =====================================================
  */
-const data = {
-  drawer: false,
-  loading: false
-}
 
 export default {
   namespaced: true,
   state () {
     return {
-      ...data
+      drawer: false,
+      loading: false,
+      package: JSON.parse(unescape(process.env.PACKAGE_JSON || '%7B%7D'))
     }
   },
   mutations: {

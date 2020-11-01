@@ -30,6 +30,7 @@ function createWindow () {
     minWidth: 500,
     minHeight: 600,
     frame: false,
+    show: false,
     webPreferences: {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       enableRemoteModule: true,
@@ -52,8 +53,20 @@ function createWindow () {
     autoUpdater.checkForUpdatesAndNotify()
   }
 
+  win.once('ready-to-show', () => {
+    win.show()
+  })
+
   win.on('closed', () => {
     win = null
+  })
+
+  win.on('focus', () => {
+    globalShortcut.register('CommandOrControl+R', () => {})
+  })
+
+  win.on('blur', () => {
+    globalShortcut.unregister('CommandOrControl+R')
   })
 }
 
@@ -85,10 +98,22 @@ function createMonitorWindow () {
     monitorWin.loadURL('app://./index.html/#/monitor')
   }
 
+  win.once('ready-to-show', () => {
+    win.show()
+  })
+
   monitorWin.on('close', (e) => {
     monitorWin.webContents.send('stop', true)
     e.preventDefault()
     monitorWin.hide()
+  })
+
+  monitorWin.on('focus', () => {
+    globalShortcut.register('CommandOrControl+R', () => {})
+  })
+
+  monitorWin.on('blur', () => {
+    globalShortcut.unregister('CommandOrControl+R')
   })
 }
 
@@ -124,6 +149,14 @@ function createProfileWindow () {
     e.preventDefault()
     profileWin.hide()
   })
+
+  profileWin.on('focus', () => {
+    globalShortcut.register('CommandOrControl+R', () => {})
+  })
+
+  profileWin.on('blur', () => {
+    globalShortcut.unregister('CommandOrControl+R')
+  })
 }
 
 /**
@@ -155,6 +188,14 @@ function createSettingWindow () {
   settingsWin.on('close', (e) => {
     e.preventDefault()
     settingsWin.hide()
+  })
+
+  settingsWin.on('focus', () => {
+    globalShortcut.register('CommandOrControl+R', () => {})
+  })
+
+  settingsWin.on('blur', () => {
+    globalShortcut.unregister('CommandOrControl+R')
   })
 }
 
@@ -188,6 +229,14 @@ function createLogWindow () {
     e.preventDefault()
     logWin.hide()
   })
+
+  logWin.on('focus', () => {
+    globalShortcut.register('CommandOrControl+R', () => {})
+  })
+
+  logWin.on('blur', () => {
+    globalShortcut.unregister('CommandOrControl+R')
+  })
 }
 
 // Quit when all windows are closed.
@@ -211,12 +260,6 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  if (!isDevelopment) {
-    globalShortcut.register('ctrl+r', () => {
-      return false
-    })
-  }
-
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {

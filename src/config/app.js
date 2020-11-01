@@ -30,9 +30,6 @@ export default {
    */
   bot: {
     avatar: process.env.VUE_APP_BOT_AVATAR,
-    name: process.env.VUE_APP_BOT_NAME,
-    version: process.env.VUE_APP_BOT_VERSION,
-    footer: process.env.VUE_APP_BOT_FOOTER,
     webhook: process.env.VUE_APP_BOT_WEBHOOK
   }
 }
