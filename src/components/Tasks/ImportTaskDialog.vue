@@ -180,7 +180,8 @@ export default {
                   sku: element.sku.trim(),
                   sizes: sizes,
                   delay: element.delay || 1000,
-                  placeOrder: element.placeOrder || ''
+                  placeOrder: element.placeOrder || '',
+                  logs: []
                 }
 
                 if (element.aco) {

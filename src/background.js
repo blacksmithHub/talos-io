@@ -3,6 +3,7 @@
 import { app, protocol, BrowserWindow, ipcMain, globalShortcut } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
+import { autoUpdater } from 'electron-updater'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -12,6 +13,7 @@ let win
 let monitorWin
 let profileWin
 let settingsWin
+let logWin
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -24,7 +26,7 @@ protocol.registerSchemesAsPrivileged([
 function createWindow () {
   win = new BrowserWindow({
     width: 720,
-    height: 925,
+    height: 870,
     minWidth: 500,
     minHeight: 600,
     frame: false,
@@ -38,6 +40,7 @@ function createWindow () {
   createMonitorWindow()
   createProfileWindow()
   createSettingWindow()
+  createLogWindow()
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
@@ -46,6 +49,7 @@ function createWindow () {
   } else {
     createProtocol('app')
     win.loadURL('app://./index.html')
+    autoUpdater.checkForUpdatesAndNotify()
   }
 
   win.on('closed', () => {
@@ -58,8 +62,8 @@ function createWindow () {
  */
 function createMonitorWindow () {
   monitorWin = new BrowserWindow({
-    width: 1000,
-    height: 900,
+    width: 955,
+    height: 800,
     minHeight: 600,
     minWidth: 500,
     parent: win,
@@ -94,7 +98,7 @@ function createMonitorWindow () {
 function createProfileWindow () {
   profileWin = new BrowserWindow({
     width: 500,
-    height: 900,
+    height: 800,
     minHeight: 600,
     minWidth: 500,
     parent: win,
@@ -128,7 +132,7 @@ function createProfileWindow () {
 function createSettingWindow () {
   settingsWin = new BrowserWindow({
     width: 500,
-    height: 900,
+    height: 700,
     minHeight: 600,
     minWidth: 500,
     parent: win,
@@ -151,6 +155,38 @@ function createSettingWindow () {
   settingsWin.on('close', (e) => {
     e.preventDefault()
     settingsWin.hide()
+  })
+}
+
+/**
+ * Create log window
+ */
+function createLogWindow () {
+  logWin = new BrowserWindow({
+    width: 500,
+    height: 800,
+    minHeight: 600,
+    minWidth: 500,
+    parent: win,
+    show: false,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+      enableRemoteModule: true,
+      webSecurity: false
+    }
+  })
+
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    logWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/logs`)
+  } else {
+    createProtocol('app')
+    logWin.loadURL('app://./index.html/#/logs')
+  }
+
+  logWin.on('close', (e) => {
+    e.preventDefault()
+    logWin.hide()
   })
 }
 
@@ -232,6 +268,12 @@ ipcMain.on('toggle-settings', (event, arg) => {
   if (isDevelopment) settingsWin.openDevTools()
 })
 
+ipcMain.on('toggle-logs', (event, arg) => {
+  logWin.show()
+
+  if (isDevelopment) logWin.openDevTools()
+})
+
 /**
  * Events
  */
@@ -240,10 +282,12 @@ ipcMain.on('update-settings', (event, arg) => {
   win.webContents.send('updateSettings', arg)
   monitorWin.webContents.send('updateSettings', arg)
   profileWin.webContents.send('updateSettings', arg)
+  logWin.webContents.send('updateSettings', arg)
 })
 
 ipcMain.on('update-tasks', (event, arg) => {
   settingsWin.webContents.send('updateTasks', arg)
+  logWin.webContents.send('updateTasks', arg)
 })
 
 ipcMain.on('update-profiles', (event, arg) => {

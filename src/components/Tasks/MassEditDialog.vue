@@ -79,7 +79,6 @@
                       outlined
                       readonly
                       v-bind="attrs"
-                      style="width: 20vh"
                       clearable
                       label="Place Order At"
                       v-on="on"
@@ -102,6 +101,16 @@
         </v-card-text>
 
         <v-card-actions class="justify-end">
+          <v-btn
+            class="primary"
+            rounded
+            small
+            @click="clearTimer"
+            v-text="'clear timer'"
+          />
+
+          <v-spacer />
+
           <v-btn
             class="primary"
             rounded
@@ -157,6 +166,20 @@ export default {
   methods: {
     ...mapActions('task', { updateTask: 'updateItem' }),
 
+    /**
+     * clear timer
+     */
+    clearTimer () {
+      this.tasks.forEach(element => {
+        const params = element
+
+        params.placeOrder = ''
+
+        this.updateTask(params)
+      })
+
+      this.onCancel()
+    },
     /**
      * Filter input sizes.
      *

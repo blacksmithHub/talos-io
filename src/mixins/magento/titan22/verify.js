@@ -118,6 +118,7 @@ export default {
           token: token
         }
         let cartId = null
+
         await this.makeCart(task, user, (response) => { cartId = response })
 
         if (!this.isTaskRunning(task.id)) {
@@ -155,6 +156,7 @@ export default {
         return true
       } else {
         this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+        return true
       }
     },
 
@@ -185,7 +187,7 @@ export default {
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
-        } else if (apiResponse.status === 200) {
+        } else if (apiResponse.status === 200 && apiResponse.data) {
           token = apiResponse.data
 
           this.updateTask({
@@ -197,7 +199,7 @@ export default {
           })
 
           break
-        } else if (apiResponse.status === 500) {
+        } else {
           continue
         }
       }
@@ -228,7 +230,7 @@ export default {
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
-        } else if (apiResponse.status === 200) {
+        } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
           user = apiResponse.data
 
           this.updateTask({
@@ -240,7 +242,7 @@ export default {
           })
 
           break
-        } else if (apiResponse.status === 500) {
+        } else {
           continue
         }
       }
@@ -271,8 +273,12 @@ export default {
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-        } else if (apiResponse.status === 200) {
+          callback(cartId)
+          return false
+        } else if (apiResponse.status === 200 && apiResponse.data) {
           cartId = apiResponse.data
+          callback(cartId)
+          return true
         }
       }
 
@@ -302,8 +308,12 @@ export default {
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-        } else if (apiResponse.status === 200) {
+          callback(cart)
+          return false
+        } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
           cart = apiResponse.data
+          callback(cart)
+          return true
         }
       }
 
