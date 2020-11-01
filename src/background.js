@@ -25,6 +25,9 @@ function sendStatusToWindow (status, params) {
   win.webContents.send(status, params)
 }
 
+autoUpdater.autoDownload = true // Turn off Automatic Updates
+autoUpdater.autoInstallOnAppQuit = true // APP quit when the automatic installation
+
 autoUpdater.on('checking-for-update', () => {
   sendStatusToWindow('autoupdate', 'Checking for update...')
 })
