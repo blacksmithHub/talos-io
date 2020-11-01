@@ -25,9 +25,6 @@ function sendStatusToWindow (status, params) {
   win.webContents.send(status, params)
 }
 
-autoUpdater.autoDownload = true // Turn off Automatic Updates
-autoUpdater.autoInstallOnAppQuit = true // APP quit when the automatic installation
-
 autoUpdater.on('checking-for-update', () => {
   sendStatusToWindow('autoupdate', 'Checking for update...')
 })
@@ -36,16 +33,16 @@ autoUpdater.on('update-available', (info) => {
   // sendStatusToWindow('autoUpdater-canUpdate', info)
   sendStatusToWindow('autoupdate', info)
 })
-autoUpdater.on('error', (err) => {
-  // Update Error
-  // sendStatusToWindow('autoUpdater-error', err)
-  sendStatusToWindow('autoupdate', err)
-})
-autoUpdater.on('download-progress', (progressObj) => {
-  // download progress being downloaded
-  // sendStatusToWindow('autoUpdater-progress', progressObj)
-  sendStatusToWindow('autoupdate', progressObj)
-})
+// autoUpdater.on('error', (err) => {
+//   // Update Error
+//   // sendStatusToWindow('autoUpdater-error', err)
+//   sendStatusToWindow('autoupdate', err)
+// })
+// autoUpdater.on('download-progress', (progressObj) => {
+//   // download progress being downloaded
+//   // sendStatusToWindow('autoUpdater-progress', progressObj)
+//   sendStatusToWindow('autoupdate', progressObj)
+// })
 autoUpdater.on('update-downloaded', (info) => {
   // Download completed
   // sendStatusToWindow('autoUpdater-downloaded')
