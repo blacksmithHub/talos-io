@@ -3,6 +3,7 @@
     <SystemBar />
     <router-view />
     <vue-progress-bar />
+    <Footer />
   </v-app>
 </template>
 
@@ -10,9 +11,10 @@
 import { mapState, mapActions } from 'vuex'
 
 import SystemBar from '@/components/App/SystemBar'
+import Footer from '@/components/App/Footer'
 
 export default {
-  components: { SystemBar },
+  components: { SystemBar, Footer },
   computed: {
     ...mapState('setting', { settings: 'items' }),
     ...mapState('task', { tasks: 'items' })

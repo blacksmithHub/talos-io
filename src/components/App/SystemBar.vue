@@ -12,7 +12,7 @@
       >
         <span
           class="text-uppercase"
-          v-text="'talos io'"
+          v-text="'talos'"
         />
       </v-col>
 
