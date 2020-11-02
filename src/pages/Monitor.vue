@@ -1,6 +1,11 @@
 <template>
   <v-app>
     <v-main>
+      <VersionUpdate
+        v-if="alertMsg"
+        :alert-msg="alertMsg"
+        :alert-class="alertClass"
+      />
       <v-container>
         <v-card>
           <v-card-title>
@@ -96,12 +101,15 @@ import moment from '@/mixins/moment'
 import App from '@/config/app'
 import productApi from '@/api/magento/titan22/product'
 import Footer from '@/components/App/Footer'
+import VersionUpdate from '@/components/App/VersionUpdate'
 
 export default {
-  components: { Footer },
+  components: { Footer, VersionUpdate },
   mixins: [moment],
   data () {
     return {
+      alertMsg: '',
+      alertClass: '',
       items: [
         { title: 'Last created', value: 'created_at' },
         { title: 'Last update', value: 'updated_at' }
@@ -166,12 +174,17 @@ export default {
     ipcRenderer.on('init', (event, arg) => {
       if (arg) {
         this.active = true
-        this.searchProduct()
+        this.searchProduct(() => {})
       }
     })
 
     ipcRenderer.on('stop', (event, arg) => {
       if (arg) this.active = false
+    })
+
+    ipcRenderer.on('versionUpdate', (event, arg) => {
+      this.alertMsg = arg.msg
+      this.alertClass = arg.class
     })
   },
   methods: {
@@ -219,11 +232,13 @@ export default {
           this.products = []
 
           response.items.forEach(element => {
+            const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
+
             this.products.push({
               name: element.name,
               sku: element.sku,
               price: element.price,
-              link: element.custom_attributes.find((val) => val.attribute_code === 'url_key').value,
+              link: (link) ? link.value : '',
               status: element.extension_attributes.out_of_stock,
               date: this.formatDate(element.updated_at)
             })

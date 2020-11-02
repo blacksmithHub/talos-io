@@ -1,6 +1,11 @@
 <template>
   <v-app>
     <v-main>
+      <VersionUpdate
+        v-if="alertMsg"
+        :alert-msg="alertMsg"
+        :alert-class="alertClass"
+      />
       <v-container>
         <v-card
           flat
@@ -111,12 +116,15 @@
 import { mapState, mapActions } from 'vuex'
 import { ipcRenderer } from 'electron'
 import Footer from '@/components/App/Footer'
+import VersionUpdate from '@/components/App/VersionUpdate'
 
 export default {
-  components: { Footer },
+  components: { Footer, VersionUpdate },
   data () {
     return {
-      panel: []
+      panel: [],
+      alertMsg: '',
+      alertClass: ''
     }
   },
   computed: {
@@ -145,6 +153,11 @@ export default {
 
     ipcRenderer.on('updateTasks', (event, arg) => {
       this.setTasks(arg)
+    })
+
+    ipcRenderer.on('versionUpdate', (event, arg) => {
+      this.alertMsg = arg.msg
+      this.alertClass = arg.class
     })
   },
   methods: {

@@ -12,7 +12,7 @@
       >
         <span
           class="text-uppercase"
-          v-text="'talos'"
+          v-text="name"
         />
       </v-col>
 
@@ -65,12 +65,19 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import { remote } from 'electron'
 
 export default {
   data () {
     return {
       time: ''
+    }
+  },
+  computed: {
+    ...mapState('core', ['package']),
+    name () {
+      return this.package.productName
     }
   },
   created () {
