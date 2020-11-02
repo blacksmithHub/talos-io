@@ -29,8 +29,8 @@ let newVersion
 
 autoUpdater.on('update-available', (info) => {
   // version can be updated
-  newVersion = info
-  sendStatusToWindow('versionUpdate', { obj: info, msg: `${newVersion} is now available! Downloading please wait...`, class: 'warning' })
+  newVersion = info.version
+  sendStatusToWindow('versionUpdate', { msg: `v${newVersion} is now available! Preparing for download please wait...`, class: 'warning' })
 })
 autoUpdater.on('error', () => {
   // Update Error
@@ -38,11 +38,11 @@ autoUpdater.on('error', () => {
 })
 autoUpdater.on('download-progress', (progressObj) => {
   // download progress being downloaded
-  sendStatusToWindow('versionUpdate', { obj: progressObj, msg: `${newVersion} is now downloading please wait... ${progressObj}`, class: 'warning' })
+  sendStatusToWindow('versionUpdate', { msg: `v${newVersion} is now downloading please wait... ${progressObj.percent.toFixed()}%`, class: 'warning' })
 })
 autoUpdater.on('update-downloaded', (info) => {
   // Download completed
-  sendStatusToWindow('versionUpdate', { obj: info, msg: `${newVersion} has been downloaded! Restart the application to install automatically`, class: 'success' })
+  sendStatusToWindow('versionUpdate', { msg: `v${info.version} has been downloaded! Restart the application to install automatically`, class: 'success' })
 })
 
 /**
