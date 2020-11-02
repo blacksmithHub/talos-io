@@ -6,6 +6,7 @@
     :icon="(alertClass === 'success') ? 'mdi-check-circle': 'mdi-alert'"
     tile
     border="left"
+    class="caption"
   >
     {{ alertMsg }}
   </v-alert>
@@ -16,11 +17,11 @@ export default {
   props: {
     alertMsg: {
       type: String,
-      required: true
+      default: String
     },
     alertClass: {
       type: String,
-      required: true
+      default: String
     }
   }
 }

@@ -1,6 +1,11 @@
 <template>
   <v-app>
     <v-main>
+      <VersionUpdate
+        v-if="alertMsg"
+        :alert-msg="alertMsg"
+        :alert-class="alertClass"
+      />
       <v-container>
         <v-card>
           <v-card-title>
@@ -96,12 +101,15 @@ import moment from '@/mixins/moment'
 import App from '@/config/app'
 import productApi from '@/api/magento/titan22/product'
 import Footer from '@/components/App/Footer'
+import VersionUpdate from '@/components/App/VersionUpdate'
 
 export default {
-  components: { Footer },
+  components: { Footer, VersionUpdate },
   mixins: [moment],
   data () {
     return {
+      alertMsg: '',
+      alertClass: '',
       items: [
         { title: 'Last created', value: 'created_at' },
         { title: 'Last update', value: 'updated_at' }
@@ -172,6 +180,11 @@ export default {
 
     ipcRenderer.on('stop', (event, arg) => {
       if (arg) this.active = false
+    })
+
+    ipcRenderer.on('versionUpdate', (event, arg) => {
+      this.alertMsg = arg.msg
+      this.alertClass = arg.class
     })
   },
   methods: {

@@ -263,7 +263,7 @@ export default {
       ipcRenderer.send('update-tasks', this.tasks)
     }
   },
-  async created () {
+  created () {
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
     })

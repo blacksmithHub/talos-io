@@ -23,6 +23,10 @@ protocol.registerSchemesAsPrivileged([
 // Send a message to the rendering thread
 function sendStatusToWindow (status, params) {
   win.webContents.send(status, params)
+  monitorWin.webContents.send(status, params)
+  profileWin.webContents.send(status, params)
+  settingsWin.webContents.send(status, params)
+  logWin.webContents.send(status, params)
 }
 
 let newVersion
