@@ -25,28 +25,24 @@ function sendStatusToWindow (status, params) {
   win.webContents.send(status, params)
 }
 
-autoUpdater.on('checking-for-update', () => {
-  sendStatusToWindow('autoupdate', 'Checking for update...')
-})
+let newVersion
+
 autoUpdater.on('update-available', (info) => {
   // version can be updated
-  // sendStatusToWindow('autoUpdater-canUpdate', info)
-  sendStatusToWindow('autoupdate', info)
+  newVersion = info
+  sendStatusToWindow('versionUpdate', { msg: `${newVersion} is now available!`, class: 'warning' })
 })
-autoUpdater.on('error', (err) => {
+autoUpdater.on('error', () => {
   // Update Error
-  // sendStatusToWindow('autoUpdater-error', err)
-  sendStatusToWindow('autoupdate', err)
+  sendStatusToWindow('versionUpdate', { msg: 'Oops! something went wrong. Restart the application to retry.', class: 'error' })
 })
 autoUpdater.on('download-progress', (progressObj) => {
   // download progress being downloaded
-  // sendStatusToWindow('autoUpdater-progress', progressObj)
-  sendStatusToWindow('autoupdate', progressObj)
+  sendStatusToWindow('versionUpdate', { msg: `${newVersion} is now downloading please wait... ${progressObj}`, class: 'warning' })
 })
 autoUpdater.on('update-downloaded', (info) => {
   // Download completed
-  // sendStatusToWindow('autoUpdater-downloaded')
-  sendStatusToWindow('autoupdate', info)
+  sendStatusToWindow('versionUpdate', { msg: `${newVersion} has been downloaded! Restart the application to install automatically`, class: 'success' })
 })
 
 /**
@@ -79,6 +75,11 @@ function createWindow () {
   } else {
     createProtocol('app')
     win.loadURL('app://./index.html')
+
+    setTimeout(() => {
+      // detect whether there are updates
+      autoUpdater.checkForUpdatesAndNotify()
+    }, 3000)
   }
 
   win.once('ready-to-show', () => {
@@ -89,18 +90,15 @@ function createWindow () {
     win = null
   })
 
-  win.on('focus', () => {
-    globalShortcut.register('CommandOrControl+R', () => {})
-  })
+  if (!isDevelopment) {
+    win.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
 
-  win.on('blur', () => {
-    globalShortcut.unregister('CommandOrControl+R')
-  })
-
-  setTimeout(() => {
-    // detect whether there are updates
-    autoUpdater.checkForUpdatesAndNotify()
-  }, 3000)
+    win.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 /**
@@ -124,16 +122,10 @@ function createMonitorWindow () {
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     monitorWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/monitor`)
-
-    if (isDevelopment) win.webContents.openDevTools()
   } else {
     createProtocol('app')
     monitorWin.loadURL('app://./index.html/#/monitor')
   }
-
-  win.once('ready-to-show', () => {
-    win.show()
-  })
 
   monitorWin.on('close', (e) => {
     monitorWin.webContents.send('stop', true)
@@ -141,13 +133,15 @@ function createMonitorWindow () {
     monitorWin.hide()
   })
 
-  monitorWin.on('focus', () => {
-    globalShortcut.register('CommandOrControl+R', () => {})
-  })
+  if (!isDevelopment) {
+    monitorWin.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
 
-  monitorWin.on('blur', () => {
-    globalShortcut.unregister('CommandOrControl+R')
-  })
+    monitorWin.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 /**
@@ -171,8 +165,6 @@ function createProfileWindow () {
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     profileWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/profiles`)
-
-    if (isDevelopment) win.webContents.openDevTools()
   } else {
     createProtocol('app')
     profileWin.loadURL('app://./index.html/#/profiles')
@@ -183,13 +175,15 @@ function createProfileWindow () {
     profileWin.hide()
   })
 
-  profileWin.on('focus', () => {
-    globalShortcut.register('CommandOrControl+R', () => {})
-  })
+  if (!isDevelopment) {
+    profileWin.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
 
-  profileWin.on('blur', () => {
-    globalShortcut.unregister('CommandOrControl+R')
-  })
+    profileWin.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 /**
@@ -223,13 +217,15 @@ function createSettingWindow () {
     settingsWin.hide()
   })
 
-  settingsWin.on('focus', () => {
-    globalShortcut.register('CommandOrControl+R', () => {})
-  })
+  if (!isDevelopment) {
+    settingsWin.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
 
-  settingsWin.on('blur', () => {
-    globalShortcut.unregister('CommandOrControl+R')
-  })
+    settingsWin.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 /**
@@ -263,13 +259,15 @@ function createLogWindow () {
     logWin.hide()
   })
 
-  logWin.on('focus', () => {
-    globalShortcut.register('CommandOrControl+R', () => {})
-  })
+  if (!isDevelopment) {
+    logWin.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
 
-  logWin.on('blur', () => {
-    globalShortcut.unregister('CommandOrControl+R')
-  })
+    logWin.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 // Quit when all windows are closed.
