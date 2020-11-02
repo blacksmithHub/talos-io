@@ -191,6 +191,7 @@
             </v-row>
           </v-card-actions>
         </v-card>
+        {{ test }}
       </v-container>
 
       <TaskDialog ref="taskDialog" />
@@ -232,7 +233,8 @@ export default {
   data () {
     return {
       alertMsg: '',
-      alertClass: ''
+      alertClass: '',
+      test: {}
     }
   },
   beforeRouteEnter (to, from, next) {
@@ -279,6 +281,7 @@ export default {
     ipcRenderer.on('versionUpdate', (event, arg) => {
       this.alertMsg = arg.msg
       this.alertClass = arg.class
+      this.test = arg.obj
     })
   },
   methods: {
