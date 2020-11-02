@@ -38,7 +38,7 @@ autoUpdater.on('update-available', (info) => {
 })
 autoUpdater.on('error', () => {
   // Update Error
-  sendStatusToWindow('versionUpdate', { msg: 'Oops! something went wrong. Restart the application to retry.', class: 'error' })
+  sendStatusToWindow('versionUpdate', { msg: 'Oops! something went wrong while downloading. Restart the application to retry.', class: 'error' })
 })
 autoUpdater.on('download-progress', (progressObj) => {
   // download progress being downloaded
