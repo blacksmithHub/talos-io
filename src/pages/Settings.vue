@@ -1,6 +1,11 @@
 <template>
   <v-app>
     <v-main>
+      <VersionUpdate
+        v-if="alertMsg"
+        :alert-msg="alertMsg"
+        :alert-class="alertClass"
+      />
       <v-container>
         <v-form @submit.prevent="submit">
           <v-card>
@@ -311,9 +316,10 @@ import { mapState, mapActions } from 'vuex'
 import { remote, ipcRenderer } from 'electron'
 import webhook from '@/mixins/webhook'
 import Footer from '@/components/App/Footer'
+import VersionUpdate from '@/components/App/VersionUpdate'
 
 export default {
-  components: { Footer },
+  components: { Footer, VersionUpdate },
   mixins: [webhook],
   data () {
     return {
@@ -327,7 +333,9 @@ export default {
       manual: false,
       backupTasks: [],
       backupProfiles: [],
-      backupBanks: []
+      backupBanks: [],
+      alertMsg: '',
+      alertClass: ''
     }
   },
   computed: {
@@ -405,6 +413,11 @@ export default {
 
     ipcRenderer.on('updateBanks', (event, arg) => {
       this.exportBanks(arg)
+    })
+
+    ipcRenderer.on('versionUpdate', (event, arg) => {
+      this.alertMsg = arg.msg
+      this.alertClass = arg.class
     })
 
     this.prepareDetails()
@@ -558,7 +571,7 @@ export default {
       this.$v.$touch()
 
       if (!this.$v.$invalid && this.webhook) {
-        this.sendWebhook(this.webhook, 'Air Jordan 4 Retro Off-White Sail', '9', 'Test Profile', '1.20', 'CV9388-100')
+        this.sendWebhook(this.webhook, 'Air Jordan 4 Retro Off-White Sail', '9', null, null, 'CV9388-100')
       }
     },
 

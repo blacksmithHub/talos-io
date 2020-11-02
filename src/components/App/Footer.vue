@@ -14,15 +14,16 @@
 </template>
 
 <script>
-import Config from '@/config/app'
+import { mapState } from 'vuex'
 
 export default {
   computed: {
+    ...mapState('core', ['package']),
     name () {
-      return Config.bot.name
+      return this.package.productName
     },
     version () {
-      return `v${Config.bot.version}`
+      return `v${this.package.version}`
     }
   }
 }

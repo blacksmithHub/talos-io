@@ -20,6 +20,35 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
+// Send a message to the rendering thread
+function sendStatusToWindow (status, params) {
+  win.webContents.send(status, params)
+  monitorWin.webContents.send(status, params)
+  profileWin.webContents.send(status, params)
+  settingsWin.webContents.send(status, params)
+  logWin.webContents.send(status, params)
+}
+
+let newVersion
+
+autoUpdater.on('update-available', (info) => {
+  // version can be updated
+  newVersion = info.version
+  sendStatusToWindow('versionUpdate', { msg: `v${newVersion} is now available! Preparing for download please wait...`, class: 'warning' })
+})
+autoUpdater.on('error', () => {
+  // Update Error
+  sendStatusToWindow('versionUpdate', { msg: 'Oops! something went wrong while downloading. Restart the application to retry.', class: 'error' })
+})
+autoUpdater.on('download-progress', (progressObj) => {
+  // download progress being downloaded
+  sendStatusToWindow('versionUpdate', { msg: `v${newVersion} is now downloading please wait... ${progressObj.percent.toFixed()}%`, class: 'warning' })
+})
+autoUpdater.on('update-downloaded', (info) => {
+  // Download completed
+  sendStatusToWindow('versionUpdate', { msg: `v${info.version} has been downloaded! Restart the application to install automatically`, class: 'success' })
+})
+
 /**
  *  Create main window
  */
@@ -30,6 +59,7 @@ function createWindow () {
     minWidth: 500,
     minHeight: 600,
     frame: false,
+    show: false,
     webPreferences: {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       enableRemoteModule: true,
@@ -49,12 +79,30 @@ function createWindow () {
   } else {
     createProtocol('app')
     win.loadURL('app://./index.html')
-    autoUpdater.checkForUpdatesAndNotify()
+
+    setTimeout(() => {
+      // detect whether there are updates
+      autoUpdater.checkForUpdatesAndNotify()
+    }, 3000)
   }
+
+  win.once('ready-to-show', () => {
+    win.show()
+  })
 
   win.on('closed', () => {
     win = null
   })
+
+  if (!isDevelopment) {
+    win.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
+
+    win.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 /**
@@ -78,8 +126,6 @@ function createMonitorWindow () {
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     monitorWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/monitor`)
-
-    if (isDevelopment) win.webContents.openDevTools()
   } else {
     createProtocol('app')
     monitorWin.loadURL('app://./index.html/#/monitor')
@@ -90,6 +136,16 @@ function createMonitorWindow () {
     e.preventDefault()
     monitorWin.hide()
   })
+
+  if (!isDevelopment) {
+    monitorWin.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
+
+    monitorWin.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 /**
@@ -113,8 +169,6 @@ function createProfileWindow () {
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     profileWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/profiles`)
-
-    if (isDevelopment) win.webContents.openDevTools()
   } else {
     createProtocol('app')
     profileWin.loadURL('app://./index.html/#/profiles')
@@ -124,6 +178,16 @@ function createProfileWindow () {
     e.preventDefault()
     profileWin.hide()
   })
+
+  if (!isDevelopment) {
+    profileWin.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
+
+    profileWin.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 /**
@@ -156,6 +220,16 @@ function createSettingWindow () {
     e.preventDefault()
     settingsWin.hide()
   })
+
+  if (!isDevelopment) {
+    settingsWin.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
+
+    settingsWin.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 /**
@@ -188,6 +262,16 @@ function createLogWindow () {
     e.preventDefault()
     logWin.hide()
   })
+
+  if (!isDevelopment) {
+    logWin.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
+
+    logWin.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 // Quit when all windows are closed.
@@ -211,12 +295,6 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  if (!isDevelopment) {
-    globalShortcut.register('ctrl+r', () => {
-      return false
-    })
-  }
-
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {

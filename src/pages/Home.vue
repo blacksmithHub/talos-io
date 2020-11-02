@@ -2,6 +2,11 @@
   <v-app>
     <SideNav />
     <v-main>
+      <VersionUpdate
+        v-if="alertMsg"
+        :alert-msg="alertMsg"
+        :alert-class="alertClass"
+      />
       <v-container>
         <Header
           class="mb-3"
@@ -210,6 +215,7 @@ import automate from '@/mixins/magento/titan22/automate'
 import Constant from '@/config/constant'
 import verify from '@/mixins/magento/titan22/verify'
 import Footer from '@/components/App/Footer'
+import VersionUpdate from '@/components/App/VersionUpdate'
 
 export default {
   components: {
@@ -219,9 +225,16 @@ export default {
     TaskDialog,
     MassEditDialog,
     ImportTaskDialog,
-    Footer
+    Footer,
+    VersionUpdate
   },
   mixins: [automate, verify],
+  data () {
+    return {
+      alertMsg: '',
+      alertClass: ''
+    }
+  },
   beforeRouteEnter (to, from, next) {
     next(async vm => {
       if (!vm.attributes.length) await vm.prepareAttributes()
@@ -261,6 +274,11 @@ export default {
 
     ipcRenderer.on('updateProfiles', (event, arg) => {
       this.setProfiles(arg)
+    })
+
+    ipcRenderer.on('versionUpdate', (event, arg) => {
+      this.alertMsg = arg.msg
+      this.alertClass = arg.class
     })
   },
   methods: {
