@@ -1206,9 +1206,9 @@ export default {
       if (this.settings.webhook) {
         this.sendWebhook(url, productName, productSize, profile, secs, sku)
 
-        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs, sku)
+        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku)
       } else {
-        this.sendWebhook(Config.bot.webhook, productName, productSize, profile, secs, sku)
+        this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku)
       }
 
       if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie)

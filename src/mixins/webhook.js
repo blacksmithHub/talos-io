@@ -28,10 +28,12 @@ export default {
         .setTitle('Copped!')
         .addField(product, sku)
         .addField('**Size**', size)
-        .addField('**Profile**', `||${profile}||`)
-        .addField('**Checkout Time**', `${secs}s`)
 
       if (cookie) msg.addField('**Cookie**', `||${cookie}||`)
+
+      if (profile) msg.addField('**Profile**', `||${profile}||`)
+
+      if (secs) msg.addField('**Checkout Time**', `${secs}s`)
 
       Hook.send(msg)
     }

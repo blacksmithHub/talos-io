@@ -174,7 +174,7 @@ export default {
     ipcRenderer.on('init', (event, arg) => {
       if (arg) {
         this.active = true
-        this.searchProduct()
+        this.searchProduct(() => {})
       }
     })
 
@@ -232,11 +232,13 @@ export default {
           this.products = []
 
           response.items.forEach(element => {
+            const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
+
             this.products.push({
               name: element.name,
               sku: element.sku,
               price: element.price,
-              link: element.custom_attributes.find((val) => val.attribute_code === 'url_key').value,
+              link: (link) ? link.value : '',
               status: element.extension_attributes.out_of_stock,
               date: this.formatDate(element.updated_at)
             })
