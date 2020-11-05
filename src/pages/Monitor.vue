@@ -1,96 +1,86 @@
 <template>
-  <v-app>
-    <v-main>
-      <VersionUpdate
-        v-if="alertMsg"
-        :alert-msg="alertMsg"
-        :alert-class="alertClass"
-      />
-      <v-container>
-        <v-card>
-          <v-card-title>
-            <v-row>
-              <v-col align-self="center">
-                <v-text-field
-                  v-model="search"
-                  append-icon="mdi-magnify"
-                  label="Search"
-                  hide-details
-                  outlined
-                  dense
-                />
-              </v-col>
-
-              <v-col
-                align-self="center"
-                cols="3"
-              >
-                <v-select
-                  v-model="filter"
-                  :items="items"
-                  outlined
-                  dense
-                  hide-details
-                  item-text="title"
-                  item-value="value"
-                  label="Filter By"
-                />
-              </v-col>
-            </v-row>
-          </v-card-title>
-
-          <v-card-text style="max-height: 75vh; overflow: auto;">
-            <v-data-table
+  <v-container>
+    <v-card>
+      <v-card-title>
+        <v-row>
+          <v-col align-self="center">
+            <v-text-field
+              v-model="search"
+              append-icon="mdi-magnify"
+              label="Search"
+              hide-details
+              outlined
               dense
-              :headers="headers"
-              :items="products"
-              :search="search"
-              :loading="loading || !products.length"
-              hide-default-footer
-              loading-text="Loading... Please wait"
-              :items-per-page="products.length"
-              :no-results-text="'Nothing to display'"
-              :no-data-text="'Nothing to display'"
-            >
-              <template v-slot:item.name="{ value }">
-                <small v-text="value" />
-              </template>
+            />
+          </v-col>
 
-              <template v-slot:item.sku="{ value }">
-                <small v-text="value" />
-              </template>
+          <v-col
+            align-self="center"
+            cols="3"
+          >
+            <v-select
+              v-model="filter"
+              :items="items"
+              outlined
+              dense
+              hide-details
+              item-text="title"
+              item-value="value"
+              label="Filter By"
+            />
+          </v-col>
+        </v-row>
+      </v-card-title>
 
-              <template v-slot:item.price="{ value }">
-                <small v-text="value" />
-              </template>
+      <v-card-text style="max-height: 75vh; overflow: auto;">
+        <v-data-table
+          dense
+          :headers="headers"
+          :items="products"
+          :search="search"
+          :loading="loading || !products.length"
+          hide-default-footer
+          loading-text="Loading... Please wait"
+          :items-per-page="products.length"
+          :no-results-text="'Nothing to display'"
+          :no-data-text="'Nothing to display'"
+        >
+          <template v-slot:item.name="{ value }">
+            <small v-text="value" />
+          </template>
 
-              <template v-slot:item.link="{ value }">
-                <small
-                  class="text-capitalize text-decoration-underline primary--text cursor"
-                  @click="redirect(value)"
-                  v-text="'product link'"
-                />
-              </template>
+          <template v-slot:item.sku="{ value }">
+            <small v-text="value" />
+          </template>
 
-              <template v-slot:item.status="{ value }">
-                <v-chip
-                  class="text-capitalize"
-                  x-small
-                  :color="(value) ? 'error' : 'success'"
-                  v-text="(value) ? 'out of stock' : 'in stock'"
-                />
-              </template>
+          <template v-slot:item.price="{ value }">
+            <small v-text="value" />
+          </template>
 
-              <template v-slot:item.date="{ value }">
-                <small v-text="value" />
-              </template>
-            </v-data-table>
-          </v-card-text>
-        </v-card>
-      </v-container>
-    </v-main>
-    <Footer />
-  </v-app>
+          <template v-slot:item.link="{ value }">
+            <small
+              class="text-capitalize text-decoration-underline primary--text cursor"
+              @click="redirect(value)"
+              v-text="'product link'"
+            />
+          </template>
+
+          <template v-slot:item.status="{ value }">
+            <v-chip
+              class="text-capitalize"
+              x-small
+              :color="(value) ? 'error' : 'success'"
+              v-text="(value) ? 'out of stock' : 'in stock'"
+            />
+          </template>
+
+          <template v-slot:item.date="{ value }">
+            <small v-text="value" />
+          </template>
+        </v-data-table>
+      </v-card-text>
+    </v-card>
+  </v-container>
 </template>
 
 <script>
@@ -100,16 +90,11 @@ import { mapState, mapActions } from 'vuex'
 import moment from '@/mixins/moment'
 import App from '@/config/app'
 import productApi from '@/api/magento/titan22/product'
-import Footer from '@/components/App/Footer'
-import VersionUpdate from '@/components/App/VersionUpdate'
 
 export default {
-  components: { Footer, VersionUpdate },
   mixins: [moment],
   data () {
     return {
-      alertMsg: '',
-      alertClass: '',
       items: [
         { title: 'Last created', value: 'created_at' },
         { title: 'Last update', value: 'updated_at' }
@@ -180,11 +165,6 @@ export default {
 
     ipcRenderer.on('stop', (event, arg) => {
       if (arg) this.active = false
-    })
-
-    ipcRenderer.on('versionUpdate', (event, arg) => {
-      this.alertMsg = arg.msg
-      this.alertClass = arg.class
     })
   },
   methods: {

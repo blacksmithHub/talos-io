@@ -1,130 +1,115 @@
 <template>
-  <v-app>
-    <v-main>
-      <VersionUpdate
-        v-if="alertMsg"
-        :alert-msg="alertMsg"
-        :alert-class="alertClass"
-      />
-      <v-container>
-        <v-card
-          flat
-          class="transparent"
+  <v-container>
+    <v-card
+      flat
+      class="transparent"
+    >
+      <v-card-title>
+        <v-btn
+          :fab="!$vuetify.breakpoint.lgAndUp"
+          :rounded="$vuetify.breakpoint.lgAndUp"
+          :small="$vuetify.breakpoint.lgAndUp"
+          :x-small="!$vuetify.breakpoint.lgAndUp"
+          class="primary mr-3"
+          @click="openAll"
         >
-          <v-card-title>
-            <v-btn
-              :fab="!$vuetify.breakpoint.lgAndUp"
-              :rounded="$vuetify.breakpoint.lgAndUp"
-              :small="$vuetify.breakpoint.lgAndUp"
-              :x-small="!$vuetify.breakpoint.lgAndUp"
-              class="primary mr-3"
-              @click="openAll"
-            >
-              <v-icon
-                :left="$vuetify.breakpoint.lgAndUp"
-                :small="$vuetify.breakpoint.lgAndUp"
-                v-text="'mdi-magnify-plus-outline'"
-              />
-              <span
-                v-if="$vuetify.breakpoint.lgAndUp"
-                v-text="'maximize all'"
-              />
-            </v-btn>
+          <v-icon
+            :left="$vuetify.breakpoint.lgAndUp"
+            :small="$vuetify.breakpoint.lgAndUp"
+            v-text="'mdi-magnify-plus-outline'"
+          />
+          <span
+            v-if="$vuetify.breakpoint.lgAndUp"
+            v-text="'maximize all'"
+          />
+        </v-btn>
 
-            <v-btn
-              :fab="!$vuetify.breakpoint.lgAndUp"
-              :rounded="$vuetify.breakpoint.lgAndUp"
-              :small="$vuetify.breakpoint.lgAndUp"
-              :x-small="!$vuetify.breakpoint.lgAndUp"
-              class="primary"
-              @click="closeAll"
-            >
-              <v-icon
-                :left="$vuetify.breakpoint.lgAndUp"
-                :small="$vuetify.breakpoint.lgAndUp"
-                v-text="'mdi-magnify-minus-outline'"
-              />
-              <span
-                v-if="$vuetify.breakpoint.lgAndUp"
-                v-text="'minimize all'"
-              />
-            </v-btn>
-          </v-card-title>
+        <v-btn
+          :fab="!$vuetify.breakpoint.lgAndUp"
+          :rounded="$vuetify.breakpoint.lgAndUp"
+          :small="$vuetify.breakpoint.lgAndUp"
+          :x-small="!$vuetify.breakpoint.lgAndUp"
+          class="primary"
+          @click="closeAll"
+        >
+          <v-icon
+            :left="$vuetify.breakpoint.lgAndUp"
+            :small="$vuetify.breakpoint.lgAndUp"
+            v-text="'mdi-magnify-minus-outline'"
+          />
+          <span
+            v-if="$vuetify.breakpoint.lgAndUp"
+            v-text="'minimize all'"
+          />
+        </v-btn>
+      </v-card-title>
 
-          <v-card-text style="max-height: 80vh; overflow: auto">
-            <v-expansion-panels
-              v-if="tasks.length"
-              v-model="panel"
-              multiple
+      <v-card-text style="max-height: 80vh; overflow: auto">
+        <v-expansion-panels
+          v-if="tasks.length"
+          v-model="panel"
+          multiple
+        >
+          <v-expansion-panel
+            v-for="(task, index) in tasks"
+            :key="index"
+          >
+            <v-expansion-panel-header>
+              {{ task.name }}
+            </v-expansion-panel-header>
+
+            <v-expansion-panel-content
+              v-if="task.logs.length"
+              id="container"
+              style="max-height: 30vh; overflow: auto"
             >
-              <v-expansion-panel
-                v-for="(task, index) in tasks"
-                :key="index"
+              <template
+                v-for="(log, i) in task.logs"
               >
-                <v-expansion-panel-header>
-                  {{ task.name }}
-                </v-expansion-panel-header>
+                <p
+                  :key="i"
+                  :class="`${(i === task.logs.length - 1 && log.msg !== 'stopped') ? 'mb-8' : 'mb-1'} ${log.color}--text caption text-capitalize`"
+                  v-text="log.msg"
+                />
 
-                <v-expansion-panel-content
-                  v-if="task.logs.length"
-                  id="container"
-                  style="max-height: 30vh; overflow: auto"
-                >
-                  <template
-                    v-for="(log, i) in task.logs"
-                  >
-                    <p
-                      :key="i"
-                      :class="`${(i === task.logs.length - 1 && log.msg !== 'stopped') ? 'mb-8' : 'mb-1'} ${log.color}--text caption text-capitalize`"
-                      v-text="log.msg"
-                    />
+                <p
+                  v-if="log.msg === 'stopped'"
+                  :key="i+'d'"
+                  class="ma-0"
+                  v-text="'===================='"
+                />
+              </template>
+            </v-expansion-panel-content>
 
-                    <p
-                      v-if="log.msg === 'stopped'"
-                      :key="i+'d'"
-                      class="ma-0"
-                      v-text="'===================='"
-                    />
-                  </template>
-                </v-expansion-panel-content>
-
-                <v-expansion-panel-content
-                  v-else
-                  class="text-center"
-                >
-                  <span
-                    class="caption"
-                    v-text="'Nothing to display'"
-                  />
-                </v-expansion-panel-content>
-              </v-expansion-panel>
-            </v-expansion-panels>
-
-            <p
+            <v-expansion-panel-content
+              v-else
               class="text-center"
-              v-text="'Nothing to display'"
-            />
-          </v-card-text>
-        </v-card>
-      </v-container>
-    </v-main>
-    <Footer />
-  </v-app>
+            >
+              <span
+                class="caption"
+                v-text="'Nothing to display'"
+              />
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+
+        <p
+          class="text-center"
+          v-text="'Nothing to display'"
+        />
+      </v-card-text>
+    </v-card>
+  </v-container>
 </template>
 
 <script>
 import { mapState, mapActions } from 'vuex'
 import { ipcRenderer } from 'electron'
-import Footer from '@/components/App/Footer'
-import VersionUpdate from '@/components/App/VersionUpdate'
 
 export default {
-  components: { Footer, VersionUpdate },
   data () {
     return {
-      panel: [],
-      alertMsg: '',
-      alertClass: ''
+      panel: []
     }
   },
   computed: {
@@ -153,11 +138,6 @@ export default {
 
     ipcRenderer.on('updateTasks', (event, arg) => {
       this.setTasks(arg)
-    })
-
-    ipcRenderer.on('versionUpdate', (event, arg) => {
-      this.alertMsg = arg.msg
-      this.alertClass = arg.class
     })
   },
   methods: {
