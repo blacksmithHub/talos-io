@@ -31,7 +31,7 @@ autoUpdater.on('update-not-available', (info) => {
     home.getWindow().show()
 
     if (isDevelopment) home.getWindow().openDevTools()
-  }, 1000)
+  }, 2000)
 })
 autoUpdater.on('error', () => {
   // Update Error
@@ -43,12 +43,9 @@ autoUpdater.on('download-progress', (progressObj) => {
 })
 autoUpdater.on('update-downloaded', (info) => {
   // Download completed
-  sendStatusToWindow('versionUpdate', 'update has been downloaded, re-launch the app')
+  sendStatusToWindow('versionUpdate', 're-launch the app')
 
-  setTimeout(() => {
-    app.relaunch()
-    app.exit()
-  }, 1000)
+  setTimeout(() => (app.exit()), 2000)
 })
 
 export default {
@@ -88,7 +85,7 @@ export default {
           home.getWindow().show()
 
           home.getWindow().openDevTools()
-        }, 1000)
+        }, 3000)
       }
     } else {
       createProtocol('app')

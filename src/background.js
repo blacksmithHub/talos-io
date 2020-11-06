@@ -4,6 +4,7 @@ import { app, protocol } from 'electron'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
 import update from '@/windows/update'
+import login from '@/windows/login'
 import home from '@/windows/home'
 import monitor from '@/windows/monitor'
 import profile from '@/windows/profile'
@@ -14,6 +15,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 
 function initializeWindows () {
   update.createWindow()
+  login.createWindow()
   home.createWindow()
   monitor.createWindow()
   profile.createWindow()

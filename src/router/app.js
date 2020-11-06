@@ -1,3 +1,5 @@
+// import GuardService from '@/services/guard'
+
 const Update = () => import('../pages/Update')
 const Login = () => import('../pages/Login')
 
@@ -31,6 +33,7 @@ export default {
       path: '/login',
       name: 'Login',
       component: Login
+      // beforeEnter: (to, from, next) => GuardService.registration(from, next)
     },
     {
       path: '',
@@ -42,26 +45,31 @@ export default {
           path: '/',
           name: 'Task',
           component: Task
+          // beforeEnter: (to, from, next) => GuardService.authorized(next)
         },
         {
           path: '/monitor',
           name: 'Monitor',
           component: Monitor
+          // beforeEnter: (to, from, next) => GuardService.authorized(next)
         },
         {
           path: '/profiles',
           name: 'Profiles',
           component: Profiles
+          // beforeEnter: (to, from, next) => GuardService.authorized(next)
         },
         {
           path: '/settings',
           name: 'Settings',
           component: Settings
+          // beforeEnter: (to, from, next) => GuardService.authorized(next)
         },
         {
           path: '/logs',
           name: 'Logs',
           component: Logs
+          // beforeEnter: (to, from, next) => GuardService.authorized(next)
         }
       ]
     }
