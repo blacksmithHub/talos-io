@@ -80,7 +80,6 @@ import automate from '@/mixins/magento/titan22/automate'
 import Constant from '@/config/constant'
 import verify from '@/mixins/magento/titan22/verify'
 import ActionButtons from '@/components/Tasks/ActionButtons'
-import auth from '@/services/auth'
 
 export default {
   components: {
@@ -132,10 +131,6 @@ export default {
 
     ipcRenderer.on('updateProfiles', (event, arg) => {
       this.setProfiles(arg)
-    })
-
-    ipcRenderer.on('setAuth', (event, arg) => {
-      auth.setAuth(JSON.stringify(arg))
     })
   },
   methods: {

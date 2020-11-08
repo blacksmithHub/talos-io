@@ -1,6 +1,5 @@
-import AuthService from '@/services/auth'
 import { ipcRenderer } from 'electron'
-
+import AuthService from '@/services/auth'
 /**
  * =======================================
  * Route Guards
@@ -16,14 +15,12 @@ export default {
   async authorized (next) {
     if (!AuthService.isAuthenticated()) {
       sessionStorage.clear()
+
       ipcRenderer.send('hide-home')
       ipcRenderer.send('toggle-login')
     }
 
-    // AuthService.verifyAccessKey()
-    //   .then((response) => {
-    //     console.log(response)
-    //   })
+    // TODO: verify key
 
     return next()
   }

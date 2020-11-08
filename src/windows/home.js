@@ -1,8 +1,10 @@
 'use strict'
 
-import { BrowserWindow, globalShortcut, ipcMain } from 'electron'
+import { app, BrowserWindow, globalShortcut, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
+import profile from './profile'
+import monitor from './monitor'
 import setting from './setting'
 import log from './log'
 
@@ -39,7 +41,7 @@ export default {
     }
 
     win.on('closed', () => {
-      win = null
+      app.quit()
     })
 
     if (!isDevelopment) {
@@ -51,6 +53,11 @@ export default {
         globalShortcut.unregister('CommandOrControl+R')
       })
     }
+
+    monitor.createWindow()
+    profile.createWindow()
+    setting.createWindow()
+    log.createWindow()
   }
 }
 
@@ -61,6 +68,10 @@ ipcMain.on('update-tasks', (event, arg) => {
 
 ipcMain.on('hide-home', (event, arg) => {
   win.hide()
+})
+
+ipcMain.on('reload-home', (event, arg) => {
+  win.reload()
 })
 
 ipcMain.on('toggle-home', (event, arg) => {

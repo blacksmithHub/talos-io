@@ -1,6 +1,6 @@
 'use strict'
 
-import { BrowserWindow, ipcMain, globalShortcut } from 'electron'
+import { BrowserWindow, globalShortcut, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
 import home from './home'

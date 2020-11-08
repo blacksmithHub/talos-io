@@ -1,5 +1,20 @@
 <template>
   <v-app>
+    <v-system-bar app>
+      <v-spacer />
+      <v-btn
+        icon
+        x-small
+        :ripple="false"
+        @click="onClose"
+      >
+        <v-icon
+          color="error"
+          v-text="'mdi-checkbox-blank-circle'"
+        />
+      </v-btn>
+    </v-system-bar>
+
     <v-main>
       <v-container class="fill-height text-center">
         <v-row
@@ -74,7 +89,7 @@
 /* global __static */
 
 import { required } from 'vuelidate/lib/validators'
-import electron, { ipcRenderer } from 'electron'
+import electron, { remote, ipcRenderer } from 'electron'
 import path from 'path'
 import AuthAPI from '@/api/auth'
 import auth from '@/services/auth'
@@ -129,9 +144,13 @@ export default {
 
           auth.setAuth(JSON.stringify(data))
 
+          this.key = ''
+          this.user = {}
+          this.$v.$reset()
+
           ipcRenderer.send('hide-login')
+          ipcRenderer.send('reload-home')
           ipcRenderer.send('toggle-home')
-          ipcRenderer.send('set-auth', data)
         }
       }
     },
@@ -162,8 +181,6 @@ export default {
       const url = 'https://discord.com/api/oauth2/authorize?client_id=772830030967472158&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=identify%20email%20guilds'
 
       win.loadURL(url)
-
-      win.openDevTools()
 
       win.on('closed', () => {
         win = null
@@ -242,6 +259,13 @@ export default {
           }
         }
       }, 1000)
+    },
+
+    /**
+     * exit app
+     */
+    onClose () {
+      remote.getCurrentWindow().close()
     }
   },
   validations: {

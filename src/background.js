@@ -1,26 +1,111 @@
 'use strict'
 
-import { app, protocol } from 'electron'
+import { app, BrowserWindow, protocol, globalShortcut } from 'electron'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
+import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
+import { autoUpdater } from 'electron-updater'
 
-import update from '@/windows/update'
-import login from '@/windows/login'
 import home from '@/windows/home'
-import monitor from '@/windows/monitor'
-import profile from '@/windows/profile'
-import setting from '@/windows/setting'
-import log from '@/windows/log'
+import login from '@/windows/login'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
+// Keep a global reference of the window object, if you don't, the window will
+// be closed automatically when the JavaScript object is garbage collected.
+let win
+
+// Send a message to the rendering thread
+function sendStatusToWindow (status, params) {
+  win.webContents.send(status, params)
+}
+
+autoUpdater.on('update-available', (info) => {
+  // version can be updated
+  sendStatusToWindow('versionUpdate', 'preparing to download')
+})
+autoUpdater.on('update-not-available', (info) => {
+  // no update available
+  sendStatusToWindow('versionUpdate', 'up to date')
+
+  setTimeout(() => {
+    login.createWindow()
+    home.createWindow()
+    win.destroy()
+  }, 2000)
+})
+autoUpdater.on('error', () => {
+  // Update Error
+  sendStatusToWindow('versionUpdate', 'oops! something went wrong')
+})
+autoUpdater.on('download-progress', (progressObj) => {
+  // download progress being downloaded
+  sendStatusToWindow('versionUpdate', `downloading... ${progressObj.percent.toFixed()}%`)
+})
+autoUpdater.on('update-downloaded', (info) => {
+  // Download completed
+  sendStatusToWindow('versionUpdate', 're-launch the app')
+
+  setTimeout(() => (app.exit()), 2000)
+})
+
 function initializeWindows () {
-  update.createWindow()
-  login.createWindow()
-  home.createWindow()
-  monitor.createWindow()
-  profile.createWindow()
-  setting.createWindow()
-  log.createWindow()
+  win = new BrowserWindow({
+    width: 250,
+    height: 250,
+    minWidth: 250,
+    minHeight: 250,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    closable: false,
+    fullscreenable: false,
+    center: true,
+    frame: false,
+    show: false,
+    webPreferences: {
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+      enableRemoteModule: true,
+      webSecurity: false
+    }
+  })
+
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/update`)
+
+    if (isDevelopment) {
+      win.webContents.openDevTools()
+
+      setTimeout(() => {
+        login.createWindow()
+        home.createWindow()
+        win.destroy()
+      }, 3000)
+    }
+  } else {
+    createProtocol('app')
+
+    win.loadURL('app://./index.html/#/update')
+
+    setTimeout(() => (autoUpdater.checkForUpdatesAndNotify()), 1000)
+  }
+
+  win.once('ready-to-show', () => {
+    win.show()
+  })
+
+  win.on('closed', () => {
+    win = null
+  })
+
+  if (!isDevelopment) {
+    win.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
+
+    win.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 // Scheme must be registered before the app is ready
@@ -40,7 +125,7 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (home.getWindow() === null) {
+  if (win === null) {
     initializeWindows()
   }
 })

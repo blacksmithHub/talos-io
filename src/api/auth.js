@@ -17,7 +17,17 @@ export default {
    */
   bind (params) {
     return this.http(this.baseUrl)
-      .post('/bind', params)
+      .put('/bind', params)
+      .then(response => response)
+      .catch(({ response }) => response)
+  },
+
+  /**
+   * Unbind key
+   */
+  unbind (params) {
+    return this.http(this.baseUrl)
+      .put('/unbind', params)
       .then(response => response)
       .catch(({ response }) => response)
   }

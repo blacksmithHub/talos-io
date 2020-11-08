@@ -1,9 +1,7 @@
 'use strict'
 
-import { BrowserWindow, globalShortcut, ipcMain } from 'electron'
+import { app, BrowserWindow, globalShortcut, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
-
-import home from './home'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -24,7 +22,6 @@ export default {
       resizable: false,
       minimizable: false,
       maximizable: false,
-      closable: false,
       fullscreenable: false,
       center: true,
       frame: false,
@@ -38,13 +35,15 @@ export default {
 
     if (process.env.WEBPACK_DEV_SERVER_URL) {
       win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/login`)
+
+      if (isDevelopment) win.openDevTools()
     } else {
       createProtocol('app')
       win.loadURL('app://./index.html/#/login')
     }
 
     win.on('closed', () => {
-      win = null
+      app.quit()
     })
 
     if (!isDevelopment) {
@@ -61,14 +60,8 @@ export default {
 
 ipcMain.on('toggle-login', (event, arg) => {
   win.show()
-
-  if (isDevelopment) win.openDevTools()
 })
 
 ipcMain.on('hide-login', (event, arg) => {
   win.hide()
-})
-
-ipcMain.on('set-auth', (event, arg) => {
-  home.getWindow().webContents.send('setAuth', arg)
 })
