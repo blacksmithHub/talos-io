@@ -3,6 +3,8 @@
 import { BrowserWindow, globalShortcut, ipcMain } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
+import home from './home'
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -65,4 +67,8 @@ ipcMain.on('toggle-login', (event, arg) => {
 
 ipcMain.on('hide-login', (event, arg) => {
   win.hide()
+})
+
+ipcMain.on('set-auth', (event, arg) => {
+  home.getWindow().webContents.send('setAuth', arg)
 })

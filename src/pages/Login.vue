@@ -131,6 +131,7 @@ export default {
 
           ipcRenderer.send('hide-login')
           ipcRenderer.send('toggle-home')
+          ipcRenderer.send('set-auth', data)
         }
       }
     },
