@@ -58,3 +58,13 @@ ipcMain.on('update-tasks', (event, arg) => {
   setting.getWindow().webContents.send('updateTasks', arg)
   log.getWindow().webContents.send('updateTasks', arg)
 })
+
+ipcMain.on('hide-home', (event, arg) => {
+  win.hide()
+})
+
+ipcMain.on('toggle-home', (event, arg) => {
+  win.show()
+
+  if (isDevelopment) win.openDevTools()
+})

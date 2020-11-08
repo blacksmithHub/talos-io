@@ -15,10 +15,16 @@ export default {
   },
   createWindow () {
     win = new BrowserWindow({
-      width: 300,
+      width: 450,
       height: 300,
       minWidth: 300,
       minHeight: 300,
+      resizable: false,
+      minimizable: false,
+      maximizable: false,
+      closable: false,
+      fullscreenable: false,
+      center: true,
       frame: false,
       show: false,
       webPreferences: {
@@ -55,4 +61,8 @@ ipcMain.on('toggle-login', (event, arg) => {
   win.show()
 
   if (isDevelopment) win.openDevTools()
+})
+
+ipcMain.on('hide-login', (event, arg) => {
+  win.hide()
 })

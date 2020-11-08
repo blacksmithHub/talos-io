@@ -10,7 +10,8 @@ export default {
      *
      */
     api: {
-      url: process.env.VUE_APP_API_URL
+      url: process.env.VUE_APP_API_URL,
+      auth: process.env.VUE_APP_API_AUTH_URL
     },
     /**
      * ===========================================
