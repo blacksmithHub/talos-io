@@ -43,7 +43,7 @@
               <span v-text="'Verify all tasks'" />
             </v-tooltip>
 
-            <v-tooltip top>
+            <!-- <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
                 <v-btn
                   v-bind="attrs"
@@ -67,7 +67,7 @@
                 </v-btn>
               </template>
               <span v-text="'See all logs'" />
-            </v-tooltip>
+            </v-tooltip> -->
 
             <v-spacer />
 
@@ -344,9 +344,9 @@ export default {
      */
     async startTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
-        const logs = task.logs
+        // const logs = task.logs
 
-        logs.push({ msg: 'started', color: 'success' })
+        // logs.push({ msg: 'started', color: 'success' })
 
         this.updateTask({
           ...task,
@@ -354,8 +354,8 @@ export default {
             id: Constant.TASK.STATUS.RUNNING,
             msg: 'running',
             class: 'orange'
-          },
-          logs: logs
+          }
+          // logs: logs
         })
 
         await this.init(task)
@@ -393,9 +393,9 @@ export default {
      *
      */
     stopTask (task) {
-      const logs = task.logs
+      // const logs = task.logs
 
-      logs.push({ msg: 'stopped', color: 'red' })
+      // logs.push({ msg: 'stopped', color: 'red' })
 
       this.updateTask({
         ...task,
@@ -404,8 +404,8 @@ export default {
           msg: 'stopped',
           class: 'grey'
         },
-        transactionData: {},
-        logs: logs
+        transactionData: {}
+        // logs: logs
       })
     },
 
@@ -431,9 +431,9 @@ export default {
      */
     async verifyTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
-        const logs = task.logs
+        // const logs = task.logs
 
-        logs.push({ msg: 'verifying', color: 'cyan' })
+        // logs.push({ msg: 'verifying', color: 'cyan' })
 
         this.updateTask({
           ...task,
@@ -442,8 +442,8 @@ export default {
             msg: 'validating',
             class: 'cyan'
           },
-          transactionData: {},
-          logs: logs
+          transactionData: {}
+          // logs: logs
         })
 
         await this.verify(task)

@@ -309,13 +309,13 @@ export default {
           break
         }
 
-        const logs = this.activeTask(task).logs
+        // const logs = this.activeTask(task).logs
 
-        logs.push({ msg: 'fetching user token...', color: 'warning' })
+        // logs.push({ msg: 'fetching user token...', color: 'warning' })
 
         this.updateTask({
-          ...this.activeTask(task),
-          logs: logs
+          ...this.activeTask(task)
+          // logs: logs
         })
 
         const apiResponse = await authApi.fetchToken(credentials)
@@ -326,28 +326,28 @@ export default {
         } else if (apiResponse.status === 200 && apiResponse.data) {
           token = apiResponse.data
 
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'received user token', color: 'success' })
+          // logs.push({ msg: 'received user token', color: 'success' })
 
           this.updateTask({
             ...this.activeTask(task),
             transactionData: {
               ...this.activeTask(task).transactionData,
               token: token
-            },
-            logs: logs
+            }
+            // logs: logs
           })
 
           break
         } else {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'no user token received', color: 'red' })
+          // logs.push({ msg: 'no user token received', color: 'red' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           continue
@@ -376,13 +376,13 @@ export default {
           break
         }
 
-        const logs = this.activeTask(task).logs
+        // const logs = this.activeTask(task).logs
 
-        logs.push({ msg: 'fetching user profile...', color: 'warning' })
+        // logs.push({ msg: 'fetching user profile...', color: 'warning' })
 
         this.updateTask({
-          ...this.activeTask(task),
-          logs: logs
+          ...this.activeTask(task)
+          // logs: logs
         })
 
         const apiResponse = await customerApi.profile(token)
@@ -393,40 +393,40 @@ export default {
         } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length && apiResponse.data.addresses.length) {
           user = apiResponse.data
 
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'received user profile', color: 'success' })
+          // logs.push({ msg: 'received user profile', color: 'success' })
 
           this.updateTask({
             ...this.activeTask(task),
             transactionData: {
               ...this.activeTask(task).transactionData,
               user: user
-            },
-            logs: logs
+            }
+            // logs: logs
           })
 
           break
         } else if (apiResponse.status === 401) {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'user token expired', color: 'red' })
+          // logs.push({ msg: 'user token expired', color: 'red' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           authorized = false
           break
         } else {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'no user profile received', color: 'red' })
+          // logs.push({ msg: 'no user profile received', color: 'red' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           continue
@@ -455,13 +455,13 @@ export default {
           break
         }
 
-        const logs = this.activeTask(task).logs
+        // const logs = this.activeTask(task).logs
 
-        logs.push({ msg: 'creating cart...', color: 'warning' })
+        // logs.push({ msg: 'creating cart...', color: 'warning' })
 
         this.updateTask({
-          ...this.activeTask(task),
-          logs: logs
+          ...this.activeTask(task)
+          // logs: logs
         })
 
         const apiResponse = await cartApi.create(user.token)
@@ -470,37 +470,37 @@ export default {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
         } else if (apiResponse.status === 200 && apiResponse.data) {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'cart has been created', color: 'success' })
+          // logs.push({ msg: 'cart has been created', color: 'success' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           cartId = apiResponse.data
           break
         } else if (apiResponse.status === 401) {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'user token expired', color: 'red' })
+          // logs.push({ msg: 'user token expired', color: 'red' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           authorized = false
           break
         } else {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'no cart has been created', color: 'red' })
+          // logs.push({ msg: 'no cart has been created', color: 'red' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           continue
@@ -529,13 +529,13 @@ export default {
           break
         }
 
-        const logs = this.activeTask(task).logs
+        // const logs = this.activeTask(task).logs
 
-        logs.push({ msg: 'fetching cart...', color: 'warning' })
+        // logs.push({ msg: 'fetching cart...', color: 'warning' })
 
         this.updateTask({
-          ...this.activeTask(task),
-          logs: logs
+          ...this.activeTask(task)
+          // logs: logs
         })
 
         const apiResponse = await cartApi.get(user.token)
@@ -544,37 +544,37 @@ export default {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
         } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'received cart', color: 'success' })
+          // logs.push({ msg: 'received cart', color: 'success' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           cart = apiResponse.data
           break
         } else if (apiResponse.status === 401) {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'user token expired', color: 'red' })
+          // logs.push({ msg: 'user token expired', color: 'red' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           authorized = false
           break
         } else {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'no cart received', color: 'red' })
+          // logs.push({ msg: 'no cart received', color: 'red' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           continue
@@ -602,13 +602,13 @@ export default {
         callback(success, authorized)
       } else {
         while (!success && this.isRunning(task.id)) {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'deleting carted items...', color: 'warning' })
+          // logs.push({ msg: 'deleting carted items...', color: 'warning' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           for (let index = 0; index < cart.items.length; index++) {
@@ -630,36 +630,36 @@ export default {
               this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
               break
             } else if (apiResponse.status === 200 && apiResponse.data) {
-              const logs = this.activeTask(task).logs
+              // const logs = this.activeTask(task).logs
 
-              logs.push({ msg: 'item has been deleted', color: 'success' })
+              // logs.push({ msg: 'item has been deleted', color: 'success' })
 
               this.updateTask({
-                ...this.activeTask(task),
-                logs: logs
+                ...this.activeTask(task)
+                // logs: logs
               })
 
               responses.push(apiResponse.data)
             } else if (apiResponse.status === 401) {
-              const logs = this.activeTask(task).logs
+              // const logs = this.activeTask(task).logs
 
-              logs.push({ msg: 'user token expired', color: 'red' })
+              // logs.push({ msg: 'user token expired', color: 'red' })
 
               this.updateTask({
-                ...this.activeTask(task),
-                logs: logs
+                ...this.activeTask(task)
+                // logs: logs
               })
 
               authorized = false
               break
             } else {
-              const logs = this.activeTask(task).logs
+              // const logs = this.activeTask(task).logs
 
-              logs.push({ msg: 'failed to delete item', color: 'red' })
+              // logs.push({ msg: 'failed to delete item', color: 'red' })
 
               this.updateTask({
-                ...this.activeTask(task),
-                logs: logs
+                ...this.activeTask(task)
+                // logs: logs
               })
 
               continue
@@ -720,16 +720,16 @@ export default {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - trying`, 'orange')
           }
 
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({
-            msg: `trying to cart size: ${this.activeTask(task).sizes[i].label}...`,
-            color: 'warning'
-          })
+          // logs.push({
+          //   msg: `trying to cart size: ${this.activeTask(task).sizes[i].label}...`,
+          //   color: 'warning'
+          // })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           const apiResponse = await cartApi.store(order, user.token)
@@ -740,16 +740,16 @@ export default {
           } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - carted`, 'orange')
 
-            const logs = this.activeTask(task).logs
+            // const logs = this.activeTask(task).logs
 
-            logs.push({
-              msg: `size: ${this.activeTask(task).sizes[i].label} has been carted`,
-              color: 'success'
-            })
+            // logs.push({
+            //   msg: `size: ${this.activeTask(task).sizes[i].label} has been carted`,
+            //   color: 'success'
+            // })
 
             this.updateTask({
-              ...this.activeTask(task),
-              logs: logs
+              ...this.activeTask(task)
+              // logs: logs
             })
 
             response = {
@@ -759,28 +759,28 @@ export default {
 
             break
           } else if (apiResponse.status === 401) {
-            const logs = this.activeTask(task).logs
+            // const logs = this.activeTask(task).logs
 
-            logs.push({ msg: 'user token expired', color: 'red' })
+            // logs.push({ msg: 'user token expired', color: 'red' })
 
             this.updateTask({
-              ...this.activeTask(task),
-              logs: logs
+              ...this.activeTask(task)
+              // logs: logs
             })
 
             authorized = false
             break
           } else {
-            const logs = this.activeTask(task).logs
+            // const logs = this.activeTask(task).logs
 
-            logs.push({
-              msg: `failed to cart size: ${this.activeTask(task).sizes[i].label}`,
-              color: 'red'
-            })
+            // logs.push({
+            //   msg: `failed to cart size: ${this.activeTask(task).sizes[i].label}`,
+            //   color: 'red'
+            // })
 
             this.updateTask({
-              ...this.activeTask(task),
-              logs: logs
+              ...this.activeTask(task)
+              // logs: logs
             })
 
             continue
@@ -838,13 +838,13 @@ export default {
 
         this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'set shipping info', 'orange')
 
-        const logs = this.activeTask(task).logs
+        // const logs = this.activeTask(task).logs
 
-        logs.push({ msg: 'setting shipping details...', color: 'warning' })
+        // logs.push({ msg: 'setting shipping details...', color: 'warning' })
 
         this.updateTask({
-          ...this.activeTask(task),
-          logs: logs
+          ...this.activeTask(task)
+          // logs: logs
         })
 
         const cartApiResponse = await cartApi.setShippingInformation(shippingParams, user.token)
@@ -853,37 +853,37 @@ export default {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
         } else if (cartApiResponse.status === 200 && cartApiResponse.data.payment_methods.length) {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'shipping details has been set', color: 'success' })
+          // logs.push({ msg: 'shipping details has been set', color: 'success' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           shipping = cartApiResponse.data
           break
         } else if (cartApiResponse.status === 401) {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'user token expired', color: 'red' })
+          // logs.push({ msg: 'user token expired', color: 'red' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           isAuthorized = false
           break
         } else {
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'failed to set shipping details', color: 'red' })
+          // logs.push({ msg: 'failed to set shipping details', color: 'red' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           continue
@@ -924,13 +924,13 @@ export default {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'estimate shipping', 'orange')
           }
 
-          const logs = this.activeTask(task).logs
+          // const logs = this.activeTask(task).logs
 
-          logs.push({ msg: 'estimating shipping...', color: 'warning' })
+          // logs.push({ msg: 'estimating shipping...', color: 'warning' })
 
           this.updateTask({
-            ...this.activeTask(task),
-            logs: logs
+            ...this.activeTask(task)
+            // logs: logs
           })
 
           const apiResponse = await cartApi.estimateShipping(estimateParams, user.token)
@@ -939,38 +939,38 @@ export default {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
             break
           } else if (apiResponse.status === 200 && apiResponse.data.length) {
-            const logs = this.activeTask(task).logs
+            // const logs = this.activeTask(task).logs
 
-            logs.push({ msg: 'shipping has been estimated', color: 'success' })
+            // logs.push({ msg: 'shipping has been estimated', color: 'success' })
 
             this.updateTask({
-              ...this.activeTask(task),
-              logs: logs
+              ...this.activeTask(task)
+              // logs: logs
             })
 
             shippingInfo = apiResponse.data[0]
             success = true
             break
           } else if (apiResponse.status === 401) {
-            const logs = this.activeTask(task).logs
+            // const logs = this.activeTask(task).logs
 
-            logs.push({ msg: 'user token expired', color: 'red' })
+            // logs.push({ msg: 'user token expired', color: 'red' })
 
             this.updateTask({
-              ...this.activeTask(task),
-              logs: logs
+              ...this.activeTask(task)
+              // logs: logs
             })
 
             authorized = false
             break
           } else {
-            const logs = this.activeTask(task).logs
+            // const logs = this.activeTask(task).logs
 
-            logs.push({ msg: 'failed to estimate shipping', color: 'red' })
+            // logs.push({ msg: 'failed to estimate shipping', color: 'red' })
 
             this.updateTask({
-              ...this.activeTask(task),
-              logs: logs
+              ...this.activeTask(task)
+              // logs: logs
             })
 
             continue
@@ -1042,13 +1042,13 @@ export default {
               vm.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
               break
             } else {
-              const logs = vm.activeTask(task).logs
+              // const logs = vm.activeTask(task).logs
 
-              logs.push({ msg: 'placing order...', color: 'warning' })
+              // logs.push({ msg: 'placing order...', color: 'warning' })
 
               vm.updateTask({
-                ...vm.activeTask(task),
-                logs: logs
+                ...vm.activeTask(task)
+                // logs: logs
               })
 
               const sw = new StopWatch(true)
@@ -1058,13 +1058,13 @@ export default {
               sw.stop()
 
               if (apiResponse.status === 200 && apiResponse.data.cookies && vm.isRunning(task.id)) {
-                const logs = vm.activeTask(task).logs
+                // const logs = vm.activeTask(task).logs
 
-                logs.push({ msg: 'order has been placed', color: 'success' })
+                // logs.push({ msg: 'order has been placed', color: 'success' })
 
                 vm.updateTask({
-                  ...vm.activeTask(task),
-                  logs: logs
+                  ...vm.activeTask(task)
+                  // logs: logs
                 })
 
                 transactionData = apiResponse.data
@@ -1075,25 +1075,25 @@ export default {
 
                 break
               } else if (index === tries) {
-                const logs = vm.activeTask(task).logs
+                // const logs = vm.activeTask(task).logs
 
-                logs.push({ msg: 'trying for restock...', color: 'warning' })
+                // logs.push({ msg: 'trying for restock...', color: 'warning' })
 
                 vm.updateTask({
-                  ...vm.activeTask(task),
-                  logs: logs
+                  ...vm.activeTask(task)
+                  // logs: logs
                 })
 
                 vm.init(vm.activeTask(task))
                 break
               } else {
-                const logs = vm.activeTask(task).logs
+                // const logs = vm.activeTask(task).logs
 
-                logs.push({ msg: 'out of stock', color: 'red' })
+                // logs.push({ msg: 'out of stock', color: 'red' })
 
                 vm.updateTask({
-                  ...vm.activeTask(task),
-                  logs: logs
+                  ...vm.activeTask(task)
+                  // logs: logs
                 })
 
                 continue
@@ -1137,13 +1137,13 @@ export default {
               clearInterval(loop)
               callback(proceed)
             } else {
-              const logs = vm.activeTask(task).logs
+              // const logs = vm.activeTask(task).logs
 
-              logs.push({ msg: 'waiting to place order...', color: 'warning' })
+              // logs.push({ msg: 'waiting to place order...', color: 'warning' })
 
               vm.updateTask({
-                ...vm.activeTask(task),
-                logs: logs
+                ...vm.activeTask(task)
+                // logs: logs
               })
             }
           } else {
@@ -1166,17 +1166,17 @@ export default {
     onSuccess (task, transactionData, shippingData, productData) {
       this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'copped!', 'success')
 
-      const logs = this.activeTask(task).logs
+      // const logs = this.activeTask(task).logs
 
-      logs.push({ msg: 'proceed to checkout', color: 'success' })
+      // logs.push({ msg: 'proceed to checkout', color: 'success' })
 
       this.updateTask({
         ...this.activeTask(task),
         transactionData: {
           ...transactionData,
           ...this.activeTask(task).transactionData
-        },
-        logs: logs
+        }
+        // logs: logs
       })
 
       if (this.settings.sound) {
