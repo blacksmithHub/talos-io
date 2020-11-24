@@ -121,7 +121,7 @@ export default {
               csvSizes.forEach((data) => {
                 const attr = this.attributes.find((val) => val.sizes.find((size) => size.label.toLowerCase() === data.toLowerCase()))
 
-                if (attr) {
+                if (attr && !sizes.find((val) => val.label.toLowerCase() === data.toLowerCase())) {
                   const size = attr.sizes.find((val) => val.label.toLowerCase() === data.toLowerCase())
 
                   sizes.push({
@@ -180,8 +180,8 @@ export default {
                   sku: element.sku.trim(),
                   sizes: sizes,
                   delay: element.delay || 1000,
-                  placeOrder: element.placeOrder || '',
-                  logs: []
+                  placeOrder: element.placeOrder || ''
+                  // logs: []
                 }
 
                 if (element.aco) {

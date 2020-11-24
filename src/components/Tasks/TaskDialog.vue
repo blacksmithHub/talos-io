@@ -284,7 +284,7 @@ export default {
         this.sizes.forEach(element => {
           const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
-          if (attr) sizes.push(element)
+          if (attr && !sizes.find((val) => val.toLowerCase() === element.toLowerCase())) sizes.push(element)
         })
 
         this.sizes = sizes
@@ -321,9 +321,9 @@ export default {
         const sizes = []
 
         this.sizes.forEach(element => {
-          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label === element))
+          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
-          const size = attr.sizes.find((data) => data.label === element)
+          const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
 
           sizes.push({
             attribute_id: attr.attribute_id,
@@ -349,8 +349,8 @@ export default {
           })
         } else {
           this.addTask({
-            ...params,
-            logs: []
+            ...params
+            // logs: []
           })
         }
 
