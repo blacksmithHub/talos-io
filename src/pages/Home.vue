@@ -43,32 +43,6 @@
               <span v-text="'Verify all tasks'" />
             </v-tooltip>
 
-            <v-tooltip top>
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn
-                  v-bind="attrs"
-                  :fab="!$vuetify.breakpoint.lgAndUp"
-                  :rounded="$vuetify.breakpoint.lgAndUp"
-                  :small="$vuetify.breakpoint.lgAndUp"
-                  :x-small="!$vuetify.breakpoint.lgAndUp"
-                  class="primary"
-                  v-on="on"
-                  @click="openLogs"
-                >
-                  <v-icon
-                    :left="$vuetify.breakpoint.lgAndUp"
-                    :small="$vuetify.breakpoint.lgAndUp"
-                    v-text="'mdi-information-outline'"
-                  />
-                  <span
-                    v-if="$vuetify.breakpoint.lgAndUp"
-                    v-text="'see all logs'"
-                  />
-                </v-btn>
-              </template>
-              <span v-text="'See all logs'" />
-            </v-tooltip>
-
             <v-spacer />
 
             <v-tooltip top>
@@ -344,18 +318,13 @@ export default {
      */
     async startTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
-        const logs = task.logs
-
-        logs.push({ msg: 'started', color: 'success' })
-
         this.updateTask({
           ...task,
           status: {
             id: Constant.TASK.STATUS.RUNNING,
             msg: 'running',
             class: 'orange'
-          },
-          logs: logs
+          }
         })
 
         await this.init(task)
@@ -393,10 +362,6 @@ export default {
      *
      */
     stopTask (task) {
-      const logs = task.logs
-
-      logs.push({ msg: 'stopped', color: 'red' })
-
       this.updateTask({
         ...task,
         status: {
@@ -404,8 +369,7 @@ export default {
           msg: 'stopped',
           class: 'grey'
         },
-        transactionData: {},
-        logs: logs
+        transactionData: {}
       })
     },
 
@@ -431,10 +395,6 @@ export default {
      */
     async verifyTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
-        const logs = task.logs
-
-        logs.push({ msg: 'verifying', color: 'cyan' })
-
         this.updateTask({
           ...task,
           status: {
@@ -442,8 +402,7 @@ export default {
             msg: 'validating',
             class: 'cyan'
           },
-          transactionData: {},
-          logs: logs
+          transactionData: {}
         })
 
         await this.verify(task)
