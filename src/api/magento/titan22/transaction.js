@@ -1,5 +1,4 @@
 import api from '../index'
-import Config from '@/config/app'
 
 const { http } = api
 
@@ -9,8 +8,8 @@ const { http } = api
  * ===================
  */
 export default {
-  baseUrl: `${Config.services.api.url}/api`,
-  url: 'place-order',
+  baseUrl: 'http://localhost:5000/api',
+  url: 'orders',
   http,
 
   /**
