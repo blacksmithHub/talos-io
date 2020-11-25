@@ -19,7 +19,7 @@ router.post('/', async (req, res) => {
   }
 
   await request(placeOrder, async function (error, response) {
-    if (error) res.send({})
+    if (error || response.statusCode !== 200) res.status(404).send({})
 
     const getTransactionData = {
       uri: 'https://www.titan22.com/ccpp/htmlredirect/gettransactiondata',
@@ -31,7 +31,9 @@ router.post('/', async (req, res) => {
     }
 
     await request(getTransactionData, async function (error, response) {
-      if (error) res.send({})
+      if (error || response.statusCode !== 200) res.status(404).send({})
+
+      console.log(response.statusCode)
 
       const parameters = {}
       const fieldRecords = JSON.parse(response.body).fields
@@ -59,7 +61,7 @@ router.post('/', async (req, res) => {
 
           const collection = cookieArray.find((val) => val.key === 'ASP.NET_SessionId')
 
-          res.send({
+          res.status(200).send({
             cookies: {
               name: 'ASP.NET_SessionId',
               value: collection.value,
