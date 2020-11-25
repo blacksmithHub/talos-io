@@ -16,6 +16,7 @@
               md="8"
               align-self="center"
               class="task"
+              :class="{'teal--text': task.aco, 'success--text': task.paid}"
               @click="(task.status.class === 'error') ? '' : $emit('click:editTask', task)"
             >
               <v-row
@@ -109,12 +110,6 @@
               cols="3"
               md="2"
             >
-              <input
-                :id="`link_${index}`"
-                type="hidden"
-                :value="setCookie(task.transactionData)"
-              >
-
               <p
                 v-if="task.delay"
                 class="mb-1"
@@ -132,11 +127,12 @@
 
               <v-chip
                 v-if="task.status.class === 'success' && task.aco"
+                v-clipboard:copy="task.transactionData.cookies.value"
+                v-clipboard:success="onCopy"
                 outlined
                 small
                 color="success"
-                class="text-capitalize"
-                @click="copyCookie(index)"
+                class="text-capitalize cursor"
                 v-text="'copy checkout cookie!'"
               />
 
@@ -241,30 +237,16 @@ export default {
   },
   methods: {
     /**
-     *  Get shareable cookie
+     *  On copy event.
+     *
      */
-    copyCookie (index) {
-      const copyText = document.querySelector(`#link_${index}`)
-      copyText.setAttribute('type', 'text')
-      copyText.select()
-      document.execCommand('copy')
-      copyText.setAttribute('type', 'hidden')
-
+    onCopy () {
       this.$toast.open({
-        message: '<strong style="font-family: Arial; text-transform: uppercase">copied to clipboard</strong>',
+        message: '<strong style="font-family: Arial; text-transform: uppercase">you just copied a cookie</strong>',
         type: 'info',
         duration: 3000,
         position: 'bottom-left'
       })
-    },
-
-    /**
-     *  Set shareable cookie
-     */
-    setCookie (transactionData) {
-      if (Object.keys(transactionData).length && transactionData.cookies) return transactionData.cookies.value
-
-      return ''
     },
 
     /**

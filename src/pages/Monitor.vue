@@ -122,26 +122,6 @@
             </v-row>
           </v-card-actions>
         </v-card>
-
-        <v-snackbar
-          v-model="snackbar"
-          bottom
-          right
-          color="primary"
-          rounded
-        >
-          {{ snackbarText }}
-
-          <template v-slot:action="{ attrs }">
-            <v-btn
-              icon
-              v-bind="attrs"
-              @click="snackbar = false"
-            >
-              <v-icon v-text="'mdi-close'" />
-            </v-btn>
-          </template>
-        </v-snackbar>
       </v-container>
     </v-main>
     <Footer />
@@ -165,8 +145,6 @@ export default {
     return {
       alertMsg: '',
       alertClass: '',
-      snackbar: false,
-      snackbarText: '',
       count: 100,
       countItems: [50, 100, 200],
       filterItems: [
@@ -250,12 +228,16 @@ export default {
     ...mapActions('setting', { setSettings: 'setItems' }),
 
     /**
-     * On copy.
+     * On copy event.
      *
      */
     onCopy (e) {
-      this.snackbar = true
-      this.snackbarText = `You just copied: ${e.text}`
+      this.$toast.open({
+        message: `<strong style="font-family: Arial; text-transform: uppercase">you just copied: ${e.text}</strong>`,
+        type: 'info',
+        duration: 3000,
+        position: 'bottom-right'
+      })
     },
 
     /**

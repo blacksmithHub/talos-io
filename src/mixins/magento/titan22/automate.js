@@ -972,6 +972,11 @@ export default {
           win.webContents.executeJavaScript(script)
 
           win.on('closed', () => {
+            this.updateTask({
+              ...this.activeTask(task),
+              paid: true
+            })
+
             win = null
           })
         })
