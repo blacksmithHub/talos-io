@@ -202,6 +202,8 @@ export default {
      *
      */
     onCancel () {
+      this.$v.$reset()
+
       this.sizes = []
       this.sku = ''
       this.dialog = false

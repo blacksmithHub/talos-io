@@ -55,7 +55,7 @@ autoUpdater.on('update-downloaded', (info) => {
 function createWindow () {
   win = new BrowserWindow({
     width: 720,
-    height: 870,
+    height: 800,
     minWidth: 500,
     minHeight: 600,
     frame: false,

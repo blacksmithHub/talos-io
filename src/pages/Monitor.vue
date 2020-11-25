@@ -27,7 +27,7 @@
               >
                 <v-select
                   v-model="filter"
-                  :items="items"
+                  :items="filterItems"
                   outlined
                   dense
                   hide-details
@@ -36,10 +36,24 @@
                   label="Filter By"
                 />
               </v-col>
+
+              <v-col
+                align-self="center"
+                cols="2"
+              >
+                <v-select
+                  v-model="count"
+                  :items="countItems"
+                  outlined
+                  dense
+                  hide-details
+                  label="Items"
+                />
+              </v-col>
             </v-row>
           </v-card-title>
 
-          <v-card-text style="max-height: 75vh; overflow: auto;">
+          <v-card-text style="max-height: 70vh; overflow: auto;">
             <v-data-table
               dense
               :headers="headers"
@@ -58,6 +72,15 @@
 
               <template v-slot:item.sku="{ value }">
                 <small v-text="value" />
+
+                <v-icon
+                  v-clipboard:copy="value"
+                  v-clipboard:success="onCopy"
+                  small
+                  right
+                  class="cursor"
+                  v-text="'mdi-content-copy'"
+                />
               </template>
 
               <template v-slot:item.price="{ value }">
@@ -86,7 +109,39 @@
               </template>
             </v-data-table>
           </v-card-text>
+
+          <v-card-actions>
+            <v-row no-gutters>
+              <v-col cols="6">
+                <small
+                  style="max-width: 100%"
+                  class="text-capitalize text-truncate d-inline-block"
+                  v-text="`total: ${products.length}`"
+                />
+              </v-col>
+            </v-row>
+          </v-card-actions>
         </v-card>
+
+        <v-snackbar
+          v-model="snackbar"
+          bottom
+          right
+          color="primary"
+          rounded
+        >
+          {{ snackbarText }}
+
+          <template v-slot:action="{ attrs }">
+            <v-btn
+              icon
+              v-bind="attrs"
+              @click="snackbar = false"
+            >
+              <v-icon v-text="'mdi-close'" />
+            </v-btn>
+          </template>
+        </v-snackbar>
       </v-container>
     </v-main>
     <Footer />
@@ -110,7 +165,11 @@ export default {
     return {
       alertMsg: '',
       alertClass: '',
-      items: [
+      snackbar: false,
+      snackbarText: '',
+      count: 100,
+      countItems: [50, 100, 200],
+      filterItems: [
         { title: 'Last created', value: 'created_at' },
         { title: 'Last update', value: 'updated_at' }
       ],
@@ -128,7 +187,7 @@ export default {
         {
           text: 'SKU',
           value: 'sku',
-          width: '8%'
+          width: '10%'
         },
         {
           text: 'Price',
@@ -191,6 +250,15 @@ export default {
     ...mapActions('setting', { setSettings: 'setItems' }),
 
     /**
+     * On copy.
+     *
+     */
+    onCopy (e) {
+      this.snackbar = true
+      this.snackbarText = `You just copied: ${e.text}`
+    },
+
+    /**
      * Redirect to product link.
      *
      */
@@ -220,7 +288,7 @@ export default {
                 direction: 'DESC'
               }
             ],
-            pageSize: 100
+            pageSize: this.count
           }
         }
 

@@ -6,12 +6,15 @@ import moment from 'moment-timezone'
 import VueToast from 'vue-toast-notification'
 import 'vue-toast-notification/dist/theme-sugar.css'
 import JsonCSV from 'vue-json-csv'
+import VueClipboard from 'vue-clipboard2'
 
 import App from './App.vue'
 import store from './store'
 import router from './router'
 import vuetify from './plugins/vuetify'
 import vueProgressBar from './plugins/vue-progress-bar'
+
+Vue.use(VueClipboard)
 
 Vue.component('downloadCsv', JsonCSV)
 
