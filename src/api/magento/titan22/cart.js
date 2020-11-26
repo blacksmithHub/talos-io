@@ -17,9 +17,9 @@ export default {
    * Create cart
    *
    */
-  create (token) {
+  create (token, cancelToken) {
     return this.http(this.baseUrl, token)
-      .post(`${this.url}/mine`)
+      .post(`${this.url}/mine`, {}, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -28,9 +28,9 @@ export default {
    * Get cart
    *
    */
-  get (token) {
+  get (token, cancelToken) {
     return this.http(this.baseUrl, token)
-      .get(`${this.url}/mine`)
+      .get(`${this.url}/mine`, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -39,9 +39,9 @@ export default {
    * Delete product to cart
    *
    */
-  delete (id, token) {
+  delete (id, token, cancelToken) {
     return this.http(this.baseUrl, token)
-      .delete(`${this.url}/mine/items/${id}`)
+      .delete(`${this.url}/mine/items/${id}`, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -50,9 +50,9 @@ export default {
    * Store product to cart
    *
    */
-  store (params, token) {
+  store (params, token, cancelToken) {
     return this.http(this.baseUrl, token)
-      .post(`${this.url}/mine/items`, params)
+      .post(`${this.url}/mine/items`, params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -61,9 +61,9 @@ export default {
    * Estimate shipping costs.
    *
    */
-  estimateShipping (params, token) {
+  estimateShipping (params, token, cancelToken) {
     return this.http(this.baseUrl, token)
-      .post(`${this.url}/mine/estimate-shipping-methods-by-address-id`, params)
+      .post(`${this.url}/mine/estimate-shipping-methods-by-address-id`, params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -72,9 +72,9 @@ export default {
    * Set shipping and billing information.
    *
    */
-  setShippingInformation (params, token) {
+  setShippingInformation (params, token, cancelToken) {
     return this.http(this.baseUrl, token)
-      .post(`${this.url}/mine/shipping-information`, params)
+      .post(`${this.url}/mine/shipping-information`, params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   }

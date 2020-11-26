@@ -310,6 +310,8 @@ export default {
      *
      */
     stopTask (task) {
+      task.cancelTokenSource.cancel()
+
       this.updateTask({
         ...task,
         status: {

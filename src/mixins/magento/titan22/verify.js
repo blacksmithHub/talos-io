@@ -4,6 +4,7 @@ import authApi from '@/api/magento/titan22/auth'
 import customerApi from '@/api/magento/titan22/customer'
 import cartApi from '@/api/magento/titan22/cart'
 import Constant from '@/config/constant'
+import axios from 'axios'
 
 /**
  * ===============================================
@@ -182,7 +183,14 @@ export default {
           break
         }
 
-        const apiResponse = await authApi.fetchToken(credentials)
+        const cancelTokenSource = axios.CancelToken.source()
+
+        this.updateTask({
+          ...this.getActiveTask(task),
+          cancelTokenSource: cancelTokenSource
+        })
+
+        const apiResponse = await authApi.fetchToken(credentials, cancelTokenSource.token)
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -225,7 +233,14 @@ export default {
           break
         }
 
-        const apiResponse = await customerApi.profile(token)
+        const cancelTokenSource = axios.CancelToken.source()
+
+        this.updateTask({
+          ...this.getActiveTask(task),
+          cancelTokenSource: cancelTokenSource
+        })
+
+        const apiResponse = await customerApi.profile(token, cancelTokenSource.token)
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -269,7 +284,14 @@ export default {
           return false
         }
 
-        const apiResponse = await cartApi.create(user.token)
+        const cancelTokenSource = axios.CancelToken.source()
+
+        this.updateTask({
+          ...this.getActiveTask(task),
+          cancelTokenSource: cancelTokenSource
+        })
+
+        const apiResponse = await cartApi.create(user.token, cancelTokenSource.token)
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -304,7 +326,14 @@ export default {
           return false
         }
 
-        const apiResponse = await cartApi.get(user.token)
+        const cancelTokenSource = axios.CancelToken.source()
+
+        this.updateTask({
+          ...this.getActiveTask(task),
+          cancelTokenSource: cancelTokenSource
+        })
+
+        const apiResponse = await cartApi.get(user.token, cancelTokenSource.token)
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -341,7 +370,14 @@ export default {
             break
           }
 
-          await cartApi.delete(cart.items[index].item_id, user.token)
+          const cancelTokenSource = axios.CancelToken.source()
+
+          this.updateTask({
+            ...this.getActiveTask(task),
+            cancelTokenSource: cancelTokenSource
+          })
+
+          await cartApi.delete(cart.items[index].item_id, user.token, cancelTokenSource.token)
         }
 
         callback()

@@ -13,6 +13,7 @@ import webhook from '@/mixins/webhook'
 import SuccessEffect from '@/assets/success.mp3'
 import path from 'path'
 import electron from 'electron'
+import axios from 'axios'
 
 /**
  * ===============================================
@@ -309,7 +310,14 @@ export default {
           break
         }
 
-        const apiResponse = await authApi.fetchToken(credentials)
+        const cancelTokenSource = axios.CancelToken.source()
+
+        this.updateTask({
+          ...this.activeTask(task),
+          cancelTokenSource: cancelTokenSource
+        })
+
+        const apiResponse = await authApi.fetchToken(credentials, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -353,7 +361,14 @@ export default {
           break
         }
 
-        const apiResponse = await customerApi.profile(token)
+        const cancelTokenSource = axios.CancelToken.source()
+
+        this.updateTask({
+          ...this.activeTask(task),
+          cancelTokenSource: cancelTokenSource
+        })
+
+        const apiResponse = await customerApi.profile(token, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -400,7 +415,14 @@ export default {
           break
         }
 
-        const apiResponse = await cartApi.create(user.token)
+        const cancelTokenSource = axios.CancelToken.source()
+
+        this.updateTask({
+          ...this.activeTask(task),
+          cancelTokenSource: cancelTokenSource
+        })
+
+        const apiResponse = await cartApi.create(user.token, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -438,7 +460,14 @@ export default {
           break
         }
 
-        const apiResponse = await cartApi.get(user.token)
+        const cancelTokenSource = axios.CancelToken.source()
+
+        this.updateTask({
+          ...this.activeTask(task),
+          cancelTokenSource: cancelTokenSource
+        })
+
+        const apiResponse = await cartApi.get(user.token, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -488,7 +517,14 @@ export default {
               break
             }
 
-            const apiResponse = await cartApi.delete(cart.items[index].item_id, user.token)
+            const cancelTokenSource = axios.CancelToken.source()
+
+            this.updateTask({
+              ...this.activeTask(task),
+              cancelTokenSource: cancelTokenSource
+            })
+
+            const apiResponse = await cartApi.delete(cart.items[index].item_id, user.token, cancelTokenSource.token)
 
             if (!this.isRunning(task.id)) {
               this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -557,7 +593,14 @@ export default {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - trying`, 'orange')
           }
 
-          const apiResponse = await cartApi.store(order, user.token)
+          const cancelTokenSource = axios.CancelToken.source()
+
+          this.updateTask({
+            ...this.activeTask(task),
+            cancelTokenSource: cancelTokenSource
+          })
+
+          const apiResponse = await cartApi.store(order, user.token, cancelTokenSource.token)
 
           if (!this.isRunning(task.id)) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -630,7 +673,14 @@ export default {
 
         this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'set shipping info', 'orange')
 
-        const cartApiResponse = await cartApi.setShippingInformation(shippingParams, user.token)
+        const cancelTokenSource = axios.CancelToken.source()
+
+        this.updateTask({
+          ...this.activeTask(task),
+          cancelTokenSource: cancelTokenSource
+        })
+
+        const cartApiResponse = await cartApi.setShippingInformation(shippingParams, user.token, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -680,7 +730,14 @@ export default {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'estimate shipping', 'orange')
           }
 
-          const apiResponse = await cartApi.estimateShipping(estimateParams, user.token)
+          const cancelTokenSource = axios.CancelToken.source()
+
+          this.updateTask({
+            ...this.activeTask(task),
+            cancelTokenSource: cancelTokenSource
+          })
+
+          const apiResponse = await cartApi.estimateShipping(estimateParams, user.token, cancelTokenSource.token)
 
           if (!this.isRunning(task.id)) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -764,7 +821,14 @@ export default {
             } else {
               const sw = new StopWatch(true)
 
-              const apiResponse = await transactionApi.placeOrder(params)
+              const cancelTokenSource = axios.CancelToken.source()
+
+              this.updateTask({
+                ...this.activeTask(task),
+                cancelTokenSource: cancelTokenSource
+              })
+
+              const apiResponse = await transactionApi.placeOrder(params, cancelTokenSource.token)
 
               sw.stop()
 
