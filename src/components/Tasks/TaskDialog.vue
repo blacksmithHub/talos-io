@@ -348,10 +348,7 @@ export default {
             ...params
           })
         } else {
-          this.addTask({
-            ...params
-            // logs: []
-          })
+          this.addTask({ ...params })
         }
 
         this.onCancel()

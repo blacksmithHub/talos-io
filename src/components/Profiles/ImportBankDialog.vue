@@ -25,7 +25,7 @@
               prepend-icon=""
               hide-details="auto"
               hint="Import .csv file only"
-              @change="fileErrors = []"
+              @change="validateFile"
             />
           </v-container>
         </v-card-text>
@@ -59,27 +59,27 @@ export default {
     return {
       dialog: false,
       csv: null,
-      fileErrors: []
+      fileErrors: [],
+      newBanks: []
     }
   },
   computed: {
     ...mapState('staticBank', { banks: 'items' })
   },
+  watch: {
+    newBanks () {
+      if (!this.newBanks.length) this.fileErrors.push('Invalid records')
+    }
+  },
   methods: {
     ...mapActions('bank', { addBank: 'addItem' }),
     /**
-     * On cancel event.
+     * Validate input file
      *
      */
-    onCancel () {
-      this.csv = null
-      this.dialog = false
-    },
-    /**
-     * On submit event.
-     *
-     */
-    submit () {
+    validateFile () {
+      this.fileErrors = []
+
       if (this.csv) {
         const ext = this.csv.name.split('.')
 
@@ -107,14 +107,14 @@ export default {
             }
           })
 
-          const newBanks = []
+          this.newBanks = []
 
           result.forEach(element => {
-            const bank = (String(element.bank)) ? this.banks.find((val) => val.name.toLowerCase() === element.bank.toLowerCase().trim()) : null
+            const bank = (element.bank) ? this.banks.find((val) => val.name.toLowerCase() === element.bank.toLowerCase().trim()) : null
 
             if (bank && parseInt(element.cardNumber)) {
-              newBanks.push({
-                cardHolder: element.cardHolder.trim() || null,
+              this.newBanks.push({
+                cardHolder: (element.cardHolder) ? element.cardHolder.trim() : null,
                 cardNumber: parseInt(element.cardNumber),
                 cvv: parseInt(element.cvv) || null,
                 expiryMonth: element.expiryMonth || null,
@@ -123,15 +123,35 @@ export default {
                   id: bank.id,
                   name: bank.name
                 },
-                nickname: element.nickname.trim() || null
+                nickname: (element.nickname) ? element.nickname.trim() : null
               })
             }
           })
-
-          newBanks.forEach(element => this.addBank(element))
-
-          this.onCancel()
         }
+      } else {
+        this.fileErrors.push('Required')
+      }
+    },
+    /**
+     * On cancel event.
+     *
+     */
+    onCancel () {
+      this.csv = null
+      this.dialog = false
+
+      this.fileErrors = []
+      this.newBanks = []
+    },
+    /**
+     * On submit event.
+     *
+     */
+    submit () {
+      if (!this.fileErrors.length && this.newBanks.length) {
+        this.newBanks.forEach(element => this.addBank(element))
+
+        this.onCancel()
       }
     }
   }

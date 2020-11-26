@@ -16,9 +16,9 @@ export default {
    * Places an order for a specified cart.
    *
    */
-  placeOrder (params) {
+  placeOrder (params, cancelToken) {
     return this.http(this.baseUrl)
-      .post(`${this.url}`, params)
+      .post(`${this.url}`, params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   }

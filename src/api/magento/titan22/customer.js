@@ -17,9 +17,9 @@ export default {
    * Get user profile
    *
    */
-  profile (token) {
+  profile (token, cancelToken) {
     return this.http(this.baseUrl, token)
-      .get(`${this.url}/me`)
+      .get(`${this.url}/me`, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   }

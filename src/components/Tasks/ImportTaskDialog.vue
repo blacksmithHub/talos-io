@@ -25,7 +25,7 @@
               prepend-icon=""
               hide-details="auto"
               hint="Import .csv file only"
-              @change="fileErrors = []"
+              @change="validateFile"
             />
           </v-container>
         </v-card-text>
@@ -59,7 +59,8 @@ export default {
     return {
       dialog: false,
       csv: null,
-      fileErrors: []
+      fileErrors: [],
+      newTasks: []
     }
   },
   computed: {
@@ -68,21 +69,20 @@ export default {
     ...mapState('profile', { profiles: 'items' }),
     ...mapState('bank', { banks: 'items' })
   },
+  watch: {
+    newTasks () {
+      if (!this.newTasks.length) this.fileErrors.push('Invalid records')
+    }
+  },
   methods: {
     ...mapActions('task', { addTask: 'addItem' }),
     /**
-     * On cancel event.
+     * Validate input file
      *
      */
-    onCancel () {
-      this.csv = null
-      this.dialog = false
-    },
-    /**
-     * On submit event.
-     *
-     */
-    submit () {
+    validateFile () {
+      this.fileErrors = []
+
       if (this.csv) {
         const a = this.csv.name.split('.')
 
@@ -110,10 +110,10 @@ export default {
             }
           })
 
-          const newTasks = []
+          this.newTasks = []
 
           result.forEach(element => {
-            const csvSizes = element.sizes.trim().split('+')
+            const csvSizes = (element.sizes) ? element.sizes.trim().split('+') : []
 
             if (csvSizes.length && element.email && element.password && element.sku) {
               const sizes = []
@@ -181,7 +181,6 @@ export default {
                   sizes: sizes,
                   delay: element.delay || 1000,
                   placeOrder: element.placeOrder || ''
-                  // logs: []
                 }
 
                 if (element.aco) {
@@ -191,15 +190,35 @@ export default {
                   object.webhook = (element.webhook) ? element.webhook.trim() : ''
                 }
 
-                newTasks.push(object)
+                this.newTasks.push(object)
               }
             }
           })
-
-          newTasks.forEach(element => this.addTask(element))
-
-          this.onCancel()
         }
+      } else {
+        this.fileErrors.push('Required')
+      }
+    },
+    /**
+     * On cancel event.
+     *
+     */
+    onCancel () {
+      this.csv = null
+      this.dialog = false
+
+      this.fileErrors = []
+      this.newTasks = []
+    },
+    /**
+     * On submit event.
+     *
+     */
+    submit () {
+      if (!this.fileErrors.length && this.newTasks.length) {
+        this.newTasks.forEach(element => this.addTask(element))
+
+        this.onCancel()
       }
     }
   }

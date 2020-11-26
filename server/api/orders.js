@@ -19,7 +19,7 @@ router.post('/', async (req, res) => {
   }
 
   await request(placeOrder, async function (error, response) {
-    if (error || response.statusCode !== 200) res.status(404).send({})
+    if (error || response.statusCode !== 200) res.status(response.statusCode).send({})
 
     const getTransactionData = {
       uri: 'https://www.titan22.com/ccpp/htmlredirect/gettransactiondata',
@@ -31,9 +31,7 @@ router.post('/', async (req, res) => {
     }
 
     await request(getTransactionData, async function (error, response) {
-      if (error || response.statusCode !== 200) res.status(404).send({})
-
-      console.log(response.statusCode)
+      if (error || response.statusCode !== 200) res.status(response.statusCode).send({})
 
       const parameters = {}
       const fieldRecords = JSON.parse(response.body).fields

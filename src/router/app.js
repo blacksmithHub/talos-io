@@ -2,7 +2,6 @@ const Home = () => import('../pages/Home')
 const Monitor = () => import('../pages/Monitor')
 const Profiles = () => import('../pages/Profiles')
 const Settings = () => import('../pages/Settings')
-const Logs = () => import('../pages/Logs')
 
 /**
  * =======================================================================
@@ -36,11 +35,6 @@ export default {
       path: '/settings',
       name: 'Settings',
       component: Settings
-    },
-    {
-      path: '/logs',
-      name: 'Logs',
-      component: Logs
     }
   ]
 }

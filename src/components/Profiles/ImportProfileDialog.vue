@@ -25,7 +25,7 @@
               prepend-icon=""
               hide-details="auto"
               hint="Import .csv file only"
-              @change="fileErrors = []"
+              @change="validateFile"
             />
           </v-container>
         </v-card-text>
@@ -59,24 +59,24 @@ export default {
     return {
       dialog: false,
       csv: null,
-      fileErrors: []
+      fileErrors: [],
+      profiles: []
+    }
+  },
+  watch: {
+    profiles () {
+      if (!this.profiles.length) this.fileErrors.push('Invalid records')
     }
   },
   methods: {
     ...mapActions('profile', { addProfile: 'addItem' }),
     /**
-     * On cancel event.
+     * Validate input file
      *
      */
-    onCancel () {
-      this.csv = null
-      this.dialog = false
-    },
-    /**
-     * On submit event.
-     *
-     */
-    submit () {
+    validateFile () {
+      this.fileErrors = []
+
       if (this.csv) {
         const ext = this.csv.name.split('.')
 
@@ -104,22 +104,42 @@ export default {
             }
           })
 
-          const newProfiles = []
+          this.profiles = []
 
           result.forEach(element => {
             if (element.email && element.password) {
-              newProfiles.push({
-                name: element.name.trim() || null,
+              this.profiles.push({
+                name: (element.name) ? element.name.trim() : null,
                 email: element.email.trim(),
                 password: element.password.trim()
               })
             }
           })
-
-          newProfiles.forEach(element => this.addProfile(element))
-
-          this.onCancel()
         }
+      } else {
+        this.fileErrors.push('Required')
+      }
+    },
+    /**
+     * On cancel event.
+     *
+     */
+    onCancel () {
+      this.csv = null
+      this.dialog = false
+
+      this.fileErrors = []
+      this.profiles = []
+    },
+    /**
+     * On submit event.
+     *
+     */
+    submit () {
+      if (!this.fileErrors.length && this.profiles.length) {
+        this.profiles.forEach(element => this.addProfile(element))
+
+        this.onCancel()
       }
     }
   }
