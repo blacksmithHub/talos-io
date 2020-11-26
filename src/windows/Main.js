@@ -16,10 +16,13 @@ let win
 
 // Send a message to the rendering thread
 function sendStatusToWindow (status, params) {
-  win.webContents.send(status, params)
-  MonitorWindow.getWindow().webContents.send(status, params)
-  ProfileWindow.getWindow().webContents.send(status, params)
-  SettingWindow.getWindow().webContents.send(status, params)
+  if (win) win.webContents.send(status, params)
+
+  if (MonitorWindow.getWindow()) MonitorWindow.getWindow().webContents.send(status, params)
+
+  if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send(status, params)
+
+  if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send(status, params)
 }
 
 let newVersion
