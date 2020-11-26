@@ -2,12 +2,45 @@
 
 import { BrowserWindow, globalShortcut } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
+import { autoUpdater } from 'electron-updater'
+
+import MonitorWindow from '@/windows/Monitor'
+import ProfileWindow from '@/windows/Profile'
+import SettingWindow from '@/windows/Setting'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
+
+// Send a message to the rendering thread
+function sendStatusToWindow (status, params) {
+  win.webContents.send(status, params)
+  MonitorWindow.getWindow().webContents.send(status, params)
+  ProfileWindow.getWindow().webContents.send(status, params)
+  SettingWindow.getWindow().webContents.send(status, params)
+}
+
+let newVersion
+
+autoUpdater.on('update-available', (info) => {
+  // version can be updated
+  newVersion = info.version
+  sendStatusToWindow('versionUpdate', { msg: `v${newVersion} is now available! Preparing for download please wait...`, class: 'warning' })
+})
+autoUpdater.on('error', () => {
+  // Update Error
+  sendStatusToWindow('versionUpdate', { msg: 'Oops! something went wrong while downloading. Restart the application to retry.', class: 'error' })
+})
+autoUpdater.on('download-progress', (progressObj) => {
+  // download progress being downloaded
+  sendStatusToWindow('versionUpdate', { msg: `v${newVersion} is now downloading please wait... ${progressObj.percent.toFixed()}%`, class: 'warning' })
+})
+autoUpdater.on('update-downloaded', (info) => {
+  // Download completed
+  sendStatusToWindow('versionUpdate', { msg: `v${info.version} has been downloaded! Restart the application to install automatically`, class: 'success' })
+})
 
 export default {
   getWindow () {
@@ -35,6 +68,11 @@ export default {
     } else {
       createProtocol('app')
       win.loadURL('app://./index.html')
+
+      setTimeout(() => {
+        // detect whether there are updates
+        autoUpdater.checkForUpdatesAndNotify()
+      }, 3000)
     }
 
     win.once('ready-to-show', () => {

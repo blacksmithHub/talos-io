@@ -1,6 +1,11 @@
 <template>
   <v-app>
     <v-main>
+      <VersionUpdate
+        v-if="alertMsg"
+        :alert-msg="alertMsg"
+        :alert-class="alertClass"
+      />
       <v-container>
         <v-card>
           <v-card-title>
@@ -131,12 +136,15 @@ import moment from '@/mixins/moment'
 import App from '@/config/app'
 import productApi from '@/api/magento/titan22/product'
 import Footer from '@/components/App/Footer'
+import VersionUpdate from '@/components/App/VersionUpdate'
 
 export default {
-  components: { Footer },
+  components: { Footer, VersionUpdate },
   mixins: [moment],
   data () {
     return {
+      alertMsg: '',
+      alertClass: '',
       count: 100,
       countItems: [50, 100, 200],
       filterItems: [
@@ -210,6 +218,11 @@ export default {
   async created () {
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
+    })
+
+    ipcRenderer.on('versionUpdate', (event, arg) => {
+      this.alertMsg = arg.msg
+      this.alertClass = arg.class
     })
 
     await this.fetchProducts()
