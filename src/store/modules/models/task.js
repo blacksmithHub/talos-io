@@ -139,6 +139,7 @@ export default {
         }
 
         element.transactionData = {}
+        element.paid = false
 
         return element
       })

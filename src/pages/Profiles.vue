@@ -1,11 +1,6 @@
 <template>
   <v-app>
     <v-main>
-      <VersionUpdate
-        v-if="alertMsg"
-        :alert-msg="alertMsg"
-        :alert-class="alertClass"
-      />
       <v-container>
         <v-tabs grow>
           <v-tab
@@ -35,20 +30,16 @@ import { ipcRenderer } from 'electron'
 import ProfileList from '@/components/Profiles/ProfileList'
 import BankList from '@/components/Profiles/BankList'
 import Footer from '@/components/App/Footer'
-import VersionUpdate from '@/components/App/VersionUpdate'
 
 export default {
   components: {
     ProfileList,
     BankList,
-    Footer,
-    VersionUpdate
+    Footer
   },
   data () {
     return {
-      tabs: ['Profiles', 'Banks'],
-      alertMsg: '',
-      alertClass: ''
+      tabs: ['Profiles', 'Banks']
     }
   },
   computed: {
@@ -70,11 +61,6 @@ export default {
   created () {
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
-    })
-
-    ipcRenderer.on('versionUpdate', (event, arg) => {
-      this.alertMsg = arg.msg
-      this.alertClass = arg.class
     })
   },
   methods: {

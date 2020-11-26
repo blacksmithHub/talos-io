@@ -1,234 +1,27 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, globalShortcut } from 'electron'
-import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
+import { app, protocol, ipcMain } from 'electron'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
-import { autoUpdater } from 'electron-updater'
+
+import MainWindow from '@/windows/Main'
+import MonitorWindow from '@/windows/Monitor'
+import ProfileWindow from '@/windows/Profile'
+import SettingWindow from '@/windows/Setting'
 
 require('../server/index.js')
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
-
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let win
-let monitorWin
-let profileWin
-let settingsWin
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
-// Send a message to the rendering thread
-function sendStatusToWindow (status, params) {
-  win.webContents.send(status, params)
-  monitorWin.webContents.send(status, params)
-  profileWin.webContents.send(status, params)
-  settingsWin.webContents.send(status, params)
-}
-
-let newVersion
-
-autoUpdater.on('update-available', (info) => {
-  // version can be updated
-  newVersion = info.version
-  sendStatusToWindow('versionUpdate', { msg: `v${newVersion} is now available! Preparing for download please wait...`, class: 'warning' })
-})
-autoUpdater.on('error', () => {
-  // Update Error
-  sendStatusToWindow('versionUpdate', { msg: 'Oops! something went wrong while downloading. Restart the application to retry.', class: 'error' })
-})
-autoUpdater.on('download-progress', (progressObj) => {
-  // download progress being downloaded
-  sendStatusToWindow('versionUpdate', { msg: `v${newVersion} is now downloading please wait... ${progressObj.percent.toFixed()}%`, class: 'warning' })
-})
-autoUpdater.on('update-downloaded', (info) => {
-  // Download completed
-  sendStatusToWindow('versionUpdate', { msg: `v${info.version} has been downloaded! Restart the application to install automatically`, class: 'success' })
-})
-
 /**
  *  Create main window
  */
-function createWindow () {
-  win = new BrowserWindow({
-    width: 720,
-    height: 800,
-    minWidth: 500,
-    minHeight: 600,
-    frame: false,
-    show: false,
-    webPreferences: {
-      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
-      enableRemoteModule: true,
-      webSecurity: false
-    }
-  })
-
-  createMonitorWindow()
-  createProfileWindow()
-  createSettingWindow()
-
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-
-    if (isDevelopment) win.webContents.openDevTools()
-  } else {
-    createProtocol('app')
-    win.loadURL('app://./index.html')
-
-    setTimeout(() => {
-      // detect whether there are updates
-      autoUpdater.checkForUpdatesAndNotify()
-    }, 3000)
-  }
-
-  win.once('ready-to-show', () => {
-    win.show()
-  })
-
-  win.on('closed', () => {
-    win = null
-  })
-
-  if (!isDevelopment) {
-    win.on('focus', () => {
-      globalShortcut.register('CommandOrControl+R', () => {})
-    })
-
-    win.on('blur', () => {
-      globalShortcut.unregister('CommandOrControl+R')
-    })
-  }
-}
-
-/**
- * Create monitor window
- */
-function createMonitorWindow () {
-  monitorWin = new BrowserWindow({
-    width: 955,
-    height: 800,
-    minHeight: 600,
-    minWidth: 500,
-    parent: win,
-    show: false,
-    frame: false,
-    webPreferences: {
-      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
-      enableRemoteModule: true,
-      webSecurity: false
-    }
-  })
-
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    monitorWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/monitor`)
-  } else {
-    createProtocol('app')
-    monitorWin.loadURL('app://./index.html/#/monitor')
-  }
-
-  monitorWin.on('close', (e) => {
-    monitorWin.webContents.send('stop', true)
-    e.preventDefault()
-    monitorWin.hide()
-  })
-
-  if (!isDevelopment) {
-    monitorWin.on('focus', () => {
-      globalShortcut.register('CommandOrControl+R', () => {})
-    })
-
-    monitorWin.on('blur', () => {
-      globalShortcut.unregister('CommandOrControl+R')
-    })
-  }
-}
-
-/**
- * Create monitor window
- */
-function createProfileWindow () {
-  profileWin = new BrowserWindow({
-    width: 500,
-    height: 800,
-    minHeight: 600,
-    minWidth: 500,
-    parent: win,
-    show: false,
-    frame: false,
-    webPreferences: {
-      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
-      enableRemoteModule: true,
-      webSecurity: false
-    }
-  })
-
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    profileWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/profiles`)
-  } else {
-    createProtocol('app')
-    profileWin.loadURL('app://./index.html/#/profiles')
-  }
-
-  profileWin.on('close', (e) => {
-    e.preventDefault()
-    profileWin.hide()
-  })
-
-  if (!isDevelopment) {
-    profileWin.on('focus', () => {
-      globalShortcut.register('CommandOrControl+R', () => {})
-    })
-
-    profileWin.on('blur', () => {
-      globalShortcut.unregister('CommandOrControl+R')
-    })
-  }
-}
-
-/**
- * Create settings window
- */
-function createSettingWindow () {
-  settingsWin = new BrowserWindow({
-    width: 500,
-    height: 700,
-    minHeight: 600,
-    minWidth: 500,
-    parent: win,
-    show: false,
-    frame: false,
-    webPreferences: {
-      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
-      enableRemoteModule: true,
-      webSecurity: false
-    }
-  })
-
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    settingsWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/settings`)
-  } else {
-    createProtocol('app')
-    settingsWin.loadURL('app://./index.html/#/settings')
-  }
-
-  settingsWin.on('close', (e) => {
-    e.preventDefault()
-    settingsWin.hide()
-  })
-
-  if (!isDevelopment) {
-    settingsWin.on('focus', () => {
-      globalShortcut.register('CommandOrControl+R', () => {})
-    })
-
-    settingsWin.on('blur', () => {
-      globalShortcut.unregister('CommandOrControl+R')
-    })
-  }
+function initializeWindows () {
+  if (!MainWindow.getWindow()) MainWindow.createWindow()
 }
 
 // Quit when all windows are closed.
@@ -243,8 +36,8 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (win === null) {
-    createWindow()
+  if (MainWindow.getWindow() === null) {
+    initializeWindows()
   }
 })
 
@@ -261,7 +54,7 @@ app.on('ready', async () => {
     }
   }
 
-  createWindow()
+  initializeWindows()
 })
 
 // Exit cleanly on request from parent process in development mode.
@@ -279,57 +72,48 @@ if (isDevelopment) {
   }
 }
 
-/**
- * Navigation
- */
-
-ipcMain.on('toggle-monitor', (event, arg) => {
-  monitorWin.show()
-
-  if (isDevelopment) monitorWin.openDevTools()
-
-  monitorWin.webContents.send('init', arg)
+ipcMain.on('launch-monitor', (event, arg) => {
+  if (!MonitorWindow.getWindow()) MonitorWindow.createWindow()
 })
 
-ipcMain.on('toggle-profiles', (event, arg) => {
-  profileWin.show()
-
-  if (isDevelopment) profileWin.openDevTools()
+ipcMain.on('launch-profile', (event, arg) => {
+  if (!ProfileWindow.getWindow()) ProfileWindow.createWindow()
 })
 
-ipcMain.on('toggle-settings', (event, arg) => {
-  settingsWin.show()
-
-  if (isDevelopment) settingsWin.openDevTools()
+ipcMain.on('launch-setting', (event, arg) => {
+  if (!SettingWindow.getWindow()) SettingWindow.createWindow()
 })
-
-/**
- * Events
- */
 
 ipcMain.on('update-settings', (event, arg) => {
-  win.webContents.send('updateSettings', arg)
-  monitorWin.webContents.send('updateSettings', arg)
-  profileWin.webContents.send('updateSettings', arg)
+  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateSettings', arg)
+
+  if (MonitorWindow.getWindow()) MonitorWindow.getWindow().webContents.send('updateSettings', arg)
+
+  if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('updateSettings', arg)
 })
 
 ipcMain.on('update-tasks', (event, arg) => {
-  settingsWin.webContents.send('updateTasks', arg)
+  if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateTasks', arg)
 })
 
 ipcMain.on('update-profiles', (event, arg) => {
-  settingsWin.webContents.send('updateProfiles', arg)
-  win.webContents.send('updateProfiles', arg)
+  if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateProfiles', arg)
+
+  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateProfiles', arg)
 })
 
 ipcMain.on('update-banks', (event, arg) => {
-  settingsWin.webContents.send('updateBanks', arg)
-  win.webContents.send('updateBanks', arg)
+  if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateBanks', arg)
+
+  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateBanks', arg)
 })
 
 ipcMain.on('clear-localStorage', (event, arg) => {
-  win.reload()
-  monitorWin.reload()
-  settingsWin.reload()
-  profileWin.reload()
+  if (MainWindow.getWindow()) MainWindow.getWindow().reload()
+
+  if (MonitorWindow.getWindow()) MonitorWindow.getWindow().reload()
+
+  if (SettingWindow.getWindow()) SettingWindow.getWindow().reload()
+
+  if (ProfileWindow.getWindow()) ProfileWindow.getWindow().reload()
 })

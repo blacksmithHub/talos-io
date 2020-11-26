@@ -68,13 +68,13 @@ import { ipcRenderer } from 'electron'
 export default {
   methods: {
     launchMonitor () {
-      ipcRenderer.send('toggle-monitor', true)
+      ipcRenderer.send('launch-monitor', true)
     },
     launchProfiles () {
-      ipcRenderer.send('toggle-profiles')
+      ipcRenderer.send('launch-profile')
     },
     launchSettings () {
-      ipcRenderer.send('toggle-settings')
+      ipcRenderer.send('launch-setting')
     }
   }
 }
