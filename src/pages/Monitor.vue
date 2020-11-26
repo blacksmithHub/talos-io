@@ -27,7 +27,7 @@
               >
                 <v-select
                   v-model="filter"
-                  :items="items"
+                  :items="filterItems"
                   outlined
                   dense
                   hide-details
@@ -36,10 +36,24 @@
                   label="Filter By"
                 />
               </v-col>
+
+              <v-col
+                align-self="center"
+                cols="2"
+              >
+                <v-select
+                  v-model="count"
+                  :items="countItems"
+                  outlined
+                  dense
+                  hide-details
+                  label="Items"
+                />
+              </v-col>
             </v-row>
           </v-card-title>
 
-          <v-card-text style="max-height: 75vh; overflow: auto;">
+          <v-card-text style="max-height: 70vh; overflow: auto;">
             <v-data-table
               dense
               :headers="headers"
@@ -58,6 +72,15 @@
 
               <template v-slot:item.sku="{ value }">
                 <small v-text="value" />
+
+                <v-icon
+                  v-clipboard:copy="value"
+                  v-clipboard:success="onCopy"
+                  small
+                  right
+                  class="cursor"
+                  v-text="'mdi-content-copy'"
+                />
               </template>
 
               <template v-slot:item.price="{ value }">
@@ -86,6 +109,18 @@
               </template>
             </v-data-table>
           </v-card-text>
+
+          <v-card-actions>
+            <v-row no-gutters>
+              <v-col cols="6">
+                <small
+                  style="max-width: 100%"
+                  class="text-capitalize text-truncate d-inline-block"
+                  v-text="`total: ${products.length}`"
+                />
+              </v-col>
+            </v-row>
+          </v-card-actions>
         </v-card>
       </v-container>
     </v-main>
@@ -110,7 +145,9 @@ export default {
     return {
       alertMsg: '',
       alertClass: '',
-      items: [
+      count: 100,
+      countItems: [50, 100, 200],
+      filterItems: [
         { title: 'Last created', value: 'created_at' },
         { title: 'Last update', value: 'updated_at' }
       ],
@@ -128,7 +165,7 @@ export default {
         {
           text: 'SKU',
           value: 'sku',
-          width: '8%'
+          width: '10%'
         },
         {
           text: 'Price',
@@ -155,7 +192,7 @@ export default {
         }
       ],
       products: [],
-      active: false
+      loop: null
     }
   },
   computed: {
@@ -164,31 +201,51 @@ export default {
   watch: {
     'settings.nightMode': function (nightMode) {
       this.$vuetify.theme.dark = nightMode
+    },
+    'settings.monitorInterval': function () {
+      clearInterval(this.loop)
+      this.searchProduct()
+    },
+    filter () {
+      clearInterval(this.loop)
+      this.searchProduct()
+    },
+    count () {
+      clearInterval(this.loop)
+      this.searchProduct()
     }
   },
-  created () {
+  async created () {
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
-    })
-
-    ipcRenderer.on('init', (event, arg) => {
-      if (arg) {
-        this.active = true
-        this.searchProduct(() => {})
-      }
-    })
-
-    ipcRenderer.on('stop', (event, arg) => {
-      if (arg) this.active = false
     })
 
     ipcRenderer.on('versionUpdate', (event, arg) => {
       this.alertMsg = arg.msg
       this.alertClass = arg.class
     })
+
+    await this.fetchProducts()
+
+    const vm = this
+
+    setTimeout(() => (vm.searchProduct()), vm.settings.monitorInterval)
   },
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
+
+    /**
+     * On copy event.
+     *
+     */
+    onCopy (e) {
+      this.$toast.open({
+        message: `<strong style="font-family: Arial; text-transform: uppercase">you just copied: ${e.text}</strong>`,
+        type: 'info',
+        duration: 3000,
+        position: 'bottom-right'
+      })
+    },
 
     /**
      * Redirect to product link.
@@ -203,56 +260,54 @@ export default {
      * Search product API.
      *
      */
-    async searchProduct (callback) {
-      let status = this.active
-      let interval = this.settings.monitorInterval
+    async searchProduct () {
+      const interval = this.settings.monitorInterval
+      const vm = this
 
-      while (status) {
-        status = this.active
+      this.loop = setInterval(async () => {
+        await vm.fetchProducts()
+      }, interval)
+    },
 
-        if (!status) break
-
-        const params = {
-          searchCriteria: {
-            sortOrders: [
-              {
-                field: this.filter,
-                direction: 'DESC'
-              }
-            ],
-            pageSize: 100
-          }
+    /**
+     * API call to backend.
+     *
+     */
+    async fetchProducts () {
+      const params = {
+        searchCriteria: {
+          sortOrders: [
+            {
+              field: this.filter,
+              direction: 'DESC'
+            }
+          ],
+          pageSize: this.count
         }
-
-        this.loading = true
-
-        const response = await productApi.search(params, App.services.titan22.token)
-
-        if (response) {
-          this.products = []
-
-          response.items.forEach(element => {
-            const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
-
-            this.products.push({
-              name: element.name,
-              sku: element.sku,
-              price: element.price,
-              link: (link) ? link.value : '',
-              status: element.extension_attributes.out_of_stock,
-              date: this.formatDate(element.updated_at)
-            })
-          })
-        }
-
-        this.loading = false
-
-        interval = this.settings.monitorInterval
-
-        await new Promise(resolve => setTimeout(resolve, interval))
       }
 
-      callback(this.active)
+      this.loading = true
+
+      const response = await productApi.search(params, App.services.titan22.token)
+
+      if (response) {
+        this.products = []
+
+        response.items.forEach(element => {
+          const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
+
+          this.products.push({
+            name: element.name,
+            sku: element.sku,
+            price: element.price,
+            link: (link) ? link.value : '',
+            status: element.extension_attributes.out_of_stock,
+            date: this.formatDate(element.updated_at)
+          })
+        })
+      }
+
+      this.loading = false
     }
   }
 }

@@ -9,8 +9,8 @@ export default {
      * ===========================================
      *
      */
-    api: {
-      url: process.env.VUE_APP_API_URL
+    auth: {
+      url: process.env.VUE_APP_API_AUTH_URL
     },
     /**
      * ===========================================
