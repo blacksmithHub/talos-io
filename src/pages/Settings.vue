@@ -436,7 +436,11 @@ export default {
       localStorage.removeItem('profiles')
       localStorage.removeItem('banks')
 
-      ipcRenderer.send('clear-localStorage')
+      try {
+        ipcRenderer.send('clear-localStorage')
+      } catch (error) {
+        //
+      }
 
       this.dialog = false
     },
@@ -593,7 +597,12 @@ export default {
           manual: this.manual
         })
 
-        ipcRenderer.send('update-settings', this.settings)
+        try {
+          ipcRenderer.send('update-settings', this.settings)
+        } catch (error) {
+          //
+        }
+
         remote.getCurrentWindow().close()
       }
     },

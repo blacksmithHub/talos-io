@@ -61,10 +61,18 @@ export default {
       this.$vuetify.theme.dark = nightMode
     },
     profiles () {
-      ipcRenderer.send('update-profiles', this.profiles)
+      try {
+        ipcRenderer.send('update-profiles', this.profiles)
+      } catch (error) {
+        //
+      }
     },
     banks () {
-      ipcRenderer.send('update-banks', this.banks)
+      try {
+        ipcRenderer.send('update-banks', this.banks)
+      } catch (error) {
+        //
+      }
     }
   },
   created () {

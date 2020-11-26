@@ -206,7 +206,11 @@ export default {
       this.$vuetify.theme.dark = nightMode
     },
     tasks () {
-      ipcRenderer.send('update-tasks', this.tasks)
+      try {
+        ipcRenderer.send('update-tasks', this.tasks)
+      } catch (error) {
+        //
+      }
     }
   },
   created () {

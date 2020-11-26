@@ -132,7 +132,7 @@
                 outlined
                 small
                 color="success"
-                class="text-capitalize cursor"
+                class="text-capitalize task"
                 v-text="'copy checkout cookie!'"
               />
 
@@ -141,7 +141,7 @@
                 outlined
                 small
                 color="success"
-                class="text-capitalize"
+                class="text-capitalize task"
                 @click="$emit('click:checkout', task)"
                 v-text="'proceed to checkout!'"
               />
