@@ -332,7 +332,11 @@ export default {
      *
      */
     stopTask (task) {
-      task.cancelTokenSource.cancel()
+      try {
+        task.cancelTokenSource.cancel()
+      } catch (error) {
+        //
+      }
 
       this.updateTask({
         ...task,
