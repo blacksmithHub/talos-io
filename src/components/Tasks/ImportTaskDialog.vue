@@ -204,11 +204,10 @@ export default {
      *
      */
     onCancel () {
-      this.csv = null
-      this.dialog = false
-
       this.fileErrors = []
       this.newTasks = []
+      this.csv = null
+      this.dialog = false
     },
     /**
      * On submit event.

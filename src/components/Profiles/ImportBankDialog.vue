@@ -137,11 +137,10 @@ export default {
      *
      */
     onCancel () {
-      this.csv = null
-      this.dialog = false
-
       this.fileErrors = []
       this.newBanks = []
+      this.csv = null
+      this.dialog = false
     },
     /**
      * On submit event.
