@@ -1,7 +1,9 @@
 'use strict'
 
-import { app, protocol, ipcMain } from 'electron'
+import { app, protocol, ipcMain, globalShortcut, BrowserWindow } from 'electron'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
+import { autoUpdater } from 'electron-updater'
+import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
 import MainWindow from '@/windows/Main'
 import MonitorWindow from '@/windows/Monitor'
@@ -17,11 +19,103 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
+let win
+
+// Send a message to the rendering thread
+function sendStatusToWindow (status, params) {
+  win.webContents.send(status, params)
+}
+
+autoUpdater.on('update-available', (info) => {
+  // version can be updated
+  sendStatusToWindow('versionUpdate', 'preparing to download')
+})
+autoUpdater.on('update-not-available', (info) => {
+  // no update available
+  sendStatusToWindow('versionUpdate', 'up to date')
+
+  if (!MainWindow.getWindow()) {
+    MainWindow.createWindow()
+    win.destroy()
+  }
+})
+autoUpdater.on('error', () => {
+  // Update Error
+  sendStatusToWindow('versionUpdate', 'oops! something went wrong')
+
+  setTimeout(() => (win.destroy()), 5000)
+})
+autoUpdater.on('download-progress', (progressObj) => {
+  // download progress being downloaded
+  sendStatusToWindow('versionUpdate', `downloading... ${progressObj.percent.toFixed()}%`)
+})
+autoUpdater.on('update-downloaded', (info) => {
+  // Download completed
+  sendStatusToWindow('versionUpdate', 're-launch the app')
+
+  setTimeout(() => {
+    app.relaunch()
+    app.exit()
+  }, 3000)
+})
+
 /**
  *  Create main window
  */
 function initializeWindows () {
-  if (!MainWindow.getWindow()) MainWindow.createWindow()
+  win = new BrowserWindow({
+    width: 250,
+    height: 250,
+    minWidth: 250,
+    minHeight: 250,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    closable: false,
+    fullscreenable: false,
+    center: true,
+    frame: false,
+    show: false,
+    webPreferences: {
+      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+      enableRemoteModule: true,
+      webSecurity: false
+    }
+  })
+
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/check-update`)
+
+    if (isDevelopment) win.webContents.openDevTools()
+
+    if (!MainWindow.getWindow()) {
+      MainWindow.createWindow()
+      win.destroy()
+    }
+  } else {
+    createProtocol('app')
+    win.loadURL('app://./index.html/#/check-update')
+
+    setTimeout(() => (autoUpdater.checkForUpdatesAndNotify()), 1000)
+  }
+
+  win.once('ready-to-show', () => {
+    win.show()
+  })
+
+  win.on('closed', () => {
+    win = null
+  })
+
+  if (!isDevelopment) {
+    win.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => {})
+    })
+
+    win.on('blur', () => {
+      globalShortcut.unregister('CommandOrControl+R')
+    })
+  }
 }
 
 // Quit when all windows are closed.

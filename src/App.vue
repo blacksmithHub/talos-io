@@ -1,6 +1,5 @@
 <template>
   <v-app>
-    <SystemBar />
     <router-view />
     <vue-progress-bar />
   </v-app>
@@ -9,10 +8,7 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 
-import SystemBar from '@/components/App/SystemBar'
-
 export default {
-  components: { SystemBar },
   computed: {
     ...mapState('setting', { settings: 'items' }),
     ...mapState('task', { tasks: 'items' })
