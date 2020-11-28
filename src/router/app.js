@@ -1,4 +1,8 @@
+const CheckUpdate = () => import('../pages/CheckUpdate')
+
 const Home = () => import('../pages/Home')
+
+const Task = () => import('../pages/Task')
 const Monitor = () => import('../pages/Monitor')
 const Profiles = () => import('../pages/Profiles')
 const Settings = () => import('../pages/Settings')
@@ -17,24 +21,36 @@ const Settings = () => import('../pages/Settings')
 export default {
   routes: [
     {
+      path: '/check-update',
+      name: 'CheckUpdate',
+      component: CheckUpdate
+    },
+    {
       path: '',
       name: 'Home',
-      component: Home
-    },
-    {
-      path: '/monitor',
-      name: 'Monitor',
-      component: Monitor
-    },
-    {
-      path: '/profiles',
-      name: 'Profiles',
-      component: Profiles
-    },
-    {
-      path: '/settings',
-      name: 'Settings',
-      component: Settings
+      component: Home,
+      children: [
+        {
+          path: '/',
+          name: 'Task',
+          component: Task
+        },
+        {
+          path: '/monitor',
+          name: 'Monitor',
+          component: Monitor
+        },
+        {
+          path: '/profiles',
+          name: 'Profiles',
+          component: Profiles
+        },
+        {
+          path: '/settings',
+          name: 'Settings',
+          component: Settings
+        }
+      ]
     }
   ]
 }
