@@ -3,7 +3,6 @@
     <v-row
       no-gutters
       class="titleBar"
-      justify="center"
       align="center"
     >
       <v-col
@@ -17,6 +16,7 @@
       </v-col>
 
       <v-col
+        v-if="headers"
         cols="6"
         align-self="center"
       >
@@ -25,6 +25,7 @@
     </v-row>
 
     <v-btn
+      v-if="headers"
       icon
       x-small
       :ripple="false"
@@ -38,6 +39,7 @@
     </v-btn>
 
     <v-btn
+      v-if="headers"
       icon
       x-small
       :ripple="false"
@@ -69,6 +71,12 @@ import { mapState } from 'vuex'
 import { remote } from 'electron'
 
 export default {
+  props: {
+    headers: {
+      type: Boolean,
+      default: true
+    }
+  },
   data () {
     return {
       time: ''

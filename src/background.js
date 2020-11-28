@@ -5,6 +5,7 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { autoUpdater } from 'electron-updater'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
+import LoginWindow from '@/windows/Login'
 import MainWindow from '@/windows/Main'
 import MonitorWindow from '@/windows/Monitor'
 import ProfileWindow from '@/windows/Profile'
@@ -207,4 +208,16 @@ ipcMain.on('clear-localStorage', (event, arg) => {
   if (SettingWindow.getWindow()) SettingWindow.getWindow().reload()
 
   if (ProfileWindow.getWindow()) ProfileWindow.getWindow().reload()
+})
+
+ipcMain.on('authenticate', (event, arg) => {
+  LoginWindow.createWindow()
+
+  if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
+})
+
+ipcMain.on('bind', (event, arg) => {
+  if (!MainWindow.getWindow()) MainWindow.createWindow()
+
+  if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
 })
