@@ -43,7 +43,7 @@ autoUpdater.on('error', () => {
   // Update Error
   sendStatusToWindow('versionUpdate', 'oops! something went wrong')
 
-  setTimeout(() => (win.destroy()), 5000)
+  setTimeout(() => (app.exit()), 5000)
 })
 autoUpdater.on('download-progress', (progressObj) => {
   // download progress being downloaded
@@ -53,10 +53,7 @@ autoUpdater.on('update-downloaded', (info) => {
   // Download completed
   sendStatusToWindow('versionUpdate', 're-launch the app')
 
-  setTimeout(() => {
-    app.relaunch()
-    app.exit()
-  }, 3000)
+  setTimeout(() => (app.exit()), 3000)
 })
 
 /**
