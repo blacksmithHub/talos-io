@@ -832,7 +832,7 @@ export default {
 
               sw.stop()
 
-              if (apiResponse.status === 200 && apiResponse.data.cookies && vm.isRunning(task.id)) {
+              if (vm.isRunning(task.id) && apiResponse.status === 200 && apiResponse.data.cookies) {
                 transactionData = apiResponse.data
                 transactionData.time = (sw.read() / 1000.0).toFixed(2)
                 transactionData.order = productData

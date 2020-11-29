@@ -86,10 +86,12 @@ function initializeWindows () {
 
     if (isDevelopment) win.webContents.openDevTools()
 
-    if (!MainWindow.getWindow()) {
-      MainWindow.createWindow()
-      win.destroy()
-    }
+    setTimeout(() => {
+      if (!MainWindow.getWindow()) {
+        MainWindow.createWindow()
+        win.destroy()
+      }
+    }, 3000)
   } else {
     createProtocol('app')
     win.loadURL('app://./index.html/#/check-update')
@@ -214,10 +216,12 @@ ipcMain.on('authenticate', (event, arg) => {
   LoginWindow.createWindow()
 
   if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
+
+  if (win) win.destroy()
 })
 
 ipcMain.on('bind', (event, arg) => {
-  if (!MainWindow.getWindow()) MainWindow.createWindow()
+  if (!win) initializeWindows()
 
   if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
 })

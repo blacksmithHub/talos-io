@@ -26,7 +26,8 @@ export default {
     {
       path: '/check-update',
       name: 'CheckUpdate',
-      component: CheckUpdate
+      component: CheckUpdate,
+      beforeEnter: (to, from, next) => GuardService.authorized(next)
     },
     {
       path: '/login',

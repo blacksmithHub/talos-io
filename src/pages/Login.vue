@@ -32,7 +32,7 @@
           </v-col>
 
           <v-col
-            v-if="Object.keys(user).length"
+            v-if="!Object.keys(user).length"
             cols="12"
             align-self="center"
           >
@@ -72,12 +72,18 @@
 </template>
 
 <script>
+/* global __static */
+
 import { required } from 'vuelidate/lib/validators'
 
 import AuthAPI from '@/api/auth'
 import auth from '@/services/auth'
 import SystemBar from '@/components/App/SystemBar'
-import { ipcRenderer } from 'electron'
+import electron, { remote, ipcRenderer } from 'electron'
+import path from 'path'
+import Config from '@/config/app'
+
+let win
 
 export default {
   components: { SystemBar },
@@ -110,6 +116,105 @@ export default {
     }
   },
   methods: {
+    async authenticate () {
+      this.loading = true
+
+      const { BrowserWindow } = electron.remote
+
+      win = new BrowserWindow({
+        width: 600,
+        height: 600,
+        minWidth: 500,
+        minHeight: 500,
+        parent: remote.getCurrentWindow(),
+        webPreferences: {
+          nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+          enableRemoteModule: true,
+          webSecurity: false
+        },
+        icon: path.join(__static, 'icon.png')
+      })
+
+      win.removeMenu()
+
+      win.loadURL(Config.services.discord.auth)
+
+      win.on('closed', () => {
+        win = null
+      })
+
+      const vm = this
+
+      await this.getUserCode(win, async (response) => {
+        win.close()
+
+        if (response) {
+          let credentials = {}
+
+          while (!Object.keys(credentials).length) {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+
+            const DiscordOauth2 = require('discord-oauth2')
+
+            const oauth = new DiscordOauth2()
+
+            oauth.tokenRequest({
+              clientId: Config.services.discord.clientId,
+              clientSecret: Config.services.discord.clientSecret,
+              scope: 'identify',
+              grantType: 'authorization_code',
+              code: response.toString(),
+              redirectUri: Config.services.local
+            }).then((data) => {
+              credentials = data
+            })
+          }
+
+          while (!Object.keys(vm.user).length) {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+
+            const token = credentials.access_token
+
+            const DiscordOauth2 = require('discord-oauth2')
+
+            const oauth = new DiscordOauth2()
+
+            oauth.getUser(token).then((data) => {
+              vm.user = data
+            })
+          }
+        }
+
+        this.loading = false
+      })
+    },
+    /**
+     * Get user code via discord oauth
+     */
+    getUserCode (win, callback) {
+      let code = ''
+
+      const loop = setInterval(() => {
+        if (win === null) {
+          clearInterval(loop)
+          callback(code)
+        } else {
+          const currentUrl = win.webContents.getURL()
+
+          code = currentUrl.toString().split('?')[1].toString().split('code=')[1]
+
+          const error = currentUrl.toString().split('?')[1].toString().split('error=')[1]
+
+          if (code) {
+            clearInterval(loop)
+            callback(code)
+          } else if (error) {
+            clearInterval(loop)
+            callback(code)
+          }
+        }
+      }, 1000)
+    },
     /**
      * Bind master key
      */
@@ -120,7 +225,7 @@ export default {
         this.loading = true
 
         await AuthAPI.bind({
-          discord_id: 123,
+          discord_id: this.user.id,
           key: this.key
         })
           .then((response) => {

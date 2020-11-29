@@ -3,6 +3,7 @@ export default {
    * Services Configuration
    */
   services: {
+    local: process.env.VUE_APP_LOCAL,
     /**
      * ===========================================
      * API Service Configuration
@@ -11,6 +12,17 @@ export default {
      */
     auth: {
       url: process.env.VUE_APP_API_AUTH_URL
+    },
+    /**
+     * ===========================================
+     * Discord Service Configuration
+     * ===========================================
+     *
+     */
+    discord: {
+      auth: process.env.VUE_APP_DISCORD_AUTH,
+      clientId: process.env.VUE_APP_DISCORD_CLIENT_ID,
+      clientSecret: process.env.VUE_APP_DISCORD_CLIENT_SECRET
     },
     /**
      * ===========================================
