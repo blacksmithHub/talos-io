@@ -91,7 +91,7 @@ function initializeWindows () {
         MainWindow.createWindow()
         win.destroy()
       }
-    }, 3000)
+    }, 5000)
   } else {
     createProtocol('app')
     win.loadURL('app://./index.html/#/check-update')

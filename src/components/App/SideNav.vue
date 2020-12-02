@@ -7,7 +7,7 @@
     <v-list>
       <v-list-item class="px-2">
         <v-list-item-avatar>
-          <v-img :src="require('@/assets/placeholder.png')" />
+          <v-img :src="avatar" />
         </v-list-item-avatar>
       </v-list-item>
 
@@ -15,9 +15,9 @@
         <v-list-item-content>
           <v-list-item-title
             class="title"
-            v-text="'John Doe'"
+            v-text="username"
           />
-          <v-list-item-subtitle v-text="'johndoe@mail.test'" />
+          <v-list-item-subtitle v-text="email" />
         </v-list-item-content>
       </v-list-item>
     </v-list>
@@ -65,7 +65,33 @@
 <script>
 import { ipcRenderer } from 'electron'
 
+import placeholder from '@/assets/placeholder.png'
+import auth from '@/services/auth'
+
 export default {
+  computed: {
+    /**
+     * return avatar
+     */
+    avatar () {
+      if (!auth.isAuthenticated()) return placeholder
+      return `https://cdn.discordapp.com/avatars/${auth.getAuth().profile.id}/${auth.getAuth().profile.avatar}.png`
+    },
+    /**
+     * return username
+     */
+    username () {
+      if (!auth.isAuthenticated()) return 'John Doe'
+      return auth.getAuth().profile.username
+    },
+    /**
+     * return email
+     */
+    email () {
+      if (!auth.isAuthenticated()) return 'johndoe@mail.com'
+      return auth.getAuth().profile.email
+    }
+  },
   methods: {
     launchMonitor () {
       ipcRenderer.send('launch-monitor', true)

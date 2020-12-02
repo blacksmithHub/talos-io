@@ -21,7 +21,7 @@ export default {
       ipcRenderer.send('authenticate')
     } else {
       const params = {
-        discord_id: AuthService.getAuth().id,
+        discord_id: AuthService.getAuth().profile.id,
         key: AuthService.getAuth().key
       }
 

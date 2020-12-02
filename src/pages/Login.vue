@@ -149,9 +149,9 @@ export default {
         win.close()
 
         if (response) {
-          let credentials = {}
+          vm.user = {}
 
-          while (!Object.keys(credentials).length) {
+          while (!vm.user.credentials) {
             await new Promise(resolve => setTimeout(resolve, 1000))
 
             const DiscordOauth2 = require('discord-oauth2')
@@ -166,21 +166,21 @@ export default {
               code: response.toString(),
               redirectUri: Config.services.local
             }).then((data) => {
-              credentials = data
+              vm.user.credentials = data
             })
           }
 
-          while (!Object.keys(vm.user).length) {
+          while (!vm.user.profile) {
             await new Promise(resolve => setTimeout(resolve, 1000))
 
-            const token = credentials.access_token
+            const token = vm.user.credentials.access_token
 
             const DiscordOauth2 = require('discord-oauth2')
 
             const oauth = new DiscordOauth2()
 
             oauth.getUser(token).then((data) => {
-              vm.user = data
+              vm.user.profile = data
             })
           }
         }
@@ -225,7 +225,7 @@ export default {
         this.loading = true
 
         await AuthAPI.bind({
-          discord_id: this.user.id,
+          discord_id: this.user.profile.id,
           key: this.key
         })
           .then((response) => {
