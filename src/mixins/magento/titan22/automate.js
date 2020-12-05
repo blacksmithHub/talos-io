@@ -289,15 +289,15 @@ export default {
        */
       sw.stop()
 
-      if (shippingData.payment_methods.find((val) => val.code === 'braintree_paypal')) {
-        this.updateTask({
-          ...this.activeTask(task),
-          transactionData: {
-            ...this.activeTask(task).transactionData,
-            time: (sw.read() / 1000.0).toFixed(2)
-          }
-        })
-      }
+      this.updateTask({
+        ...this.activeTask(task),
+        transactionData: {
+          ...this.activeTask(task).transactionData,
+          time: (sw.read() / 1000.0).toFixed(2)
+        }
+      })
+
+      await this.placeOrder(task, shippingData, user, cartData, productData)
     },
 
     /**
@@ -1142,6 +1142,11 @@ export default {
         })
 
       win.on('closed', () => {
+        this.updateTask({
+          ...this.activeTask(task),
+          paid: true
+        })
+
         win = null
       })
     }
