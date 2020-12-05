@@ -16,7 +16,7 @@ export default {
      * @param {*} profile
      * @param {*} secs
      */
-    sendWebhook (url, product, size, profile, secs, sku, cookie) {
+    sendWebhook (url, product, size, profile, secs, sku, cookie, method) {
       const Hook = new webhook.Webhook(url)
 
       const msg = new webhook.MessageBuilder()
@@ -34,6 +34,8 @@ export default {
       if (profile) msg.addField('**Profile**', `||${profile}||`)
 
       if (secs) msg.addField('**Checkout Time**', `${secs}s`)
+
+      if (method) msg.addField('**Checkout Method**', `${method}`)
 
       Hook.send(msg)
     }
