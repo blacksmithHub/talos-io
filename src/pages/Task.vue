@@ -257,7 +257,11 @@ export default {
      *
      */
     redirectToCheckout (task) {
-      this.launchWindow(task.transactionData, task)
+      if (task.transactionData.paypal) {
+        this.launchPaypalWindow(task)
+      } else {
+        this.launch2c2pWindow(task)
+      }
     },
     /**
      * Start task.

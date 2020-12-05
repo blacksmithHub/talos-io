@@ -261,6 +261,8 @@ export default {
        */
       let shippingData = {}
 
+      const sw = new StopWatch(true)
+
       await this.setShippingInfo(task, user, productData, (response, authorized) => {
         isAuthorized = authorized
         shippingData = response
@@ -285,6 +287,16 @@ export default {
        *
        * place order
        */
+      sw.stop()
+
+      this.updateTask({
+        ...this.activeTask(task),
+        transactionData: {
+          ...this.activeTask(task).transactionData,
+          time: (sw.read() / 1000.0).toFixed(2)
+        }
+      })
+
       await this.placeOrder(task, shippingData, user, cartData, productData)
     },
 
@@ -715,7 +727,7 @@ export default {
       }
       let authorized = true
 
-      if (product.price <= 5000) {
+      if (product.price <= 7000) {
         const estimateParams = { addressId: defaultShippingAddress.id }
 
         let success = false
@@ -789,64 +801,19 @@ export default {
      * @param {*} cartData
      */
     async placeOrder (task, shippingData, user, cartData, productData) {
-      const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
-
-      const params = {
-        payload: {
-          amcheckout: {},
-          billingAddress: this.setAddresses(defaultBillingAddress, user),
-          cartId: cartData.id.toString(),
-          paymentMethod: {
-            additional_data: null,
-            method: shippingData.payment_methods[0].code,
-            po_number: null
-          }
-        },
-        token: user.token
-      }
-
       const vm = this
 
       await this.timer(task, productData.sizeLabel, async (response) => {
         if (response && vm.isRunning(task.id)) {
-          let transactionData = {}
-          const tries = 2
-
-          vm.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
-
-          for (let index = 1; index <= tries; index++) {
-            if (!vm.isRunning(task.id)) {
-              vm.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-              break
-            } else {
-              const sw = new StopWatch(true)
-
-              const cancelTokenSource = axios.CancelToken.source()
-
-              this.updateTask({
-                ...this.activeTask(task),
-                cancelTokenSource: cancelTokenSource
-              })
-
-              const apiResponse = await transactionApi.placeOrder(params, cancelTokenSource.token)
-
-              sw.stop()
-
-              if (apiResponse.status === 200 && apiResponse.data.cookies && vm.isRunning(task.id)) {
-                transactionData = apiResponse.data
-                transactionData.time = (sw.read() / 1000.0).toFixed(2)
-                transactionData.order = productData
-
-                vm.onSuccess(task, transactionData, shippingData, productData)
-
-                break
-              } else if (index === tries) {
-                vm.init(vm.activeTask(task))
-                break
-              } else {
-                continue
-              }
+          if (shippingData.payment_methods.find((val) => val.code === 'ccpp')) {
+            vm.creditCardCheckout(task, shippingData, user, cartData, productData)
+          } else if (shippingData.payment_methods.find((val) => val.code === 'braintree_paypal')) {
+            const transactionData = {
+              paypal: true,
+              order: productData
             }
+
+            vm.onSuccess(task, transactionData, shippingData, productData)
           }
         }
       })
@@ -895,6 +862,72 @@ export default {
     },
 
     /**
+     * 2c2p checkout method
+     *
+     * @param {*} task
+     * @param {*} shippingData
+     * @param {*} user
+     * @param {*} cartData
+     */
+    async creditCardCheckout (task, shippingData, user, cartData, productData) {
+      const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
+
+      const params = {
+        payload: {
+          amcheckout: {},
+          billingAddress: this.setAddresses(defaultBillingAddress, user),
+          cartId: cartData.id.toString(),
+          paymentMethod: {
+            additional_data: null,
+            method: 'ccpp',
+            po_number: null
+          }
+        },
+        token: user.token
+      }
+
+      let transactionData = {}
+      const tries = 3
+
+      this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
+
+      for (let index = 1; index <= tries; index++) {
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        } else {
+          const sw = new StopWatch(true)
+
+          const cancelTokenSource = axios.CancelToken.source()
+
+          this.updateTask({
+            ...this.activeTask(task),
+            cancelTokenSource: cancelTokenSource
+          })
+
+          const apiResponse = await transactionApi.placeOrder(params, cancelTokenSource.token)
+
+          sw.stop()
+
+          if (apiResponse.status === 200 && apiResponse.data.cookies && this.isRunning(task.id)) {
+            transactionData = apiResponse.data
+            transactionData.time = (sw.read() / 1000.0).toFixed(2)
+            transactionData.order = productData
+
+            this.onSuccess(task, transactionData, shippingData, productData)
+
+            break
+          } else if (index === tries) {
+            this.init(this.activeTask(task))
+            break
+          } else {
+            continue
+          }
+        }
+      }
+    },
+
+    /**
      * Trigger on success event.
      *
      * @param {*} task
@@ -903,15 +936,26 @@ export default {
      * @param {*} time
      */
     onSuccess (task, transactionData, shippingData, productData) {
-      this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'copped!', 'success')
-
       this.updateTask({
         ...this.activeTask(task),
         transactionData: {
           ...transactionData,
           ...this.activeTask(task).transactionData
+        },
+        status: {
+          id: Constant.TASK.STATUS.STOPPED,
+          msg: 'copped!',
+          class: 'success'
         }
       })
+
+      if (this.settings.autoPay && !this.activeTask(task).aco) {
+        if (transactionData.paypal) {
+          this.launchPaypalWindow(task)
+        } else {
+          this.launch2c2pWindow(task)
+        }
+      }
 
       if (this.settings.sound) {
         const sound = new Howl({
@@ -927,34 +971,39 @@ export default {
         duration: 3000
       })
 
-      if (this.settings.autoPay && !this.activeTask(task).aco) this.launchWindow(transactionData, task)
-
       const url = this.settings.webhook
       const productName = shippingData.totals.items[0].name
       const productSize = productData.sizeLabel
       const profile = this.activeTask(task).profile.name
       const secs = transactionData.time
       const sku = this.activeTask(task).sku
-      const cookie = transactionData.cookies.value
+      const method = transactionData.paypal ? 'PayPal' : '2c2p'
 
       if (this.settings.webhook) {
-        this.sendWebhook(url, productName, productSize, profile, secs, sku)
+        // send to personal webhook
+        this.sendWebhook(url, productName, productSize, profile, secs, sku, method)
 
-        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku)
+        // send to public webhook
+        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method)
       } else {
-        this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku)
+        // send to public webhook
+        this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method)
       }
 
-      if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie)
+      if (!transactionData.paypal) {
+        const cookie = transactionData.cookies.value
+
+        // send to aco webhook
+        if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie, method)
+      }
     },
 
     /**
      * Launch 2c2p payment window.
      *
-     * @param {*} transactionData
      * @param {*} task
      */
-    launchWindow (transactionData, task) {
+    launch2c2pWindow (task) {
       const { BrowserWindow } = electron.remote
 
       const baseUrl = `${Config.services.titan22.checkout}/RedirectV3/Payment/Accept`
@@ -971,7 +1020,7 @@ export default {
 
       ses.cookies.set({
         url: baseUrl,
-        ...transactionData.cookies
+        ...this.activeTask(task).transactionData.cookies
       })
         .then(() => {
           win.loadURL(baseUrl)
@@ -1020,10 +1069,10 @@ export default {
             $(function() {
               $(".navbar-inner").append("<p><strong>Task:</strong> ${this.activeTask(task).name}</p>");
               $(".navbar-inner").append("<p><strong>Profile:</strong> ${this.activeTask(task).profile.name}</p>");
-              $(".navbar-inner").append("<p><strong>Product name:</strong> ${transactionData.order.name}</p>");
-              $(".navbar-inner").append("<p><strong>Product SKU:</strong> ${transactionData.order.sku}</p>");
-              $(".navbar-inner").append("<p><strong>Size:</strong> ${transactionData.order.sizeLabel}</p>");
-              $(".navbar-inner").append("<p><strong>Price:</strong> ${transactionData.order.price}</p>");
+              $(".navbar-inner").append("<p><strong>Product name:</strong> ${this.activeTask(task).transactionData.order.name}</p>");
+              $(".navbar-inner").append("<p><strong>Product SKU:</strong> ${this.activeTask(task).transactionData.order.sku}</p>");
+              $(".navbar-inner").append("<p><strong>Size:</strong> ${this.activeTask(task).transactionData.order.sizeLabel}</p>");
+              $(".navbar-inner").append("<p><strong>Price:</strong> ${this.activeTask(task).transactionData.order.price}</p>");
             });
           })(window.$);`
 
@@ -1044,6 +1093,62 @@ export default {
             win = null
           })
         })
+    },
+
+    /**
+     * Launch PayPal payment window.
+     *
+     * @param {*} task
+     */
+    launchPaypalWindow (task) {
+      const { BrowserWindow } = electron.remote
+
+      const baseUrl = `${Config.services.titan22.url}/customer/account/login/`
+
+      let win = new BrowserWindow({
+        width: 800,
+        height: 600,
+        icon: path.join(__static, 'icon.png')
+      })
+
+      win.removeMenu()
+
+      const ses = win.webContents.session
+
+      ses.webRequest.onBeforeRequest({ urls: ['https://titan22.queue-it.net/*'] }, () => {})
+
+      ses.cookies.remove(Config.services.titan22.url, 'PHPSESSID')
+        .then(() => {
+          win.webContents.openDevTools()
+          win.loadURL(baseUrl)
+
+          win.webContents.on('did-finish-load', () => {
+            const loop = setInterval(() => {
+              if (win.webContents.getURL() === baseUrl && !win.webContents.isLoading()) {
+                const script = `document.getElementById("email").value = "${this.activeTask(task).profile.email}";
+                  document.getElementById("pass").value = "${this.activeTask(task).profile.password}";
+                  document.getElementById("send2").click()`
+
+                win.webContents.executeJavaScript(script)
+              } else if (win.webContents.getURL() !== baseUrl) {
+                clearInterval(loop)
+              }
+            }, 2000)
+          })
+
+          win.webContents.on('did-frame-navigate', (event, url) => {
+            if (url === 'https://www.titan22.com/customer/account/') win.webContents.loadURL('https://www.titan22.com/checkout/')
+          })
+        })
+
+      win.on('closed', () => {
+        this.updateTask({
+          ...this.activeTask(task),
+          paid: true
+        })
+
+        win = null
+      })
     }
   }
 }
