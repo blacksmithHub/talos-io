@@ -208,3 +208,52 @@ ipcMain.on('clear-localStorage', (event, arg) => {
 
   if (ProfileWindow.getWindow()) ProfileWindow.getWindow().reload()
 })
+
+ipcMain.on('pay-with-paypal', (event, arg) => {
+  const puppeteer = require('puppeteer');
+
+  (async () => {
+    const browser = await puppeteer.launch({
+      headless: false,
+      executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+      defaultViewport: null
+    })
+
+    const page = await browser.newPage()
+
+    await page.setRequestInterception(true)
+
+    page.on('request', (request) => {
+      const url = request.url()
+      const resourceType = request.resourceType()
+
+      const filters = [
+        'queue-it.net'
+      ]
+
+      const shouldAbort = filters.some((urlPart) => url.includes(urlPart))
+
+      if (shouldAbort ||
+      resourceType === 'media' ||
+      url.endsWith('.png') ||
+      url.endsWith('.gif') ||
+      url.endsWith('.jpg')
+      ) {
+        request.abort()
+      } else {
+        request.continue()
+      }
+    })
+
+    page.on('requestfinished', async (request) => {
+      if (request.url() === 'https://www.titan22.com/rest/V1/carts/mine/payment-information') MainWindow.getWindow().webContents.send('updateTask', arg)
+    })
+
+    await page.goto('https://www.titan22.com/customer/account/login/')
+    await page.type('#email', JSON.parse(arg).profile.email)
+    await page.type('#pass', JSON.parse(arg).profile.password)
+    await page.click('#send2')
+    await page.waitForNavigation()
+    await page.goto('https://www.titan22.com/checkout/')
+  })()
+})
