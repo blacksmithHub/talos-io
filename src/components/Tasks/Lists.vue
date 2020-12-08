@@ -15,9 +15,7 @@
               cols="4"
               md="8"
               align-self="center"
-              class="task"
               :class="{'teal--text': task.aco, 'success--text': task.paid}"
-              @click="(task.status.class === 'error') ? '' : $emit('click:editTask', task)"
             >
               <v-row
                 align="center"
@@ -70,7 +68,7 @@
 
                 <v-col
                   cols="12"
-                  md="3"
+                  md="2"
                   align-self="center"
                 >
                   <small
@@ -82,6 +80,23 @@
                       v-text="'SKU:'"
                     />
                     <span v-text="`${task.sku}`" />
+                  </small>
+                </v-col>
+
+                <v-col
+                  cols="12"
+                  md="1"
+                  align-self="center"
+                >
+                  <small
+                    class="d-inline-block text-truncate"
+                    style="max-width: 5vh"
+                  >
+                    <strong
+                      class="mr-1"
+                      v-text="'Qty:'"
+                    />
+                    <span v-text="`${task.qty || 1}`" />
                   </small>
                 </v-col>
 
@@ -137,7 +152,7 @@
               />
 
               <v-chip
-                v-else-if="task.status.class === 'success' && !settings.autoPay"
+                v-else-if="(task.status.class === 'success' && !settings.autoPay) || (task.status.class === 'success' && task.transactionData.paypal)"
                 outlined
                 small
                 color="success"
@@ -175,25 +190,18 @@
               class="text-right"
             >
               <v-btn
+                v-if="task.status.id === 1 && task.status.class !== 'error'"
                 icon
-                color="primary"
-                @click="$emit('click:verifyTask', task)"
-              >
-                <v-icon v-text="'mdi-shield-search'" />
-              </v-btn>
-
-              <v-btn
-                v-if="task.status.class !== 'error'"
-                icon
-                color="primary"
+                color="success"
                 @click="$emit('click:startTask', task)"
               >
                 <v-icon v-text="'mdi-play'" />
               </v-btn>
 
               <v-btn
+                v-if="task.status.id === 2"
                 icon
-                color="primary"
+                color="warning"
                 @click="$emit('click:stopTask', task)"
               >
                 <v-icon v-text="'mdi-stop'" />
@@ -202,10 +210,57 @@
               <v-btn
                 icon
                 color="primary"
+                @click="$emit('click:editTask', task)"
+              >
+                <v-icon
+                  small
+                  v-text="'mdi-pencil'"
+                />
+              </v-btn>
+
+              <v-btn
+                icon
+                color="error"
                 @click="$emit('click:deleteTask', task, index)"
               >
-                <v-icon v-text="'mdi-delete'" />
+                <v-icon
+                  small
+                  v-text="'mdi-delete'"
+                />
               </v-btn>
+
+              <v-menu offset-y>
+                <template v-slot:activator="{ attrs, on }">
+                  <v-btn
+                    color="primary"
+                    v-bind="attrs"
+                    icon
+                    v-on="on"
+                  >
+                    <v-icon v-text="'mdi-dots-vertical'" />
+                  </v-btn>
+                </template>
+
+                <v-list
+                  nav
+                  dense
+                  rounded
+                >
+                  <v-list-item
+                    link
+                    @click="$emit('click:verifyTask', task)"
+                  >
+                    <v-list-item-title v-text="'Verify'" />
+                  </v-list-item>
+
+                  <v-list-item
+                    link
+                    @click="$emit('click:openLogs', task)"
+                  >
+                    <v-list-item-title v-text="'Logs'" />
+                  </v-list-item>
+                </v-list>
+              </v-menu>
             </v-col>
           </v-row>
         </v-list-item-content>

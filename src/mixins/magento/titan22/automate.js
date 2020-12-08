@@ -309,6 +309,11 @@ export default {
     async authenticate (task, callback) {
       let token = this.activeTask(task).transactionData.token
 
+      this.updateTask({
+        ...this.activeTask(task),
+        logs: `${this.activeTask(task).logs || ''};Logging in...`
+      })
+
       while (!token && this.isRunning(task.id)) {
         await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
@@ -347,6 +352,11 @@ export default {
 
           break
         } else {
+          this.updateTask({
+            ...this.activeTask(task),
+            logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+          })
+
           continue
         }
       }
@@ -364,6 +374,11 @@ export default {
     async getProfile (task, token, callback) {
       let user = this.activeTask(task).transactionData.user || {}
       let authorized = true
+
+      this.updateTask({
+        ...this.activeTask(task),
+        logs: `${this.activeTask(task).logs || ''};Fetching profile...`
+      })
 
       while (!Object.keys(user).length && this.isRunning(task.id)) {
         await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
@@ -399,8 +414,19 @@ export default {
           break
         } else if (apiResponse.status === 401) {
           authorized = false
+
+          this.updateTask({
+            ...this.activeTask(task),
+            logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+          })
+
           break
         } else {
+          this.updateTask({
+            ...this.activeTask(task),
+            logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+          })
+
           continue
         }
       }
@@ -418,6 +444,11 @@ export default {
     async createCart (task, user, callback) {
       let cartId = null
       let authorized = true
+
+      this.updateTask({
+        ...this.activeTask(task),
+        logs: `${this.activeTask(task).logs || ''};Creating cart...`
+      })
 
       while (!cartId && this.isRunning(task.id)) {
         await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
@@ -444,8 +475,19 @@ export default {
           break
         } else if (apiResponse.status === 401) {
           authorized = false
+
+          this.updateTask({
+            ...this.activeTask(task),
+            logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+          })
+
           break
         } else {
+          this.updateTask({
+            ...this.activeTask(task),
+            logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+          })
+
           continue
         }
       }
@@ -463,6 +505,11 @@ export default {
     async getCart (task, user, callback) {
       let cart = {}
       let authorized = true
+
+      this.updateTask({
+        ...this.activeTask(task),
+        logs: `${this.activeTask(task).logs || ''};Fetching cart...`
+      })
 
       while (!Object.keys(cart).length && this.isRunning(task.id)) {
         await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
@@ -489,8 +536,19 @@ export default {
           break
         } else if (apiResponse.status === 401) {
           authorized = false
+
+          this.updateTask({
+            ...this.activeTask(task),
+            logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+          })
+
           break
         } else {
+          this.updateTask({
+            ...this.activeTask(task),
+            logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+          })
+
           continue
         }
       }
@@ -515,6 +573,11 @@ export default {
         success = true
         callback(success, authorized)
       } else {
+        this.updateTask({
+          ...this.activeTask(task),
+          logs: `${this.activeTask(task).logs || ''};Cleaning cart...`
+        })
+
         while (!success && this.isRunning(task.id)) {
           for (let index = 0; index < cart.items.length; index++) {
             if (!this.isRunning(task.id)) {
@@ -545,8 +608,19 @@ export default {
               responses.push(apiResponse.data)
             } else if (apiResponse.status === 401) {
               authorized = false
+
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+              })
+
               break
             } else {
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+              })
+
               continue
             }
           }
@@ -582,7 +656,7 @@ export default {
           const order = {
             cartItem: {
               sku: `${this.activeTask(task).sku}-SZ${this.activeTask(task).sizes[i].label.replace('.', 'P').toUpperCase()}`,
-              qty: 1,
+              qty: this.activeTask(task).qty || 1,
               quote_id: cart.id.toString(),
               product_option: {
                 extension_attributes: {
@@ -620,6 +694,11 @@ export default {
           } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - carted`, 'orange')
 
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};size: ${this.activeTask(task).sizes[i].label} - carted!`
+            })
+
             response = {
               ...apiResponse.data,
               sizeLabel: this.activeTask(task).sizes[i].label
@@ -628,8 +707,19 @@ export default {
             break
           } else if (apiResponse.status === 401) {
             authorized = false
+
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+            })
+
             break
           } else {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+            })
+
             continue
           }
         }
@@ -675,6 +765,11 @@ export default {
 
       let shipping = {}
 
+      this.updateTask({
+        ...this.activeTask(task),
+        logs: `${this.activeTask(task).logs || ''};Setting shipping details...`
+      })
+
       while (!Object.keys(shipping).length && this.isRunning(task.id) && isAuthorized) {
         await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
@@ -702,8 +797,19 @@ export default {
           break
         } else if (cartApiResponse.status === 401) {
           isAuthorized = false
+
+          this.updateTask({
+            ...this.activeTask(task),
+            logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+          })
+
           break
         } else {
+          this.updateTask({
+            ...this.activeTask(task),
+            logs: `${this.activeTask(task).logs || ''};Request failed - ${cartApiResponse.status}`
+          })
+
           continue
         }
       }
@@ -725,9 +831,15 @@ export default {
         carrier_code: 'freeshipping',
         method_code: 'freeshipping'
       }
+
       let authorized = true
 
       if (product.price <= 7000) {
+        this.updateTask({
+          ...this.activeTask(task),
+          logs: `${this.activeTask(task).logs || ''};Estimating shipping...`
+        })
+
         const estimateParams = { addressId: defaultShippingAddress.id }
 
         let success = false
@@ -760,8 +872,19 @@ export default {
             break
           } else if (apiResponse.status === 401) {
             authorized = false
+
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+            })
+
             break
           } else {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+            })
+
             continue
           }
         }
@@ -802,6 +925,11 @@ export default {
      */
     async placeOrder (task, shippingData, user, cartData, productData) {
       const vm = this
+
+      this.updateTask({
+        ...this.activeTask(task),
+        logs: `${this.activeTask(task).logs || ''};Waiting to place order...`
+      })
 
       await this.timer(task, productData.sizeLabel, async (response) => {
         if (response && vm.isRunning(task.id)) {
@@ -889,6 +1017,11 @@ export default {
       let transactionData = {}
       const tries = 3
 
+      this.updateTask({
+        ...this.activeTask(task),
+        logs: `${this.activeTask(task).logs || ''};Placing order...`
+      })
+
       this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
 
       for (let index = 1; index <= tries; index++) {
@@ -918,9 +1051,19 @@ export default {
 
             break
           } else if (index === tries) {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Trying for restock!`
+            })
+
             this.init(this.activeTask(task))
             break
           } else {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Out of stock!`
+            })
+
             continue
           }
         }
@@ -946,16 +1089,11 @@ export default {
           id: Constant.TASK.STATUS.STOPPED,
           msg: 'copped!',
           class: 'success'
-        }
+        },
+        logs: `${this.activeTask(task).logs || ''};Copped!`
       })
 
-      if (this.settings.autoPay && !this.activeTask(task).aco) {
-        if (transactionData.paypal) {
-          this.launchPaypalWindow(task)
-        } else {
-          this.launch2c2pWindow(task)
-        }
-      }
+      if (this.settings.autoPay && !this.activeTask(task).aco && !transactionData.paypal) this.launch2c2pWindow(task)
 
       if (this.settings.sound) {
         const sound = new Howl({
@@ -1093,62 +1231,6 @@ export default {
             win = null
           })
         })
-    },
-
-    /**
-     * Launch PayPal payment window.
-     *
-     * @param {*} task
-     */
-    launchPaypalWindow (task) {
-      const { BrowserWindow } = electron.remote
-
-      const baseUrl = `${Config.services.titan22.url}/customer/account/login/`
-
-      let win = new BrowserWindow({
-        width: 800,
-        height: 600,
-        icon: path.join(__static, 'icon.png')
-      })
-
-      win.removeMenu()
-
-      const ses = win.webContents.session
-
-      ses.webRequest.onBeforeRequest({ urls: ['https://titan22.queue-it.net/*'] }, () => {})
-
-      ses.cookies.remove(Config.services.titan22.url, 'PHPSESSID')
-        .then(() => {
-          win.webContents.openDevTools()
-          win.loadURL(baseUrl)
-
-          win.webContents.on('did-finish-load', () => {
-            const loop = setInterval(() => {
-              if (win.webContents.getURL() === baseUrl && !win.webContents.isLoading()) {
-                const script = `document.getElementById("email").value = "${this.activeTask(task).profile.email}";
-                  document.getElementById("pass").value = "${this.activeTask(task).profile.password}";
-                  document.getElementById("send2").click()`
-
-                win.webContents.executeJavaScript(script)
-              } else if (win.webContents.getURL() !== baseUrl) {
-                clearInterval(loop)
-              }
-            }, 2000)
-          })
-
-          win.webContents.on('did-frame-navigate', (event, url) => {
-            if (url === 'https://www.titan22.com/customer/account/') win.webContents.loadURL('https://www.titan22.com/checkout/')
-          })
-        })
-
-      win.on('closed', () => {
-        this.updateTask({
-          ...this.activeTask(task),
-          paid: true
-        })
-
-        win = null
-      })
     }
   }
 }
