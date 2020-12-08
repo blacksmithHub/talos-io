@@ -152,7 +152,7 @@
               />
 
               <v-chip
-                v-else-if="task.status.class === 'success' && !settings.autoPay"
+                v-else-if="(task.status.class === 'success' && !settings.autoPay) || (task.status.class === 'success' && task.transactionData.paypal)"
                 outlined
                 small
                 color="success"
