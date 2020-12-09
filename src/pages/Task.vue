@@ -37,7 +37,7 @@
             :rounded="$vuetify.breakpoint.lgAndUp"
             :small="$vuetify.breakpoint.lgAndUp"
             :x-small="!$vuetify.breakpoint.lgAndUp"
-            class="primary mr-3"
+            class="success mr-3"
             @click="startAll"
           >
             <v-icon
@@ -56,7 +56,7 @@
             :rounded="$vuetify.breakpoint.lgAndUp"
             :small="$vuetify.breakpoint.lgAndUp"
             :x-small="!$vuetify.breakpoint.lgAndUp"
-            class="primary mr-3"
+            class="warning mr-3"
             @click="stopAll"
           >
             <v-icon
@@ -75,7 +75,7 @@
             :rounded="$vuetify.breakpoint.lgAndUp"
             :small="$vuetify.breakpoint.lgAndUp"
             :x-small="!$vuetify.breakpoint.lgAndUp"
-            class="primary"
+            class="error"
             @click="deleteAll"
           >
             <v-icon
@@ -103,6 +103,7 @@
             @click:editTask="openEditTaskDialog"
             @click:checkout="redirectToCheckout"
             @click:verifyTask="verifyTask"
+            @click:openLogs="openLogs"
           />
         </v-card-text>
 
@@ -133,6 +134,7 @@
       </v-card>
     </v-container>
 
+    <LogsDialog ref="logsDialog" />
     <TaskDialog ref="taskDialog" />
     <MassEditDialog ref="massEditDialog" />
     <ImportTaskDialog ref="importTaskDialog" />
@@ -149,12 +151,16 @@ import Header from '@/components/Tasks/Header'
 import TaskDialog from '@/components/Tasks/TaskDialog'
 import MassEditDialog from '@/components/Tasks/MassEditDialog'
 import ImportTaskDialog from '@/components/Tasks/ImportTaskDialog'
+import LogsDialog from '@/components/Tasks/LogsDialog'
+
 import automate from '@/mixins/magento/titan22/automate'
-import Constant from '@/config/constant'
 import verify from '@/mixins/magento/titan22/verify'
+
+import Constant from '@/config/constant'
 
 export default {
   components: {
+    LogsDialog,
     SideNav,
     Lists,
     Header,
@@ -207,6 +213,13 @@ export default {
     ipcRenderer.on('updateProfiles', (event, arg) => {
       this.setProfiles(arg)
     })
+
+    ipcRenderer.on('updateTask', (event, arg) => {
+      this.updateTask({
+        ...this.tasks.find((val) => val.id === arg.id),
+        paid: true
+      })
+    })
   },
   methods: {
     ...mapActions('attribute', {
@@ -224,6 +237,13 @@ export default {
     ...mapActions('bank', { setBanks: 'setItems' }),
     ...mapActions('attribute', { prepareAttributes: 'initializeItems' }),
 
+    /**
+     * Open logs dialog.
+     *
+     */
+    openLogs (task) {
+      this.$refs.logsDialog.mapData(task)
+    },
     /**
      * Open import task dialog.
      *
@@ -257,7 +277,11 @@ export default {
      *
      */
     redirectToCheckout (task) {
-      this.launchWindow(task.transactionData, task)
+      if (task.transactionData.paypal) {
+        ipcRenderer.send('pay-with-paypal', JSON.stringify(task))
+      } else {
+        this.launch2c2pWindow(task)
+      }
     },
     /**
      * Start task.
@@ -271,7 +295,8 @@ export default {
             id: Constant.TASK.STATUS.RUNNING,
             msg: 'running',
             class: 'orange'
-          }
+          },
+          logs: `${task.logs || ''};Started!`
         })
 
         await this.init(task)
@@ -323,7 +348,8 @@ export default {
           class: 'grey'
         },
         transactionData: {},
-        paid: false
+        paid: false,
+        logs: `${task.logs || ''};Stopped!`
       })
     },
 

@@ -175,14 +175,11 @@ export default {
         password: this.getActiveTask(task).profile.password
       }
 
-      while (this.isTaskRunning(task.id)) {
-        await new Promise(resolve => setTimeout(resolve, this.getActiveTask(task).delay))
+      await new Promise(resolve => setTimeout(resolve, this.getActiveTask(task).delay))
 
-        if (!this.isTaskRunning(task.id)) {
-          this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
-        }
-
+      if (!this.isTaskRunning(task.id)) {
+        this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+      } else {
         const cancelTokenSource = axios.CancelToken.source()
 
         this.updateTask({
@@ -194,7 +191,6 @@ export default {
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
         } else if (apiResponse.status === 200 && apiResponse.data) {
           token = apiResponse.data
 
@@ -205,10 +201,6 @@ export default {
               token: token
             }
           })
-
-          break
-        } else {
-          continue
         }
       }
 
@@ -225,14 +217,11 @@ export default {
     async profile (task, token, callback) {
       let user = {}
 
-      while (this.isTaskRunning(task.id)) {
-        await new Promise(resolve => setTimeout(resolve, this.getActiveTask(task).delay))
+      await new Promise(resolve => setTimeout(resolve, this.getActiveTask(task).delay))
 
-        if (!this.isTaskRunning(task.id)) {
-          this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
-        }
-
+      if (!this.isTaskRunning(task.id)) {
+        this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+      } else {
         const cancelTokenSource = axios.CancelToken.source()
 
         this.updateTask({
@@ -244,7 +233,6 @@ export default {
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
         } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
           user = apiResponse.data
 
@@ -255,10 +243,6 @@ export default {
               user: user
             }
           })
-
-          break
-        } else {
-          continue
         }
       }
 

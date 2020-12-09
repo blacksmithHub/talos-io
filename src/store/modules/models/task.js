@@ -140,6 +140,7 @@ export default {
 
         element.transactionData = {}
         element.paid = false
+        element.logs = ''
 
         return element
       })

@@ -30,10 +30,10 @@
       x-small
       :ripple="false"
       class="mr-1"
-      @click="onMinimize"
+      @click="onMaximize"
     >
       <v-icon
-        color="warning"
+        color="success"
         v-text="'mdi-checkbox-blank-circle'"
       />
     </v-btn>
@@ -44,10 +44,10 @@
       x-small
       :ripple="false"
       class="mr-1"
-      @click="onMaximize"
+      @click="onMinimize"
     >
       <v-icon
-        color="success"
+        color="warning"
         v-text="'mdi-checkbox-blank-circle'"
       />
     </v-btn>

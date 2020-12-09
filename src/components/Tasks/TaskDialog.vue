@@ -55,16 +55,33 @@
               </v-col>
             </v-row>
 
-            <v-text-field
-              v-model="sku"
-              label="SKU"
-              required
-              outlined
-              dense
-              :error-messages="skuErrors"
-              autocomplete="off"
-              @blur="$v.sku.$touch()"
-            />
+            <v-row>
+              <v-col class="pt-0 pb-0">
+                <v-text-field
+                  v-model="sku"
+                  label="SKU"
+                  required
+                  outlined
+                  dense
+                  :error-messages="skuErrors"
+                  autocomplete="off"
+                  @blur="$v.sku.$touch()"
+                />
+              </v-col>
+
+              <v-col class="pt-0 pb-0">
+                <v-text-field
+                  v-model="qty"
+                  dense
+                  outlined
+                  type="number"
+                  hide-details="auto"
+                  :error-messages="qtyErrors"
+                  label="Quantity"
+                  @blur="$v.qty.$touch()"
+                />
+              </v-col>
+            </v-row>
 
             <v-combobox
               v-model="sizes"
@@ -178,7 +195,8 @@ export default {
       selectedTask: {},
       delay: 1000,
       placeOrder: '',
-      placeOrderMenu: false
+      placeOrderMenu: false,
+      qty: 1
     }
   },
   computed: {
@@ -245,6 +263,19 @@ export default {
       this.$v.delay.minValue || errors.push('Invalid input')
 
       return errors
+    },
+    /**
+     * Error messages for qty.
+     *
+     */
+    qtyErrors () {
+      const errors = []
+
+      if (!this.$v.qty.$dirty) return errors
+
+      this.$v.qty.minValue || errors.push('Invalid input')
+
+      return errors
     }
   },
   methods: {
@@ -265,6 +296,7 @@ export default {
         this.sizes = sizes
         this.delay = task.delay
         this.placeOrder = task.placeOrder
+        this.qty = task.qty
 
         this.profile = task.profile
         this.bank = task.bank
@@ -306,6 +338,7 @@ export default {
       this.delay = 1000
       this.placeOrder = ''
       this.placeOrderMenu = false
+      this.qty = 1
 
       this.dialog = false
       this.isEditMode = false
@@ -339,7 +372,8 @@ export default {
           profile: this.profile,
           bank: this.bank || {},
           delay: this.delay,
-          placeOrder: this.placeOrder
+          placeOrder: this.placeOrder,
+          qty: this.qty
         }
 
         if (this.isEditMode) {
@@ -359,7 +393,8 @@ export default {
     profile: { required },
     sku: { required },
     sizes: { required },
-    delay: { minValue: minValue(0) }
+    delay: { minValue: minValue(0) },
+    qty: { minValue: minValue(1) }
   }
 }
 </script>
