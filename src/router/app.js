@@ -24,15 +24,15 @@ const Settings = () => import('../pages/Settings')
 export default {
   routes: [
     {
+      path: '/login',
+      name: 'Login',
+      component: Login
+    },
+    {
       path: '/check-update',
       name: 'CheckUpdate',
       component: CheckUpdate,
       beforeEnter: (to, from, next) => GuardService.authorized(next)
-    },
-    {
-      path: '/login',
-      name: 'Login',
-      component: Login
     },
     {
       path: '',

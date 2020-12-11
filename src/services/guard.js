@@ -15,7 +15,9 @@ export default {
    * @return next
    */
   async authorized (next) {
-    if (!AuthService.isAuthenticated()) {
+    const now = new Date()
+
+    if (!AuthService.isAuthenticated() || now >= (new Date(AuthService.getAuth().expiry))) {
       sessionStorage.clear()
 
       ipcRenderer.send('authenticate')

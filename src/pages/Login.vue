@@ -47,7 +47,7 @@
           </v-col>
 
           <v-col
-            v-else
+            v-else-if="!hasKey"
             cols="12"
             align-self="center"
             class="pl-5 pr-5"
@@ -77,7 +77,7 @@
 import { required } from 'vuelidate/lib/validators'
 
 import AuthAPI from '@/api/auth'
-import auth from '@/services/auth'
+import AuthService from '@/services/auth'
 import SystemBar from '@/components/App/SystemBar'
 import electron, { remote, ipcRenderer } from 'electron'
 import path from 'path'
@@ -96,6 +96,12 @@ export default {
     }
   },
   computed: {
+    /**
+     * Check if has key stored.
+     */
+    hasKey () {
+      return (AuthService.isAuthenticated()) ? !!(AuthService.getAuth().key) : false
+    },
     /**
      * Error messages for key.
      *
@@ -186,6 +192,18 @@ export default {
         }
 
         this.loading = false
+
+        if (this.hasKey) {
+          const details = {
+            ...AuthService.getAuth(),
+            ...this.user,
+            expiry: this.$moment().add(1, 'weeks').format('Y-M-D')
+          }
+
+          AuthService.setAuth(JSON.stringify(details))
+
+          this.close()
+        }
       })
     },
     /**
@@ -226,6 +244,8 @@ export default {
 
         await AuthAPI.bind({
           discord_id: this.user.profile.id,
+          username: this.user.profile.username,
+          discriminator: this.user.profile.discriminator,
           key: this.key
         })
           .then((response) => {
@@ -233,31 +253,40 @@ export default {
               case 200: {
                 const data = {
                   ...this.user,
-                  key: this.key
+                  key: this.key,
+                  expiry: this.$moment().add(1, 'weeks').format('Y-M-D')
                 }
 
-                auth.setAuth(JSON.stringify(data))
+                AuthService.setAuth(JSON.stringify(data))
 
-                this.key = ''
-                this.user = {}
-                this.apiValidation = []
-
-                this.$v.$reset()
-
-                ipcRenderer.send('bind')
+                this.close()
 
                 break
               }
 
               case 422:
-                this.apiValidation.push(response.data.errors.key[0])
+                if (response.data.errors.key) this.apiValidation.push(response.data.errors.key[0])
+
+                if (response.data.errors.discord_id) this.apiValidation.push(response.data.errors.discord_id[0])
 
                 break
             }
-
-            this.loading = false
           })
+
+        this.loading = false
       }
+    },
+    /**
+     * exit auth
+     */
+    close () {
+      this.key = ''
+      this.user = {}
+      this.apiValidation = []
+
+      this.$v.$reset()
+
+      ipcRenderer.send('bind')
     }
   },
   validations: {

@@ -15,6 +15,9 @@ export default {
   getWindow () {
     return win
   },
+  closeWindow () {
+    win = null
+  },
   createWindow () {
     win = new BrowserWindow({
       width: 500,

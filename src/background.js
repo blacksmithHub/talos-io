@@ -215,6 +215,10 @@ ipcMain.on('clear-localStorage', (event, arg) => {
 ipcMain.on('authenticate', (event, arg) => {
   LoginWindow.createWindow()
 
+  SettingWindow.closeWindow()
+  ProfileWindow.closeWindow()
+  MonitorWindow.closeWindow()
+
   if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
 
   if (win) win.destroy()
