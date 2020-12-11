@@ -38,6 +38,7 @@ autoUpdater.on('update-not-available', (info) => {
   if (!MainWindow.getWindow()) {
     MainWindow.createWindow()
     win.destroy()
+    win = null
   }
 })
 autoUpdater.on('error', () => {
@@ -90,6 +91,7 @@ function initializeWindows () {
       if (!MainWindow.getWindow()) {
         MainWindow.createWindow()
         win.destroy()
+        win = null
       }
     }, 5000)
   } else {
@@ -213,21 +215,25 @@ ipcMain.on('clear-localStorage', (event, arg) => {
 })
 
 ipcMain.on('authenticate', (event, arg) => {
-  LoginWindow.createWindow()
+  if (!LoginWindow.getWindow()) LoginWindow.createWindow()
 
   SettingWindow.closeWindow()
   ProfileWindow.closeWindow()
   MonitorWindow.closeWindow()
 
-  if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
-
-  if (win) win.destroy()
+  if (MainWindow.getWindow()) {
+    MainWindow.getWindow().destroy()
+    MainWindow.closeWindow()
+  }
 })
 
 ipcMain.on('bind', (event, arg) => {
-  if (!win) initializeWindows()
+  initializeWindows()
 
-  if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
+  if (LoginWindow.getWindow()) {
+    LoginWindow.getWindow().destroy()
+    LoginWindow.closeWindow()
+  }
 })
 
 ipcMain.on('pay-with-paypal', (event, arg) => {
