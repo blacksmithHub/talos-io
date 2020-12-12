@@ -3,8 +3,6 @@
 import { BrowserWindow, globalShortcut } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
-import MainWindow from '@/windows/Main'
-
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -20,11 +18,15 @@ export default {
   },
   createWindow () {
     win = new BrowserWindow({
-      width: 955,
-      height: 800,
-      minHeight: 600,
-      minWidth: 500,
-      parent: MainWindow.getWindow(),
+      width: 450,
+      height: 300,
+      minWidth: 300,
+      minHeight: 300,
+      resizable: false,
+      minimizable: false,
+      maximizable: false,
+      fullscreenable: false,
+      center: true,
       show: false,
       frame: false,
       webPreferences: {
@@ -35,12 +37,12 @@ export default {
     })
 
     if (process.env.WEBPACK_DEV_SERVER_URL) {
-      win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/monitor`)
+      win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/login`)
 
       if (isDevelopment) win.webContents.openDevTools()
     } else {
       createProtocol('app')
-      win.loadURL('app://./index.html/#/monitor')
+      win.loadURL('app://./index.html/#/login')
     }
 
     win.once('ready-to-show', () => {

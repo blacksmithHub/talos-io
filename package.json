@@ -24,6 +24,7 @@
     "convert-csv-to-json": "^1.0.0",
     "core-js": "^3.6.5",
     "cors": "^2.8.5",
+    "discord-oauth2": "^2.6.0",
     "electron-updater": "^4.3.5",
     "express": "^4.17.1",
     "howler": "^2.2.0",

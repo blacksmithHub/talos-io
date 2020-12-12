@@ -5,6 +5,7 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { autoUpdater } from 'electron-updater'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
+import LoginWindow from '@/windows/Login'
 import MainWindow from '@/windows/Main'
 import MonitorWindow from '@/windows/Monitor'
 import ProfileWindow from '@/windows/Profile'
@@ -37,6 +38,7 @@ autoUpdater.on('update-not-available', (info) => {
   if (!MainWindow.getWindow()) {
     MainWindow.createWindow()
     win.destroy()
+    win = null
   }
 })
 autoUpdater.on('error', () => {
@@ -85,10 +87,13 @@ function initializeWindows () {
 
     if (isDevelopment) win.webContents.openDevTools()
 
-    if (!MainWindow.getWindow()) {
-      MainWindow.createWindow()
-      win.destroy()
-    }
+    setTimeout(() => {
+      if (!MainWindow.getWindow()) {
+        MainWindow.createWindow()
+        win.destroy()
+        win = null
+      }
+    }, 5000)
   } else {
     createProtocol('app')
     win.loadURL('app://./index.html/#/check-update')
@@ -207,6 +212,28 @@ ipcMain.on('clear-localStorage', (event, arg) => {
   if (SettingWindow.getWindow()) SettingWindow.getWindow().reload()
 
   if (ProfileWindow.getWindow()) ProfileWindow.getWindow().reload()
+})
+
+ipcMain.on('authenticate', (event, arg) => {
+  if (!LoginWindow.getWindow()) LoginWindow.createWindow()
+
+  SettingWindow.closeWindow()
+  ProfileWindow.closeWindow()
+  MonitorWindow.closeWindow()
+
+  if (MainWindow.getWindow()) {
+    MainWindow.getWindow().destroy()
+    MainWindow.closeWindow()
+  }
+})
+
+ipcMain.on('bind', (event, arg) => {
+  initializeWindows()
+
+  if (LoginWindow.getWindow()) {
+    LoginWindow.getWindow().destroy()
+    LoginWindow.closeWindow()
+  }
 })
 
 ipcMain.on('pay-with-paypal', (event, arg) => {
