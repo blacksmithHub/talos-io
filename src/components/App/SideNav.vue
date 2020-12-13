@@ -21,7 +21,6 @@
               class="title"
               v-text="username"
             />
-            <v-list-item-subtitle v-text="email" />
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -92,13 +91,6 @@ export default {
     username () {
       if (!auth.isAuthenticated()) return 'John Doe'
       return auth.getAuth().profile.username
-    },
-    /**
-     * return email
-     */
-    email () {
-      if (!auth.isAuthenticated()) return 'johndoe@mail.com'
-      return auth.getAuth().profile.email
     }
   },
   methods: {

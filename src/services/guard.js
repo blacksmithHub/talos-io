@@ -1,6 +1,5 @@
 import { ipcRenderer } from 'electron'
 import AuthService from '@/services/auth'
-import AuthAPI from '@/api/auth'
 
 /**
  * =======================================
@@ -27,7 +26,7 @@ export default {
         key: AuthService.getAuth().key
       }
 
-      await AuthAPI.verify(params)
+      await AuthService.verify(params)
         .then((response) => {
           switch (response.status) {
             case 200:
