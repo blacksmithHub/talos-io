@@ -1,3 +1,5 @@
+import AuthAPI from '@/api/auth'
+
 /**
  * ===============================================
  * Auth service
@@ -42,5 +44,12 @@ export default {
    */
   flush () {
     localStorage.removeItem('auth')
+  },
+
+  /**
+   * Verification api
+   */
+  verify (params) {
+    return AuthAPI.verify(params).then(response => response)
   }
 }

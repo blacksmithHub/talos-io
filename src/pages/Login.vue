@@ -191,19 +191,26 @@ export default {
           }
         }
 
-        this.loading = false
+        await AuthService.verify({ discord_id: vm.user.profile.id })
+          .then((response) => {
+            switch (response.status) {
+              case 200:
+                {
+                  const details = {
+                    ...vm.user,
+                    expiry: vm.$moment().add(1, 'weeks').format('Y-M-D'),
+                    key: response.data.master_key.key
+                  }
 
-        if (this.hasKey) {
-          const details = {
-            ...AuthService.getAuth(),
-            ...this.user,
-            expiry: this.$moment().add(1, 'weeks').format('Y-M-D')
-          }
+                  AuthService.setAuth(JSON.stringify(details))
 
-          AuthService.setAuth(JSON.stringify(details))
+                  vm.close()
+                }
+                break
+            }
+          })
 
-          this.close()
-        }
+        vm.loading = false
       })
     },
     /**
