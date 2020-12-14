@@ -326,7 +326,7 @@ ipcMain.on('pay-with-2c2p', (event, arg) => {
       `<p><strong>Product name:</strong> ${task.transactionData.order.name}</p>`,
       `<p><strong>Product SKU:</strong> ${task.transactionData.order.sku}</p>`,
       `<p><strong>Size:</strong> ${task.transactionData.order.sizeLabel}</p>`,
-      `<p><strong>Price:</strong> ${task.transactionData.order.price}</p>`
+      `<p><strong>Price:</strong> ${task.transactionData.order.price.toLocaleString()}</p>`
     ]
 
     await page.evaluate((array) => {

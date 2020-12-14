@@ -178,7 +178,7 @@ export default {
                   name: (element.name) ? element.name.trim() : '',
                   sku: element.sku.trim(),
                   sizes: sizes,
-                  delay: element.delay || 1000,
+                  delay: element.delay || 3200,
                   placeOrder: element.placeOrder || ''
                 }
 

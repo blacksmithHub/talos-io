@@ -193,7 +193,7 @@ export default {
       bank: {},
       isEditMode: false,
       selectedTask: {},
-      delay: 1000,
+      delay: 3200,
       placeOrder: '',
       placeOrderMenu: false,
       qty: 1

@@ -555,7 +555,7 @@ export default {
       this.$v.$touch()
 
       if (!this.$v.$invalid && this.webhook) {
-        this.sendWebhook(this.webhook, 'Air Jordan 4 Retro Off-White Sail', '9', null, null, 'CV9388-100')
+        this.sendWebhook(this.webhook, 'Air Jordan 4 Retro Off-White Sail', '9', null, null, 'CV9388-100', null, null, 'https://static.sneakerjagers.com/products/660x660/161740.jpg')
       }
     },
 

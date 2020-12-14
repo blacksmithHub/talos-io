@@ -11,6 +11,7 @@ import webhook from '@/mixins/webhook'
 import SuccessEffect from '@/assets/success.mp3'
 import axios from 'axios'
 import { ipcRenderer } from 'electron'
+import productApi from '@/api/magento/titan22/product'
 
 /**
  * ===============================================
@@ -1083,7 +1084,7 @@ export default {
      * @param {*} shippingData
      * @param {*} time
      */
-    onSuccess (task, transactionData, shippingData, productData) {
+    async onSuccess (task, transactionData, shippingData, productData) {
       this.updateTask({
         ...this.activeTask(task),
         transactionData: {
@@ -1127,23 +1128,48 @@ export default {
       const secs = transactionData.time
       const sku = this.activeTask(task).sku
       const method = transactionData.paypal ? 'PayPal' : '2c2p'
+      let img = ''
+
+      const params = {
+        searchCriteria: {
+          filterGroups: [
+            {
+              filters: [
+                {
+                  field: 'sku',
+                  value: sku
+                }
+              ]
+            }
+          ]
+        }
+      }
+
+      const apiResponse = await productApi.search(params, Config.services.titan22.token)
+
+      try {
+        const image = apiResponse.items[0].custom_attributes.find((val) => val.attribute_code === 'image')
+        img = `https://www.titan22.com/media/catalog/product${image.value}`
+      } catch (error) {
+        img = ''
+      }
 
       if (this.settings.webhook) {
         // send to personal webhook
-        this.sendWebhook(url, productName, productSize, profile, secs, sku, method)
+        this.sendWebhook(url, productName, productSize, profile, secs, sku, null, method, img)
 
         // send to public webhook
-        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method)
+        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img)
       } else {
         // send to public webhook
-        this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method)
+        this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img)
       }
 
       if (!transactionData.paypal) {
         const cookie = transactionData.cookies.value
 
         // send to aco webhook
-        if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie, method)
+        if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie, method, img)
       }
     }
   }

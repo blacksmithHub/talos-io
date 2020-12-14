@@ -141,7 +141,7 @@ export default {
       dialog: false,
       sizes: [],
       sku: '',
-      delay: 1000,
+      delay: 3200,
       placeOrder: '',
       placeOrderMenu: false
     }

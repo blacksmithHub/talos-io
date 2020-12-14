@@ -16,7 +16,7 @@
             :rounded="$vuetify.breakpoint.lgAndUp"
             :small="$vuetify.breakpoint.lgAndUp"
             :x-small="!$vuetify.breakpoint.lgAndUp"
-            class="primary mr-3"
+            class="cyan mr-3"
             @click="verifyAll"
           >
             <v-icon
