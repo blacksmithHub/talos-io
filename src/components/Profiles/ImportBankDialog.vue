@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapActions } from 'vuex'
 
 export default {
   data () {
@@ -62,9 +62,6 @@ export default {
       fileErrors: [],
       newBanks: []
     }
-  },
-  computed: {
-    ...mapState('staticBank', { banks: 'items' })
   },
   watch: {
     newBanks () {
@@ -110,19 +107,14 @@ export default {
           this.newBanks = []
 
           result.forEach(element => {
-            const bank = (element.bank) ? this.banks.find((val) => val.name.toLowerCase() === element.bank.toLowerCase().trim()) : null
-
-            if (bank && parseInt(element.cardNumber)) {
+            if (element.bank && parseInt(element.cardNumber)) {
               this.newBanks.push({
                 cardHolder: (element.cardHolder) ? element.cardHolder.trim() : null,
                 cardNumber: parseInt(element.cardNumber),
                 cvv: parseInt(element.cvv) || null,
                 expiryMonth: element.expiryMonth || null,
                 expiryYear: element.expiryYear || null,
-                bank: {
-                  id: bank.id,
-                  name: bank.name
-                },
+                bank: element.bank || null,
                 nickname: (element.nickname) ? element.nickname.trim() : null
               })
             }

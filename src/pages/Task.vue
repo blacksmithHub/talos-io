@@ -278,9 +278,9 @@ export default {
      */
     redirectToCheckout (task) {
       if (task.transactionData.paypal) {
-        ipcRenderer.send('pay-with-paypal', JSON.stringify(task))
+        ipcRenderer.send('pay-with-paypal', JSON.stringify({ task: task, settings: this.settings }))
       } else {
-        this.launch2c2pWindow(task)
+        ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
       }
     },
     /**
@@ -296,7 +296,8 @@ export default {
             msg: 'running',
             class: 'orange'
           },
-          logs: `${task.logs || ''};Started!`
+          logs: `${task.logs || ''};Started!`,
+          paid: false
         })
 
         await this.init(task)

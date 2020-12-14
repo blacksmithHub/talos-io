@@ -69,7 +69,7 @@
               :rounded="$vuetify.breakpoint.lgAndUp"
               :small="$vuetify.breakpoint.lgAndUp"
               :x-small="!$vuetify.breakpoint.lgAndUp"
-              class="primary"
+              class="error"
               @click="reset"
             >
               <v-icon
@@ -99,54 +99,115 @@
             :key="`${index}-item`"
             class="pa-0"
           >
-            <v-list-item-content
-              class="bank"
-              @click="editBank(bank)"
-            >
-              <v-list-item-title v-text="bank.nickname" />
-
-              <v-list-item-subtitle>
-                <strong
-                  class="text-capitalize"
-                  v-text="'Bank:'"
-                />
-                {{ bank.bank.name }}
-              </v-list-item-subtitle>
-
-              <v-list-item-subtitle>
-                <strong
-                  class="text-capitalize"
-                  v-text="'Card Holder:'"
-                />
-                {{ bank.cardHolder || 'N/A' }}
-              </v-list-item-subtitle>
-
-              <v-list-item-subtitle>
-                <strong
-                  class="text-capitalize"
-                  v-text="'Card Number:'"
-                />
-                <input
-                  :value="bank.cardNumber"
-                  class="ml-1 grey--text"
-                  readonly
-                  disabled
-                  type="password"
+            <v-list-item-content>
+              <v-row no-gutters>
+                <v-col
+                  cols="9"
+                  align-self="center"
                 >
-              </v-list-item-subtitle>
-            </v-list-item-content>
+                  <v-row
+                    align="center"
+                    no-gutters
+                  >
+                    <v-col
+                      cols="12"
+                      align-self="center"
+                    >
+                      <h4
+                        class="d-inline-block text-truncate"
+                        style="max-width: 40vh"
+                        v-text="bank.nickname"
+                      />
+                    </v-col>
 
-            <v-list-item-action>
-              <v-btn
-                icon
-                @click="deleteBank(index)"
-              >
-                <v-icon
-                  color="primary"
-                  v-text="'mdi-delete'"
-                />
-              </v-btn>
-            </v-list-item-action>
+                    <v-col
+                      cols="12"
+                      md="3"
+                      align-self="center"
+                    >
+                      <small
+                        class="d-inline-block text-truncate"
+                        style="max-width: 40vh"
+                      >
+                        <strong
+                          class="text-capitalize"
+                          v-text="'bank:'"
+                        />
+                        {{ bank.bank }}
+                      </small>
+                    </v-col>
+
+                    <v-col
+                      cols="12"
+                      md="3"
+                      align-self="center"
+                    >
+                      <small
+                        class="d-inline-block text-truncate"
+                        style="max-width: 40vh"
+                      >
+                        <strong
+                          class="text-capitalize"
+                          v-text="'Card Holder:'"
+                        />
+                        {{ bank.cardHolder || 'N/A' }}
+                      </small>
+                    </v-col>
+
+                    <v-col
+                      cols="12"
+                      md="3"
+                      align-self="center"
+                    >
+                      <small
+                        class="d-inline-block text-truncate"
+                        style="max-width: 40vh"
+                      >
+                        <strong
+                          class="text-capitalize"
+                          v-text="'Card Number:'"
+                        />
+                        <input
+                          :value="bank.cardNumber"
+                          class="ml-1 grey--text"
+                          readonly
+                          disabled
+                          type="password"
+                        >
+                      </small>
+                    </v-col>
+                  </v-row>
+                </v-col>
+
+                <v-col
+                  align-self="center"
+                  class="text-center"
+                  cols="3"
+                >
+                  <v-btn
+                    icon
+                    color="primary"
+                    @click="editBank(bank)"
+                  >
+                    <v-icon
+                      small
+                      v-text="'mdi-pencil'"
+                    />
+                  </v-btn>
+
+                  <v-btn
+                    icon
+                    color="error"
+                    @click="deleteBank(index)"
+                  >
+                    <v-icon
+                      small
+                      v-text="'mdi-delete'"
+                    />
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-list-item-content>
           </v-list-item>
 
           <v-divider
@@ -208,9 +269,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.bank:hover {
-  cursor: pointer;
-}
-</style>

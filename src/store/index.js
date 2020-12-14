@@ -9,7 +9,6 @@ import bank from './modules/models/bank'
 import setting from './modules/models/setting'
 
 import attribute from './modules/static/attribute'
-import staticBank from './modules/static/bank'
 
 Vue.use(Vuex)
 
@@ -22,7 +21,6 @@ export default new Vuex.Store({
     profile,
     bank,
 
-    attribute,
-    staticBank
+    attribute
   }
 })

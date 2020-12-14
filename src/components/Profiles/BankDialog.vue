@@ -19,7 +19,7 @@
               <v-col cols="12">
                 <v-text-field
                   v-model="nickname"
-                  label="Nickname"
+                  label="Nickname (optional)"
                   outlined
                   dense
                   hide-details
@@ -28,18 +28,14 @@
               </v-col>
 
               <v-col cols="12">
-                <v-autocomplete
+                <v-text-field
                   v-model="bank"
-                  hide-details="auto"
-                  required
-                  :error-messages="bankErrors"
-                  clearable
-                  :items="availableBanks"
+                  label="Bank"
                   outlined
                   dense
-                  label="Bank"
-                  item-text="name"
-                  return-object
+                  hide-details
+                  autocomplete="off"
+                  :error-messages="bankErrors"
                   @blur="$v.bank.$touch()"
                 />
               </v-col>
@@ -163,7 +159,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapActions } from 'vuex'
 import { required, maxLength, requiredIf, maxValue, minValue } from 'vuelidate/lib/validators'
 
 export default {
@@ -173,7 +169,7 @@ export default {
       isEditMode: false,
       selectedBank: {},
       nickname: '',
-      bank: {},
+      bank: '',
       cardHolder: '',
       cardNumber: '',
       expiryMonth: '',
@@ -182,8 +178,6 @@ export default {
     }
   },
   computed: {
-    ...mapState('staticBank', { availableBanks: 'items' }),
-
     /**
      * Set modal header.
      *
@@ -196,7 +190,7 @@ export default {
      *
      */
     isGcash () {
-      return (this.bank && this.bank.id === 1)
+      return (this.bank.toLowerCase() === 'gcash')
     },
     /**
      * Error messages for bank.
@@ -315,7 +309,7 @@ export default {
       this.$v.$reset()
 
       this.nickname = ''
-      this.bank = {}
+      this.bank = ''
       this.cardHolder = ''
       this.cardNumber = ''
       this.expiryMonth = ''

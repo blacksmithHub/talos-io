@@ -442,7 +442,7 @@ export default {
             password: element.profile.password,
             sku: element.sku,
             sizes: sizes,
-            bank: element.bank.bank.name,
+            bank: element.bank.bank,
             cardHolder: element.bank.cardHolder,
             cardNumber: element.bank.cardNumber,
             expiryMonth: element.bank.expiryMonth,
@@ -509,7 +509,7 @@ export default {
         banks.forEach(element => {
           jsons.push({
             nickname: element.nickname,
-            bank: element.bank.name,
+            bank: element.bank,
             cardHolder: element.cardHolder,
             cardNumber: element.cardNumber,
             expiryMonth: element.expiryMonth,

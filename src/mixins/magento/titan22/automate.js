@@ -1,5 +1,3 @@
-/* global __static */
-
 import { mapState, mapActions } from 'vuex'
 import { Howl } from 'howler'
 import StopWatch from 'statman-stopwatch'
@@ -11,9 +9,8 @@ import Constant from '@/config/constant'
 import Config from '@/config/app'
 import webhook from '@/mixins/webhook'
 import SuccessEffect from '@/assets/success.mp3'
-import path from 'path'
-import electron from 'electron'
 import axios from 'axios'
+import { ipcRenderer } from 'electron'
 
 /**
  * ===============================================
@@ -934,6 +931,14 @@ export default {
       await this.timer(task, productData.sizeLabel, async (response) => {
         if (response && vm.isRunning(task.id)) {
           if (shippingData.payment_methods.find((val) => val.code === 'ccpp')) {
+            vm.updateTask({
+              ...vm.activeTask(task),
+              transactionData: {
+                ...vm.activeTask(task).transactionData,
+                paypal: false
+              }
+            })
+
             vm.creditCardCheckout(task, shippingData, user, cartData, productData)
           } else if (shippingData.payment_methods.find((val) => val.code === 'braintree_paypal')) {
             const transactionData = {
@@ -1093,7 +1098,13 @@ export default {
         logs: `${this.activeTask(task).logs || ''};Copped!`
       })
 
-      if (this.settings.autoPay && !this.activeTask(task).aco && !transactionData.paypal) this.launch2c2pWindow(task)
+      if (this.settings.autoPay && !this.activeTask(task).aco) {
+        if (transactionData.paypal) {
+          ipcRenderer.send('pay-with-paypal', JSON.stringify({ task: task, settings: this.settings }))
+        } else {
+          ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
+        }
+      }
 
       if (this.settings.sound) {
         const sound = new Howl({
@@ -1134,103 +1145,6 @@ export default {
         // send to aco webhook
         if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie, method)
       }
-    },
-
-    /**
-     * Launch 2c2p payment window.
-     *
-     * @param {*} task
-     */
-    launch2c2pWindow (task) {
-      const { BrowserWindow } = electron.remote
-
-      const baseUrl = `${Config.services.titan22.checkout}/RedirectV3/Payment/Accept`
-
-      let win = new BrowserWindow({
-        width: 800,
-        height: 600,
-        icon: path.join(__static, 'icon.png')
-      })
-
-      win.removeMenu()
-
-      const ses = win.webContents.session
-
-      ses.cookies.set({
-        url: baseUrl,
-        ...this.activeTask(task).transactionData.cookies
-      })
-        .then(() => {
-          win.loadURL(baseUrl)
-
-          let script = ''
-
-          switch (this.activeTask(task).bank.bank.id) {
-            case Constant.BANK.GCASH.id:
-              if (this.settings.autoPay || this.settings.autoFill) script = 'document.getElementById(\'btnGCashSubmit\').click()'
-              break
-
-            default:
-
-              if (this.settings.autoPay) {
-                script = `
-                (function($) {
-                  $(function() {
-                    document.getElementById('credit_card_number').value = "${this.activeTask(task).bank.cardNumber || ''}";
-                    document.getElementById('credit_card_holder_name').value = "${this.activeTask(task).bank.cardHolder || ''}";
-                    document.getElementById('credit_card_expiry_month').value = "${this.activeTask(task).bank.expiryMonth || ''}";
-                    document.getElementById('credit_card_expiry_year').value = "${this.activeTask(task).bank.expiryYear || ''}";
-                    document.getElementById('credit_card_cvv').value = "${this.activeTask(task).bank.cvv || ''}";
-                    document.getElementById('credit_card_issuing_bank_name').value = "${this.activeTask(task).bank.bank.name || ''}";
-                    document.getElementById('btnCCSubmit').click();
-                  });
-                })(window.$);`
-              } else if (this.settings.autoFill) {
-                script = `
-                (function($) {
-                  $(function() {
-                    document.getElementById('credit_card_number').value = "${this.activeTask(task).bank.cardNumber || ''}";
-                    document.getElementById('credit_card_holder_name').value = "${this.activeTask(task).bank.cardHolder || ''}";
-                    document.getElementById('credit_card_expiry_month').value = "${this.activeTask(task).bank.expiryMonth || ''}";
-                    document.getElementById('credit_card_expiry_year').value = "${this.activeTask(task).bank.expiryYear || ''}";
-                    document.getElementById('credit_card_cvv').value = "${this.activeTask(task).bank.cvv || ''}";
-                    document.getElementById('credit_card_issuing_bank_name').value = "${this.activeTask(task).bank.bank.name || ''}";
-                  });
-                })(window.$);`
-              }
-
-              break
-          }
-
-          const orderDetails = `
-          (function($) {
-            $(function() {
-              $(".navbar-inner").append("<p><strong>Task:</strong> ${this.activeTask(task).name}</p>");
-              $(".navbar-inner").append("<p><strong>Profile:</strong> ${this.activeTask(task).profile.name}</p>");
-              $(".navbar-inner").append("<p><strong>Product name:</strong> ${this.activeTask(task).transactionData.order.name}</p>");
-              $(".navbar-inner").append("<p><strong>Product SKU:</strong> ${this.activeTask(task).transactionData.order.sku}</p>");
-              $(".navbar-inner").append("<p><strong>Size:</strong> ${this.activeTask(task).transactionData.order.sizeLabel}</p>");
-              $(".navbar-inner").append("<p><strong>Price:</strong> ${this.activeTask(task).transactionData.order.price}</p>");
-            });
-          })(window.$);`
-
-          if (script) {
-            script = `${script} ${orderDetails}`
-          } else {
-            script = orderDetails
-          }
-
-          win.webContents.executeJavaScript(script)
-
-          win.on('closed', () => {
-            this.updateTask({
-              ...this.activeTask(task),
-              paid: true
-            })
-
-            win = null
-          })
-        })
     }
   }
 }

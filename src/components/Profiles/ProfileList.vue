@@ -69,7 +69,7 @@
               :rounded="$vuetify.breakpoint.lgAndUp"
               :small="$vuetify.breakpoint.lgAndUp"
               :x-small="!$vuetify.breakpoint.lgAndUp"
-              class="primary"
+              class="error"
               @click="reset"
             >
               <v-icon
@@ -99,46 +99,98 @@
             :key="`${index}-item`"
             class="pa-0"
           >
-            <v-list-item-content
-              class="profile"
-              @click="editProfile(profile)"
-            >
-              <v-list-item-title v-text="profile.name" />
-
-              <v-list-item-subtitle>
-                <strong
-                  class="text-capitalize"
-                  v-text="'email:'"
-                />
-                {{ profile.email }}
-              </v-list-item-subtitle>
-
-              <v-list-item-subtitle>
-                <strong
-                  class="text-capitalize"
-                  v-text="'password:'"
-                />
-                <input
-                  :value="profile.password"
-                  class="ml-1 grey--text"
-                  readonly
-                  disabled
-                  type="password"
+            <v-list-item-content>
+              <v-row no-gutters>
+                <v-col
+                  cols="9"
+                  align-self="center"
                 >
-              </v-list-item-subtitle>
-            </v-list-item-content>
+                  <v-row
+                    align="center"
+                    no-gutters
+                  >
+                    <v-col
+                      cols="12"
+                      align-self="center"
+                    >
+                      <h4
+                        class="d-inline-block text-truncate"
+                        style="max-width: 40vh"
+                        v-text="profile.name"
+                      />
+                    </v-col>
 
-            <v-list-item-action>
-              <v-btn
-                icon
-                @click="deleteProfile(index)"
-              >
-                <v-icon
-                  color="primary"
-                  v-text="'mdi-delete'"
-                />
-              </v-btn>
-            </v-list-item-action>
+                    <v-col
+                      cols="12"
+                      md="3"
+                      align-self="center"
+                    >
+                      <small
+                        class="d-inline-block text-truncate"
+                        style="max-width: 40vh"
+                      >
+                        <strong
+                          class="text-capitalize"
+                          v-text="'email:'"
+                        />
+                        {{ profile.email }}
+                      </small>
+                    </v-col>
+
+                    <v-col
+                      cols="12"
+                      md="3"
+                      align-self="center"
+                    >
+                      <small
+                        class="d-inline-block text-truncate"
+                        style="max-width: 40vh"
+                      >
+                        <strong
+                          class="text-capitalize"
+                          v-text="'password:'"
+                        />
+                        <input
+                          :value="profile.password"
+                          class="ml-1 grey--text"
+                          readonly
+                          disabled
+                          type="password"
+                        >
+                      </small>
+                    </v-col>
+                  </v-row>
+                </v-col>
+
+                <v-col
+                  align-self="center"
+                  class="text-center"
+                  cols="3"
+                >
+                  <v-btn
+                    icon
+                    color="primary"
+                    @click="editProfile(profile)"
+                  >
+                    <v-icon
+                      small
+                      v-text="'mdi-pencil'"
+                    />
+                  </v-btn>
+
+                  <v-btn
+                    icon
+                    color="error"
+                    @click="deleteProfile(index)"
+                  >
+                    <v-icon
+                      small
+                      v-text="'mdi-delete'"
+                    />
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-list-item-content>
           </v-list-item>
 
           <v-divider
@@ -200,9 +252,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.profile:hover {
-  cursor: pointer;
-}
-</style>

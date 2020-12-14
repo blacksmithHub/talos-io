@@ -17,7 +17,7 @@
           <v-container>
             <v-text-field
               v-model="name"
-              label="Profile name"
+              label="Profile name (optional)"
               required
               outlined
               dense

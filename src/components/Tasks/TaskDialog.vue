@@ -17,7 +17,7 @@
           <v-container>
             <v-text-field
               v-model="name"
-              label="Task name"
+              label="Task name (optional)"
               required
               outlined
               dense
