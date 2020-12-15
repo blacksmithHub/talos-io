@@ -22,7 +22,8 @@ export default {
         sound: true,
         autoPay: false,
         autoFill: false,
-        manual: true
+        manual: true,
+        monitorProxy: {}
       }
     },
 

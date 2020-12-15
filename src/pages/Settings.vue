@@ -118,6 +118,28 @@
 
             <v-list-item class="pa-0">
               <v-list-item-content class="pa-2">
+                <v-list-item-title v-text="'Monitor Proxy Pool'" />
+              </v-list-item-content>
+
+              <v-list-item-action>
+                <v-autocomplete
+                  v-model="monitorProxy"
+                  required
+                  clearable
+                  :items="proxies"
+                  outlined
+                  dense
+                  item-text="name"
+                  return-object
+                  hide-details
+                />
+              </v-list-item-action>
+            </v-list-item>
+
+            <v-divider />
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
                 <v-list-item-title v-text="'Backup all Tasks'" />
 
                 <v-list-item-subtitle v-text="'All tasks will export in a .csv file'" />
@@ -320,7 +342,8 @@ export default {
       manual: false,
       backupTasks: [],
       backupProfiles: [],
-      backupBanks: []
+      backupBanks: [],
+      monitorProxy: {}
     }
   },
   computed: {
@@ -328,6 +351,7 @@ export default {
     ...mapState('task', { tasks: 'items' }),
     ...mapState('profile', { profiles: 'items' }),
     ...mapState('bank', { banks: 'items' }),
+    ...mapState('proxy', { proxies: 'items' }),
 
     /**
      * Error messages for webhook.
@@ -400,10 +424,15 @@ export default {
       this.exportBanks(arg)
     })
 
+    ipcRenderer.on('updateProxies', (event, arg) => {
+      this.updateProxies(arg)
+    })
+
     this.prepareDetails()
   },
   methods: {
     ...mapActions('setting', { updateSettings: 'setItems' }),
+    ...mapActions('proxy', { updateProxies: 'setItems' }),
 
     /**
      * Clear all local storage.
@@ -546,6 +575,7 @@ export default {
       this.autoPay = this.settings.autoPay
       this.autoFill = this.settings.autoFill
       this.manual = this.settings.manual
+      this.monitorProxy = this.settings.monitorProxy
     },
 
     /**
@@ -575,7 +605,8 @@ export default {
           sound: this.sound,
           autoPay: this.autoPay,
           autoFill: this.autoFill,
-          manual: this.manual
+          manual: this.manual,
+          monitorProxy: this.monitorProxy
         })
 
         try {

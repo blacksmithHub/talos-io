@@ -204,6 +204,10 @@ export default {
       clearInterval(this.loop)
       this.searchProduct()
     },
+    'settings.monitorProxy': function () {
+      clearInterval(this.loop)
+      this.searchProduct()
+    },
     filter () {
       clearInterval(this.loop)
       this.searchProduct()
@@ -268,25 +272,38 @@ export default {
      */
     async fetchProducts () {
       const params = {
-        searchCriteria: {
-          sortOrders: [
-            {
-              field: this.filter,
-              direction: 'DESC'
-            }
-          ],
-          pageSize: this.count
+        payload: {
+          searchCriteria: {
+            sortOrders: [
+              {
+                field: this.filter,
+                direction: 'DESC'
+              }
+            ],
+            pageSize: this.count
+          }
+        },
+        token: App.services.titan22.token
+      }
+
+      if (this.settings.monitorProxy && Object.keys(this.settings.monitorProxy).length) {
+        const proxy = this.settings.monitorProxy.proxies[Math.floor(Math.random() * this.settings.monitorProxy.proxies.length)]
+        params.proxy = {
+          host: proxy.host,
+          port: proxy.port,
+          username: proxy.username,
+          password: proxy.password
         }
       }
 
       this.loading = true
 
-      const response = await productApi.search(params, App.services.titan22.token)
+      const response = await productApi.search(params)
 
-      if (response) {
+      if (response.status === 200) {
         this.products = []
 
-        response.items.forEach(element => {
+        response.data.items.forEach(element => {
           const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
           const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
 

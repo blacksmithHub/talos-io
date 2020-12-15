@@ -204,6 +204,13 @@ export default {
   watch: {
     'settings.nightMode': function (nightMode) {
       this.$vuetify.theme.dark = nightMode
+    },
+    proxies () {
+      try {
+        ipcRenderer.send('update-proxies', this.proxies)
+      } catch (error) {
+        //
+      }
     }
   },
   created () {

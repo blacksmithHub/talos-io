@@ -211,6 +211,12 @@ ipcMain.on('update-banks', (event, arg) => {
   if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateBanks', arg)
 })
 
+ipcMain.on('update-proxies', (event, arg) => {
+  if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateProxies', arg)
+
+  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateProxies', arg)
+})
+
 ipcMain.on('clear-localStorage', (event, arg) => {
   if (MainWindow.getWindow()) MainWindow.getWindow().reload()
 

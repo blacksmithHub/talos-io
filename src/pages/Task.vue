@@ -220,6 +220,10 @@ export default {
         paid: true
       })
     })
+
+    ipcRenderer.on('updateProxies', (event, arg) => {
+      this.setProxies(arg)
+    })
   },
   methods: {
     ...mapActions('attribute', {
@@ -235,6 +239,7 @@ export default {
     ...mapActions('setting', { setSettings: 'setItems' }),
     ...mapActions('profile', { setProfiles: 'setItems' }),
     ...mapActions('bank', { setBanks: 'setItems' }),
+    ...mapActions('proxy', { setProxies: 'setItems' }),
     ...mapActions('attribute', { prepareAttributes: 'initializeItems' }),
 
     /**

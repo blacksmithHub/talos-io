@@ -1195,21 +1195,26 @@ export default {
       let img = ''
 
       const params = {
-        searchCriteria: {
-          filterGroups: [
-            {
-              filters: [
-                {
-                  field: 'sku',
-                  value: sku
-                }
-              ]
-            }
-          ]
-        }
+        payload: {
+          searchCriteria: {
+            filterGroups: [
+              {
+                filters: [
+                  {
+                    field: 'sku',
+                    value: sku
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        token: Config.services.titan22.token
       }
 
-      const apiResponse = await productApi.search(params, Config.services.titan22.token)
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+
+      const apiResponse = await productApi.search(params)
 
       try {
         const image = apiResponse.items[0].custom_attributes.find((val) => val.attribute_code === 'image')

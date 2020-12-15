@@ -16,7 +16,7 @@
         <v-card-text>
           <v-container>
             <v-row>
-              <v-col cols="12">
+              <v-col cols="6">
                 <v-text-field
                   v-model="sku"
                   label="SKU"
@@ -24,6 +24,21 @@
                   dense
                   hide-details
                   autocomplete="off"
+                />
+              </v-col>
+
+              <v-col cols="6">
+                <v-autocomplete
+                  v-model="proxy"
+                  required
+                  clearable
+                  :items="proxies"
+                  outlined
+                  dense
+                  label="Proxies"
+                  item-text="name"
+                  return-object
+                  hide-details
                 />
               </v-col>
 
@@ -143,12 +158,14 @@ export default {
       sku: '',
       delay: 3200,
       placeOrder: '',
-      placeOrderMenu: false
+      placeOrderMenu: false,
+      proxy: {}
     }
   },
   computed: {
     ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
+    ...mapState('proxy', { proxies: 'items' }),
     /**
      * Error messages for delay.
      *
@@ -225,6 +242,8 @@ export default {
         if (this.sku) params.sku = this.sku
 
         if (this.placeOrder) params.placeOrder = this.placeOrder
+
+        if (this.proxy && Object.keys(this.proxy).length) params.proxy = this.proxy
 
         if (this.sizes.length) {
           const sizes = []

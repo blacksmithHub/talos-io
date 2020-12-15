@@ -57,7 +57,7 @@
           @click="launchProxies"
         >
           <v-list-item-icon>
-            <v-icon v-text="'mdi-account-group'" />
+            <v-icon v-text="'mdi-incognito'" />
           </v-list-item-icon>
           <v-list-item-title v-text="'Proxies'" />
         </v-list-item>
