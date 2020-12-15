@@ -25,6 +25,19 @@ export default {
     ...mapActions('task', { updateTask: 'updateItem' }),
 
     /**
+     * Get random proxy from pool
+     */
+    genProxy (task) {
+      const proxy = this.getActiveTask(task).proxy.proxies[Math.floor(Math.random() * this.getActiveTask(task).proxy.proxies.length)]
+      return {
+        host: proxy.host,
+        port: proxy.port,
+        username: proxy.username,
+        password: proxy.password
+      }
+    },
+
+    /**
      * Check if the task is running.
      *
      */
@@ -170,10 +183,14 @@ export default {
     async login (task, callback) {
       let token = null
 
-      const credentials = {
-        username: this.getActiveTask(task).profile.email,
-        password: this.getActiveTask(task).profile.password
+      const params = {
+        payload: {
+          username: this.getActiveTask(task).profile.email,
+          password: this.getActiveTask(task).profile.password
+        }
       }
+
+      if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length) params.proxy = this.genProxy(this.getActiveTask(task))
 
       await new Promise(resolve => setTimeout(resolve, this.getActiveTask(task).delay))
 
@@ -187,7 +204,7 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await authApi.fetchToken(credentials, cancelTokenSource.token)
+        const apiResponse = await authApi.fetchToken(params, cancelTokenSource.token)
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -229,7 +246,13 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await customerApi.profile(token, cancelTokenSource.token)
+        const params = {
+          token: token
+        }
+
+        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length) params.proxy = this.genProxy(this.getActiveTask(task))
+
+        const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -275,7 +298,13 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await cartApi.create(user.token, cancelTokenSource.token)
+        const params = {
+          token: user.token
+        }
+
+        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length) params.proxy = this.genProxy(this.getActiveTask(task))
+
+        const apiResponse = await cartApi.create(params, cancelTokenSource.token)
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -317,7 +346,13 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await cartApi.get(user.token, cancelTokenSource.token)
+        const params = {
+          token: user.token
+        }
+
+        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length) params.proxy = this.genProxy(this.getActiveTask(task))
+
+        const apiResponse = await cartApi.get(params, cancelTokenSource.token)
 
         if (!this.isTaskRunning(task.id)) {
           this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -361,7 +396,14 @@ export default {
             cancelTokenSource: cancelTokenSource
           })
 
-          await cartApi.delete(cart.items[index].item_id, user.token, cancelTokenSource.token)
+          const params = {
+            id: cart.items[index].item_id,
+            token: user.token
+          }
+
+          if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length) params.proxy = this.genProxy(this.getActiveTask(task))
+
+          await cartApi.delete(params, cancelTokenSource.token)
         }
 
         callback()

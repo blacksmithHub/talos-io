@@ -388,7 +388,8 @@ export default {
             msg: 'validating',
             class: 'cyan'
           },
-          transactionData: {}
+          transactionData: {},
+          paid: false
         })
 
         await this.verify(task)
