@@ -316,8 +316,16 @@ export default {
         await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
         const credentials = {
-          username: this.activeTask(task).profile.email,
-          password: this.activeTask(task).profile.password
+          payload: {
+            username: this.activeTask(task).profile.email,
+            password: this.activeTask(task).profile.password
+          },
+          proxy: {
+            host: '62.133.48.22',
+            port: 59518,
+            username: 'run',
+            password: 'Lw6WS7kj'
+          }
         }
 
         if (!this.isRunning(task.id)) {
@@ -393,7 +401,17 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await customerApi.profile(token, cancelTokenSource.token)
+        const params = {
+          token: token,
+          proxy: {
+            host: '62.133.48.22',
+            port: 59518,
+            username: 'run',
+            password: 'Lw6WS7kj'
+          }
+        }
+
+        const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -463,7 +481,17 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await cartApi.create(user.token, cancelTokenSource.token)
+        const params = {
+          token: user.token,
+          proxy: {
+            host: '62.133.48.22',
+            port: 59518,
+            username: 'run',
+            password: 'Lw6WS7kj'
+          }
+        }
+
+        const apiResponse = await cartApi.create(params, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -524,7 +552,17 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await cartApi.get(user.token, cancelTokenSource.token)
+        const params = {
+          token: user.token,
+          proxy: {
+            host: '62.133.48.22',
+            port: 59518,
+            username: 'run',
+            password: 'Lw6WS7kj'
+          }
+        }
+
+        const apiResponse = await cartApi.get(params, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -597,7 +635,18 @@ export default {
               cancelTokenSource: cancelTokenSource
             })
 
-            const apiResponse = await cartApi.delete(cart.items[index].item_id, user.token, cancelTokenSource.token)
+            const params = {
+              token: user.token,
+              id: cart.items[index].item_id,
+              proxy: {
+                host: '62.133.48.22',
+                port: 59518,
+                username: 'run',
+                password: 'Lw6WS7kj'
+              }
+            }
+
+            const apiResponse = await cartApi.delete(params, cancelTokenSource.token)
 
             if (!this.isRunning(task.id)) {
               this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -684,7 +733,18 @@ export default {
             cancelTokenSource: cancelTokenSource
           })
 
-          const apiResponse = await cartApi.store(order, user.token, cancelTokenSource.token)
+          const params = {
+            token: user.token,
+            payload: order,
+            proxy: {
+              host: '62.133.48.22',
+              port: 59518,
+              username: 'run',
+              password: 'Lw6WS7kj'
+            }
+          }
+
+          const apiResponse = await cartApi.store(params, cancelTokenSource.token)
 
           if (!this.isRunning(task.id)) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -785,7 +845,18 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const cartApiResponse = await cartApi.setShippingInformation(shippingParams, user.token, cancelTokenSource.token)
+        const params = {
+          token: user.token,
+          payload: shippingParams,
+          proxy: {
+            host: '62.133.48.22',
+            port: 59518,
+            username: 'run',
+            password: 'Lw6WS7kj'
+          }
+        }
+
+        const cartApiResponse = await cartApi.setShippingInformation(params, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -859,7 +930,18 @@ export default {
             cancelTokenSource: cancelTokenSource
           })
 
-          const apiResponse = await cartApi.estimateShipping(estimateParams, user.token, cancelTokenSource.token)
+          const params = {
+            token: user.token,
+            payload: estimateParams,
+            proxy: {
+              host: '62.133.48.22',
+              port: 59518,
+              username: 'run',
+              password: 'Lw6WS7kj'
+            }
+          }
+
+          const apiResponse = await cartApi.estimateShipping(params, cancelTokenSource.token)
 
           if (!this.isRunning(task.id)) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -1017,7 +1099,13 @@ export default {
             po_number: null
           }
         },
-        token: user.token
+        token: user.token,
+        proxy: {
+          host: '62.133.48.22',
+          port: 59518,
+          username: 'run',
+          password: 'Lw6WS7kj'
+        }
       }
 
       let transactionData = {}

@@ -17,9 +17,11 @@ export default {
    * Create cart
    *
    */
-  create (token, cancelToken) {
-    return this.http(this.baseUrl, token)
-      .post(`${this.url}/mine`, {}, { cancelToken: cancelToken })
+  create (params, cancelToken) {
+    params.url = `${this.baseUrl}/${this.url}/mine`
+
+    return this.http('http://localhost:5000/api/request')
+      .post('post', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -28,9 +30,11 @@ export default {
    * Get cart
    *
    */
-  get (token, cancelToken) {
-    return this.http(this.baseUrl, token)
-      .get(`${this.url}/mine`, { cancelToken: cancelToken })
+  get (params, cancelToken) {
+    params.url = `${this.baseUrl}/${this.url}/mine`
+
+    return this.http('http://localhost:5000/api/request')
+      .post('get', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -39,9 +43,11 @@ export default {
    * Delete product to cart
    *
    */
-  delete (id, token, cancelToken) {
-    return this.http(this.baseUrl, token)
-      .delete(`${this.url}/mine/items/${id}`, { cancelToken: cancelToken })
+  delete (params, cancelToken) {
+    params.url = `${this.baseUrl}/${this.url}/mine/items/${params.id}`
+
+    return this.http('http://localhost:5000/api/request')
+      .post('delete', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -50,9 +56,11 @@ export default {
    * Store product to cart
    *
    */
-  store (params, token, cancelToken) {
-    return this.http(this.baseUrl, token)
-      .post(`${this.url}/mine/items`, params, { cancelToken: cancelToken })
+  store (params, cancelToken) {
+    params.url = `${this.baseUrl}/${this.url}/mine/items`
+
+    return this.http('http://localhost:5000/api/request')
+      .post('post', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -61,9 +69,11 @@ export default {
    * Estimate shipping costs.
    *
    */
-  estimateShipping (params, token, cancelToken) {
-    return this.http(this.baseUrl, token)
-      .post(`${this.url}/mine/estimate-shipping-methods-by-address-id`, params, { cancelToken: cancelToken })
+  estimateShipping (params, cancelToken) {
+    params.url = `${this.baseUrl}/${this.url}/mine/estimate-shipping-methods-by-address-id`
+
+    return this.http('http://localhost:5000/api/request')
+      .post('post', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -72,9 +82,11 @@ export default {
    * Set shipping and billing information.
    *
    */
-  setShippingInformation (params, token, cancelToken) {
-    return this.http(this.baseUrl, token)
-      .post(`${this.url}/mine/shipping-information`, params, { cancelToken: cancelToken })
+  setShippingInformation (params, cancelToken) {
+    params.url = `${this.baseUrl}/${this.url}/mine/shipping-information`
+
+    return this.http('http://localhost:5000/api/request')
+      .post('post', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   }
