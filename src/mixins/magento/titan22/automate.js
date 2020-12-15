@@ -33,6 +33,18 @@ export default {
     ...mapActions('task', { updateTask: 'updateItem' }),
 
     /**
+     * Get random proxy from pool
+     */
+    getProxy (task) {
+      const proxy = this.activeTask(task).proxy.proxies[Math.floor(Math.random() * this.activeTask(task).proxy.proxies.length)]
+      return {
+        host: proxy.host,
+        port: proxy.port,
+        username: proxy.username,
+        password: proxy.password
+      }
+    },
+    /**
      * Check if the task is running.
      *
      */
@@ -315,18 +327,14 @@ export default {
       while (!token && this.isRunning(task.id)) {
         await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
-        const credentials = {
+        const params = {
           payload: {
             username: this.activeTask(task).profile.email,
             password: this.activeTask(task).profile.password
-          },
-          proxy: {
-            host: '62.133.48.22',
-            port: 59518,
-            username: 'run',
-            password: 'Lw6WS7kj'
           }
         }
+
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -340,7 +348,7 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await authApi.fetchToken(credentials, cancelTokenSource.token)
+        const apiResponse = await authApi.fetchToken(params, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -402,14 +410,10 @@ export default {
         })
 
         const params = {
-          token: token,
-          proxy: {
-            host: '62.133.48.22',
-            port: 59518,
-            username: 'run',
-            password: 'Lw6WS7kj'
-          }
+          token: token
         }
+
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
 
         const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
 
@@ -482,14 +486,10 @@ export default {
         })
 
         const params = {
-          token: user.token,
-          proxy: {
-            host: '62.133.48.22',
-            port: 59518,
-            username: 'run',
-            password: 'Lw6WS7kj'
-          }
+          token: user.token
         }
+
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
 
         const apiResponse = await cartApi.create(params, cancelTokenSource.token)
 
@@ -553,14 +553,10 @@ export default {
         })
 
         const params = {
-          token: user.token,
-          proxy: {
-            host: '62.133.48.22',
-            port: 59518,
-            username: 'run',
-            password: 'Lw6WS7kj'
-          }
+          token: user.token
         }
+
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
 
         const apiResponse = await cartApi.get(params, cancelTokenSource.token)
 
@@ -637,14 +633,10 @@ export default {
 
             const params = {
               token: user.token,
-              id: cart.items[index].item_id,
-              proxy: {
-                host: '62.133.48.22',
-                port: 59518,
-                username: 'run',
-                password: 'Lw6WS7kj'
-              }
+              id: cart.items[index].item_id
             }
+
+            if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
 
             const apiResponse = await cartApi.delete(params, cancelTokenSource.token)
 
@@ -735,14 +727,10 @@ export default {
 
           const params = {
             token: user.token,
-            payload: order,
-            proxy: {
-              host: '62.133.48.22',
-              port: 59518,
-              username: 'run',
-              password: 'Lw6WS7kj'
-            }
+            payload: order
           }
+
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
 
           const apiResponse = await cartApi.store(params, cancelTokenSource.token)
 
@@ -847,14 +835,10 @@ export default {
 
         const params = {
           token: user.token,
-          payload: shippingParams,
-          proxy: {
-            host: '62.133.48.22',
-            port: 59518,
-            username: 'run',
-            password: 'Lw6WS7kj'
-          }
+          payload: shippingParams
         }
+
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
 
         const cartApiResponse = await cartApi.setShippingInformation(params, cancelTokenSource.token)
 
@@ -932,14 +916,10 @@ export default {
 
           const params = {
             token: user.token,
-            payload: estimateParams,
-            proxy: {
-              host: '62.133.48.22',
-              port: 59518,
-              username: 'run',
-              password: 'Lw6WS7kj'
-            }
+            payload: estimateParams
           }
+
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
 
           const apiResponse = await cartApi.estimateShipping(params, cancelTokenSource.token)
 
@@ -1099,14 +1079,10 @@ export default {
             po_number: null
           }
         },
-        token: user.token,
-        proxy: {
-          host: '62.133.48.22',
-          port: 59518,
-          username: 'run',
-          password: 'Lw6WS7kj'
-        }
+        token: user.token
       }
+
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
 
       let transactionData = {}
       const tries = 3

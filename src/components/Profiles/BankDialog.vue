@@ -317,8 +317,8 @@ export default {
       this.cvv = ''
       this.selectedBank = {}
 
-      this.dialog = false
       this.isEditMode = false
+      this.dialog = false
     },
     /**
      * On submit event.

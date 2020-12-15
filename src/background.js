@@ -9,6 +9,7 @@ import LoginWindow from '@/windows/Login'
 import MainWindow from '@/windows/Main'
 import MonitorWindow from '@/windows/Monitor'
 import ProfileWindow from '@/windows/Profile'
+import ProxyWindow from '@/windows/Proxy'
 import SettingWindow from '@/windows/Setting'
 
 require('../server/index.js')
@@ -176,6 +177,10 @@ ipcMain.on('launch-profile', (event, arg) => {
   if (!ProfileWindow.getWindow()) ProfileWindow.createWindow()
 })
 
+ipcMain.on('launch-proxies', (event, arg) => {
+  if (!ProxyWindow.getWindow()) ProxyWindow.createWindow()
+})
+
 ipcMain.on('launch-setting', (event, arg) => {
   if (!SettingWindow.getWindow()) SettingWindow.createWindow()
 })
@@ -186,6 +191,8 @@ ipcMain.on('update-settings', (event, arg) => {
   if (MonitorWindow.getWindow()) MonitorWindow.getWindow().webContents.send('updateSettings', arg)
 
   if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('updateSettings', arg)
+
+  if (ProxyWindow.getWindow()) ProxyWindow.getWindow().webContents.send('updateSettings', arg)
 })
 
 ipcMain.on('update-tasks', (event, arg) => {
@@ -212,14 +219,17 @@ ipcMain.on('clear-localStorage', (event, arg) => {
   if (SettingWindow.getWindow()) SettingWindow.getWindow().reload()
 
   if (ProfileWindow.getWindow()) ProfileWindow.getWindow().reload()
+
+  if (ProxyWindow.getWindow()) ProxyWindow.getWindow().reload()
 })
 
 ipcMain.on('authenticate', (event, arg) => {
   if (!LoginWindow.getWindow()) LoginWindow.createWindow()
 
-  SettingWindow.closeWindow()
-  ProfileWindow.closeWindow()
   MonitorWindow.closeWindow()
+  ProfileWindow.closeWindow()
+  ProxyWindow.closeWindow()
+  SettingWindow.closeWindow()
 
   if (MainWindow.getWindow()) {
     MainWindow.getWindow().destroy()

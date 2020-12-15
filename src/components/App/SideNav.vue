@@ -54,6 +54,16 @@
 
         <v-list-item
           link
+          @click="launchProxies"
+        >
+          <v-list-item-icon>
+            <v-icon v-text="'mdi-account-group'" />
+          </v-list-item-icon>
+          <v-list-item-title v-text="'Proxies'" />
+        </v-list-item>
+
+        <v-list-item
+          link
           @click="launchSettings"
         >
           <v-list-item-icon>
@@ -99,6 +109,9 @@ export default {
     },
     launchProfiles () {
       ipcRenderer.send('launch-profile')
+    },
+    launchProxies () {
+      ipcRenderer.send('launch-proxies')
     },
     launchSettings () {
       ipcRenderer.send('launch-setting')

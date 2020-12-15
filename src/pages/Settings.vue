@@ -414,6 +414,7 @@ export default {
       localStorage.removeItem('settings')
       localStorage.removeItem('tasks')
       localStorage.removeItem('profiles')
+      localStorage.removeItem('proxies')
       localStorage.removeItem('banks')
 
       try {
