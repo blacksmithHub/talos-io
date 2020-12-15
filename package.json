@@ -30,6 +30,7 @@
     "express": "^4.17.1",
     "howler": "^2.2.0",
     "moment-timezone": "^0.5.31",
+    "proxy-chain": "^0.4.6",
     "puppeteer": "^5.5.0",
     "qs": "^6.9.4",
     "statman-stopwatch": "^2.11.1",

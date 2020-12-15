@@ -251,14 +251,20 @@ ipcMain.on('bind', (event, arg) => {
  */
 ipcMain.on('pay-with-paypal', (event, arg) => {
   const task = JSON.parse(arg).task
-  const puppeteer = require('puppeteer');
+  const proxy = task.proxy.proxies[Math.floor(Math.random() * task.proxy.proxies.length)]
+  const puppeteer = require('puppeteer')
+  const proxyChain = require('proxy-chain');
 
   (async () => {
+    const oldProxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
+    const newProxyUrl = await proxyChain.anonymizeProxy(oldProxyUrl)
+
     const browser = await puppeteer.launch({
       headless: false,
       executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
       args: [
-        '--window-size=800,600'
+        '--window-size=800,600',
+        `--proxy-server=${newProxyUrl}`
       ],
       defaultViewport: null
     })
@@ -307,15 +313,21 @@ ipcMain.on('pay-with-paypal', (event, arg) => {
  */
 ipcMain.on('pay-with-2c2p', (event, arg) => {
   const task = JSON.parse(arg).task
+  const proxy = task.proxy.proxies[Math.floor(Math.random() * task.proxy.proxies.length)]
   const settings = JSON.parse(arg).settings
-  const puppeteer = require('puppeteer');
+  const puppeteer = require('puppeteer')
+  const proxyChain = require('proxy-chain');
 
   (async () => {
+    const oldProxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
+    const newProxyUrl = await proxyChain.anonymizeProxy(oldProxyUrl)
+
     const browser = await puppeteer.launch({
       headless: false,
       executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
       args: [
-        '--window-size=800,600'
+        '--window-size=800,600',
+        `--proxy-server=${newProxyUrl}`
       ],
       defaultViewport: null
     })
@@ -339,6 +351,8 @@ ipcMain.on('pay-with-2c2p', (event, arg) => {
       `<p><strong>Price:</strong> ${task.transactionData.order.price.toLocaleString()}</p>`
     ]
 
+    await page.waitForSelector('.navbar-inner')
+
     await page.evaluate((array) => {
       array.forEach(element => {
         var div = document.getElementsByClassName('navbar-inner')[0]
@@ -352,6 +366,7 @@ ipcMain.on('pay-with-2c2p', (event, arg) => {
           if (settings.autoPay || settings.autoFill) {
             await page.click('#btnGCashSubmit')
             await page.waitForNavigation()
+            await page.waitForSelector('.layout-header')
 
             await page.evaluate((array) => {
               array.forEach(element => {

@@ -10,7 +10,7 @@ router.post('/', async (req, res) => {
 
   const option = {}
 
-  if (req.body.proxy) option.proxy = 'http://run:Lw6WS7kj@62.133.48.22:59518'
+  if (req.body.proxy) option.proxy = `http://${req.body.proxy.username}:${req.body.proxy.password}@${req.body.proxy.host}:${req.body.proxy.port}`
 
   request = request.defaults(option)
 
