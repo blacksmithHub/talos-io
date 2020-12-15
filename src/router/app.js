@@ -8,6 +8,7 @@ const Home = () => import('../pages/Home')
 const Task = () => import('../pages/Task')
 const Monitor = () => import('../pages/Monitor')
 const Profiles = () => import('../pages/Profiles')
+const Proxies = () => import('../pages/Proxies')
 const Settings = () => import('../pages/Settings')
 
 /**
@@ -54,6 +55,11 @@ export default {
           path: '/profiles',
           name: 'Profiles',
           component: Profiles
+        },
+        {
+          path: '/proxies',
+          name: 'Proxies',
+          component: Proxies
         },
         {
           path: '/settings',

@@ -16,7 +16,7 @@ export default {
      * @param {*} profile
      * @param {*} secs
      */
-    sendWebhook (url, product, size, profile, secs, sku, cookie, method) {
+    sendWebhook (url, product, size, profile, secs, sku, cookie, method, img = 'https://i.imgur.com/eVt99L8.png') {
       const Hook = new webhook.Webhook(url)
 
       const msg = new webhook.MessageBuilder()
@@ -28,6 +28,7 @@ export default {
         .setTitle('Copped!')
         .addField(product, sku)
         .addField('**Size**', size)
+        .setThumbnail(img)
 
       if (cookie) msg.addField('**Cookie**', `||${cookie}||`)
 

@@ -1,5 +1,3 @@
-/* global __static */
-
 import { mapState, mapActions } from 'vuex'
 import { Howl } from 'howler'
 import StopWatch from 'statman-stopwatch'
@@ -11,9 +9,9 @@ import Constant from '@/config/constant'
 import Config from '@/config/app'
 import webhook from '@/mixins/webhook'
 import SuccessEffect from '@/assets/success.mp3'
-import path from 'path'
-import electron from 'electron'
 import axios from 'axios'
+import { ipcRenderer } from 'electron'
+import productApi from '@/api/magento/titan22/product'
 
 /**
  * ===============================================
@@ -34,6 +32,18 @@ export default {
   methods: {
     ...mapActions('task', { updateTask: 'updateItem' }),
 
+    /**
+     * Get random proxy from pool
+     */
+    getProxy (task) {
+      const proxy = this.activeTask(task).proxy.proxies[Math.floor(Math.random() * this.activeTask(task).proxy.proxies.length)]
+      return {
+        host: proxy.host,
+        port: proxy.port,
+        username: proxy.username,
+        password: proxy.password
+      }
+    },
     /**
      * Check if the task is running.
      *
@@ -317,10 +327,14 @@ export default {
       while (!token && this.isRunning(task.id)) {
         await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
-        const credentials = {
-          username: this.activeTask(task).profile.email,
-          password: this.activeTask(task).profile.password
+        const params = {
+          payload: {
+            username: this.activeTask(task).profile.email,
+            password: this.activeTask(task).profile.password
+          }
         }
+
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -334,7 +348,7 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await authApi.fetchToken(credentials, cancelTokenSource.token)
+        const apiResponse = await authApi.fetchToken(params, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -395,7 +409,13 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await customerApi.profile(token, cancelTokenSource.token)
+        const params = {
+          token: token
+        }
+
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+
+        const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -465,7 +485,13 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await cartApi.create(user.token, cancelTokenSource.token)
+        const params = {
+          token: user.token
+        }
+
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+
+        const apiResponse = await cartApi.create(params, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -526,7 +552,13 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const apiResponse = await cartApi.get(user.token, cancelTokenSource.token)
+        const params = {
+          token: user.token
+        }
+
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+
+        const apiResponse = await cartApi.get(params, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -599,7 +631,14 @@ export default {
               cancelTokenSource: cancelTokenSource
             })
 
-            const apiResponse = await cartApi.delete(cart.items[index].item_id, user.token, cancelTokenSource.token)
+            const params = {
+              token: user.token,
+              id: cart.items[index].item_id
+            }
+
+            if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+
+            const apiResponse = await cartApi.delete(params, cancelTokenSource.token)
 
             if (!this.isRunning(task.id)) {
               this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -686,7 +725,14 @@ export default {
             cancelTokenSource: cancelTokenSource
           })
 
-          const apiResponse = await cartApi.store(order, user.token, cancelTokenSource.token)
+          const params = {
+            token: user.token,
+            payload: order
+          }
+
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+
+          const apiResponse = await cartApi.store(params, cancelTokenSource.token)
 
           if (!this.isRunning(task.id)) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -787,7 +833,14 @@ export default {
           cancelTokenSource: cancelTokenSource
         })
 
-        const cartApiResponse = await cartApi.setShippingInformation(shippingParams, user.token, cancelTokenSource.token)
+        const params = {
+          token: user.token,
+          payload: shippingParams
+        }
+
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+
+        const cartApiResponse = await cartApi.setShippingInformation(params, cancelTokenSource.token)
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -861,7 +914,14 @@ export default {
             cancelTokenSource: cancelTokenSource
           })
 
-          const apiResponse = await cartApi.estimateShipping(estimateParams, user.token, cancelTokenSource.token)
+          const params = {
+            token: user.token,
+            payload: estimateParams
+          }
+
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+
+          const apiResponse = await cartApi.estimateShipping(params, cancelTokenSource.token)
 
           if (!this.isRunning(task.id)) {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -934,6 +994,14 @@ export default {
       await this.timer(task, productData.sizeLabel, async (response) => {
         if (response && vm.isRunning(task.id)) {
           if (shippingData.payment_methods.find((val) => val.code === 'ccpp')) {
+            vm.updateTask({
+              ...vm.activeTask(task),
+              transactionData: {
+                ...vm.activeTask(task).transactionData,
+                paypal: false
+              }
+            })
+
             vm.creditCardCheckout(task, shippingData, user, cartData, productData)
           } else if (shippingData.payment_methods.find((val) => val.code === 'braintree_paypal')) {
             const transactionData = {
@@ -1014,6 +1082,8 @@ export default {
         token: user.token
       }
 
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+
       let transactionData = {}
       const tries = 3
 
@@ -1078,7 +1148,7 @@ export default {
      * @param {*} shippingData
      * @param {*} time
      */
-    onSuccess (task, transactionData, shippingData, productData) {
+    async onSuccess (task, transactionData, shippingData, productData) {
       this.updateTask({
         ...this.activeTask(task),
         transactionData: {
@@ -1093,7 +1163,13 @@ export default {
         logs: `${this.activeTask(task).logs || ''};Copped!`
       })
 
-      if (this.settings.autoPay && !this.activeTask(task).aco && !transactionData.paypal) this.launch2c2pWindow(task)
+      if (this.settings.autoPay && !this.activeTask(task).aco) {
+        if (transactionData.paypal) {
+          ipcRenderer.send('pay-with-paypal', JSON.stringify({ task: task, settings: this.settings }))
+        } else {
+          ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
+        }
+      }
 
       if (this.settings.sound) {
         const sound = new Howl({
@@ -1116,121 +1192,54 @@ export default {
       const secs = transactionData.time
       const sku = this.activeTask(task).sku
       const method = transactionData.paypal ? 'PayPal' : '2c2p'
+      let img = ''
+
+      const params = {
+        payload: {
+          searchCriteria: {
+            filterGroups: [
+              {
+                filters: [
+                  {
+                    field: 'sku',
+                    value: sku
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        token: Config.services.titan22.token
+      }
+
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+
+      const apiResponse = await productApi.search(params)
+
+      try {
+        const image = apiResponse.items[0].custom_attributes.find((val) => val.attribute_code === 'image')
+        img = `https://www.titan22.com/media/catalog/product${image.value}`
+      } catch (error) {
+        img = ''
+      }
 
       if (this.settings.webhook) {
         // send to personal webhook
-        this.sendWebhook(url, productName, productSize, profile, secs, sku, method)
+        this.sendWebhook(url, productName, productSize, profile, secs, sku, null, method, img)
 
         // send to public webhook
-        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method)
+        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img)
       } else {
         // send to public webhook
-        this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method)
+        this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img)
       }
 
       if (!transactionData.paypal) {
         const cookie = transactionData.cookies.value
 
         // send to aco webhook
-        if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie, method)
+        if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie, method, img)
       }
-    },
-
-    /**
-     * Launch 2c2p payment window.
-     *
-     * @param {*} task
-     */
-    launch2c2pWindow (task) {
-      const { BrowserWindow } = electron.remote
-
-      const baseUrl = `${Config.services.titan22.checkout}/RedirectV3/Payment/Accept`
-
-      let win = new BrowserWindow({
-        width: 800,
-        height: 600,
-        icon: path.join(__static, 'icon.png')
-      })
-
-      win.removeMenu()
-
-      const ses = win.webContents.session
-
-      ses.cookies.set({
-        url: baseUrl,
-        ...this.activeTask(task).transactionData.cookies
-      })
-        .then(() => {
-          win.loadURL(baseUrl)
-
-          let script = ''
-
-          switch (this.activeTask(task).bank.bank.id) {
-            case Constant.BANK.GCASH.id:
-              if (this.settings.autoPay || this.settings.autoFill) script = 'document.getElementById(\'btnGCashSubmit\').click()'
-              break
-
-            default:
-
-              if (this.settings.autoPay) {
-                script = `
-                (function($) {
-                  $(function() {
-                    document.getElementById('credit_card_number').value = "${this.activeTask(task).bank.cardNumber || ''}";
-                    document.getElementById('credit_card_holder_name').value = "${this.activeTask(task).bank.cardHolder || ''}";
-                    document.getElementById('credit_card_expiry_month').value = "${this.activeTask(task).bank.expiryMonth || ''}";
-                    document.getElementById('credit_card_expiry_year').value = "${this.activeTask(task).bank.expiryYear || ''}";
-                    document.getElementById('credit_card_cvv').value = "${this.activeTask(task).bank.cvv || ''}";
-                    document.getElementById('credit_card_issuing_bank_name').value = "${this.activeTask(task).bank.bank.name || ''}";
-                    document.getElementById('btnCCSubmit').click();
-                  });
-                })(window.$);`
-              } else if (this.settings.autoFill) {
-                script = `
-                (function($) {
-                  $(function() {
-                    document.getElementById('credit_card_number').value = "${this.activeTask(task).bank.cardNumber || ''}";
-                    document.getElementById('credit_card_holder_name').value = "${this.activeTask(task).bank.cardHolder || ''}";
-                    document.getElementById('credit_card_expiry_month').value = "${this.activeTask(task).bank.expiryMonth || ''}";
-                    document.getElementById('credit_card_expiry_year').value = "${this.activeTask(task).bank.expiryYear || ''}";
-                    document.getElementById('credit_card_cvv').value = "${this.activeTask(task).bank.cvv || ''}";
-                    document.getElementById('credit_card_issuing_bank_name').value = "${this.activeTask(task).bank.bank.name || ''}";
-                  });
-                })(window.$);`
-              }
-
-              break
-          }
-
-          const orderDetails = `
-          (function($) {
-            $(function() {
-              $(".navbar-inner").append("<p><strong>Task:</strong> ${this.activeTask(task).name}</p>");
-              $(".navbar-inner").append("<p><strong>Profile:</strong> ${this.activeTask(task).profile.name}</p>");
-              $(".navbar-inner").append("<p><strong>Product name:</strong> ${this.activeTask(task).transactionData.order.name}</p>");
-              $(".navbar-inner").append("<p><strong>Product SKU:</strong> ${this.activeTask(task).transactionData.order.sku}</p>");
-              $(".navbar-inner").append("<p><strong>Size:</strong> ${this.activeTask(task).transactionData.order.sizeLabel}</p>");
-              $(".navbar-inner").append("<p><strong>Price:</strong> ${this.activeTask(task).transactionData.order.price}</p>");
-            });
-          })(window.$);`
-
-          if (script) {
-            script = `${script} ${orderDetails}`
-          } else {
-            script = orderDetails
-          }
-
-          win.webContents.executeJavaScript(script)
-
-          win.on('closed', () => {
-            this.updateTask({
-              ...this.activeTask(task),
-              paid: true
-            })
-
-            win = null
-          })
-        })
     }
   }
 }

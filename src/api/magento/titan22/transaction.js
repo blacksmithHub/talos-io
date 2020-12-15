@@ -9,7 +9,7 @@ const { http } = api
  */
 export default {
   baseUrl: 'http://localhost:5000/api',
-  url: 'orders',
+  url: 'order',
   http,
 
   /**

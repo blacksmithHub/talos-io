@@ -2,8 +2,17 @@ const express = require('express')
 
 const router = express.Router()
 
+/**
+ * Place order
+ */
 router.post('/', async (req, res) => {
-  const request = require('request')
+  let request = require('request')
+
+  const option = {}
+
+  if (req.body.proxy) option.proxy = `http://${req.body.proxy.username}:${req.body.proxy.password}@${req.body.proxy.host}:${req.body.proxy.port}`
+
+  request = request.defaults(option)
 
   const jar = request.jar()
 
@@ -52,10 +61,10 @@ router.post('/', async (req, res) => {
       }
 
       await request(payment, function (error, response) {
-        if (error) res.send({})
+        if (error) res.status(500).send({})
 
         jar._jar.store.getAllCookies(function (err, cookieArray) {
-          if (err) res.send({})
+          if (err) res.status(500).send({})
 
           const collection = cookieArray.find((val) => val.key === 'ASP.NET_SessionId')
 

@@ -7,9 +7,11 @@ const app = express()
 app.use(bodyParser.json())
 app.use(cors())
 
-const orders = require('./api/orders')
+const request = require('./api/request')
+const order = require('./api/order')
 
-app.use('/api/orders', orders)
+app.use('/api/request', request)
+app.use('/api/order', order)
 
 const port = 5000
 

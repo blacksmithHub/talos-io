@@ -17,9 +17,11 @@ export default {
    * Get user profile
    *
    */
-  profile (token, cancelToken) {
-    return this.http(this.baseUrl, token)
-      .get(`${this.url}/me`, { cancelToken: cancelToken })
+  profile (params, cancelToken) {
+    params.url = `${this.baseUrl}/${this.url}/me`
+
+    return this.http('http://localhost:5000/api/request')
+      .post('get', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   }
