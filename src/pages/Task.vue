@@ -16,7 +16,7 @@
             :rounded="$vuetify.breakpoint.lgAndUp"
             :small="$vuetify.breakpoint.lgAndUp"
             :x-small="!$vuetify.breakpoint.lgAndUp"
-            class="primary mr-3"
+            class="cyan mr-3"
             @click="verifyAll"
           >
             <v-icon
@@ -220,6 +220,10 @@ export default {
         paid: true
       })
     })
+
+    ipcRenderer.on('updateProxies', (event, arg) => {
+      this.setProxies(arg)
+    })
   },
   methods: {
     ...mapActions('attribute', {
@@ -235,6 +239,7 @@ export default {
     ...mapActions('setting', { setSettings: 'setItems' }),
     ...mapActions('profile', { setProfiles: 'setItems' }),
     ...mapActions('bank', { setBanks: 'setItems' }),
+    ...mapActions('proxy', { setProxies: 'setItems' }),
     ...mapActions('attribute', { prepareAttributes: 'initializeItems' }),
 
     /**
@@ -278,9 +283,9 @@ export default {
      */
     redirectToCheckout (task) {
       if (task.transactionData.paypal) {
-        ipcRenderer.send('pay-with-paypal', JSON.stringify(task))
+        ipcRenderer.send('pay-with-paypal', JSON.stringify({ task: task, settings: this.settings }))
       } else {
-        this.launch2c2pWindow(task)
+        ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
       }
     },
     /**
@@ -296,7 +301,8 @@ export default {
             msg: 'running',
             class: 'orange'
           },
-          logs: `${task.logs || ''};Started!`
+          logs: `${task.logs || ''};Started!`,
+          paid: false
         })
 
         await this.init(task)

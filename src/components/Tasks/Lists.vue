@@ -13,7 +13,6 @@
           <v-row no-gutters>
             <v-col
               cols="4"
-              md="8"
               align-self="center"
               :class="{'teal--text': task.aco, 'success--text': task.paid}"
             >
@@ -34,7 +33,7 @@
 
                 <v-col
                   cols="12"
-                  md="3"
+                  md="6"
                   align-self="center"
                 >
                   <small
@@ -51,7 +50,31 @@
 
                 <v-col
                   cols="12"
-                  md="3"
+                  md="6"
+                  align-self="center"
+                >
+                  <small
+                    class="d-inline-block text-truncate"
+                    style="max-width: 14vh"
+                  >
+                    <strong
+                      class="mr-1"
+                      v-text="'Proxies:'"
+                    />
+                    <span
+                      v-if="task.proxy"
+                      v-text="`${task.proxy.name || 'Localhost'}`"
+                    />
+                    <span
+                      v-else
+                      v-text="'Localhost'"
+                    />
+                  </small>
+                </v-col>
+
+                <v-col
+                  cols="12"
+                  md="6"
                   align-self="center"
                 >
                   <small
@@ -68,7 +91,7 @@
 
                 <v-col
                   cols="12"
-                  md="2"
+                  md="6"
                   align-self="center"
                 >
                   <small
@@ -85,7 +108,7 @@
 
                 <v-col
                   cols="12"
-                  md="1"
+                  md="6"
                   align-self="center"
                 >
                   <small
@@ -102,7 +125,7 @@
 
                 <v-col
                   cols="12"
-                  md="3"
+                  md="6"
                   align-self="center"
                 >
                   <small
@@ -122,8 +145,7 @@
             <v-col
               align-self="center"
               class="text-center"
-              cols="3"
-              md="2"
+              cols="4"
             >
               <p
                 v-if="task.delay"
@@ -185,8 +207,7 @@
 
             <v-col
               align-self="center"
-              cols="5"
-              md="2"
+              cols="4"
               class="text-right"
             >
               <v-btn

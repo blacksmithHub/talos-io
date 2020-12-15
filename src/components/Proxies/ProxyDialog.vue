@@ -9,7 +9,7 @@
         <v-card-title>
           <span
             class="headline"
-            v-text="`${header} Profile`"
+            v-text="`${header} Proxy Pool`"
           />
         </v-card-title>
 
@@ -17,36 +17,26 @@
           <v-container>
             <v-text-field
               v-model="name"
-              label="Profile name (optional)"
+              label="Pool name (optional)"
               required
               outlined
               dense
               autocomplete="off"
             />
 
-            <v-text-field
-              v-model="email"
-              label="Email"
+            <v-textarea
+              v-model="proxies"
+              label="Proxies"
               required
               outlined
               dense
-              :error-messages="emailErrors"
+              hint="Insert proxy per line"
               autocomplete="off"
-              @blur="$v.email.$touch()"
-            />
-
-            <v-text-field
-              v-model="password"
-              label="Password"
-              required
-              :type="showPassword ? 'text' : 'password'"
-              outlined
-              dense
-              :error-messages="passwordErrors"
-              autocomplete="off"
-              :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-              @blur="$v.password.$touch()"
-              @click:append="showPassword = !showPassword"
+              auto-grow
+              :error-messages="proxiesErrors"
+              placeholder="ip:port:username:password"
+              @blur="$v.proxies.$touch()"
+              @change="onChange"
             />
           </v-container>
         </v-card-text>
@@ -75,18 +65,17 @@
 
 <script>
 import { mapActions } from 'vuex'
-import { required, email } from 'vuelidate/lib/validators'
+import { required } from 'vuelidate/lib/validators'
 
 export default {
   data () {
     return {
       dialog: false,
       isEditMode: false,
-      email: '',
-      password: '',
       name: '',
-      selectedProfile: {},
-      showPassword: false
+      proxies: '',
+      pool: [],
+      selectedProxy: {}
     }
   },
   computed: {
@@ -98,47 +87,43 @@ export default {
       return this.isEditMode ? 'Edit' : 'New'
     },
     /**
-     * Error messages for email.
+     * Error messages for proxies.
      *
      */
-    emailErrors () {
+    proxiesErrors () {
       const errors = []
 
-      if (!this.$v.email.$dirty) return errors
+      if (!this.$v.proxies.$dirty) return errors
 
-      this.$v.email.required || errors.push('Required')
-      this.$v.email.email || errors.push('Invalid email')
-
-      return errors
-    },
-    /**
-     * Error messages for password.
-     *
-     */
-    passwordErrors () {
-      const errors = []
-
-      if (!this.$v.password.$dirty) return errors
-
-      this.$v.password.required || errors.push('Required')
+      this.$v.proxies.required || errors.push('Required')
 
       return errors
     }
   },
+  watch: {
+    pool () {
+      if (this.pool.length) {
+        const pool = this.pool.slice().map((val) => {
+          return `${val.host}:${val.port}:${val.username}:${val.password}`
+        })
+
+        this.proxies = pool.join('\n')
+      }
+    }
+  },
   methods: {
-    ...mapActions('profile', { addProfile: 'addItem', updateProfile: 'updateItem' }),
+    ...mapActions('proxy', { addProxy: 'addItem', updateProxy: 'updateItem' }),
 
     /**
-     * Map selected profile.
+     * Map selected proxy.
      *
      */
-    mapData (profile) {
-      if (Object.keys(profile).length) {
-        this.selectedProfile = profile
+    mapData (proxy) {
+      if (Object.keys(proxy).length) {
+        this.selectedProxy = proxy
 
-        this.name = profile.name
-        this.email = profile.email
-        this.password = profile.password
+        this.name = proxy.name
+        this.pool = proxy.proxies
 
         this.isEditMode = true
         this.dialog = true
@@ -152,11 +137,10 @@ export default {
       this.$v.$reset()
 
       this.name = ''
-      this.email = ''
-      this.password = ''
-      this.selectedProfile = {}
+      this.proxies = ''
+      this.pool = []
+      this.selectedProxy = {}
 
-      this.showPassword = false
       this.isEditMode = false
       this.dialog = false
     },
@@ -170,29 +154,53 @@ export default {
       if (!this.$v.$invalid) {
         const params = {
           name: this.name.trim(),
-          email: this.email,
-          password: this.password.trim()
+          proxies: this.pool
         }
 
         if (this.isEditMode) {
-          this.updateProfile({
-            id: this.selectedProfile.id,
+          this.updateProxy({
+            id: this.selectedProxy.id,
             ...params
           })
         } else {
-          this.addProfile({ ...params })
+          this.addProxy({ ...params })
         }
 
         this.onCancel()
       }
+    },
+    /**
+     * on change event
+     */
+    onChange () {
+      let proxies = this.proxies.split('\n')
+      this.pool = []
+
+      proxies = proxies.map(element => {
+        const proxy = element.split(':')
+
+        if (proxy.length === 4) {
+          this.pool.push({
+            host: proxy[0],
+            port: proxy[1],
+            username: proxy[2],
+            password: proxy[3]
+          })
+        } else {
+          element = ''
+        }
+
+        return element
+      })
+
+      if (proxies.length) {
+        proxies = proxies.filter((val) => val)
+        this.proxies = proxies.join('\n')
+      }
     }
   },
   validations: {
-    email: {
-      required,
-      email
-    },
-    password: { required }
+    proxies: { required }
   }
 }
 </script>

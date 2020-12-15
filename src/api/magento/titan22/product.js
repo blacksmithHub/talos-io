@@ -19,17 +19,14 @@ export default {
    * Search product
    *
    */
-  search (params, token) {
-    try {
-      params = qs.stringify(params)
+  search (params) {
+    const query = qs.stringify(params.payload)
+    params.url = `${this.baseUrl}/${this.url}?${query}`
 
-      return this.http(this.baseUrl, token)
-        .get(`${this.url}?${params}`)
-        .then(({ data }) => data)
-        .catch(() => false)
-    } catch (error) {
-      return false
-    }
+    return this.http('http://localhost:5000/api/request')
+      .post('get', params)
+      .then(response => response)
+      .catch(({ response }) => response)
   },
 
   /**

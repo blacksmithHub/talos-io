@@ -15,14 +15,32 @@
 
         <v-card-text>
           <v-container>
-            <v-text-field
-              v-model="name"
-              label="Task name"
-              required
-              outlined
-              dense
-              autocomplete="off"
-            />
+            <v-row>
+              <v-col class="pt-0 pb-0">
+                <v-text-field
+                  v-model="name"
+                  label="Task name (optional)"
+                  required
+                  outlined
+                  dense
+                  autocomplete="off"
+                />
+              </v-col>
+
+              <v-col class="pt-0 pb-0">
+                <v-autocomplete
+                  v-model="proxy"
+                  required
+                  clearable
+                  :items="proxies"
+                  outlined
+                  dense
+                  label="Proxies (optional)"
+                  item-text="name"
+                  return-object
+                />
+              </v-col>
+            </v-row>
 
             <v-row>
               <v-col class="pt-0 pb-0">
@@ -190,10 +208,11 @@ export default {
       sku: '',
       sizes: [],
       profile: {},
+      proxy: {},
       bank: {},
       isEditMode: false,
       selectedTask: {},
-      delay: 1000,
+      delay: 3200,
       placeOrder: '',
       placeOrderMenu: false,
       qty: 1
@@ -204,6 +223,7 @@ export default {
     ...mapState('attribute', { attributes: 'items' }),
     ...mapState('profile', { profiles: 'items' }),
     ...mapState('bank', { banks: 'items' }),
+    ...mapState('proxy', { proxies: 'items' }),
 
     /**
      * Set modal header.
@@ -296,7 +316,8 @@ export default {
         this.sizes = sizes
         this.delay = task.delay
         this.placeOrder = task.placeOrder
-        this.qty = task.qty
+        this.qty = task.qty || 1
+        this.proxy = task.proxy
 
         this.profile = task.profile
         this.bank = task.bank
@@ -334,6 +355,7 @@ export default {
       this.sizes = []
       this.bank = {}
       this.profile = {}
+      this.proxy = {}
       this.selectedTask = {}
       this.delay = 1000
       this.placeOrder = ''
@@ -370,6 +392,7 @@ export default {
           sku: this.sku.trim(),
           sizes: sizes,
           profile: this.profile,
+          proxy: this.proxy,
           bank: this.bank || {},
           delay: this.delay,
           placeOrder: this.placeOrder,

@@ -59,6 +59,13 @@
           :no-results-text="'Nothing to display'"
           :no-data-text="'Nothing to display'"
         >
+          <template v-slot:item.img="{ value }">
+            <v-img
+              :src="value"
+              width="100"
+            />
+          </template>
+
           <template v-slot:item.name="{ value }">
             <small v-text="value" />
           </template>
@@ -84,7 +91,7 @@
             <small
               class="text-capitalize text-decoration-underline primary--text cursor"
               @click="redirect(value)"
-              v-text="'product link'"
+              v-text="'product'"
             />
           </template>
 
@@ -125,6 +132,7 @@ import { mapState, mapActions } from 'vuex'
 import moment from '@/mixins/moment'
 import App from '@/config/app'
 import productApi from '@/api/magento/titan22/product'
+import placeholder from '@/assets/no_image.png'
 
 export default {
   mixins: [moment],
@@ -142,10 +150,15 @@ export default {
       search: '',
       headers: [
         {
+          sortable: false,
+          value: 'img',
+          width: '1%'
+        },
+        {
           text: 'Product',
           sortable: false,
           value: 'name',
-          width: '8%'
+          width: '10%'
         },
         {
           text: 'SKU',
@@ -161,19 +174,19 @@ export default {
           text: 'Link',
           sortable: false,
           value: 'link',
-          width: '5%',
+          width: '1%',
           align: 'center'
         },
         {
           text: 'Status',
           value: 'status',
-          width: '3%',
+          width: '1%',
           align: 'center'
         },
         {
           text: 'Date',
           value: 'date',
-          width: '10%'
+          width: '11%'
         }
       ],
       products: [],
@@ -188,6 +201,10 @@ export default {
       this.$vuetify.theme.dark = nightMode
     },
     'settings.monitorInterval': function () {
+      clearInterval(this.loop)
+      this.searchProduct()
+    },
+    'settings.monitorProxy': function () {
       clearInterval(this.loop)
       this.searchProduct()
     },
@@ -255,31 +272,46 @@ export default {
      */
     async fetchProducts () {
       const params = {
-        searchCriteria: {
-          sortOrders: [
-            {
-              field: this.filter,
-              direction: 'DESC'
-            }
-          ],
-          pageSize: this.count
+        payload: {
+          searchCriteria: {
+            sortOrders: [
+              {
+                field: this.filter,
+                direction: 'DESC'
+              }
+            ],
+            pageSize: this.count
+          }
+        },
+        token: App.services.titan22.token
+      }
+
+      if (this.settings.monitorProxy && Object.keys(this.settings.monitorProxy).length) {
+        const proxy = this.settings.monitorProxy.proxies[Math.floor(Math.random() * this.settings.monitorProxy.proxies.length)]
+        params.proxy = {
+          host: proxy.host,
+          port: proxy.port,
+          username: proxy.username,
+          password: proxy.password
         }
       }
 
       this.loading = true
 
-      const response = await productApi.search(params, App.services.titan22.token)
+      const response = await productApi.search(params)
 
-      if (response) {
+      if (response.status === 200) {
         this.products = []
 
-        response.items.forEach(element => {
+        response.data.items.forEach(element => {
           const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
+          const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
 
           this.products.push({
+            img: (image) ? `https://www.titan22.com/media/catalog/product${image.value}` : placeholder,
             name: element.name,
             sku: element.sku,
-            price: element.price,
+            price: element.price.toLocaleString(),
             link: (link) ? link.value : '',
             status: element.extension_attributes.out_of_stock,
             date: this.formatDate(element.updated_at)

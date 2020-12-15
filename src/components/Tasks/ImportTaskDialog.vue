@@ -153,7 +153,7 @@ export default {
                     data.cvv === (parseInt(element.cvv) || '') &&
                     data.expiryMonth === (element.expiryMonth || '') &&
                     data.expiryYear === (element.expiryYear || '') &&
-                    data.bank.name.toLowerCase() === ((element.bank) ? element.bank.trim().toLowerCase() : null)
+                    data.bank.toLowerCase() === ((element.bank) ? element.bank.trim().toLowerCase() : null)
                   )
                 })
 
@@ -164,13 +164,12 @@ export default {
                     cvv: parseInt(element.cvv) || '',
                     expiryMonth: element.expiryMonth || '',
                     expiryYear: element.expiryYear || '',
-                    bank: {
-                      id: '',
-                      name: (element.bank) ? element.bank.trim() : ''
-                    },
+                    bank: (element.bank) ? element.bank.trim() : '',
                     nickname: (element.bank) ? element.bank.trim() : '',
                     id: ''
                   }
+                } else {
+                  bank = {}
                 }
 
                 const object = {
@@ -179,7 +178,7 @@ export default {
                   name: (element.name) ? element.name.trim() : '',
                   sku: element.sku.trim(),
                   sizes: sizes,
-                  delay: element.delay || 1000,
+                  delay: element.delay || 3200,
                   placeOrder: element.placeOrder || ''
                 }
 
