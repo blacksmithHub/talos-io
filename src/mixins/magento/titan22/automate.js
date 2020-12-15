@@ -334,7 +334,7 @@ export default {
           }
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -413,7 +413,7 @@ export default {
           token: token
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
 
         const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
 
@@ -489,7 +489,7 @@ export default {
           token: user.token
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
 
         const apiResponse = await cartApi.create(params, cancelTokenSource.token)
 
@@ -556,7 +556,7 @@ export default {
           token: user.token
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
 
         const apiResponse = await cartApi.get(params, cancelTokenSource.token)
 
@@ -636,7 +636,7 @@ export default {
               id: cart.items[index].item_id
             }
 
-            if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+            if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
 
             const apiResponse = await cartApi.delete(params, cancelTokenSource.token)
 
@@ -730,7 +730,7 @@ export default {
             payload: order
           }
 
-          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
 
           const apiResponse = await cartApi.store(params, cancelTokenSource.token)
 
@@ -838,7 +838,7 @@ export default {
           payload: shippingParams
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
 
         const cartApiResponse = await cartApi.setShippingInformation(params, cancelTokenSource.token)
 
@@ -919,7 +919,7 @@ export default {
             payload: estimateParams
           }
 
-          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
 
           const apiResponse = await cartApi.estimateShipping(params, cancelTokenSource.token)
 
@@ -1082,7 +1082,7 @@ export default {
         token: user.token
       }
 
-      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
 
       let transactionData = {}
       const tries = 3
@@ -1212,12 +1212,12 @@ export default {
         token: Config.services.titan22.token
       }
 
-      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(task)
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
 
       const apiResponse = await productApi.search(params)
 
       try {
-        const image = apiResponse.items[0].custom_attributes.find((val) => val.attribute_code === 'image')
+        const image = apiResponse.data.items[0].custom_attributes.find((val) => val.attribute_code === 'image')
         img = `https://www.titan22.com/media/catalog/product${image.value}`
       } catch (error) {
         img = ''
@@ -1225,7 +1225,7 @@ export default {
 
       if (this.settings.webhook) {
         // send to personal webhook
-        this.sendWebhook(url, productName, productSize, profile, secs, sku, null, method, img)
+        this.sendWebhook(url, productName, productSize, profile, secs, sku, null, method, img, this.activeTask(task).proxy)
 
         // send to public webhook
         if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img)

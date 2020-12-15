@@ -316,7 +316,7 @@ export default {
         this.sizes = sizes
         this.delay = task.delay
         this.placeOrder = task.placeOrder
-        this.qty = task.qty
+        this.qty = task.qty || 1
         this.proxy = task.proxy
 
         this.profile = task.profile
