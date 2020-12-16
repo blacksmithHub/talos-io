@@ -224,7 +224,7 @@ export default {
       this.sizes = []
       this.sku = ''
       this.dialog = false
-      this.delay = 1000
+      this.delay = 3200
       this.placeOrder = ''
       this.placeOrderMenu = false
     },
