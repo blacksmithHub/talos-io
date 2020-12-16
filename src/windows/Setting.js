@@ -49,6 +49,7 @@ export default {
 
     win.on('close', (e) => {
       win = null
+      MainWindow.getWindow().focus()
     })
 
     if (!isDevelopment) {
