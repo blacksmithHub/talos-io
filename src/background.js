@@ -257,21 +257,27 @@ ipcMain.on('bind', (event, arg) => {
  */
 ipcMain.on('pay-with-paypal', (event, arg) => {
   const task = JSON.parse(arg).task
-  const proxy = task.proxy.proxies[Math.floor(Math.random() * task.proxy.proxies.length)]
+
+  let proxy = {}
+
+  if (task.proxy && Object.keys(task.proxy).length) proxy = task.proxy.proxies[Math.floor(Math.random() * task.proxy.proxies.length)]
+
   const puppeteer = require('puppeteer')
   const proxyChain = require('proxy-chain');
 
   (async () => {
-    const oldProxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
-    const newProxyUrl = await proxyChain.anonymizeProxy(oldProxyUrl)
+    const args = ['--window-size=800,600']
+
+    if (Object.keys(proxy).length) {
+      const oldProxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
+      const newProxyUrl = await proxyChain.anonymizeProxy(oldProxyUrl)
+      args.push(`--proxy-server=${newProxyUrl}`)
+    }
 
     const browser = await puppeteer.launch({
       headless: false,
       executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
-      args: [
-        '--window-size=800,600',
-        `--proxy-server=${newProxyUrl}`
-      ],
+      args: args,
       defaultViewport: null
     })
 
@@ -283,9 +289,7 @@ ipcMain.on('pay-with-paypal', (event, arg) => {
       const url = request.url()
       const resourceType = request.resourceType()
 
-      const filters = [
-        'queue-it.net'
-      ]
+      const filters = ['queue-it.net']
 
       const shouldAbort = filters.some((urlPart) => url.includes(urlPart))
 
@@ -319,22 +323,28 @@ ipcMain.on('pay-with-paypal', (event, arg) => {
  */
 ipcMain.on('pay-with-2c2p', (event, arg) => {
   const task = JSON.parse(arg).task
-  const proxy = task.proxy.proxies[Math.floor(Math.random() * task.proxy.proxies.length)]
+
+  let proxy = {}
+
+  if (task.proxy && Object.keys(task.proxy).length) proxy = task.proxy.proxies[Math.floor(Math.random() * task.proxy.proxies.length)]
+
   const settings = JSON.parse(arg).settings
   const puppeteer = require('puppeteer')
   const proxyChain = require('proxy-chain');
 
   (async () => {
-    const oldProxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
-    const newProxyUrl = await proxyChain.anonymizeProxy(oldProxyUrl)
+    const args = ['--window-size=800,600']
+
+    if (Object.keys(proxy).length) {
+      const oldProxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
+      const newProxyUrl = await proxyChain.anonymizeProxy(oldProxyUrl)
+      args.push(`--proxy-server=${newProxyUrl}`)
+    }
 
     const browser = await puppeteer.launch({
       headless: false,
       executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
-      args: [
-        '--window-size=800,600',
-        `--proxy-server=${newProxyUrl}`
-      ],
+      args: args,
       defaultViewport: null
     })
 
