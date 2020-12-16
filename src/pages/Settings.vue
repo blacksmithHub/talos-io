@@ -246,6 +246,29 @@
 
             <v-list-item class="pa-0">
               <v-list-item-content class="pa-2">
+                <v-list-item-title v-text="'Google Chrome executable path'" />
+
+                <v-list-item-subtitle v-text="'Set where your google chrome executable path is located'" />
+              </v-list-item-content>
+            </v-list-item>
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
+                <v-text-field
+                  v-model="executablePath"
+                  dense
+                  hide-details
+                  outlined
+                  clearable
+                  @change="onChange"
+                />
+              </v-list-item-content>
+            </v-list-item>
+
+            <v-divider />
+
+            <v-list-item class="pa-0">
+              <v-list-item-content class="pa-2">
                 <v-list-item-title v-text="'Clear Local Storage'" />
 
                 <v-list-item-subtitle v-text="'All saved records will be removed'" />
@@ -343,7 +366,8 @@ export default {
       backupTasks: [],
       backupProfiles: [],
       backupBanks: [],
-      monitorProxy: {}
+      monitorProxy: {},
+      executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
     }
   },
   computed: {
@@ -433,6 +457,13 @@ export default {
   methods: {
     ...mapActions('setting', { updateSettings: 'setItems' }),
     ...mapActions('proxy', { updateProxies: 'setItems' }),
+
+    /**
+     * on change event
+     */
+    onChange () {
+      if (!this.executablePath) this.executablePath = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+    },
 
     /**
      * Clear all local storage.
@@ -576,6 +607,7 @@ export default {
       this.autoFill = this.settings.autoFill
       this.manual = this.settings.manual
       this.monitorProxy = this.settings.monitorProxy
+      this.executablePath = this.settings.executablePath
     },
 
     /**
@@ -606,7 +638,8 @@ export default {
           autoPay: this.autoPay,
           autoFill: this.autoFill,
           manual: this.manual,
-          monitorProxy: this.monitorProxy
+          monitorProxy: this.monitorProxy,
+          executablePath: this.executablePath
         })
 
         try {

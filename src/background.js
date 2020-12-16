@@ -15,6 +15,8 @@ import SettingWindow from '@/windows/Setting'
 require('../server/index.js')
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
+const puppeteer = require('puppeteer')
+const proxyChain = require('proxy-chain')
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -257,13 +259,11 @@ ipcMain.on('bind', (event, arg) => {
  */
 ipcMain.on('pay-with-paypal', async (event, arg) => {
   const task = JSON.parse(arg).task
+  const settings = JSON.parse(arg).settings
 
   let proxy = {}
 
   if (task.proxy && Object.keys(task.proxy).length) proxy = task.proxy.proxies[Math.floor(Math.random() * task.proxy.proxies.length)]
-
-  const puppeteer = require('puppeteer')
-  const proxyChain = require('proxy-chain')
 
   const args = ['--window-size=800,600']
 
@@ -276,7 +276,8 @@ ipcMain.on('pay-with-paypal', async (event, arg) => {
   const browser = await puppeteer.launch({
     headless: false,
     args: args,
-    defaultViewport: null
+    defaultViewport: null,
+    executablePath: settings.executablePath || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
   })
 
   const page = await browser.newPage()
@@ -320,14 +321,11 @@ ipcMain.on('pay-with-paypal', async (event, arg) => {
  */
 ipcMain.on('pay-with-2c2p', async (event, arg) => {
   const task = JSON.parse(arg).task
+  const settings = JSON.parse(arg).settings
 
   let proxy = {}
 
   if (task.proxy && Object.keys(task.proxy).length) proxy = task.proxy.proxies[Math.floor(Math.random() * task.proxy.proxies.length)]
-
-  const settings = JSON.parse(arg).settings
-  const puppeteer = require('puppeteer')
-  const proxyChain = require('proxy-chain')
 
   const args = ['--window-size=800,600']
 
@@ -340,7 +338,8 @@ ipcMain.on('pay-with-2c2p', async (event, arg) => {
   const browser = await puppeteer.launch({
     headless: false,
     args: args,
-    defaultViewport: null
+    defaultViewport: null,
+    executablePath: settings.executablePath || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
   })
 
   const page = await browser.newPage()
