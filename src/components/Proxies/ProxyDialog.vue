@@ -102,18 +102,24 @@ export default {
   },
   watch: {
     pool () {
-      if (this.pool.length) {
-        const pool = this.pool.slice().map((val) => {
-          return `${val.host}:${val.port}:${val.username}:${val.password}`
-        })
-
-        this.proxies = pool.join('\n')
-      }
+      if (this.pool.length) this.setProxies()
     }
   },
   methods: {
     ...mapActions('proxy', { addProxy: 'addItem', updateProxy: 'updateItem' }),
 
+    /**
+     * set all proxies
+     */
+    setProxies () {
+      this.proxies = []
+
+      const pool = this.pool.slice().map((val) => {
+        return `${val.host}:${val.port}:${val.username}:${val.password}`
+      })
+
+      this.proxies = pool.join('\n')
+    },
     /**
      * Map selected proxy.
      *
@@ -124,6 +130,8 @@ export default {
 
         this.name = proxy.name
         this.pool = proxy.proxies
+
+        this.setProxies()
 
         this.isEditMode = true
         this.dialog = true

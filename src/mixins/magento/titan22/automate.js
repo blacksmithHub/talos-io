@@ -1,17 +1,20 @@
 import { mapState, mapActions } from 'vuex'
 import { Howl } from 'howler'
-import StopWatch from 'statman-stopwatch'
+import { ipcRenderer } from 'electron'
+
 import authApi from '@/api/magento/titan22/auth'
 import customerApi from '@/api/magento/titan22/customer'
 import cartApi from '@/api/magento/titan22/cart'
 import transactionApi from '@/api/magento/titan22/transaction'
+import productApi from '@/api/magento/titan22/product'
+
 import Constant from '@/config/constant'
 import Config from '@/config/app'
 import webhook from '@/mixins/webhook'
 import SuccessEffect from '@/assets/success.mp3'
+
+import StopWatch from 'statman-stopwatch'
 import axios from 'axios'
-import { ipcRenderer } from 'electron'
-import productApi from '@/api/magento/titan22/product'
 
 /**
  * ===============================================
