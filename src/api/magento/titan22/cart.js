@@ -89,5 +89,17 @@ export default {
       .post('post', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
+  },
+
+  /**
+   * Place order
+   */
+  paymentInformation (params, cancelToken) {
+    params.url = `${this.baseUrl}/${this.url}/mine/payment-information`
+
+    return this.http('http://localhost:5000/api/request')
+      .post('post', params, { cancelToken: cancelToken })
+      .then(response => response)
+      .catch(({ response }) => response)
   }
 }
