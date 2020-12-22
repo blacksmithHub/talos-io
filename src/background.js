@@ -415,3 +415,43 @@ ipcMain.on('pay-with-2c2p', async (event, arg) => {
     MainWindow.getWindow().webContents.send('updateTask', task)
   })
 })
+
+/**
+ * Login paypal
+ */
+ipcMain.on('paypal-login', async (event, arg) => {
+  const url = JSON.parse(arg).url
+  const fingerprint = JSON.parse(arg).fingerprint
+  const settings = JSON.parse(arg).settings
+
+  const browser = await puppeteer.launch({
+    headless: false,
+    args: ['--window-size=800,600'],
+    defaultViewport: null,
+    executablePath: settings.executablePath || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+  })
+
+  const page = await browser.newPage()
+
+  await page.goto(url)
+
+  page.on('framenavigated', frame => {
+    if (frame._url.includes('titan-bot-auth.herokuapp.com')) {
+      const domain = 'https://titan-bot-auth.herokuapp.com/?'
+
+      const queries = frame._url.slice(domain.length).split('&')
+
+      const params = {}
+
+      queries.forEach(element => {
+        const query = element.split('=')
+
+        params[query[0]] = query[1]
+      })
+
+      browser.close()
+
+      MainWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint })
+    }
+  })
+})

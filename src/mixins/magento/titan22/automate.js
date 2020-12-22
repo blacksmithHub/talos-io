@@ -30,7 +30,8 @@ export default {
   mixins: [webhook],
   computed: {
     ...mapState('task', { allTasks: 'items' }),
-    ...mapState('setting', { settings: 'items' })
+    ...mapState('setting', { settings: 'items' }),
+    ...mapState('paypal', { paypal: 'items' })
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem' }),
@@ -274,8 +275,6 @@ export default {
        */
       let shippingData = {}
 
-      const sw = new StopWatch(true)
-
       await this.setShippingInfo(task, user, productData, (response, authorized) => {
         isAuthorized = authorized
         shippingData = response
@@ -300,16 +299,6 @@ export default {
        *
        * place order
        */
-      sw.stop()
-
-      this.updateTask({
-        ...this.activeTask(task),
-        transactionData: {
-          ...this.activeTask(task).transactionData,
-          time: (sw.read() / 1000.0).toFixed(2)
-        }
-      })
-
       await this.placeOrder(task, shippingData, user, cartData, productData)
     },
 
@@ -1007,12 +996,15 @@ export default {
 
             vm.creditCardCheckout(task, shippingData, user, cartData, productData)
           } else if (shippingData.payment_methods.find((val) => val.code === 'braintree_paypal')) {
-            const transactionData = {
-              paypal: true,
-              order: productData
-            }
+            vm.updateTask({
+              ...vm.activeTask(task),
+              transactionData: {
+                ...vm.activeTask(task).transactionData,
+                paypal: true
+              }
+            })
 
-            vm.onSuccess(task, transactionData, shippingData, productData)
+            vm.paypalCheckout(task, shippingData, user, cartData, productData)
           }
         }
       })
@@ -1139,6 +1131,148 @@ export default {
 
             continue
           }
+        }
+      }
+    },
+
+    /**
+     * paypal checkout method
+     *
+     * @param {*} task
+     * @param {*} shippingData
+     * @param {*} user
+     * @param {*} cartData
+     * @param {*} productData
+     */
+    async paypalCheckout (task, shippingData, user, cartData, productData) {
+      this.updateTask({
+        ...this.activeTask(task),
+        logs: `${this.activeTask(task).logs || ''};Placing order...`
+      })
+
+      this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
+
+      const tries = 3
+
+      const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
+
+      const params = {
+        payload: {
+          amcheckout: {},
+          billingAddress: this.setAddresses(defaultBillingAddress, user),
+          cartId: cartData.id.toString(),
+          paymentMethod: {
+            additional_data: {
+              paypal_express_checkout_token: this.paypal.paypalAccounts[0].details.correlationId,
+              paypal_express_checkout_redirect_required: false,
+              paypal_express_checkout_payer_id: this.paypal.paypalAccounts[0].details.payerInfo.payerId
+            },
+            method: 'braintree_paypal',
+            po_number: null
+          }
+        },
+        token: user.token
+      }
+
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+
+      for (let index = 1; index <= tries; index++) {
+        const cancelTokenSource = axios.CancelToken.source()
+
+        this.updateTask({
+          ...this.activeTask(task),
+          cancelTokenSource: cancelTokenSource
+        })
+
+        const apiResponse = await cartApi.paymentInformation(params, cancelTokenSource.token)
+
+        if (apiResponse.status === 200) {
+          this.updateTask({
+            ...this.activeTask(task),
+            status: {
+              id: Constant.TASK.STATUS.STOPPED,
+              msg: 'copped!',
+              class: 'success'
+            },
+            logs: `${this.activeTask(task).logs || ''};Copped!`
+          })
+
+          if (this.settings.sound) {
+            const sound = new Howl({
+              src: [SuccessEffect]
+            })
+
+            sound.play()
+          }
+
+          this.$toast.open({
+            message: '<strong style="font-family: Arial; text-transform: uppercase">checked out</strong>',
+            type: 'success',
+            duration: 3000
+          })
+
+          const url = this.settings.webhook
+          const productName = shippingData.totals.items[0].name
+          const productSize = productData.sizeLabel
+          const profile = this.activeTask(task).profile.name
+          const sku = this.activeTask(task).sku
+          const method = 'PayPal'
+          let img = ''
+
+          const payload = {
+            payload: {
+              searchCriteria: {
+                filterGroups: [
+                  {
+                    filters: [
+                      {
+                        field: 'sku',
+                        value: sku
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            token: Config.services.titan22.token
+          }
+
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) payload.proxy = this.getProxy(this.activeTask(task))
+
+          const response = await productApi.search(payload)
+
+          try {
+            const image = response.data.items[0].custom_attributes.find((val) => val.attribute_code === 'image')
+            img = `https://www.titan22.com/media/catalog/product${image.value}`
+          } catch (error) {
+            img = ''
+          }
+
+          if (this.settings.webhook) {
+          // send to personal webhook
+            this.sendWebhook(url, productName, productSize, profile, null, sku, null, method, img, this.activeTask(task).proxy)
+
+            // send to public webhook
+            if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, null, sku, null, method, img)
+          } else {
+          // send to public webhook
+            this.sendWebhook(Config.bot.webhook, productName, productSize, null, null, sku, null, method, img)
+          }
+        } else if (index === tries) {
+          this.updateTask({
+            ...this.activeTask(task),
+            logs: `${this.activeTask(task).logs || ''};Trying for restock!`
+          })
+
+          this.init(this.activeTask(task))
+          break
+        } else {
+          this.updateTask({
+            ...this.activeTask(task),
+            logs: `${this.activeTask(task).logs || ''};Out of stock!`
+          })
+
+          continue
         }
       }
     },

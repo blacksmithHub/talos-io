@@ -30,6 +30,25 @@
             />
           </v-btn>
 
+          <v-btn
+            :fab="!$vuetify.breakpoint.lgAndUp"
+            :rounded="$vuetify.breakpoint.lgAndUp"
+            :small="$vuetify.breakpoint.lgAndUp"
+            :x-small="!$vuetify.breakpoint.lgAndUp"
+            class="cyan mr-3"
+            @click="paypalLogin"
+          >
+            <v-icon
+              :left="$vuetify.breakpoint.lgAndUp"
+              :small="$vuetify.breakpoint.lgAndUp"
+              v-text="'mdi-bank'"
+            />
+            <span
+              v-if="$vuetify.breakpoint.lgAndUp"
+              v-text="'PayPal Login'"
+            />
+          </v-btn>
+
           <v-spacer />
 
           <v-btn
@@ -158,6 +177,8 @@ import verify from '@/mixins/magento/titan22/verify'
 
 import Constant from '@/config/constant'
 
+import axios from 'axios'
+
 export default {
   components: {
     LogsDialog,
@@ -180,6 +201,7 @@ export default {
     ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
     ...mapState('setting', { settings: 'items' }),
+    ...mapState('paypal', { paypal: 'items' }),
 
     /**
      * Return success count.
@@ -224,6 +246,26 @@ export default {
     ipcRenderer.on('updateProxies', (event, arg) => {
       this.setProxies(arg)
     })
+
+    ipcRenderer.on('paypalParams', async (event, arg) => {
+      const params = {
+        paypalAccount: {
+          correlationId: arg.params.token,
+          paymentToken: arg.params.paymentId,
+          payerId: arg.params.PayerID,
+          unilateral: true,
+          intent: 'authorize'
+        },
+        braintreeLibraryVersion: 'braintree/web/3.48.0',
+        authorizationFingerprint: arg.fingerprint
+      }
+
+      const response = await axios.post('https://api.braintreegateway.com/merchants/nw7drdhqdjqh5x6n/client_api/v1/payment_methods/paypal_accounts', params)
+
+      const data = response.data
+
+      this.setPaypal(data)
+    })
   },
   methods: {
     ...mapActions('attribute', {
@@ -241,6 +283,7 @@ export default {
     ...mapActions('bank', { setBanks: 'setItems' }),
     ...mapActions('proxy', { setProxies: 'setItems' }),
     ...mapActions('attribute', { prepareAttributes: 'initializeItems' }),
+    ...mapActions('paypal', { setPaypal: 'setItems' }),
 
     /**
      * Open logs dialog.
@@ -308,7 +351,28 @@ export default {
         await this.init(task)
       }
     },
+    /**
+     * Login to paypal
+     */
+    async paypalLogin () {
+      const secret = await axios.get('https://www.titan22.com/rest/V1/braintree/merchant_server')
 
+      const fingerprint = JSON.parse(atob(secret.data)).authorizationFingerprint
+
+      const params = {
+        returnUrl: 'https://titan-bot-auth.herokuapp.com',
+        cancelUrl: 'https://titan-bot-auth.herokuapp.com',
+        offerPaypalCredit: false,
+        amount: 1,
+        currencyIsoCode: 'PHP',
+        braintreeLibraryVersion: 'braintree/web/3.48.0',
+        authorizationFingerprint: fingerprint
+      }
+
+      const paypal = await axios.post('https://api.braintreegateway.com/merchants/nw7drdhqdjqh5x6n/client_api/v1/paypal_hermes/create_payment_resource', params)
+
+      ipcRenderer.send('paypal-login', JSON.stringify({ url: paypal.data.paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings }))
+    },
     /**
      * delete task
      *
