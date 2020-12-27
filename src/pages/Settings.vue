@@ -607,7 +607,7 @@ export default {
       this.autoFill = this.settings.autoFill
       this.manual = this.settings.manual
       this.monitorProxy = this.settings.monitorProxy
-      this.executablePath = this.settings.executablePath
+      this.executablePath = this.settings.executablePath || this.executablePath
     },
 
     /**
