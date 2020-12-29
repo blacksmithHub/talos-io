@@ -111,7 +111,8 @@ export default {
               this.profiles.push({
                 name: (element.name) ? element.name.trim() : null,
                 email: element.email.trim(),
-                password: element.password.trim()
+                password: element.password.trim(),
+                paypal: {}
               })
             }
           })

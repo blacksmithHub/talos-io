@@ -11,6 +11,15 @@
             class="headline"
             v-text="'Mass Edit'"
           />
+
+          <v-spacer />
+
+          <v-btn
+            icon
+            @click="onCancel"
+          >
+            <v-icon v-text="'mdi-close'" />
+          </v-btn>
         </v-card-title>
 
         <v-card-text>
@@ -115,31 +124,47 @@
           </v-container>
         </v-card-text>
 
-        <v-card-actions class="justify-end">
-          <v-btn
-            class="primary"
-            rounded
-            small
-            @click="clearTimer"
-            v-text="'clear timer'"
-          />
+        <v-card-actions>
+          <v-container>
+            <v-row
+              no-gutters
+              align="center"
+            >
+              <v-col
+                cols="6"
+                align-self="center"
+              >
+                <v-btn
+                  class="primary"
+                  rounded
+                  small
+                  @click="clearTimer"
+                  v-text="'clear timer'"
+                />
+              </v-col>
 
-          <v-spacer />
-
-          <v-btn
-            class="primary"
-            rounded
-            small
-            @click="onCancel"
-            v-text="'cancel'"
-          />
-          <v-btn
-            class="primary"
-            rounded
-            type="submit"
-            small
-            v-text="'save'"
-          />
+              <v-col
+                cols="6"
+                align-self="center"
+                class="text-right"
+              >
+                <v-btn
+                  class="primary mr-2"
+                  rounded
+                  small
+                  @click="onCancel"
+                  v-text="'cancel'"
+                />
+                <v-btn
+                  class="primary"
+                  rounded
+                  type="submit"
+                  small
+                  v-text="'save'"
+                />
+              </v-col>
+            </v-row>
+          </v-container>
         </v-card-actions>
       </v-card>
     </v-form>

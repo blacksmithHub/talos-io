@@ -11,6 +11,8 @@
         v-for="n in tabs.length"
         :key="n"
       >
+        <v-divider />
+
         <ProfileList v-if="n === 1" />
         <BankList v-else />
       </v-tab-item>
@@ -24,6 +26,7 @@ import { ipcRenderer } from 'electron'
 
 import ProfileList from '@/components/Profiles/ProfileList'
 import BankList from '@/components/Profiles/BankList'
+import axios from 'axios'
 
 export default {
   components: {
@@ -63,9 +66,35 @@ export default {
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
     })
+
+    ipcRenderer.on('paypalParams', async (event, arg) => {
+      if (arg.profile) {
+        const params = {
+          paypalAccount: {
+            correlationId: arg.params.token,
+            paymentToken: arg.params.paymentId,
+            payerId: arg.params.PayerID,
+            unilateral: true,
+            intent: 'authorize'
+          },
+          braintreeLibraryVersion: 'braintree/web/3.48.0',
+          authorizationFingerprint: arg.fingerprint
+        }
+
+        const response = await axios.post('https://api.braintreegateway.com/merchants/nw7drdhqdjqh5x6n/client_api/v1/payment_methods/paypal_accounts', params)
+
+        const data = response.data
+
+        this.updateProfile({
+          ...arg.profile,
+          paypal: data
+        })
+      }
+    })
   },
   methods: {
-    ...mapActions('setting', { setSettings: 'setItems' })
+    ...mapActions('setting', { setSettings: 'setItems' }),
+    ...mapActions('profile', { updateProfile: 'updateItem' })
   }
 }
 </script>

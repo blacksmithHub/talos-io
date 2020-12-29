@@ -109,6 +109,7 @@
                   style="width: 15vh"
                   hide-details
                   :error-messages="monitorIntervalErrors"
+                  placeholder="ms"
                   @blur="$v.monitorInterval.$touch()"
                 />
               </v-list-item-action>
@@ -132,6 +133,7 @@
                   item-text="name"
                   return-object
                   hide-details
+                  placeholder="select proxy list"
                 />
               </v-list-item-action>
             </v-list-item>
@@ -178,6 +180,7 @@
                     class="primary"
                     rounded
                     small
+                    depressed
                     v-text="'Export'"
                   />
                 </download-csv>
@@ -202,6 +205,7 @@
                     class="primary"
                     rounded
                     small
+                    depressed
                     v-text="'Export'"
                   />
                 </download-csv>
@@ -227,6 +231,7 @@
                   outlined
                   :error-messages="webhookErrors"
                   clearable
+                  placeholder="webhook url"
                   @blur="$v.webhook.$touch()"
                 />
               </v-list-item-content>
@@ -236,6 +241,7 @@
                   class="primary"
                   rounded
                   small
+                  depressed
                   @click="testWebhook"
                   v-text="'test'"
                 />
@@ -279,6 +285,7 @@
                   class="primary"
                   rounded
                   small
+                  depressed
                   @click="dialog = true"
                   v-text="'Clear'"
                 />
@@ -287,22 +294,26 @@
           </v-list>
         </v-card-text>
 
-        <v-card-actions class="justify-end">
-          <v-btn
-            class="primary"
-            rounded
-            small
-            @click="onCancel"
-            v-text="'cancel'"
-          />
+        <v-card-actions>
+          <v-container class="text-right">
+            <v-btn
+              class="primary mr-2"
+              rounded
+              small
+              depressed
+              @click="onCancel"
+              v-text="'cancel'"
+            />
 
-          <v-btn
-            class="primary"
-            rounded
-            type="submit"
-            small
-            v-text="'save'"
-          />
+            <v-btn
+              class="primary"
+              rounded
+              type="submit"
+              small
+              depressed
+              v-text="'save'"
+            />
+          </v-container>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -315,30 +326,55 @@
       <v-card>
         <v-card-title class="headline">
           Confirmation
+
+          <v-spacer />
+
+          <v-btn
+            icon
+            @click="dialog=false"
+          >
+            <v-icon v-text="'mdi-close'" />
+          </v-btn>
         </v-card-title>
 
-        <v-card-text>
-          Do you wish to clear all saved records?
+        <v-card-text class="text-center pa-5">
+          <v-row
+            justify="center"
+            align="center"
+            no-gutters
+            class="fill-height"
+          >
+            <v-col
+              align-self="center"
+              cols="9"
+            >
+              Do you wish to clear all saved records?
+            </v-col>
+          </v-row>
         </v-card-text>
 
-        <v-card-actions class="justify-end">
-          <v-btn
-            class="primary"
-            rounded
-            small
-            @click="dialog = false"
-          >
-            Disagree
-          </v-btn>
+        <v-card-actions>
+          <v-container class="text-right">
+            <v-btn
+              class="primary mr-2"
+              rounded
+              depressed
+              small
+              @click="dialog=false"
+            >
+              Disagree
+            </v-btn>
 
-          <v-btn
-            small
-            class="primary"
-            rounded
-            @click="clearLocalStorage"
-          >
-            Agree
-          </v-btn>
+            <v-btn
+              depressed
+              small
+              class="primary"
+              rounded
+              @click="clearLocalStorage"
+            >
+              Agree
+            </v-btn>
+          </v-container>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -498,7 +534,6 @@ export default {
           const sizes = element.sizes.slice().map((val) => val.label).join('+')
 
           jsons.push({
-            name: element.name,
             email: element.profile.email,
             password: element.profile.password,
             sku: element.sku,
@@ -515,7 +550,6 @@ export default {
         })
       } else {
         jsons.push({
-          name: '',
           email: '',
           password: '',
           sku: '',

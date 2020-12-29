@@ -11,6 +11,7 @@ const { http } = api
  *
  */
 export default {
+  local: `http://localhost:${Config.services.port}/api`,
   baseUrl: `${Config.services.titan22.url}/rest/V2`,
   url: 'products',
   http,
@@ -23,7 +24,7 @@ export default {
     const query = qs.stringify(params.payload)
     params.url = `${this.baseUrl}/${this.url}?${query}`
 
-    return this.http('http://localhost:5000/api/request')
+    return this.http(`${this.local}/request`)
       .post('get', params)
       .then(response => response)
       .catch(({ response }) => response)
@@ -34,15 +35,11 @@ export default {
    *
    */
   attribute (params, token) {
-    try {
-      params = qs.stringify(params)
+    params = qs.stringify(params)
 
-      return this.http(this.baseUrl, token)
-        .get(`${this.url}/attributes?${params}`)
-        .then(({ data }) => data)
-        .catch(() => false)
-    } catch (error) {
-      return false
-    }
+    return this.http(this.baseUrl, token)
+      .get(`${this.url}/attributes?${params}`)
+      .then(({ data }) => data)
+      .catch(({ response }) => response)
   }
 }

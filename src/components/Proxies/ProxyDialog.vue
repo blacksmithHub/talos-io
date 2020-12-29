@@ -11,6 +11,15 @@
             class="headline"
             v-text="`${header} Proxy Pool`"
           />
+
+          <v-spacer />
+
+          <v-btn
+            icon
+            @click="onCancel"
+          >
+            <v-icon v-text="'mdi-close'" />
+          </v-btn>
         </v-card-title>
 
         <v-card-text>
@@ -42,21 +51,24 @@
         </v-card-text>
 
         <v-card-actions>
-          <v-spacer />
-          <v-btn
-            rounded
-            class="primary"
-            small
-            @click="onCancel"
-            v-text="'Cancel'"
-          />
-          <v-btn
-            class="primary"
-            rounded
-            type="submit"
-            small
-            v-text="'Save'"
-          />
+          <v-container class="text-right">
+            <v-btn
+              rounded
+              class="primary mr-2"
+              depressed
+              small
+              @click="onCancel"
+              v-text="'Cancel'"
+            />
+            <v-btn
+              class="primary"
+              rounded
+              type="submit"
+              small
+              depressed
+              v-text="'Save'"
+            />
+          </v-container>
         </v-card-actions>
       </v-card>
     </v-form>

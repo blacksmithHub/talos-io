@@ -80,7 +80,7 @@ export default {
      * @param {*} params
      */
     async fetchAttributes ({ commit }, params) {
-      const attribute = await productApi.attribute({
+      const payload = {
         searchCriteria: {
           filterGroups: [
             {
@@ -93,18 +93,19 @@ export default {
             }
           ]
         }
-      }, params.token)
+      }
 
-      if (!attribute) return {}
+      const attribute = await productApi.attribute(payload, params.token)
 
-      const sizes = attribute.items[0].options.filter((data) => data.value).map((item) => {
+      if (attribute.status !== 200) return {}
+
+      const sizes = attribute.data.items[0].options.filter((data) => data.value).map((item) => {
         item.label = item.label.toLowerCase()
-
         return item
       })
 
       const response = {
-        attribute_id: attribute.items[0].attribute_id,
+        attribute_id: attribute.data.items[0].attribute_id,
         sizes: sizes
       }
 

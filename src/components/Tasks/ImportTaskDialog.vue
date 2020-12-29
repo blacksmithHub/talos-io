@@ -11,6 +11,15 @@
             class="headline"
             v-text="'Import Tasks'"
           />
+
+          <v-spacer />
+
+          <v-btn
+            icon
+            @click="onCancel"
+          >
+            <v-icon v-text="'mdi-close'" />
+          </v-btn>
         </v-card-title>
 
         <v-card-text>
@@ -30,21 +39,23 @@
           </v-container>
         </v-card-text>
 
-        <v-card-actions class="justify-end">
-          <v-btn
-            class="primary"
-            rounded
-            small
-            @click="onCancel"
-            v-text="'cancel'"
-          />
-          <v-btn
-            class="primary"
-            rounded
-            type="submit"
-            small
-            v-text="'save'"
-          />
+        <v-card-actions>
+          <v-container class="text-right">
+            <v-btn
+              rounded
+              small
+              class="primary mr-2"
+              @click="onCancel"
+              v-text="'cancel'"
+            />
+            <v-btn
+              class="primary"
+              rounded
+              type="submit"
+              small
+              v-text="'save'"
+            />
+          </v-container>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -72,6 +83,9 @@ export default {
   watch: {
     newTasks () {
       if (!this.newTasks.length) this.fileErrors.push('Invalid records')
+    },
+    dialog () {
+      if (this.dialog) this.fileErrors = []
     }
   },
   methods: {
@@ -175,15 +189,14 @@ export default {
                 const object = {
                   bank: bank,
                   profile: profile,
-                  name: (element.name) ? element.name.trim() : '',
                   sku: element.sku.trim(),
                   sizes: sizes,
                   delay: element.delay || 3200,
-                  placeOrder: element.placeOrder || ''
+                  placeOrder: element.placeOrder || '',
+                  proxy: { id: null, name: 'Localhost', proxies: [] }
                 }
 
                 if (element.aco) {
-                  object.name = (element.id) ? element.id.trim() : ''
                   object.profile.name = (element.id) ? element.id.trim() : ''
                   object.aco = true
                   object.webhook = (element.webhook) ? element.webhook.trim() : ''
@@ -203,9 +216,9 @@ export default {
      *
      */
     onCancel () {
-      this.fileErrors = []
-      this.newTasks = []
       this.csv = null
+      this.newTasks = []
+      this.fileErrors = []
       this.dialog = false
     },
     /**

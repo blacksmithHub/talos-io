@@ -12,11 +12,12 @@ import ProfileWindow from '@/windows/Profile'
 import ProxyWindow from '@/windows/Proxy'
 import SettingWindow from '@/windows/Setting'
 
-require('../server/index.js')
+import CreditCardCheckout from '@/services/Automate/CreditCardCheckout'
+import PayPalAuthorization from '@/services/Automate/PayPalAuthorization'
+
+const port = require('../server/index.js')
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
-const puppeteer = require('puppeteer')
-const proxyChain = require('proxy-chain')
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -34,6 +35,7 @@ autoUpdater.on('update-available', (info) => {
   // version can be updated
   sendStatusToWindow('versionUpdate', 'preparing to download')
 })
+
 autoUpdater.on('update-not-available', (info) => {
   // no update available
   sendStatusToWindow('versionUpdate', 'up to date')
@@ -44,16 +46,43 @@ autoUpdater.on('update-not-available', (info) => {
     win = null
   }
 })
+
 autoUpdater.on('error', () => {
   // Update Error
   sendStatusToWindow('versionUpdate', 'oops! something went wrong')
 
-  setTimeout(() => (app.exit()), 5000)
+  setTimeout(() => {
+    if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
+
+    if (SettingWindow.getWindow()) SettingWindow.getWindow().destroy()
+
+    if (ProxyWindow.getWindow()) ProxyWindow.getWindow().destroy()
+
+    if (ProfileWindow.getWindow()) ProfileWindow.getWindow().destroy()
+
+    if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
+
+    if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
+
+    LoginWindow.closeWindow()
+    SettingWindow.closeWindow()
+    ProxyWindow.closeWindow()
+    MonitorWindow.closeWindow()
+    MainWindow.closeWindow()
+
+    if (win) win.destroy()
+
+    win = null
+
+    app.exit()
+  }, 5000)
 })
+
 autoUpdater.on('download-progress', (progressObj) => {
   // download progress being downloaded
   sendStatusToWindow('versionUpdate', `downloading... ${progressObj.percent.toFixed()}%`)
 })
+
 autoUpdater.on('update-downloaded', (info) => {
   // Download completed
   sendStatusToWindow('versionUpdate', 're-launch the app')
@@ -62,9 +91,9 @@ autoUpdater.on('update-downloaded', (info) => {
 })
 
 /**
- *  Create main window
+ * Create main window
  */
-function initializeWindows () {
+async function initializeWindows () {
   win = new BrowserWindow({
     width: 250,
     height: 250,
@@ -86,9 +115,9 @@ function initializeWindows () {
   })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
-    win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/check-update`)
+    await win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/check-update`)
 
-    if (isDevelopment) win.webContents.openDevTools()
+    if (isDevelopment) await win.webContents.openDevTools()
 
     setTimeout(() => {
       if (!MainWindow.getWindow()) {
@@ -99,10 +128,12 @@ function initializeWindows () {
     }, 5000)
   } else {
     createProtocol('app')
-    win.loadURL('app://./index.html/#/check-update')
+    await win.loadURL('app://./index.html/#/check-update')
 
     setTimeout(() => (autoUpdater.checkForUpdatesAndNotify()), 1000)
   }
+
+  win.webContents.send('currentPort', await port)
 
   win.once('ready-to-show', () => {
     win.show()
@@ -171,22 +202,37 @@ if (isDevelopment) {
   }
 }
 
+/**
+ * open monitor window
+ */
 ipcMain.on('launch-monitor', (event, arg) => {
   if (!MonitorWindow.getWindow()) MonitorWindow.createWindow()
 })
 
+/**
+ * open profile window
+ */
 ipcMain.on('launch-profile', (event, arg) => {
   if (!ProfileWindow.getWindow()) ProfileWindow.createWindow()
 })
 
+/**
+ * open proxy window
+ */
 ipcMain.on('launch-proxies', (event, arg) => {
   if (!ProxyWindow.getWindow()) ProxyWindow.createWindow()
 })
 
+/**
+ * open settings window
+ */
 ipcMain.on('launch-setting', (event, arg) => {
   if (!SettingWindow.getWindow()) SettingWindow.createWindow()
 })
 
+/**
+ * settings update event
+ */
 ipcMain.on('update-settings', (event, arg) => {
   if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateSettings', arg)
 
@@ -197,28 +243,43 @@ ipcMain.on('update-settings', (event, arg) => {
   if (ProxyWindow.getWindow()) ProxyWindow.getWindow().webContents.send('updateSettings', arg)
 })
 
+/**
+ * task list update event
+ */
 ipcMain.on('update-tasks', (event, arg) => {
   if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateTasks', arg)
 })
 
+/**
+ * profile list update event
+ */
 ipcMain.on('update-profiles', (event, arg) => {
   if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateProfiles', arg)
 
   if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateProfiles', arg)
 })
 
+/**
+ * bank list update event
+ */
 ipcMain.on('update-banks', (event, arg) => {
   if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateBanks', arg)
 
   if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateBanks', arg)
 })
 
+/**
+ * proxy pool update event
+ */
 ipcMain.on('update-proxies', (event, arg) => {
   if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateProxies', arg)
 
   if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateProxies', arg)
 })
 
+/**
+ * clear all local storage
+ */
 ipcMain.on('clear-localStorage', (event, arg) => {
   if (MainWindow.getWindow()) MainWindow.getWindow().reload()
 
@@ -231,6 +292,9 @@ ipcMain.on('clear-localStorage', (event, arg) => {
   if (ProxyWindow.getWindow()) ProxyWindow.getWindow().reload()
 })
 
+/**
+ * user authentication
+ */
 ipcMain.on('authenticate', (event, arg) => {
   if (!LoginWindow.getWindow()) LoginWindow.createWindow()
 
@@ -245,6 +309,9 @@ ipcMain.on('authenticate', (event, arg) => {
   }
 })
 
+/**
+ * key binding
+ */
 ipcMain.on('bind', (event, arg) => {
   initializeWindows()
 
@@ -255,203 +322,15 @@ ipcMain.on('bind', (event, arg) => {
 })
 
 /**
- * paypal checkout method
- */
-ipcMain.on('pay-with-paypal', async (event, arg) => {
-  const task = JSON.parse(arg).task
-  const settings = JSON.parse(arg).settings
-
-  let proxy = {}
-
-  if (task.proxy && Object.keys(task.proxy).length) proxy = task.proxy.proxies[Math.floor(Math.random() * task.proxy.proxies.length)]
-
-  const args = ['--window-size=800,600']
-
-  if (Object.keys(proxy).length) {
-    const oldProxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
-    const newProxyUrl = await proxyChain.anonymizeProxy(oldProxyUrl)
-    args.push(`--proxy-server=${newProxyUrl}`)
-  }
-
-  const browser = await puppeteer.launch({
-    headless: false,
-    args: args,
-    defaultViewport: null,
-    executablePath: settings.executablePath || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
-  })
-
-  const page = await browser.newPage()
-
-  await page.setRequestInterception(true)
-
-  page.on('request', (request) => {
-    const url = request.url()
-    const resourceType = request.resourceType()
-
-    const filters = ['queue-it.net']
-
-    const shouldAbort = filters.some((urlPart) => url.includes(urlPart))
-
-    if (shouldAbort ||
-      resourceType === 'media' ||
-      url.endsWith('.png') ||
-      url.endsWith('.gif') ||
-      url.endsWith('.jpg')
-    ) {
-      request.abort()
-    } else {
-      request.continue()
-    }
-  })
-
-  page.on('requestfinished', async (request) => {
-    if (request.url() === 'https://www.titan22.com/rest/V1/carts/mine/payment-information') MainWindow.getWindow().webContents.send('updateTask', task)
-  })
-
-  await page.goto('https://www.titan22.com/customer/account/login/')
-  await page.type('#email', task.profile.email)
-  await page.type('#pass', task.profile.password)
-  await page.click('#send2')
-  await page.waitForNavigation()
-  await page.goto('https://www.titan22.com/checkout/')
-})
-
-/**
  * 2c2p checkout method
  */
 ipcMain.on('pay-with-2c2p', async (event, arg) => {
-  const task = JSON.parse(arg).task
-  const settings = JSON.parse(arg).settings
-
-  let proxy = {}
-
-  if (task.proxy && Object.keys(task.proxy).length) proxy = task.proxy.proxies[Math.floor(Math.random() * task.proxy.proxies.length)]
-
-  const args = ['--window-size=800,600']
-
-  if (Object.keys(proxy).length) {
-    const oldProxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
-    const newProxyUrl = await proxyChain.anonymizeProxy(oldProxyUrl)
-    args.push(`--proxy-server=${newProxyUrl}`)
-  }
-
-  const browser = await puppeteer.launch({
-    headless: false,
-    args: args,
-    defaultViewport: null,
-    executablePath: settings.executablePath || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
-  })
-
-  const page = await browser.newPage()
-
-  await page.setCookie({
-    name: task.transactionData.cookies.name,
-    value: task.transactionData.cookies.value,
-    domain: task.transactionData.cookies.domain
-  })
-
-  await page.goto('https://t.2c2p.com/RedirectV3/Payment/Accept')
-
-  const array = [
-      `<p><strong>Task:</strong> ${task.name}</p>`,
-      `<p><strong>Profile:</strong> ${task.profile.name}</p>`,
-      `<p><strong>Product name:</strong> ${task.transactionData.order.name}</p>`,
-      `<p><strong>Product SKU:</strong> ${task.transactionData.order.sku}</p>`,
-      `<p><strong>Size:</strong> ${task.transactionData.order.sizeLabel}</p>`,
-      `<p><strong>Price:</strong> ${task.transactionData.order.price.toLocaleString()}</p>`
-  ]
-
-  await page.waitForSelector('.navbar-inner')
-
-  await page.evaluate((array) => {
-    array.forEach(element => {
-      var div = document.getElementsByClassName('navbar-inner')[0]
-      div.insertAdjacentHTML('beforeend', element)
-    })
-  }, array)
-
-  if (task.bank && Object.keys(task.bank).length) {
-    switch (task.bank.bank.toLowerCase()) {
-      case 'gcash':
-        if (settings.autoPay || settings.autoFill) {
-          await page.click('#btnGCashSubmit')
-          await page.waitForNavigation()
-          await page.waitForSelector('.layout-header')
-
-          await page.evaluate((array) => {
-            array.forEach(element => {
-              var div = document.getElementsByClassName('layout-header')[0]
-              div.insertAdjacentHTML('beforebegin', element)
-            })
-          }, array)
-
-          await page.type('input[type=number]', task.bank.cardNumber)
-          await page.click('.ap-button')
-        }
-        break
-
-      default:
-        if (settings.autoPay) {
-          await page.type('#credit_card_number', task.bank.cardNumber)
-          await page.type('#credit_card_holder_name', task.bank.cardHolder)
-          await page.type('#credit_card_expiry_month', task.bank.expiryMonth)
-          await page.type('#credit_card_expiry_year', task.bank.expiryYear)
-          await page.type('#credit_card_cvv', task.bank.cvv)
-          await page.type('#credit_card_issuing_bank_name', task.bank.bank)
-          await page.click('#btnCCSubmit')
-        } else if (settings.autoFill) {
-          await page.type('#credit_card_number', task.bank.cardNumber)
-          await page.type('#credit_card_holder_name', task.bank.cardHolder)
-          await page.type('#credit_card_expiry_month', task.bank.expiryMonth)
-          await page.type('#credit_card_expiry_year', task.bank.expiryYear)
-          await page.type('#credit_card_cvv', task.bank.cvv)
-          await page.type('#credit_card_issuing_bank_name', task.bank.bank)
-        }
-        break
-    }
-  }
-
-  page.on('close', () => {
-    MainWindow.getWindow().webContents.send('updateTask', task)
-  })
+  CreditCardCheckout.automate(JSON.parse(arg))
 })
 
 /**
- * Login paypal
+ * PayPal authorization
  */
 ipcMain.on('paypal-login', async (event, arg) => {
-  const url = JSON.parse(arg).url
-  const fingerprint = JSON.parse(arg).fingerprint
-  const settings = JSON.parse(arg).settings
-
-  const browser = await puppeteer.launch({
-    headless: false,
-    args: ['--window-size=800,600'],
-    defaultViewport: null,
-    executablePath: settings.executablePath || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
-  })
-
-  const page = await browser.newPage()
-
-  await page.goto(url)
-
-  page.on('framenavigated', frame => {
-    if (frame._url.includes('titan-bot-auth.herokuapp.com')) {
-      const domain = 'https://titan-bot-auth.herokuapp.com/?'
-
-      const queries = frame._url.slice(domain.length).split('&')
-
-      const params = {}
-
-      queries.forEach(element => {
-        const query = element.split('=')
-
-        params[query[0]] = query[1]
-      })
-
-      browser.close()
-
-      MainWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint })
-    }
-  })
+  PayPalAuthorization.automate(JSON.parse(arg))
 })

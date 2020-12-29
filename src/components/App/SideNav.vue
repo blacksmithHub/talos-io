@@ -3,7 +3,7 @@
     <v-navigation-drawer
       app
       permanent
-      :expand-on-hover="!$vuetify.breakpoint.lgAndUp"
+      expand-on-hover
     >
       <v-list>
         <v-list-item class="px-2">

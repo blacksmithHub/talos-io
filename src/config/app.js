@@ -3,7 +3,6 @@ export default {
    * Services Configuration
    */
   services: {
-    local: process.env.VUE_APP_LOCAL,
     /**
      * ===========================================
      * API Service Configuration
@@ -34,7 +33,14 @@ export default {
       url: process.env.VUE_APP_TITAN_URL,
       token: process.env.VUE_APP_TITAN_ADMIN_TOKEN,
       checkout: process.env.VUE_APP_2C2P_URL
-    }
+    },
+    /**
+     * ===========================================
+     * Port Configuration
+     * ===========================================
+     *
+     */
+    port: JSON.parse(localStorage.getItem('core')).port
   },
 
   /**

@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <div class="pa-5">
     <v-card>
       <v-card-title>
         <v-row>
@@ -46,7 +46,7 @@
         </v-row>
       </v-card-title>
 
-      <v-card-text style="max-height: 70vh; overflow: auto;">
+      <v-card-text>
         <v-data-table
           dense
           :headers="headers"
@@ -58,11 +58,13 @@
           :items-per-page="products.length"
           :no-results-text="'Nothing to display'"
           :no-data-text="'Nothing to display'"
+          fixed-header
+          height="65vh"
         >
           <template v-slot:item.img="{ value }">
             <v-img
               :src="value"
-              width="100"
+              width="80"
             />
           </template>
 
@@ -122,7 +124,7 @@
         </v-row>
       </v-card-actions>
     </v-card>
-  </v-container>
+  </div>
 </template>
 
 <script>

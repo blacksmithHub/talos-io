@@ -9,6 +9,7 @@ const { http } = api
  * ===================
  */
 export default {
+  local: `http://localhost:${Config.services.port}/api`,
   baseUrl: `${Config.services.titan22.url}/rest/default/V1`,
   url: 'customers',
   http,
@@ -20,7 +21,7 @@ export default {
   profile (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/me`
 
-    return this.http('http://localhost:5000/api/request')
+    return this.http(`${this.local}/request`)
       .post('get', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)

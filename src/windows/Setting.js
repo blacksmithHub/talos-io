@@ -21,8 +21,8 @@ export default {
   createWindow () {
     win = new BrowserWindow({
       width: 500,
-      height: 800,
-      minHeight: 600,
+      height: 820,
+      minHeight: 820,
       minWidth: 500,
       parent: MainWindow.getWindow(),
       show: false,

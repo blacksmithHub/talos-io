@@ -7,6 +7,8 @@
       <v-toolbar
         dense
         rounded
+        class="transparent"
+        flat
       >
         <v-row
           no-gutters
@@ -22,6 +24,7 @@
               :small="$vuetify.breakpoint.lgAndUp"
               :x-small="!$vuetify.breakpoint.lgAndUp"
               class="primary"
+              depressed
               @click="addNewProfile"
             >
               <v-icon
@@ -46,6 +49,7 @@
               :small="$vuetify.breakpoint.lgAndUp"
               :x-small="!$vuetify.breakpoint.lgAndUp"
               class="primary"
+              depressed
               @click="importProfiles"
             >
               <v-icon
@@ -70,6 +74,7 @@
               :small="$vuetify.breakpoint.lgAndUp"
               :x-small="!$vuetify.breakpoint.lgAndUp"
               class="error"
+              depressed
               @click="reset"
             >
               <v-icon
@@ -87,6 +92,8 @@
       </v-toolbar>
     </v-card-title>
 
+    <v-divider />
+
     <v-card-text style="max-height: 70vh; overflow: auto">
       <v-list
         v-if="profiles.length"
@@ -102,7 +109,7 @@
             <v-list-item-content>
               <v-row no-gutters>
                 <v-col
-                  cols="9"
+                  cols="6"
                   align-self="center"
                 >
                   <v-row
@@ -112,8 +119,9 @@
                     <v-col
                       cols="12"
                       align-self="center"
+                      class="mb-2"
                     >
-                      <h4
+                      <h3
                         class="d-inline-block text-truncate"
                         style="max-width: 40vh"
                         v-text="profile.name"
@@ -125,16 +133,16 @@
                       md="3"
                       align-self="center"
                     >
-                      <small
+                      <span
                         class="d-inline-block text-truncate"
                         style="max-width: 40vh"
                       >
-                        <strong
-                          class="text-capitalize"
+                        <span
+                          class="text-capitalize font-weight-bold"
                           v-text="'email:'"
                         />
                         {{ profile.email }}
-                      </small>
+                      </span>
                     </v-col>
 
                     <v-col
@@ -142,12 +150,12 @@
                       md="3"
                       align-self="center"
                     >
-                      <small
+                      <span
                         class="d-inline-block text-truncate"
                         style="max-width: 40vh"
                       >
-                        <strong
-                          class="text-capitalize"
+                        <span
+                          class="text-capitalize font-weight-bold"
                           v-text="'password:'"
                         />
                         <input
@@ -157,19 +165,34 @@
                           disabled
                           type="password"
                         >
-                      </small>
+                      </span>
                     </v-col>
                   </v-row>
                 </v-col>
 
                 <v-col
                   align-self="center"
-                  class="text-center"
-                  cols="3"
+                  class="text-right"
+                  cols="6"
                 >
                   <v-btn
                     icon
                     color="primary"
+                    depressed
+                    class="mr-2"
+                    @click="paypalLogin(profile)"
+                  >
+                    <vue-fontawesome
+                      icon="paypal"
+                      size="1"
+                    />
+                  </v-btn>
+
+                  <v-btn
+                    icon
+                    color="primary"
+                    depressed
+                    class="mr-2"
                     @click="editProfile(profile)"
                   >
                     <v-icon
@@ -181,6 +204,7 @@
                   <v-btn
                     icon
                     color="error"
+                    depressed
                     @click="deleteProfile(index)"
                   >
                     <v-icon
@@ -216,9 +240,11 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
+import { ipcRenderer } from 'electron'
 
 import ProfileDialog from '@/components/Profiles/ProfileDialog'
 import ImportProfileDialog from '@/components/Profiles/ImportProfileDialog'
+import axios from 'axios'
 
 export default {
   components: {
@@ -248,6 +274,28 @@ export default {
      */
     importProfiles () {
       this.$refs.importProfileDialog.dialog = true
+    },
+    /**
+     * Login to paypal
+     */
+    async paypalLogin (profile) {
+      const secret = await axios.get('https://www.titan22.com/rest/V1/braintree/merchant_server')
+
+      const fingerprint = JSON.parse(atob(secret.data)).authorizationFingerprint
+
+      const params = {
+        returnUrl: 'https://titan-bot-auth.herokuapp.com',
+        cancelUrl: 'https://titan-bot-auth.herokuapp.com',
+        offerPaypalCredit: false,
+        amount: 1,
+        currencyIsoCode: 'PHP',
+        braintreeLibraryVersion: 'braintree/web/3.48.0',
+        authorizationFingerprint: fingerprint
+      }
+
+      const paypal = await axios.post('https://api.braintreegateway.com/merchants/nw7drdhqdjqh5x6n/client_api/v1/paypal_hermes/create_payment_resource', params)
+
+      ipcRenderer.send('paypal-login', JSON.stringify({ url: paypal.data.paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings, profile: profile }))
     }
   }
 }

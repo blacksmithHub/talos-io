@@ -29,6 +29,7 @@ export default {
      */
     genProxy (task) {
       const proxy = this.getActiveTask(task).proxy.proxies[Math.floor(Math.random() * this.getActiveTask(task).proxy.proxies.length)]
+
       return {
         host: proxy.host,
         port: proxy.port,
@@ -190,7 +191,9 @@ export default {
         }
       }
 
-      if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length) params.proxy = this.genProxy(this.getActiveTask(task))
+      if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
+        params.proxy = this.genProxy(this.getActiveTask(task))
+      }
 
       await new Promise(resolve => setTimeout(resolve, this.getActiveTask(task).delay))
 
@@ -250,7 +253,9 @@ export default {
           token: token
         }
 
-        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length) params.proxy = this.genProxy(this.getActiveTask(task))
+        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
+          params.proxy = this.genProxy(this.getActiveTask(task))
+        }
 
         const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
 
@@ -302,7 +307,9 @@ export default {
           token: user.token
         }
 
-        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length) params.proxy = this.genProxy(this.getActiveTask(task))
+        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
+          params.proxy = this.genProxy(this.getActiveTask(task))
+        }
 
         const apiResponse = await cartApi.create(params, cancelTokenSource.token)
 
@@ -350,7 +357,9 @@ export default {
           token: user.token
         }
 
-        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length) params.proxy = this.genProxy(this.getActiveTask(task))
+        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
+          params.proxy = this.genProxy(this.getActiveTask(task))
+        }
 
         const apiResponse = await cartApi.get(params, cancelTokenSource.token)
 
@@ -401,7 +410,9 @@ export default {
             token: user.token
           }
 
-          if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length) params.proxy = this.genProxy(this.getActiveTask(task))
+          if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
+            params.proxy = this.genProxy(this.getActiveTask(task))
+          }
 
           await cartApi.delete(params, cancelTokenSource.token)
         }

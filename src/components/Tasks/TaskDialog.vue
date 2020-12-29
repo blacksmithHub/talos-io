@@ -11,37 +11,19 @@
             class="headline"
             v-text="`${header} Task`"
           />
+
+          <v-spacer />
+
+          <v-btn
+            icon
+            @click="onCancel"
+          >
+            <v-icon v-text="'mdi-close'" />
+          </v-btn>
         </v-card-title>
 
         <v-card-text>
           <v-container>
-            <v-row>
-              <v-col class="pt-0 pb-0">
-                <v-text-field
-                  v-model="name"
-                  label="Task name (optional)"
-                  required
-                  outlined
-                  dense
-                  autocomplete="off"
-                />
-              </v-col>
-
-              <v-col class="pt-0 pb-0">
-                <v-autocomplete
-                  v-model="proxy"
-                  required
-                  clearable
-                  :items="proxies"
-                  outlined
-                  dense
-                  label="Proxies (optional)"
-                  item-text="name"
-                  return-object
-                />
-              </v-col>
-            </v-row>
-
             <v-row>
               <v-col class="pt-0 pb-0">
                 <v-autocomplete
@@ -72,6 +54,18 @@
                 />
               </v-col>
             </v-row>
+
+            <v-autocomplete
+              v-model="proxy"
+              required
+              clearable
+              :items="proxies"
+              outlined
+              dense
+              label="Proxies (optional)"
+              item-text="name"
+              return-object
+            />
 
             <v-row>
               <v-col class="pt-0 pb-0">
@@ -175,21 +169,22 @@
         </v-card-text>
 
         <v-card-actions>
-          <v-spacer />
-          <v-btn
-            rounded
-            class="primary"
-            small
-            @click="onCancel"
-            v-text="'Cancel'"
-          />
-          <v-btn
-            class="primary"
-            rounded
-            type="submit"
-            small
-            v-text="'Save'"
-          />
+          <v-container class="text-right">
+            <v-btn
+              rounded
+              small
+              class="primary mr-2"
+              @click="onCancel"
+              v-text="'Cancel'"
+            />
+            <v-btn
+              class="primary"
+              rounded
+              type="submit"
+              small
+              v-text="'Save'"
+            />
+          </v-container>
         </v-card-actions>
       </v-card>
     </v-form>
@@ -204,7 +199,6 @@ export default {
   data () {
     return {
       dialog: false,
-      name: '',
       sku: '',
       sizes: [],
       profile: {},
@@ -311,7 +305,6 @@ export default {
 
         const sizes = task.sizes.slice().map((val) => val.label)
 
-        this.name = task.name
         this.sku = task.sku
         this.sizes = sizes
         this.delay = task.delay
@@ -350,7 +343,6 @@ export default {
     onCancel () {
       this.$v.$reset()
 
-      this.name = ''
       this.sku = ''
       this.sizes = []
       this.bank = {}
@@ -388,11 +380,10 @@ export default {
         })
 
         const params = {
-          name: this.name.trim(),
           sku: this.sku.trim(),
           sizes: sizes,
           profile: this.profile,
-          proxy: this.proxy,
+          proxy: (this.proxy && Object.keys(this.proxy).length && this.proxy.proxies.length) ? this.proxy : { id: null, name: 'Localhost', proxies: [] },
           bank: this.bank || {},
           delay: this.delay,
           placeOrder: this.placeOrder,

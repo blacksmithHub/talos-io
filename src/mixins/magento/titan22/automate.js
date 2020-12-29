@@ -5,7 +5,7 @@ import { ipcRenderer } from 'electron'
 import authApi from '@/api/magento/titan22/auth'
 import customerApi from '@/api/magento/titan22/customer'
 import cartApi from '@/api/magento/titan22/cart'
-import transactionApi from '@/api/magento/titan22/transaction'
+import orderApi from '@/api/magento/titan22/order'
 import productApi from '@/api/magento/titan22/product'
 
 import Constant from '@/config/constant'
@@ -41,6 +41,7 @@ export default {
      */
     getProxy (task) {
       const proxy = this.activeTask(task).proxy.proxies[Math.floor(Math.random() * this.activeTask(task).proxy.proxies.length)]
+
       return {
         host: proxy.host,
         port: proxy.port,
@@ -326,7 +327,9 @@ export default {
           }
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+          params.proxy = this.getProxy(this.activeTask(task))
+        }
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -405,7 +408,9 @@ export default {
           token: token
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+          params.proxy = this.getProxy(this.activeTask(task))
+        }
 
         const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
 
@@ -481,7 +486,9 @@ export default {
           token: user.token
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+          params.proxy = this.getProxy(this.activeTask(task))
+        }
 
         const apiResponse = await cartApi.create(params, cancelTokenSource.token)
 
@@ -548,7 +555,9 @@ export default {
           token: user.token
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+          params.proxy = this.getProxy(this.activeTask(task))
+        }
 
         const apiResponse = await cartApi.get(params, cancelTokenSource.token)
 
@@ -628,7 +637,9 @@ export default {
               id: cart.items[index].item_id
             }
 
-            if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+            if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+              params.proxy = this.getProxy(this.activeTask(task))
+            }
 
             const apiResponse = await cartApi.delete(params, cancelTokenSource.token)
 
@@ -722,7 +733,9 @@ export default {
             payload: order
           }
 
-          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+            params.proxy = this.getProxy(this.activeTask(task))
+          }
 
           const apiResponse = await cartApi.store(params, cancelTokenSource.token)
 
@@ -830,7 +843,9 @@ export default {
           payload: shippingParams
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+          params.proxy = this.getProxy(this.activeTask(task))
+        }
 
         const cartApiResponse = await cartApi.setShippingInformation(params, cancelTokenSource.token)
 
@@ -911,7 +926,9 @@ export default {
             payload: estimateParams
           }
 
-          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+            params.proxy = this.getProxy(this.activeTask(task))
+          }
 
           const apiResponse = await cartApi.estimateShipping(params, cancelTokenSource.token)
 
@@ -1077,7 +1094,9 @@ export default {
         token: user.token
       }
 
-      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+        params.proxy = this.getProxy(this.activeTask(task))
+      }
 
       let transactionData = {}
       const tries = 3
@@ -1103,7 +1122,7 @@ export default {
             cancelTokenSource: cancelTokenSource
           })
 
-          const apiResponse = await transactionApi.placeOrder(params, cancelTokenSource.token)
+          const apiResponse = await orderApi.placeOrder(params, cancelTokenSource.token)
 
           sw.stop()
 
@@ -1174,7 +1193,9 @@ export default {
         token: user.token
       }
 
-      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+        params.proxy = this.getProxy(this.activeTask(task))
+      }
 
       for (let index = 1; index <= tries; index++) {
         const cancelTokenSource = axios.CancelToken.source()
@@ -1237,7 +1258,9 @@ export default {
             token: Config.services.titan22.token
           }
 
-          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) payload.proxy = this.getProxy(this.activeTask(task))
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+            params.proxy = this.getProxy(this.activeTask(task))
+          }
 
           const response = await productApi.search(payload)
 
