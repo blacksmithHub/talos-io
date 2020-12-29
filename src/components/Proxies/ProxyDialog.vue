@@ -199,8 +199,9 @@ export default {
 
         if (this.isEditMode) {
           this.updateProxy({
-            id: this.selectedProxy.id,
-            ...params
+            ...params,
+            name: this.name.trim() || this.selectedProxy.name,
+            id: this.selectedProxy.id
           })
 
           this.snackbarContent = 'updated'

@@ -361,9 +361,9 @@ export default {
 
       if (!this.$v.$invalid) {
         const params = {
-          nickname: this.nickname,
-          bank: this.bank,
-          cardHolder: this.cardHolder,
+          nickname: this.nickname.trim(),
+          bank: this.bank.trim(),
+          cardHolder: this.cardHolder.trim(),
           cardNumber: this.cardNumber,
           expiryMonth: this.expiryMonth,
           expiryYear: this.expiryYear,
@@ -372,8 +372,9 @@ export default {
 
         if (this.isEditMode) {
           this.updateBank({
-            id: this.selectedBank.id,
-            ...params
+            ...params,
+            nickname: this.nickname.trim() || this.selectedBank.nickname,
+            id: this.selectedBank.id
           })
 
           this.snackbarContent = 'updated'

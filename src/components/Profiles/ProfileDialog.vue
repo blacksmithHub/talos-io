@@ -209,8 +209,9 @@ export default {
 
         if (this.isEditMode) {
           this.updateProfile({
+            ...params,
             id: this.selectedProfile.id,
-            ...params
+            name: this.name.trim() || this.selectedProfile.name
           })
 
           this.snackbarContent = 'updated'
