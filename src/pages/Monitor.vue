@@ -112,6 +112,8 @@
         </v-data-table>
       </v-card-text>
 
+      <v-divider />
+
       <v-card-actions>
         <v-row no-gutters>
           <v-col cols="6">

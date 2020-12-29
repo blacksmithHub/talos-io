@@ -235,6 +235,20 @@
       <ProfileDialog ref="profileDialog" />
       <ImportProfileDialog ref="importProfileDialog" />
     </v-card-text>
+
+    <v-divider />
+
+    <v-card-actions>
+      <v-row no-gutters>
+        <v-col cols="6">
+          <small
+            style="max-width: 100%"
+            class="text-capitalize text-truncate d-inline-block"
+            v-text="`total: ${profiles.length}`"
+          />
+        </v-col>
+      </v-row>
+    </v-card-actions>
   </v-card>
 </template>
 

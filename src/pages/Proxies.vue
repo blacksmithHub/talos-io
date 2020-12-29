@@ -1,14 +1,12 @@
 <template>
   <v-container>
-    <v-card
-      flat
-      class="transparent"
-    >
+    <v-card flat>
       <v-card-title>
         <v-toolbar
           dense
           rounded
           flat
+          class="transparent"
         >
           <v-row
             no-gutters
@@ -91,6 +89,8 @@
           </v-row>
         </v-toolbar>
       </v-card-title>
+
+      <v-divider />
 
       <v-card-text style="max-height: 70vh; overflow: auto">
         <v-list
@@ -191,6 +191,20 @@
         <ProxyDialog ref="proxyDialog" />
         <ImportProxyDialog ref="importProxyDialog" />
       </v-card-text>
+
+      <v-divider />
+
+      <v-card-actions>
+        <v-row no-gutters>
+          <v-col cols="6">
+            <small
+              style="max-width: 100%"
+              class="text-capitalize text-truncate d-inline-block"
+              v-text="`total: ${proxies.length}`"
+            />
+          </v-col>
+        </v-row>
+      </v-card-actions>
     </v-card>
   </v-container>
 </template>
