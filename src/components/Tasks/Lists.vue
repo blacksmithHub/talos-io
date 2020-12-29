@@ -14,30 +14,6 @@
     disable-pagination
     :search="search"
   >
-    <template v-slot:item.profile="{ item }">
-      <span
-        class="d-inline-block text-truncate cursor"
-        style="max-width: 15vh"
-        v-text="`${item.profile.name}`"
-      />
-    </template>
-
-    <template v-slot:item.bank="{ item }">
-      <span
-        class="d-inline-block text-truncate cursor"
-        style="max-width: 10vh"
-        v-text="`${item.bank.bank}`"
-      />
-    </template>
-
-    <template v-slot:item.proxy="{ item }">
-      <span
-        class="d-inline-block text-truncate cursor"
-        style="max-width: 10vh"
-        v-text="(item.proxy && Object.keys(item.proxy).length) ? item.proxy.name : 'Localhost'"
-      />
-    </template>
-
     <template v-slot:item.sku="{ item }">
       <v-tooltip
         bottom

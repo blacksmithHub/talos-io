@@ -52,6 +52,8 @@
                     label="Bank"
                     item-text="nickname"
                     return-object
+                    :error-messages="profileErrors"
+                    @blur="$v.profile.$touch()"
                   />
                 </v-col>
               </v-row>
@@ -262,6 +264,19 @@ export default {
       return errors
     },
     /**
+     * Error messages for bank.
+     *
+     */
+    bankErrors () {
+      const errors = []
+
+      if (!this.$v.bank.$dirty) return errors
+
+      this.$v.bank.required || errors.push('Required')
+
+      return errors
+    },
+    /**
      * Error messages for sku.
      *
      */
@@ -432,6 +447,7 @@ export default {
   },
   validations: {
     profile: { required },
+    bank: { required },
     sku: { required },
     sizes: { required },
     delay: { minValue: minValue(0) },

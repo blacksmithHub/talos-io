@@ -148,7 +148,7 @@ export default {
           result.forEach(element => {
             const csvSizes = (element.sizes) ? element.sizes.trim().split('+') : []
 
-            if (csvSizes.length && element.email && element.password && element.sku) {
+            if (csvSizes.length && element.email && element.password && element.sku && element.bank && element.cardNumber) {
               const sizes = []
 
               csvSizes.forEach((data) => {
@@ -179,30 +179,15 @@ export default {
                   }
                 }
 
-                let bank = this.banks.slice().find((data) => {
-                  return (
-                    data.cardHolder.toLowerCase() === ((element.cardHolder) ? element.cardHolder.trim().toLowerCase() : '') &&
-                    data.cardNumber === (element.cardNumber || '') &&
-                    data.cvv === (parseInt(element.cvv) || '') &&
-                    data.expiryMonth === (element.expiryMonth || '') &&
-                    data.expiryYear === (element.expiryYear || '') &&
-                    data.bank.toLowerCase() === ((element.bank) ? element.bank.trim().toLowerCase() : null)
-                  )
-                })
-
-                if (!bank) {
-                  bank = {
-                    cardHolder: (element.cardHolder) ? element.cardHolder.trim() : '',
-                    cardNumber: parseInt(element.cardNumber) || '',
-                    cvv: parseInt(element.cvv) || '',
-                    expiryMonth: element.expiryMonth || '',
-                    expiryYear: element.expiryYear || '',
-                    bank: (element.bank) ? element.bank.trim() : '',
-                    nickname: (element.bank) ? element.bank.trim() : '',
-                    id: ''
-                  }
-                } else {
-                  bank = {}
+                const bank = {
+                  cardHolder: (element.cardHolder) ? element.cardHolder.trim() : '',
+                  cardNumber: parseInt(element.cardNumber) || '',
+                  cvv: parseInt(element.cvv) || '',
+                  expiryMonth: element.expiryMonth || '',
+                  expiryYear: element.expiryYear || '',
+                  bank: (element.bank) ? element.bank.trim() : '',
+                  nickname: (element.bank) ? element.bank.trim() : '',
+                  id: null
                 }
 
                 const object = {
