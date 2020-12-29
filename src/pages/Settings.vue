@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-form @submit.prevent="submit">
-      <v-card>
+      <v-card flat>
         <v-card-text style="max-height: 80vh; overflow: auto">
           <v-list
             class="pa-0"
@@ -294,6 +294,8 @@
           </v-list>
         </v-card-text>
 
+        <v-divider />
+
         <v-card-actions>
           <v-container class="text-right">
             <v-btn
@@ -302,7 +304,7 @@
               small
               depressed
               @click="onCancel"
-              v-text="'cancel'"
+              v-text="'close'"
             />
 
             <v-btn
@@ -353,6 +355,8 @@
           </v-row>
         </v-card-text>
 
+        <v-divider />
+
         <v-card-actions>
           <v-container class="text-right">
             <v-btn
@@ -378,6 +382,20 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-snackbar v-model="snackbar">
+      Settings successfully saved
+
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          icon
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
+          <v-icon v-text="'mdi-close'" />
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -391,6 +409,7 @@ export default {
   mixins: [webhook],
   data () {
     return {
+      snackbar: false,
       dialog: false,
       monitorInterval: 1,
       webhook: '',
@@ -682,7 +701,7 @@ export default {
           //
         }
 
-        remote.getCurrentWindow().close()
+        this.snackbar = true
       }
     },
     /**

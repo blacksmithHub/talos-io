@@ -1,174 +1,195 @@
 <template>
-  <v-dialog
-    v-model="dialog"
-    persistent
-    max-width="600px"
-  >
-    <v-form @submit.prevent="submit">
-      <v-card>
-        <v-card-title>
-          <span
-            class="headline"
-            v-text="'Mass Edit'"
-          />
+  <div>
+    <v-dialog
+      v-model="dialog"
+      persistent
+      max-width="600px"
+    >
+      <v-form @submit.prevent="submit">
+        <v-card>
+          <v-card-title>
+            <span
+              class="headline"
+              v-text="'Mass Edit'"
+            />
 
-          <v-spacer />
+            <v-spacer />
 
-          <v-btn
-            icon
-            @click="onCancel"
-          >
-            <v-icon v-text="'mdi-close'" />
-          </v-btn>
-        </v-card-title>
-
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="6">
-                <v-text-field
-                  v-model="sku"
-                  label="SKU"
-                  outlined
-                  dense
-                  hide-details
-                  autocomplete="off"
-                />
-              </v-col>
-
-              <v-col cols="6">
-                <v-autocomplete
-                  v-model="proxy"
-                  required
-                  clearable
-                  :items="proxies"
-                  outlined
-                  dense
-                  label="Proxies"
-                  item-text="name"
-                  return-object
-                  hide-details
-                />
-              </v-col>
-
-              <v-col cols="12">
-                <v-combobox
-                  v-model="sizes"
-                  chips
-                  small-chips
-                  deletable-chips
-                  clearable
-                  label="Sizes"
-                  multiple
-                  outlined
-                  dense
-                  append-icon=""
-                  hint="Press Enter per input to apply"
-                  hide-details="auto"
-                  @input="filterSizes"
-                />
-              </v-col>
-
-              <v-col cols="6">
-                <v-text-field
-                  v-model="delay"
-                  dense
-                  outlined
-                  type="number"
-                  hide-details="auto"
-                  :error-messages="delayErrors"
-                  label="Delays"
-                  hint="Input value in milliseconds"
-                  @blur="$v.delay.$touch()"
-                />
-              </v-col>
-
-              <v-col cols="6">
-                <v-menu
-                  ref="placeOrderMenu"
-                  v-model="placeOrderMenu"
-                  :close-on-content-click="false"
-                  :nudge-right="40"
-                  :return-value.sync="placeOrder"
-                  transition="scale-transition"
-                  offset-y
-                  max-width="350px"
-                  min-width="350px"
-                >
-                  <template v-slot:activator="{ on, attrs }">
-                    <v-text-field
-                      v-model="placeOrder"
-                      dense
-                      hide-details
-                      outlined
-                      readonly
-                      v-bind="attrs"
-                      clearable
-                      label="Place Order At"
-                      v-on="on"
-                    />
-                  </template>
-                  <v-time-picker
-                    v-if="placeOrderMenu"
-                    v-model="placeOrder"
-                    full-width
-                    ampm-in-title
-                    format="ampm"
-                    use-seconds
-                    color="primary"
-                    @click:second="$refs.placeOrderMenu.save(placeOrder)"
-                  />
-                </v-menu>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-
-        <v-card-actions>
-          <v-container>
-            <v-row
-              no-gutters
-              align="center"
+            <v-btn
+              icon
+              @click="onCancel"
             >
-              <v-col
-                cols="6"
-                align-self="center"
-              >
-                <v-btn
-                  class="primary"
-                  rounded
-                  small
-                  @click="clearTimer"
-                  v-text="'clear timer'"
-                />
-              </v-col>
+              <v-icon v-text="'mdi-close'" />
+            </v-btn>
+          </v-card-title>
 
-              <v-col
-                cols="6"
-                align-self="center"
-                class="text-right"
+          <v-card-text>
+            <v-container>
+              <v-row>
+                <v-col cols="6">
+                  <v-text-field
+                    v-model="sku"
+                    label="SKU"
+                    outlined
+                    dense
+                    hide-details
+                    autocomplete="off"
+                  />
+                </v-col>
+
+                <v-col cols="6">
+                  <v-autocomplete
+                    v-model="proxy"
+                    required
+                    clearable
+                    :items="proxies"
+                    outlined
+                    dense
+                    label="Proxies"
+                    item-text="name"
+                    return-object
+                    hide-details
+                  />
+                </v-col>
+
+                <v-col cols="12">
+                  <v-combobox
+                    v-model="sizes"
+                    chips
+                    small-chips
+                    deletable-chips
+                    clearable
+                    label="Sizes"
+                    multiple
+                    outlined
+                    dense
+                    append-icon=""
+                    hint="Press Enter per input to apply"
+                    hide-details="auto"
+                    @input="filterSizes"
+                  />
+                </v-col>
+
+                <v-col cols="6">
+                  <v-text-field
+                    v-model="delay"
+                    dense
+                    outlined
+                    type="number"
+                    hide-details="auto"
+                    :error-messages="delayErrors"
+                    label="Delays"
+                    hint="Input value in milliseconds"
+                    @blur="$v.delay.$touch()"
+                  />
+                </v-col>
+
+                <v-col cols="6">
+                  <v-menu
+                    ref="placeOrderMenu"
+                    v-model="placeOrderMenu"
+                    :close-on-content-click="false"
+                    :nudge-right="40"
+                    :return-value.sync="placeOrder"
+                    transition="scale-transition"
+                    offset-y
+                    max-width="350px"
+                    min-width="350px"
+                  >
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-text-field
+                        v-model="placeOrder"
+                        dense
+                        hide-details
+                        outlined
+                        readonly
+                        v-bind="attrs"
+                        clearable
+                        label="Place Order At"
+                        v-on="on"
+                      />
+                    </template>
+                    <v-time-picker
+                      v-if="placeOrderMenu"
+                      v-model="placeOrder"
+                      full-width
+                      ampm-in-title
+                      format="ampm"
+                      use-seconds
+                      color="primary"
+                      @click:second="$refs.placeOrderMenu.save(placeOrder)"
+                    />
+                  </v-menu>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-text>
+
+          <v-divider />
+
+          <v-card-actions>
+            <v-container>
+              <v-row
+                no-gutters
+                align="center"
               >
-                <v-btn
-                  class="primary mr-2"
-                  rounded
-                  small
-                  @click="onCancel"
-                  v-text="'cancel'"
-                />
-                <v-btn
-                  class="primary"
-                  rounded
-                  type="submit"
-                  small
-                  v-text="'save'"
-                />
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-actions>
-      </v-card>
-    </v-form>
-  </v-dialog>
+                <v-col
+                  cols="6"
+                  align-self="center"
+                >
+                  <v-btn
+                    class="primary"
+                    rounded
+                    small
+                    depressed
+                    @click="clearTimer"
+                    v-text="'clear timer'"
+                  />
+                </v-col>
+
+                <v-col
+                  cols="6"
+                  align-self="center"
+                  class="text-right"
+                >
+                  <v-btn
+                    class="primary mr-2"
+                    rounded
+                    small
+                    depressed
+                    @click="onCancel"
+                    v-text="'close'"
+                  />
+                  <v-btn
+                    class="primary"
+                    rounded
+                    type="submit"
+                    depressed
+                    small
+                    v-text="'save'"
+                  />
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-actions>
+        </v-card>
+      </v-form>
+    </v-dialog>
+
+    <v-snackbar v-model="snackbar">
+      Tasks successfully updated
+
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          icon
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
+          <v-icon v-text="'mdi-close'" />
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </div>
 </template>
 
 <script>
@@ -178,6 +199,7 @@ import { minValue } from 'vuelidate/lib/validators'
 export default {
   data () {
     return {
+      snackbar: false,
       dialog: false,
       sizes: [],
       sku: '',
@@ -248,10 +270,10 @@ export default {
 
       this.sizes = []
       this.sku = ''
-      this.dialog = false
       this.delay = 3200
       this.placeOrder = ''
       this.placeOrderMenu = false
+      this.dialog = false
     },
 
     /**
@@ -291,6 +313,7 @@ export default {
         this.updateTask(params)
       })
 
+      this.snackbar = true
       this.onCancel()
     }
   },

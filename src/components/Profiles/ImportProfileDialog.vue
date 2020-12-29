@@ -1,54 +1,85 @@
 <template>
-  <v-dialog
-    v-model="dialog"
-    persistent
-    max-width="600px"
-  >
-    <v-form @submit.prevent="submit">
-      <v-card>
-        <v-card-title>
-          <span
-            class="headline"
-            v-text="'Import Profiles'"
-          />
-        </v-card-title>
-
-        <v-card-text>
-          <v-container>
-            <v-file-input
-              v-model="csv"
-              label="File input"
-              accept=".csv"
-              :error-messages="fileErrors"
-              outlined
-              dense
-              prepend-icon=""
-              hide-details="auto"
-              hint="Import .csv file only"
-              @change="validateFile"
+  <div>
+    <v-dialog
+      v-model="dialog"
+      persistent
+      max-width="600px"
+    >
+      <v-form @submit.prevent="submit">
+        <v-card>
+          <v-card-title>
+            <span
+              class="headline"
+              v-text="'Import Profiles'"
             />
-          </v-container>
-        </v-card-text>
 
-        <v-card-actions class="justify-end">
-          <v-btn
-            class="primary"
-            rounded
-            small
-            @click="onCancel"
-            v-text="'cancel'"
-          />
-          <v-btn
-            class="primary"
-            rounded
-            type="submit"
-            small
-            v-text="'save'"
-          />
-        </v-card-actions>
-      </v-card>
-    </v-form>
-  </v-dialog>
+            <v-spacer />
+
+            <v-btn
+              icon
+              @click="onCancel"
+            >
+              <v-icon v-text="'mdi-close'" />
+            </v-btn>
+          </v-card-title>
+
+          <v-card-text>
+            <v-container>
+              <v-file-input
+                v-model="csv"
+                label="File input"
+                accept=".csv"
+                :error-messages="fileErrors"
+                outlined
+                dense
+                prepend-icon=""
+                hide-details="auto"
+                hint="Import .csv file only"
+                @change="validateFile"
+              />
+            </v-container>
+          </v-card-text>
+
+          <v-divider />
+
+          <v-card-actions>
+            <v-container class="text-right">
+              <v-btn
+                class="primary mr-2"
+                rounded
+                small
+                depressed
+                @click="onCancel"
+                v-text="'close'"
+              />
+              <v-btn
+                class="primary"
+                rounded
+                depressed
+                type="submit"
+                small
+                v-text="'save'"
+              />
+            </v-container>
+          </v-card-actions>
+        </v-card>
+      </v-form>
+    </v-dialog>
+
+    <v-snackbar v-model="snackbar">
+      Profiles successfully imported
+
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          icon
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
+          <v-icon v-text="'mdi-close'" />
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </div>
 </template>
 
 <script>
@@ -57,6 +88,7 @@ import { mapActions } from 'vuex'
 export default {
   data () {
     return {
+      snackbar: false,
       dialog: false,
       csv: null,
       fileErrors: [],
@@ -139,7 +171,7 @@ export default {
       if (!this.fileErrors.length && this.profiles.length) {
         this.profiles.forEach(element => this.addProfile(element))
 
-        this.onCancel()
+        this.snackbar = true
       }
     }
   }

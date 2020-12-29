@@ -9,7 +9,7 @@
         @click:editAll="editAll"
         @click:ImportTasks="importTasks"
       />
-      <v-card>
+      <v-card flat>
         <TaskTitle
           @click:verifyAll="verifyAll"
           @click:paypalLogin="paypalLogin"

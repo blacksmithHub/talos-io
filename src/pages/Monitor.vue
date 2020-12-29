@@ -1,6 +1,6 @@
 <template>
   <div class="pa-5">
-    <v-card>
+    <v-card flat>
       <v-card-title>
         <v-row>
           <v-col align-self="center">

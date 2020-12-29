@@ -39,26 +39,44 @@
           </v-container>
         </v-card-text>
 
+        <v-divider />
+
         <v-card-actions>
           <v-container class="text-right">
             <v-btn
               rounded
               small
               class="primary mr-2"
+              depressed
               @click="onCancel"
-              v-text="'cancel'"
+              v-text="'close'"
             />
             <v-btn
               class="primary"
               rounded
               type="submit"
               small
+              depressed
               v-text="'save'"
             />
           </v-container>
         </v-card-actions>
       </v-card>
     </v-form>
+
+    <v-snackbar v-model="snackbar">
+      Tasks successfully imported
+
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          icon
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
+          <v-icon v-text="'mdi-close'" />
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-dialog>
 </template>
 
@@ -68,6 +86,7 @@ import { mapState, mapActions } from 'vuex'
 export default {
   data () {
     return {
+      snackbar: false,
       dialog: false,
       csv: null,
       fileErrors: [],
@@ -229,7 +248,7 @@ export default {
       if (!this.fileErrors.length && this.newTasks.length) {
         this.newTasks.forEach(element => this.addTask(element))
 
-        this.onCancel()
+        this.snackbar = true
       }
     }
   }
