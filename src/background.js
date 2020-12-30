@@ -139,9 +139,9 @@ async function initializeWindows () {
   })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
-    await win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/check-update`)
+    win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/check-update`)
 
-    if (isDevelopment) await win.webContents.openDevTools()
+    if (isDevelopment) win.webContents.openDevTools()
 
     setTimeout(() => {
       if (!MainWindow.getWindow()) {
@@ -152,7 +152,7 @@ async function initializeWindows () {
     }, 5000)
   } else {
     createProtocol('app')
-    await win.loadURL('app://./index.html/#/check-update')
+    win.loadURL('app://./index.html/#/check-update')
 
     setTimeout(() => (autoUpdater.checkForUpdatesAndNotify()), 1000)
   }
