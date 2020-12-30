@@ -164,14 +164,16 @@ export default {
 
             const oauth = new DiscordOauth2()
 
-            oauth.tokenRequest({
+            const request = {
               clientId: Config.services.discord.clientId,
               clientSecret: Config.services.discord.clientSecret,
               scope: 'identify',
               grantType: 'authorization_code',
               code: response.toString(),
               redirectUri: Config.services.local
-            }).then((data) => {
+            }
+
+            oauth.tokenRequest(request).then((data) => {
               vm.user.credentials = data
             })
           }

@@ -29,7 +29,10 @@
             <v-row no-gutters>
               <v-col cols="12">
                 <strong>{{ username }}</strong>
-                <p>Key: {{ key }}</p>
+                <br>
+                <span>Key: {{ key }}</span>
+                <br>
+                <span>Expiry: N/A</span>
               </v-col>
 
               <v-col
@@ -39,6 +42,8 @@
               >
                 <v-btn
                   class="error"
+                  small
+                  rounded
                   :loading="loading"
                 >
                   reset

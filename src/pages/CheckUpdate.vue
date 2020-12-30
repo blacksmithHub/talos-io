@@ -51,6 +51,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
 import { ipcRenderer } from 'electron'
 
 export default {
@@ -63,6 +64,11 @@ export default {
     ipcRenderer.on('versionUpdate', (event, arg) => {
       this.msg = arg
     })
+
+    ipcRenderer.on('currentPort', (event, arg) => this.setPort(arg))
+  },
+  methods: {
+    ...mapActions('core', ['setPort'])
   }
 }
 </script>

@@ -6,6 +6,7 @@ import './plugins/vue-toast-notification'
 import './plugins/vue-json-csv'
 import './plugins/vue-clipboard2'
 import './plugins/vue-progress-bar'
+import './plugins/vue-fontawesome'
 
 import App from './App.vue'
 import store from './store'

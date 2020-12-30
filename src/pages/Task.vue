@@ -1,7 +1,7 @@
 <template>
   <div>
     <SideNav />
-    <v-container>
+    <div class="pa-5">
       <Header
         class="mb-3"
         @click:AddTask="openAddTaskDialog"
@@ -9,105 +9,14 @@
         @click:editAll="editAll"
         @click:ImportTasks="importTasks"
       />
-      <v-card>
-        <v-card-title>
-          <v-btn
-            :fab="!$vuetify.breakpoint.lgAndUp"
-            :rounded="$vuetify.breakpoint.lgAndUp"
-            :small="$vuetify.breakpoint.lgAndUp"
-            :x-small="!$vuetify.breakpoint.lgAndUp"
-            class="cyan mr-3"
-            @click="verifyAll"
-          >
-            <v-icon
-              :left="$vuetify.breakpoint.lgAndUp"
-              :small="$vuetify.breakpoint.lgAndUp"
-              v-text="'mdi-shield-search'"
-            />
-            <span
-              v-if="$vuetify.breakpoint.lgAndUp"
-              v-text="'verify all tasks'"
-            />
-          </v-btn>
-
-          <v-btn
-            :fab="!$vuetify.breakpoint.lgAndUp"
-            :rounded="$vuetify.breakpoint.lgAndUp"
-            :small="$vuetify.breakpoint.lgAndUp"
-            :x-small="!$vuetify.breakpoint.lgAndUp"
-            class="cyan mr-3"
-            @click="paypalLogin"
-          >
-            <v-icon
-              :left="$vuetify.breakpoint.lgAndUp"
-              :small="$vuetify.breakpoint.lgAndUp"
-              v-text="'mdi-bank'"
-            />
-            <span
-              v-if="$vuetify.breakpoint.lgAndUp"
-              v-text="'PayPal Login'"
-            />
-          </v-btn>
-
-          <v-spacer />
-
-          <v-btn
-            :fab="!$vuetify.breakpoint.lgAndUp"
-            :rounded="$vuetify.breakpoint.lgAndUp"
-            :small="$vuetify.breakpoint.lgAndUp"
-            :x-small="!$vuetify.breakpoint.lgAndUp"
-            class="success mr-3"
-            @click="startAll"
-          >
-            <v-icon
-              :left="$vuetify.breakpoint.lgAndUp"
-              :small="$vuetify.breakpoint.lgAndUp"
-              v-text="'mdi-play'"
-            />
-            <span
-              v-if="$vuetify.breakpoint.lgAndUp"
-              v-text="'start all'"
-            />
-          </v-btn>
-
-          <v-btn
-            :fab="!$vuetify.breakpoint.lgAndUp"
-            :rounded="$vuetify.breakpoint.lgAndUp"
-            :small="$vuetify.breakpoint.lgAndUp"
-            :x-small="!$vuetify.breakpoint.lgAndUp"
-            class="warning mr-3"
-            @click="stopAll"
-          >
-            <v-icon
-              :left="$vuetify.breakpoint.lgAndUp"
-              :small="$vuetify.breakpoint.lgAndUp"
-              v-text="'mdi-stop'"
-            />
-            <span
-              v-if="$vuetify.breakpoint.lgAndUp"
-              v-text="'stop all'"
-            />
-          </v-btn>
-
-          <v-btn
-            :fab="!$vuetify.breakpoint.lgAndUp"
-            :rounded="$vuetify.breakpoint.lgAndUp"
-            :small="$vuetify.breakpoint.lgAndUp"
-            :x-small="!$vuetify.breakpoint.lgAndUp"
-            class="error"
-            @click="deleteAll"
-          >
-            <v-icon
-              :left="$vuetify.breakpoint.lgAndUp"
-              :small="$vuetify.breakpoint.lgAndUp"
-              v-text="'mdi-delete'"
-            />
-            <span
-              v-if="$vuetify.breakpoint.lgAndUp"
-              v-text="'delete all'"
-            />
-          </v-btn>
-        </v-card-title>
+      <v-card flat>
+        <TaskTitle
+          @click:verifyAll="verifyAll"
+          @click:startAll="startAll"
+          @click:stopAll="stopAll"
+          @click:deleteAll="deleteAll"
+          @input:search="onSearch"
+        />
 
         <v-divider />
 
@@ -116,6 +25,7 @@
           class="pa-0"
         >
           <Lists
+            ref="list"
             @click:startTask="startTask"
             @click:stopTask="stopTask"
             @click:deleteTask="deleteTask"
@@ -151,7 +61,7 @@
           </v-row>
         </v-card-actions>
       </v-card>
-    </v-container>
+    </div>
 
     <LogsDialog ref="logsDialog" />
     <TaskDialog ref="taskDialog" />
@@ -171,16 +81,16 @@ import TaskDialog from '@/components/Tasks/TaskDialog'
 import MassEditDialog from '@/components/Tasks/MassEditDialog'
 import ImportTaskDialog from '@/components/Tasks/ImportTaskDialog'
 import LogsDialog from '@/components/Tasks/LogsDialog'
+import TaskTitle from '@/components/Tasks/TaskTitle'
 
 import automate from '@/mixins/magento/titan22/automate'
 import verify from '@/mixins/magento/titan22/verify'
 
 import Constant from '@/config/constant'
 
-import axios from 'axios'
-
 export default {
   components: {
+    TaskTitle,
     LogsDialog,
     SideNav,
     Lists,
@@ -201,7 +111,6 @@ export default {
     ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
     ...mapState('setting', { settings: 'items' }),
-    ...mapState('paypal', { paypal: 'items' }),
 
     /**
      * Return success count.
@@ -230,10 +139,12 @@ export default {
 
     ipcRenderer.on('updateBanks', (event, arg) => {
       this.setBanks(arg)
+      this.updateAllBankTask(arg)
     })
 
     ipcRenderer.on('updateProfiles', (event, arg) => {
       this.setProfiles(arg)
+      this.updateAllProfileTask(arg)
     })
 
     ipcRenderer.on('updateTask', (event, arg) => {
@@ -245,26 +156,7 @@ export default {
 
     ipcRenderer.on('updateProxies', (event, arg) => {
       this.setProxies(arg)
-    })
-
-    ipcRenderer.on('paypalParams', async (event, arg) => {
-      const params = {
-        paypalAccount: {
-          correlationId: arg.params.token,
-          paymentToken: arg.params.paymentId,
-          payerId: arg.params.PayerID,
-          unilateral: true,
-          intent: 'authorize'
-        },
-        braintreeLibraryVersion: 'braintree/web/3.48.0',
-        authorizationFingerprint: arg.fingerprint
-      }
-
-      const response = await axios.post('https://api.braintreegateway.com/merchants/nw7drdhqdjqh5x6n/client_api/v1/payment_methods/paypal_accounts', params)
-
-      const data = response.data
-
-      this.setPaypal(data)
+      this.updateAllProxyTask(arg)
     })
   },
   methods: {
@@ -283,8 +175,58 @@ export default {
     ...mapActions('bank', { setBanks: 'setItems' }),
     ...mapActions('proxy', { setProxies: 'setItems' }),
     ...mapActions('attribute', { prepareAttributes: 'initializeItems' }),
-    ...mapActions('paypal', { setPaypal: 'setItems' }),
 
+    /**
+     * update all proxy tasks
+     */
+    updateAllProxyTask (proxies) {
+      this.tasks.forEach(element => {
+        const proxy = proxies.find((val) => val.id === element.proxy.id)
+
+        if (proxy) {
+          this.updateTask({
+            ...element,
+            proxy: proxy
+          })
+        }
+      })
+    },
+    /**
+     * update all bank tasks
+     */
+    updateAllBankTask (banks) {
+      this.tasks.forEach(element => {
+        const bank = banks.find((val) => val.id === element.bank.id)
+
+        if (bank) {
+          this.updateTask({
+            ...element,
+            bank: bank
+          })
+        }
+      })
+    },
+    /**
+     * update all profile tasks
+     */
+    updateAllProfileTask (profiles) {
+      this.tasks.forEach(element => {
+        const profile = profiles.find((val) => val.id === element.profile.id)
+
+        if (profile) {
+          this.updateTask({
+            ...element,
+            profile: profile
+          })
+        }
+      })
+    },
+    /**
+     * on search input event.
+     */
+    onSearch (search) {
+      this.$refs.list.search = search
+    },
     /**
      * Open logs dialog.
      *
@@ -325,11 +267,7 @@ export default {
      *
      */
     redirectToCheckout (task) {
-      if (task.transactionData.paypal) {
-        ipcRenderer.send('pay-with-paypal', JSON.stringify({ task: task, settings: this.settings }))
-      } else {
-        ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
-      }
+      ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
     },
     /**
      * Start task.
@@ -352,34 +290,12 @@ export default {
       }
     },
     /**
-     * Login to paypal
-     */
-    async paypalLogin () {
-      const secret = await axios.get('https://www.titan22.com/rest/V1/braintree/merchant_server')
-
-      const fingerprint = JSON.parse(atob(secret.data)).authorizationFingerprint
-
-      const params = {
-        returnUrl: 'https://titan-bot-auth.herokuapp.com',
-        cancelUrl: 'https://titan-bot-auth.herokuapp.com',
-        offerPaypalCredit: false,
-        amount: 1,
-        currencyIsoCode: 'PHP',
-        braintreeLibraryVersion: 'braintree/web/3.48.0',
-        authorizationFingerprint: fingerprint
-      }
-
-      const paypal = await axios.post('https://api.braintreegateway.com/merchants/nw7drdhqdjqh5x6n/client_api/v1/paypal_hermes/create_payment_resource', params)
-
-      ipcRenderer.send('paypal-login', JSON.stringify({ url: paypal.data.paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings }))
-    },
-    /**
      * delete task
      *
      */
-    async deleteTask (task, key) {
+    async deleteTask (task) {
       await this.stopTask(task)
-      await this.removeTask(key)
+      await this.removeTask(task.id)
     },
 
     /**
@@ -387,9 +303,15 @@ export default {
      *
      */
     async startAll () {
-      await this.tasks.forEach((task) => {
-        if (task.status.class !== 'error') this.startTask(task)
-      })
+      if (this.$refs.list.selected.length) {
+        await this.$refs.list.selected.forEach((task) => {
+          if (task.status.class !== 'error') this.startTask(task)
+        })
+      } else {
+        await this.tasks.forEach((task) => {
+          if (task.status.class !== 'error') this.startTask(task)
+        })
+      }
     },
 
     /**
@@ -397,7 +319,11 @@ export default {
      *
      */
     async stopAll () {
-      await this.tasks.forEach((task) => this.stopTask(task))
+      if (this.$refs.list.selected.length) {
+        await this.$refs.list.selected.forEach((task) => this.stopTask(task))
+      } else {
+        await this.tasks.forEach((task) => this.stopTask(task))
+      }
     },
     /**
      * Stop task
@@ -428,8 +354,15 @@ export default {
      *
      */
     async deleteAll () {
-      await this.stopAll()
-      await this.resetTask()
+      if (this.$refs.list.selected.length) {
+        await this.$refs.list.selected.forEach((task) => {
+          this.stopTask(task)
+          this.deleteTask(task)
+        })
+      } else {
+        await this.stopAll()
+        await this.resetTask()
+      }
     },
 
     /**
@@ -437,7 +370,11 @@ export default {
      *
      */
     async verifyAll () {
-      await this.tasks.forEach((task) => this.verifyTask(task))
+      if (this.$refs.list.selected.length) {
+        await this.$refs.list.selected.forEach((task) => this.verifyTask(task))
+      } else {
+        await this.tasks.forEach((task) => this.verifyTask(task))
+      }
     },
     /**
      * verify task

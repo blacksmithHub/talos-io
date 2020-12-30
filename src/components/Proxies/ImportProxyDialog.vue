@@ -11,6 +11,15 @@
             class="headline"
             v-text="'Import Proxies'"
           />
+
+          <v-spacer />
+
+          <v-btn
+            icon
+            @click="onCancel"
+          >
+            <v-icon v-text="'mdi-close'" />
+          </v-btn>
         </v-card-title>
 
         <v-card-text>
@@ -19,14 +28,19 @@
           </v-container>
         </v-card-text>
 
-        <v-card-actions class="justify-end">
-          <v-btn
-            class="primary"
-            rounded
-            small
-            @click="onCancel"
-            v-text="'close'"
-          />
+        <v-divider />
+
+        <v-card-actions>
+          <v-container class="text-right">
+            <v-btn
+              class="primary"
+              rounded
+              depressed
+              small
+              @click="onCancel"
+              v-text="'close'"
+            />
+          </v-container>
         </v-card-actions>
       </v-card>
     </v-form>

@@ -1,6 +1,6 @@
 <template>
-  <v-container>
-    <v-card>
+  <div class="pa-5">
+    <v-card flat>
       <v-card-title>
         <v-row>
           <v-col align-self="center">
@@ -46,7 +46,7 @@
         </v-row>
       </v-card-title>
 
-      <v-card-text style="max-height: 70vh; overflow: auto;">
+      <v-card-text>
         <v-data-table
           dense
           :headers="headers"
@@ -58,11 +58,13 @@
           :items-per-page="products.length"
           :no-results-text="'Nothing to display'"
           :no-data-text="'Nothing to display'"
+          fixed-header
+          height="65vh"
         >
           <template v-slot:item.img="{ value }">
             <v-img
               :src="value"
-              width="100"
+              width="80"
             />
           </template>
 
@@ -110,6 +112,8 @@
         </v-data-table>
       </v-card-text>
 
+      <v-divider />
+
       <v-card-actions>
         <v-row no-gutters>
           <v-col cols="6">
@@ -122,7 +126,7 @@
         </v-row>
       </v-card-actions>
     </v-card>
-  </v-container>
+  </div>
 </template>
 
 <script>

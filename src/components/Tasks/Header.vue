@@ -2,6 +2,7 @@
   <v-toolbar
     rounded
     dense
+    flat
   >
     <v-btn
       :fab="!$vuetify.breakpoint.lgAndUp"
@@ -9,6 +10,7 @@
       :small="$vuetify.breakpoint.lgAndUp"
       :x-small="!$vuetify.breakpoint.lgAndUp"
       class="primary mr-3"
+      depressed
       @click="$emit('click:AddTask')"
     >
       <v-icon
@@ -28,6 +30,7 @@
       :small="$vuetify.breakpoint.lgAndUp"
       :x-small="!$vuetify.breakpoint.lgAndUp"
       class="primary mr-3"
+      depressed
       @click="$emit('click:ImportTasks')"
     >
       <v-icon
@@ -47,6 +50,7 @@
       :small="$vuetify.breakpoint.lgAndUp"
       :x-small="!$vuetify.breakpoint.lgAndUp"
       class="primary"
+      depressed
       @click="$emit('click:editAll')"
     >
       <v-icon
@@ -61,13 +65,3 @@
     </v-btn>
   </v-toolbar>
 </template>
-
-<script>
-export default {
-  data () {
-    return {
-      //
-    }
-  }
-}
-</script>

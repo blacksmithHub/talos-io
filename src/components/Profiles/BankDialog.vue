@@ -1,161 +1,191 @@
 <template>
-  <v-dialog
-    v-model="dialog"
-    persistent
-    max-width="600px"
-  >
-    <v-form @submit.prevent="submit">
-      <v-card>
-        <v-card-title>
-          <span
-            class="headline"
-            v-text="`${header} Bank`"
-          />
-        </v-card-title>
+  <div>
+    <v-dialog
+      v-model="dialog"
+      persistent
+      max-width="600px"
+    >
+      <v-form @submit.prevent="submit">
+        <v-card>
+          <v-card-title>
+            <span
+              class="headline"
+              v-text="`${header} Bank`"
+            />
 
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="nickname"
-                  label="Nickname (optional)"
-                  outlined
-                  dense
-                  hide-details
-                  autocomplete="off"
-                />
-              </v-col>
+            <v-spacer />
 
-              <v-col cols="12">
-                <v-text-field
-                  v-model="bank"
-                  label="Bank"
-                  outlined
-                  dense
-                  hide-details
-                  autocomplete="off"
-                  :error-messages="bankErrors"
-                  @blur="$v.bank.$touch()"
-                />
-              </v-col>
+            <v-btn
+              icon
+              @click="onCancel"
+            >
+              <v-icon v-text="'mdi-close'" />
+            </v-btn>
+          </v-card-title>
 
-              <v-col
-                v-if="!isGcash"
-                cols="12"
-                md="6"
-              >
-                <v-text-field
-                  v-model="cardHolder"
-                  label="Card holder"
-                  required
-                  outlined
-                  dense
-                  :error-messages="cardHolderErrors"
-                  hide-details="auto"
-                  autocomplete="off"
-                  @blur="$v.cardHolder.$touch()"
-                />
-              </v-col>
+          <v-card-text>
+            <v-container>
+              <v-row>
+                <v-col cols="12">
+                  <v-text-field
+                    v-model="nickname"
+                    label="Nickname (optional)"
+                    outlined
+                    dense
+                    hide-details
+                    autocomplete="off"
+                  />
+                </v-col>
 
-              <v-col
-                cols="12"
-                :md="isGcash ? 12 : 6"
-              >
-                <v-text-field
-                  v-model="cardNumber"
-                  label="Card number"
-                  required
-                  outlined
-                  dense
-                  :error-messages="cardNumberErrors"
-                  hide-details="auto"
-                  type="number"
-                  autocomplete="off"
-                  @blur="$v.cardNumber.$touch()"
-                />
-              </v-col>
+                <v-col cols="12">
+                  <v-text-field
+                    v-model="bank"
+                    label="Bank"
+                    outlined
+                    dense
+                    hide-details
+                    autocomplete="off"
+                    :error-messages="bankErrors"
+                    @blur="$v.bank.$touch()"
+                  />
+                </v-col>
 
-              <v-col
-                v-if="!isGcash"
-                cols="12"
-                md="6"
-              >
-                <v-row>
-                  <v-col class="pt-0 pb-0">
-                    <v-text-field
-                      v-model="expiryMonth"
-                      label="Expiry month"
-                      required
-                      outlined
-                      dense
-                      :error-messages="expiryMonthErrors"
-                      hide-details="auto"
-                      type="number"
-                      autocomplete="off"
-                      @blur="$v.expiryMonth.$touch()"
-                    />
-                  </v-col>
+                <v-col
+                  v-if="!isGcash"
+                  cols="12"
+                  md="6"
+                >
+                  <v-text-field
+                    v-model="cardHolder"
+                    label="Card holder"
+                    required
+                    outlined
+                    dense
+                    :error-messages="cardHolderErrors"
+                    hide-details="auto"
+                    autocomplete="off"
+                    @blur="$v.cardHolder.$touch()"
+                  />
+                </v-col>
 
-                  <v-col class="pt-0 pb-0">
-                    <v-text-field
-                      v-model="expiryYear"
-                      label="Expiry year"
-                      required
-                      outlined
-                      dense
-                      :error-messages="expiryYearErrors"
-                      hide-details="auto"
-                      type="number"
-                      autocomplete="off"
-                      @blur="$v.expiryYear.$touch()"
-                    />
-                  </v-col>
-                </v-row>
-              </v-col>
+                <v-col
+                  cols="12"
+                  :md="isGcash ? 12 : 6"
+                >
+                  <v-text-field
+                    v-model="cardNumber"
+                    label="Card number"
+                    required
+                    outlined
+                    dense
+                    :error-messages="cardNumberErrors"
+                    hide-details="auto"
+                    type="number"
+                    autocomplete="off"
+                    @blur="$v.cardNumber.$touch()"
+                  />
+                </v-col>
 
-              <v-col
-                v-if="!isGcash"
-                cols="12"
-                md="6"
-              >
-                <v-text-field
-                  v-model="cvv"
-                  label="Cvv"
-                  required
-                  outlined
-                  dense
-                  :error-messages="cvvErrors"
-                  hide-details="auto"
-                  type="number"
-                  autocomplete="off"
-                  @blur="$v.cvv.$touch()"
-                />
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
+                <v-col
+                  v-if="!isGcash"
+                  cols="12"
+                  md="6"
+                >
+                  <v-row>
+                    <v-col class="pt-0 pb-0">
+                      <v-text-field
+                        v-model="expiryMonth"
+                        label="Expiry month"
+                        required
+                        outlined
+                        dense
+                        :error-messages="expiryMonthErrors"
+                        hide-details="auto"
+                        type="number"
+                        autocomplete="off"
+                        @blur="$v.expiryMonth.$touch()"
+                      />
+                    </v-col>
 
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            rounded
-            class="primary"
-            small
-            @click="onCancel"
-            v-text="'Cancel'"
-          />
-          <v-btn
-            class="primary"
-            rounded
-            type="submit"
-            small
-            v-text="'Save'"
-          />
-        </v-card-actions>
-      </v-card>
-    </v-form>
-  </v-dialog>
+                    <v-col class="pt-0 pb-0">
+                      <v-text-field
+                        v-model="expiryYear"
+                        label="Expiry year"
+                        required
+                        outlined
+                        dense
+                        :error-messages="expiryYearErrors"
+                        hide-details="auto"
+                        type="number"
+                        autocomplete="off"
+                        @blur="$v.expiryYear.$touch()"
+                      />
+                    </v-col>
+                  </v-row>
+                </v-col>
+
+                <v-col
+                  v-if="!isGcash"
+                  cols="12"
+                  md="6"
+                >
+                  <v-text-field
+                    v-model="cvv"
+                    label="Cvv"
+                    required
+                    outlined
+                    dense
+                    :error-messages="cvvErrors"
+                    hide-details="auto"
+                    type="number"
+                    autocomplete="off"
+                    @blur="$v.cvv.$touch()"
+                  />
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-text>
+
+          <v-divider />
+
+          <v-card-actions>
+            <v-container class="text-right">
+              <v-btn
+                rounded
+                class="primary mr-2"
+                small
+                depressed
+                @click="onCancel"
+                v-text="'Close'"
+              />
+              <v-btn
+                class="primary"
+                rounded
+                type="submit"
+                small
+                depressed
+                v-text="'Save'"
+              />
+            </v-container>
+          </v-card-actions>
+        </v-card>
+      </v-form>
+    </v-dialog>
+
+    <v-snackbar v-model="snackbar">
+      Bank successfully {{ snackbarContent }}
+
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          icon
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
+          <v-icon v-text="'mdi-close'" />
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </div>
 </template>
 
 <script>
@@ -165,6 +195,8 @@ import { required, maxLength, requiredIf, maxValue, minValue } from 'vuelidate/l
 export default {
   data () {
     return {
+      snackbarContent: 'created',
+      snackbar: false,
       dialog: false,
       isEditMode: false,
       selectedBank: {},
@@ -329,9 +361,9 @@ export default {
 
       if (!this.$v.$invalid) {
         const params = {
-          nickname: this.nickname,
-          bank: this.bank,
-          cardHolder: this.cardHolder,
+          nickname: this.nickname.trim(),
+          bank: this.bank.trim(),
+          cardHolder: this.cardHolder.trim(),
           cardNumber: this.cardNumber,
           expiryMonth: this.expiryMonth,
           expiryYear: this.expiryYear,
@@ -340,14 +372,19 @@ export default {
 
         if (this.isEditMode) {
           this.updateBank({
-            id: this.selectedBank.id,
-            ...params
+            ...params,
+            nickname: this.nickname.trim() || this.selectedBank.nickname,
+            id: this.selectedBank.id
           })
+
+          this.snackbarContent = 'updated'
+          this.snackbar = true
+          this.onCancel()
         } else {
           this.addBank({ ...params })
+          this.snackbarContent = 'created'
+          this.snackbar = true
         }
-
-        this.onCancel()
       }
     }
   },

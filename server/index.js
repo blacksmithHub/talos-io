@@ -13,6 +13,13 @@ const order = require('./api/order')
 app.use('/api/request', request)
 app.use('/api/order', order)
 
-const port = 5000
+const getPort = require('get-port')
 
-app.listen(port, () => console.log(`Server started on port ${port}`))
+const port = getPort();
+
+(async () => {
+  const availPort = await port
+  app.listen(availPort, () => console.log(`Server started on port ${availPort}`))
+})()
+
+module.exports = port

@@ -86,6 +86,8 @@ export default {
 
       commit('SET_ITEMS', banks)
       localStorage.setItem('banks', JSON.stringify(banks))
+
+      return lastItemId
     },
 
     /**

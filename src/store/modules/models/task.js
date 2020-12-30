@@ -34,8 +34,9 @@ export default {
      * @param {*} state
      * @param {*} key
      */
-    DELETE_ITEM (state, key) {
-      state.items.splice(key, 1)
+    DELETE_ITEM (state, id) {
+      const index = state.items.indexOf(state.items.find((el) => el.id === id))
+      state.items.splice(index, 1)
     }
   },
 
@@ -81,7 +82,6 @@ export default {
       tasks.push({
         id: lastItemId,
         ...item,
-        name: item.name || `Task ${lastItemId}`,
         status: {
           id: 1,
           msg: 'stopped',

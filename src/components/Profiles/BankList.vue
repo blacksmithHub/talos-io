@@ -7,6 +7,8 @@
       <v-toolbar
         dense
         rounded
+        class="transparent"
+        flat
       >
         <v-row
           no-gutters
@@ -22,6 +24,7 @@
               :small="$vuetify.breakpoint.lgAndUp"
               :x-small="!$vuetify.breakpoint.lgAndUp"
               class="primary"
+              depressed
               @click="addNewBank"
             >
               <v-icon
@@ -46,6 +49,7 @@
               :small="$vuetify.breakpoint.lgAndUp"
               :x-small="!$vuetify.breakpoint.lgAndUp"
               class="primary"
+              depressed
               @click="importBanks"
             >
               <v-icon
@@ -70,6 +74,7 @@
               :small="$vuetify.breakpoint.lgAndUp"
               :x-small="!$vuetify.breakpoint.lgAndUp"
               class="error"
+              depressed
               @click="reset"
             >
               <v-icon
@@ -87,6 +92,8 @@
       </v-toolbar>
     </v-card-title>
 
+    <v-divider />
+
     <v-card-text style="max-height: 70vh; overflow: auto">
       <v-list
         v-if="banks.length"
@@ -102,7 +109,7 @@
             <v-list-item-content>
               <v-row no-gutters>
                 <v-col
-                  cols="9"
+                  cols="6"
                   align-self="center"
                 >
                   <v-row
@@ -112,8 +119,9 @@
                     <v-col
                       cols="12"
                       align-self="center"
+                      class="mb-2"
                     >
-                      <h4
+                      <h3
                         class="d-inline-block text-truncate"
                         style="max-width: 40vh"
                         v-text="bank.nickname"
@@ -125,16 +133,16 @@
                       md="3"
                       align-self="center"
                     >
-                      <small
+                      <span
                         class="d-inline-block text-truncate"
                         style="max-width: 40vh"
                       >
-                        <strong
-                          class="text-capitalize"
+                        <span
+                          class="text-capitalize font-weight-bold"
                           v-text="'bank:'"
                         />
                         {{ bank.bank }}
-                      </small>
+                      </span>
                     </v-col>
 
                     <v-col
@@ -142,16 +150,16 @@
                       md="3"
                       align-self="center"
                     >
-                      <small
+                      <span
                         class="d-inline-block text-truncate"
                         style="max-width: 40vh"
                       >
-                        <strong
-                          class="text-capitalize"
+                        <span
+                          class="text-capitalize font-weight-bold"
                           v-text="'Card Holder:'"
                         />
                         {{ bank.cardHolder || 'N/A' }}
-                      </small>
+                      </span>
                     </v-col>
 
                     <v-col
@@ -159,12 +167,12 @@
                       md="3"
                       align-self="center"
                     >
-                      <small
+                      <span
                         class="d-inline-block text-truncate"
                         style="max-width: 40vh"
                       >
-                        <strong
-                          class="text-capitalize"
+                        <span
+                          class="text-capitalize font-weight-bold"
                           v-text="'Card Number:'"
                         />
                         <input
@@ -174,19 +182,20 @@
                           disabled
                           type="password"
                         >
-                      </small>
+                      </span>
                     </v-col>
                   </v-row>
                 </v-col>
 
                 <v-col
                   align-self="center"
-                  class="text-center"
-                  cols="3"
+                  class="text-right"
+                  cols="6"
                 >
                   <v-btn
                     icon
                     color="primary"
+                    class="mr-2"
                     @click="editBank(bank)"
                   >
                     <v-icon
@@ -198,6 +207,7 @@
                   <v-btn
                     icon
                     color="error"
+                    class="mr-2"
                     @click="deleteBank(index)"
                   >
                     <v-icon
@@ -228,6 +238,20 @@
       <BankDialog ref="bankDialog" />
       <ImportBankDialog ref="importBankDialog" />
     </v-card-text>
+
+    <v-divider />
+
+    <v-card-actions>
+      <v-row no-gutters>
+        <v-col cols="6">
+          <small
+            style="max-width: 100%"
+            class="text-capitalize text-truncate d-inline-block"
+            v-text="`total: ${banks.length}`"
+          />
+        </v-col>
+      </v-row>
+    </v-card-actions>
   </v-card>
 </template>
 

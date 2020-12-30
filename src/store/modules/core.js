@@ -14,7 +14,8 @@ export default {
     return {
       drawer: false,
       loading: false,
-      package: JSON.parse(unescape(process.env.PACKAGE_JSON || '%7B%7D'))
+      package: JSON.parse(unescape(process.env.PACKAGE_JSON || '%7B%7D')),
+      port: JSON.parse(localStorage.getItem('core')).port
     }
   },
   mutations: {
@@ -36,17 +37,28 @@ export default {
      */
     TOGGLE_DRAWER (state, data) {
       state.drawer = data
+    },
+
+    /**
+     * Set the port.
+     *
+     * @param state
+     * @param port
+     */
+    SET_PORT (state, port) {
+      state.port = port
     }
   },
   actions: {
     /**
      * Set the loading state
      *
-     * @param {*} param0
+     * @param {*} param
      * @param {*} loading
      */
-    setLoading ({ commit }, loading) {
+    setLoading ({ state, commit }, loading) {
       commit('SET_LOADING', loading)
+      localStorage.setItem('core', JSON.stringify(state))
     },
 
     /**
@@ -55,8 +67,20 @@ export default {
      * @param state
      * @param data
      */
-    toggleDrawer ({ commit }, data) {
+    toggleDrawer ({ state, commit }, data) {
       commit('TOGGLE_DRAWER', data)
+      localStorage.setItem('core', JSON.stringify(state))
+    },
+
+    /**
+     * Set the port state
+     *
+     * @param {*} param
+     * @param {*} port
+     */
+    setPort ({ state, commit }, port) {
+      commit('SET_PORT', port)
+      localStorage.setItem('core', JSON.stringify(state))
     }
   }
 }

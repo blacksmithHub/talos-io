@@ -36,7 +36,17 @@ router.post('/post', async (req, res) => {
 
   await http.post(req.body.url, req.body.payload)
     .then((response) => res.status(response.status).send(response.data))
-    .catch(({ response }) => res.status(response.status).send({}))
+    .catch(({ response }) => {
+      let arg = null
+
+      try {
+        arg = response.data.message
+      } catch (error) {
+        arg = {}
+      }
+
+      res.status(response.status).send(arg)
+    })
 })
 
 /**
@@ -72,7 +82,17 @@ router.post('/get', async (req, res) => {
 
   await http.get(req.body.url)
     .then((response) => res.status(response.status).send(response.data))
-    .catch(({ response }) => res.status(response.status).send({}))
+    .catch(({ response }) => {
+      let arg = null
+
+      try {
+        arg = response.data.message
+      } catch (error) {
+        arg = {}
+      }
+
+      res.status(response.status).send(arg)
+    })
 })
 
 /**
@@ -108,7 +128,17 @@ router.post('/delete', async (req, res) => {
 
   await http.delete(req.body.url)
     .then((response) => res.status(response.status).send(response.data))
-    .catch(({ response }) => res.status(response.status).send({}))
+    .catch(({ response }) => {
+      let arg = null
+
+      try {
+        arg = response.data.message
+      } catch (error) {
+        arg = {}
+      }
+
+      res.status(response.status).send(arg)
+    })
 })
 
 module.exports = router
