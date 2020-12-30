@@ -157,7 +157,8 @@ async function initializeWindows () {
     setTimeout(() => (autoUpdater.checkForUpdatesAndNotify()), 1000)
   }
 
-  win.webContents.send('currentPort', await port)
+  const currentPort = await port
+  win.webContents.send('currentPort', currentPort)
 
   win.once('ready-to-show', () => {
     win.show()
