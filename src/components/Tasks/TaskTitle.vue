@@ -216,7 +216,7 @@ export default {
             unilateral: true,
             intent: 'authorize'
           },
-          braintreeLibraryVersion: Config.services.braintreeLibraryVersion,
+          braintreeLibraryVersion: Config.services.braintree.version,
           authorizationFingerprint: arg.fingerprint
         }
 
@@ -252,7 +252,7 @@ export default {
         offerPaypalCredit: false,
         amount: 1,
         currencyIsoCode: 'PHP',
-        braintreeLibraryVersion: Config.services.braintreeLibraryVersion,
+        braintreeLibraryVersion: Config.services.braintree.version,
         authorizationFingerprint: fingerprint
       }
 

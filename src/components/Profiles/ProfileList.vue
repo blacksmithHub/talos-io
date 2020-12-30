@@ -352,7 +352,7 @@ export default {
             unilateral: true,
             intent: 'authorize'
           },
-          braintreeLibraryVersion: Config.services.braintreeLibraryVersion,
+          braintreeLibraryVersion: Config.services.braintree.version,
           authorizationFingerprint: arg.fingerprint
         }
 
@@ -426,12 +426,12 @@ export default {
       const fingerprint = JSON.parse(atob(secret.data)).authorizationFingerprint
 
       const params = {
-        returnUrl: 'https://titan-bot-auth.herokuapp.com',
-        cancelUrl: 'https://titan-bot-auth.herokuapp.com',
+        returnUrl: Config.services.auth.url,
+        cancelUrl: Config.services.auth.url,
         offerPaypalCredit: false,
         amount: 1,
         currencyIsoCode: 'PHP',
-        braintreeLibraryVersion: Config.services.braintreeLibraryVersion,
+        braintreeLibraryVersion: Config.services.braintree.version,
         authorizationFingerprint: fingerprint
       }
 

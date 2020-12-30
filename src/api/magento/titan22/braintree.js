@@ -18,7 +18,7 @@ export default {
    */
   createPaymentResource (params) {
     return this.http(`${this.baseUrl}`)
-      .post('payment_methods/paypal_accounts', params)
+      .post('paypal_hermes/create_payment_resource', params)
       .then(response => response)
       .catch(({ response }) => response)
   },
