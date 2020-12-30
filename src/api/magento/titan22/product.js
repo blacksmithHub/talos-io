@@ -39,7 +39,7 @@ export default {
 
     return this.http(this.baseUrl, token)
       .get(`${this.url}/attributes?${params}`)
-      .then(({ data }) => data)
+      .then(response => response)
       .catch(({ response }) => response)
   }
 }

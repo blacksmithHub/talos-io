@@ -1056,7 +1056,11 @@ export default {
             })
 
             vm.checkoutOrder(task, shippingData, productData, params)
+          } else {
+            vm.init(vm.activeTask(task))
           }
+        } else {
+          vm.init(vm.activeTask(task))
         }
       })
     },

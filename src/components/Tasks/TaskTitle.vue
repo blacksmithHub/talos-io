@@ -229,6 +229,8 @@ export default {
         this.setPaypal(data)
       }
     })
+
+    this.validatePaypal()
   },
   methods: {
     ...mapActions('paypal', { setPaypal: 'setItems', confirmPaypalLogout: 'reset' }),
@@ -259,6 +261,26 @@ export default {
       const paypal = await BraintreeApi.createPaymentResource(params)
 
       ipcRenderer.send('paypal-login', JSON.stringify({ url: paypal.data.paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings }))
+    },
+    /**
+     * validate paypal expiry
+     */
+    async validatePaypal () {
+      const vm = this
+
+      const loop = setTimeout(async () => {
+        if (vm.paypal && Object.keys(vm.paypal).length) {
+          const timer = vm.paypal.expiry
+          const current = vm.$moment().format('HH:mm:ss')
+
+          if (current >= timer) {
+            vm.setPaypal({})
+          }
+        }
+
+        clearTimeout(loop)
+        vm.validatePaypal()
+      }, 1000)
     }
   }
 }

@@ -43,7 +43,6 @@ export default {
     await page.goto('https://t.2c2p.com/RedirectV3/Payment/Accept')
 
     const array = [
-      `<p><strong>Task:</strong> ${task.name}</p>`,
       `<p><strong>Profile:</strong> ${task.profile.name}</p>`,
       `<p><strong>Product name:</strong> ${task.transactionData.order.name}</p>`,
       `<p><strong>Product SKU:</strong> ${task.transactionData.order.sku}</p>`,

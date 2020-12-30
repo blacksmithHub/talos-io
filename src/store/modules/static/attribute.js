@@ -5,7 +5,6 @@ export default {
   namespaced: true,
   state () {
     return {
-      loading: false,
       items: localStorage.getItem('attributes')
         ? JSON.parse(localStorage.getItem('attributes'))
         : []
@@ -41,7 +40,7 @@ export default {
      */
     reset ({ commit }) {
       commit('RESET')
-      if (localStorage.getItem('attributes')) localStorage.removeItem('attributes')
+      if (localStorage.getItem('attributes')) localStorage.setItem('attributes', JSON.stringify([]))
     },
 
     /**
@@ -65,11 +64,15 @@ export default {
 
       const token = App.services.titan22.token
 
+      const attributes = []
+
       const footwears = await dispatch('fetchAttributes', { value: 'm_footwear_size', token: token })
+
+      if (Object.keys(footwears).length) attributes.push(footwears)
 
       const apparels = await dispatch('fetchAttributes', { value: 'm_apparel_size', token: token })
 
-      const attributes = [footwears, apparels]
+      if (Object.keys(apparels).length) attributes.push(apparels)
 
       dispatch('setItems', attributes)
     },

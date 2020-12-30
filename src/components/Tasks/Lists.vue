@@ -14,6 +14,33 @@
     disable-pagination
     :search="search"
   >
+    <template v-slot:[`item.profile.name`]="{ item }">
+      <span
+        class="d-inline-block text-truncate"
+        style="max-width: 15vh"
+        :class="{'success--text': item.paid, 'teal--text': item.aco}"
+        v-text="item.profile.name"
+      />
+    </template>
+
+    <template v-slot:[`item.bank.nickname`]="{ item }">
+      <span
+        class="d-inline-block text-truncate"
+        style="max-width: 15vh"
+        :class="{'success--text': item.paid, 'teal--text': item.aco}"
+        v-text="item.bank.nickname"
+      />
+    </template>
+
+    <template v-slot:[`item.proxy.name`]="{ item }">
+      <span
+        class="d-inline-block text-truncate"
+        style="max-width: 15vh"
+        :class="{'success--text': item.paid, 'teal--text': item.aco}"
+        v-text="item.proxy.name"
+      />
+    </template>
+
     <template v-slot:item.sku="{ item }">
       <v-tooltip
         bottom
@@ -24,6 +51,7 @@
           <span
             v-bind="attrs"
             class="d-inline-block text-truncate cursor"
+            :class="{'success--text': item.paid, 'teal--text': item.aco}"
             style="max-width: 15vh"
             v-on="on"
             v-text="`${item.sku}`"
@@ -54,7 +82,10 @@
     </template>
 
     <template v-slot:item.status="{ item }">
-      <ListChipStatus :task="item" />
+      <ListChipStatus
+        :task="item"
+        @click:checkout="$emit('click:checkout', item)"
+      />
     </template>
 
     <template v-slot:item.actions="{ item }">
@@ -87,8 +118,8 @@ export default {
       search: '',
       selected: [],
       headers: [
-        { text: 'Profile', value: 'profile.name', width: '12%' },
-        { text: 'Bank', value: 'bank.bank', width: '12%' },
+        { text: 'Profile', value: 'profile.name', width: '10%' },
+        { text: 'Bank', value: 'bank.nickname', width: '12%' },
         { text: 'Proxy List', value: 'proxy.name', width: '12%' },
         { text: 'Product', value: 'sku', width: '12%' },
         { text: 'Status', value: 'status', align: 'center' },

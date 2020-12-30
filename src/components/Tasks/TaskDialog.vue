@@ -52,8 +52,8 @@
                     label="Bank"
                     item-text="nickname"
                     return-object
-                    :error-messages="profileErrors"
-                    @blur="$v.profile.$touch()"
+                    :error-messages="bankErrors"
+                    @blur="$v.bank.$touch()"
                   />
                 </v-col>
               </v-row>
@@ -386,7 +386,7 @@ export default {
       this.profile = {}
       this.proxy = {}
       this.selectedTask = {}
-      this.delay = 1000
+      this.delay = 3200
       this.placeOrder = ''
       this.placeOrderMenu = false
       this.qty = 1
