@@ -9,6 +9,7 @@ const { http } = api
  * ===================
  */
 export default {
+  local: `http://localhost:${Config.services.port}/api`,
   baseUrl: `${Config.services.titan22.url}/rest/V1`,
   url: 'carts',
   http,
@@ -20,7 +21,7 @@ export default {
   create (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine`
 
-    return this.http('http://localhost:5000/api/request')
+    return this.http(`${this.local}/request`)
       .post('post', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
@@ -33,7 +34,7 @@ export default {
   get (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine`
 
-    return this.http('http://localhost:5000/api/request')
+    return this.http(`${this.local}/request`)
       .post('get', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
@@ -46,7 +47,7 @@ export default {
   delete (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine/items/${params.id}`
 
-    return this.http('http://localhost:5000/api/request')
+    return this.http(`${this.local}/request`)
       .post('delete', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
@@ -59,7 +60,7 @@ export default {
   store (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine/items`
 
-    return this.http('http://localhost:5000/api/request')
+    return this.http(`${this.local}/request`)
       .post('post', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
@@ -72,7 +73,7 @@ export default {
   estimateShipping (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine/estimate-shipping-methods-by-address-id`
 
-    return this.http('http://localhost:5000/api/request')
+    return this.http(`${this.local}/request`)
       .post('post', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
@@ -85,7 +86,7 @@ export default {
   setShippingInformation (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine/shipping-information`
 
-    return this.http('http://localhost:5000/api/request')
+    return this.http(`${this.local}/request`)
       .post('post', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
@@ -97,7 +98,7 @@ export default {
   paymentInformation (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine/payment-information`
 
-    return this.http('http://localhost:5000/api/request')
+    return this.http(`${this.local}/request`)
       .post('post', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)

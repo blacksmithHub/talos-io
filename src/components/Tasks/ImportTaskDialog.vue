@@ -11,6 +11,15 @@
             class="headline"
             v-text="'Import Tasks'"
           />
+
+          <v-spacer />
+
+          <v-btn
+            icon
+            @click="onCancel"
+          >
+            <v-icon v-text="'mdi-close'" />
+          </v-btn>
         </v-card-title>
 
         <v-card-text>
@@ -30,24 +39,44 @@
           </v-container>
         </v-card-text>
 
-        <v-card-actions class="justify-end">
-          <v-btn
-            class="primary"
-            rounded
-            small
-            @click="onCancel"
-            v-text="'cancel'"
-          />
-          <v-btn
-            class="primary"
-            rounded
-            type="submit"
-            small
-            v-text="'save'"
-          />
+        <v-divider />
+
+        <v-card-actions>
+          <v-container class="text-right">
+            <v-btn
+              rounded
+              small
+              class="primary mr-2"
+              depressed
+              @click="onCancel"
+              v-text="'close'"
+            />
+            <v-btn
+              class="primary"
+              rounded
+              type="submit"
+              small
+              depressed
+              v-text="'save'"
+            />
+          </v-container>
         </v-card-actions>
       </v-card>
     </v-form>
+
+    <v-snackbar v-model="snackbar">
+      Tasks successfully imported
+
+      <template v-slot:action="{ attrs }">
+        <v-btn
+          icon
+          v-bind="attrs"
+          @click="snackbar = false"
+        >
+          <v-icon v-text="'mdi-close'" />
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-dialog>
 </template>
 
@@ -57,6 +86,7 @@ import { mapState, mapActions } from 'vuex'
 export default {
   data () {
     return {
+      snackbar: false,
       dialog: false,
       csv: null,
       fileErrors: [],
@@ -72,6 +102,9 @@ export default {
   watch: {
     newTasks () {
       if (!this.newTasks.length) this.fileErrors.push('Invalid records')
+    },
+    dialog () {
+      if (this.dialog) this.fileErrors = []
     }
   },
   methods: {
@@ -115,7 +148,7 @@ export default {
           result.forEach(element => {
             const csvSizes = (element.sizes) ? element.sizes.trim().split('+') : []
 
-            if (csvSizes.length && element.email && element.password && element.sku) {
+            if (csvSizes.length && element.email && element.password && element.sku && element.bank && element.cardNumber) {
               const sizes = []
 
               csvSizes.forEach((data) => {
@@ -146,44 +179,28 @@ export default {
                   }
                 }
 
-                let bank = this.banks.slice().find((data) => {
-                  return (
-                    data.cardHolder.toLowerCase() === ((element.cardHolder) ? element.cardHolder.trim().toLowerCase() : '') &&
-                    data.cardNumber === (element.cardNumber || '') &&
-                    data.cvv === (parseInt(element.cvv) || '') &&
-                    data.expiryMonth === (element.expiryMonth || '') &&
-                    data.expiryYear === (element.expiryYear || '') &&
-                    data.bank.toLowerCase() === ((element.bank) ? element.bank.trim().toLowerCase() : null)
-                  )
-                })
-
-                if (!bank) {
-                  bank = {
-                    cardHolder: (element.cardHolder) ? element.cardHolder.trim() : '',
-                    cardNumber: parseInt(element.cardNumber) || '',
-                    cvv: parseInt(element.cvv) || '',
-                    expiryMonth: element.expiryMonth || '',
-                    expiryYear: element.expiryYear || '',
-                    bank: (element.bank) ? element.bank.trim() : '',
-                    nickname: (element.bank) ? element.bank.trim() : '',
-                    id: ''
-                  }
-                } else {
-                  bank = {}
+                const bank = {
+                  cardHolder: (element.cardHolder) ? element.cardHolder.trim() : '',
+                  cardNumber: parseInt(element.cardNumber) || '',
+                  cvv: parseInt(element.cvv) || '',
+                  expiryMonth: element.expiryMonth || '',
+                  expiryYear: element.expiryYear || '',
+                  bank: (element.bank) ? element.bank.trim() : '',
+                  nickname: (element.bank) ? element.bank.trim() : '',
+                  id: null
                 }
 
                 const object = {
                   bank: bank,
                   profile: profile,
-                  name: (element.name) ? element.name.trim() : '',
                   sku: element.sku.trim(),
                   sizes: sizes,
                   delay: element.delay || 3200,
-                  placeOrder: element.placeOrder || ''
+                  placeOrder: element.placeOrder || '',
+                  proxy: {}
                 }
 
                 if (element.aco) {
-                  object.name = (element.id) ? element.id.trim() : ''
                   object.profile.name = (element.id) ? element.id.trim() : ''
                   object.aco = true
                   object.webhook = (element.webhook) ? element.webhook.trim() : ''
@@ -203,9 +220,9 @@ export default {
      *
      */
     onCancel () {
-      this.fileErrors = []
-      this.newTasks = []
       this.csv = null
+      this.newTasks = []
+      this.fileErrors = []
       this.dialog = false
     },
     /**
@@ -216,7 +233,7 @@ export default {
       if (!this.fileErrors.length && this.newTasks.length) {
         this.newTasks.forEach(element => this.addTask(element))
 
-        this.onCancel()
+        this.snackbar = true
       }
     }
   }

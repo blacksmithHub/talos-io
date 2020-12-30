@@ -8,7 +8,7 @@
       <v-card-title>
         <span
           class="headline"
-          v-text="`${task.name} - Logs`"
+          v-text="`${header}`"
         />
 
         <v-spacer />
@@ -54,13 +54,16 @@ export default {
   computed: {
     logs () {
       return (this.task.logs) ? this.task.logs.split(';') : []
+    },
+    header () {
+      return (Object.keys(this.task).length) ? `${this.task.profile.name} - Logs` : 'Logs'
     }
   },
   watch: {
     dialog () {
       if (this.dialog) {
         setTimeout(() => {
-          document.getElementById(`log-${this.logs.length - 1}`).scrollIntoView()
+          if (this.logs.length) document.getElementById(`log-${this.logs.length - 1}`).scrollIntoView()
         }, 500)
       }
     }

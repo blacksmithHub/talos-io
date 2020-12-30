@@ -5,7 +5,6 @@ export default {
   namespaced: true,
   state () {
     return {
-      loading: false,
       items: localStorage.getItem('attributes')
         ? JSON.parse(localStorage.getItem('attributes'))
         : []
@@ -41,7 +40,7 @@ export default {
      */
     reset ({ commit }) {
       commit('RESET')
-      if (localStorage.getItem('attributes')) localStorage.removeItem('attributes')
+      if (localStorage.getItem('attributes')) localStorage.setItem('attributes', JSON.stringify([]))
     },
 
     /**
@@ -65,11 +64,15 @@ export default {
 
       const token = App.services.titan22.token
 
+      const attributes = []
+
       const footwears = await dispatch('fetchAttributes', { value: 'm_footwear_size', token: token })
+
+      if (Object.keys(footwears).length) attributes.push(footwears)
 
       const apparels = await dispatch('fetchAttributes', { value: 'm_apparel_size', token: token })
 
-      const attributes = [footwears, apparels]
+      if (Object.keys(apparels).length) attributes.push(apparels)
 
       dispatch('setItems', attributes)
     },
@@ -80,7 +83,7 @@ export default {
      * @param {*} params
      */
     async fetchAttributes ({ commit }, params) {
-      const attribute = await productApi.attribute({
+      const payload = {
         searchCriteria: {
           filterGroups: [
             {
@@ -93,18 +96,19 @@ export default {
             }
           ]
         }
-      }, params.token)
+      }
 
-      if (!attribute) return {}
+      const attribute = await productApi.attribute(payload, params.token)
 
-      const sizes = attribute.items[0].options.filter((data) => data.value).map((item) => {
+      if (attribute.status !== 200) return {}
+
+      const sizes = attribute.data.items[0].options.filter((data) => data.value).map((item) => {
         item.label = item.label.toLowerCase()
-
         return item
       })
 
       const response = {
-        attribute_id: attribute.items[0].attribute_id,
+        attribute_id: attribute.data.items[0].attribute_id,
         sizes: sizes
       }
 

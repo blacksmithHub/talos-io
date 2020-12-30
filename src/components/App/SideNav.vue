@@ -3,7 +3,7 @@
     <v-navigation-drawer
       app
       permanent
-      :expand-on-hover="!$vuetify.breakpoint.lgAndUp"
+      expand-on-hover
     >
       <v-list>
         <v-list-item class="px-2">
@@ -12,10 +12,7 @@
           </v-list-item-avatar>
         </v-list-item>
 
-        <v-list-item
-          link
-          @click="$refs.account.openDialog()"
-        >
+        <v-list-item link>
           <v-list-item-content>
             <v-list-item-title
               class="title"

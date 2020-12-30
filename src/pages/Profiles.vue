@@ -11,6 +11,8 @@
         v-for="n in tabs.length"
         :key="n"
       >
+        <v-divider />
+
         <ProfileList v-if="n === 1" />
         <BankList v-else />
       </v-tab-item>

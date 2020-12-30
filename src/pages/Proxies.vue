@@ -1,13 +1,12 @@
 <template>
   <v-container>
-    <v-card
-      flat
-      class="transparent"
-    >
+    <v-card flat>
       <v-card-title>
         <v-toolbar
           dense
           rounded
+          flat
+          class="transparent"
         >
           <v-row
             no-gutters
@@ -23,6 +22,7 @@
                 :small="$vuetify.breakpoint.lgAndUp"
                 :x-small="!$vuetify.breakpoint.lgAndUp"
                 class="primary"
+                depressed
                 @click="addNewProxy"
               >
                 <v-icon
@@ -47,6 +47,7 @@
                 :small="$vuetify.breakpoint.lgAndUp"
                 :x-small="!$vuetify.breakpoint.lgAndUp"
                 class="primary"
+                depressed
                 @click="importProxies"
               >
                 <v-icon
@@ -71,6 +72,7 @@
                 :small="$vuetify.breakpoint.lgAndUp"
                 :x-small="!$vuetify.breakpoint.lgAndUp"
                 class="error"
+                depressed
                 @click="reset"
               >
                 <v-icon
@@ -88,6 +90,8 @@
         </v-toolbar>
       </v-card-title>
 
+      <v-divider />
+
       <v-card-text style="max-height: 70vh; overflow: auto">
         <v-list
           v-if="proxies.length"
@@ -100,7 +104,7 @@
               <v-list-item-content>
                 <v-row no-gutters>
                   <v-col
-                    cols="9"
+                    cols="6"
                     align-self="center"
                   >
                     <v-row
@@ -110,8 +114,9 @@
                       <v-col
                         cols="12"
                         align-self="center"
+                        class="mb-2"
                       >
-                        <h4
+                        <h3
                           class="d-inline-block text-truncate"
                           style="max-width: 40vh"
                           v-text="proxy.name"
@@ -122,28 +127,29 @@
                         cols="12"
                         align-self="center"
                       >
-                        <small
+                        <span
                           class="d-inline-block text-truncate"
                           style="max-width: 40vh"
                         >
-                          <strong
-                            class="text-capitalize"
+                          <span
+                            class="text-capitalize font-weight-bold"
                             v-text="'Total:'"
                           />
                           {{ proxy.proxies.length }}
-                        </small>
+                        </span>
                       </v-col>
                     </v-row>
                   </v-col>
 
                   <v-col
                     align-self="center"
-                    class="text-center"
-                    cols="3"
+                    class="text-right"
+                    cols="6"
                   >
                     <v-btn
                       icon
                       color="primary"
+                      class="mr-2"
                       @click="editProxy(proxy)"
                     >
                       <v-icon
@@ -185,6 +191,20 @@
         <ProxyDialog ref="proxyDialog" />
         <ImportProxyDialog ref="importProxyDialog" />
       </v-card-text>
+
+      <v-divider />
+
+      <v-card-actions>
+        <v-row no-gutters>
+          <v-col cols="6">
+            <small
+              style="max-width: 100%"
+              class="text-capitalize text-truncate d-inline-block"
+              v-text="`total: ${proxies.length}`"
+            />
+          </v-col>
+        </v-row>
+      </v-card-actions>
     </v-card>
   </v-container>
 </template>

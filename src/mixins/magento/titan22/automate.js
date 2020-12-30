@@ -5,7 +5,7 @@ import { ipcRenderer } from 'electron'
 import authApi from '@/api/magento/titan22/auth'
 import customerApi from '@/api/magento/titan22/customer'
 import cartApi from '@/api/magento/titan22/cart'
-import transactionApi from '@/api/magento/titan22/transaction'
+import orderApi from '@/api/magento/titan22/order'
 import productApi from '@/api/magento/titan22/product'
 
 import Constant from '@/config/constant'
@@ -41,6 +41,7 @@ export default {
      */
     getProxy (task) {
       const proxy = this.activeTask(task).proxy.proxies[Math.floor(Math.random() * this.activeTask(task).proxy.proxies.length)]
+
       return {
         host: proxy.host,
         port: proxy.port,
@@ -326,7 +327,9 @@ export default {
           }
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+          params.proxy = this.getProxy(this.activeTask(task))
+        }
 
         if (!this.isRunning(task.id)) {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
@@ -405,7 +408,9 @@ export default {
           token: token
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+          params.proxy = this.getProxy(this.activeTask(task))
+        }
 
         const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
 
@@ -481,7 +486,9 @@ export default {
           token: user.token
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+          params.proxy = this.getProxy(this.activeTask(task))
+        }
 
         const apiResponse = await cartApi.create(params, cancelTokenSource.token)
 
@@ -548,7 +555,9 @@ export default {
           token: user.token
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+          params.proxy = this.getProxy(this.activeTask(task))
+        }
 
         const apiResponse = await cartApi.get(params, cancelTokenSource.token)
 
@@ -628,7 +637,9 @@ export default {
               id: cart.items[index].item_id
             }
 
-            if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+            if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+              params.proxy = this.getProxy(this.activeTask(task))
+            }
 
             const apiResponse = await cartApi.delete(params, cancelTokenSource.token)
 
@@ -722,7 +733,9 @@ export default {
             payload: order
           }
 
-          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+            params.proxy = this.getProxy(this.activeTask(task))
+          }
 
           const apiResponse = await cartApi.store(params, cancelTokenSource.token)
 
@@ -830,7 +843,9 @@ export default {
           payload: shippingParams
         }
 
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+          params.proxy = this.getProxy(this.activeTask(task))
+        }
 
         const cartApiResponse = await cartApi.setShippingInformation(params, cancelTokenSource.token)
 
@@ -911,7 +926,9 @@ export default {
             payload: estimateParams
           }
 
-          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+            params.proxy = this.getProxy(this.activeTask(task))
+          }
 
           const apiResponse = await cartApi.estimateShipping(params, cancelTokenSource.token)
 
@@ -985,27 +1002,65 @@ export default {
 
       await this.timer(task, productData.sizeLabel, async (response) => {
         if (response && vm.isRunning(task.id)) {
-          if (shippingData.payment_methods.find((val) => val.code === 'ccpp')) {
-            vm.updateTask({
-              ...vm.activeTask(task),
-              transactionData: {
-                ...vm.activeTask(task).transactionData,
-                paypal: false
-              }
-            })
+          const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
 
-            vm.creditCardCheckout(task, shippingData, user, cartData, productData)
-          } else if (shippingData.payment_methods.find((val) => val.code === 'braintree_paypal')) {
-            vm.updateTask({
-              ...vm.activeTask(task),
-              transactionData: {
-                ...vm.activeTask(task).transactionData,
-                paypal: true
+          const params = {
+            payload: {
+              amcheckout: {},
+              billingAddress: this.setAddresses(defaultBillingAddress, user),
+              cartId: cartData.id.toString(),
+              paymentMethod: {
+                additional_data: null,
+                method: 'ccpp',
+                po_number: null
               }
-            })
-
-            vm.paypalCheckout(task, shippingData, user, cartData, productData)
+            },
+            token: user.token
           }
+
+          if (shippingData.payment_methods.find((val) => val.code === 'ccpp')) {
+            params.payload.paymentMethod.method = 'ccpp'
+
+            vm.updateTask({
+              ...vm.activeTask(task),
+              transactionData: {
+                ...vm.activeTask(task).transactionData,
+                method: '2c2p'
+              }
+            })
+
+            vm.checkoutOrder(task, shippingData, productData, params)
+          } else if (shippingData.payment_methods.find((val) => val.code === 'braintree_paypal')) {
+            params.payload.paymentMethod.method = 'braintree_paypal'
+
+            if (vm.activeTask(task).profile.paypal && Object.keys(vm.activeTask(task).profile.paypal).length) {
+              params.payload.paymentMethod.additional_data = {
+                paypal_express_checkout_token: vm.activeTask(task).profile.paypal.paypalAccounts[0].details.correlationId,
+                paypal_express_checkout_redirect_required: false,
+                paypal_express_checkout_payer_id: vm.activeTask(task).profile.paypal.paypalAccounts[0].details.payerInfo.payerId
+              }
+            } else if (vm.paypal && Object.keys(vm.paypal).length) {
+              params.payload.paymentMethod.additional_data = {
+                paypal_express_checkout_token: vm.paypal.paypalAccounts[0].details.correlationId,
+                paypal_express_checkout_redirect_required: false,
+                paypal_express_checkout_payer_id: vm.paypal.paypalAccounts[0].details.payerInfo.payerId
+              }
+            }
+
+            vm.updateTask({
+              ...vm.activeTask(task),
+              transactionData: {
+                ...vm.activeTask(task).transactionData,
+                method: 'PayPal'
+              }
+            })
+
+            vm.checkoutOrder(task, shippingData, productData, params)
+          } else {
+            vm.init(vm.activeTask(task))
+          }
+        } else {
+          vm.init(vm.activeTask(task))
         }
       })
     },
@@ -1053,33 +1108,19 @@ export default {
     },
 
     /**
-     * 2c2p checkout method
+     * Checkout order
      *
      * @param {*} task
      * @param {*} shippingData
-     * @param {*} user
-     * @param {*} cartData
+     * @param {*} productData
+     * @param {*} params
      */
-    async creditCardCheckout (task, shippingData, user, cartData, productData) {
-      const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
-
-      const params = {
-        payload: {
-          amcheckout: {},
-          billingAddress: this.setAddresses(defaultBillingAddress, user),
-          cartId: cartData.id.toString(),
-          paymentMethod: {
-            additional_data: null,
-            method: 'ccpp',
-            po_number: null
-          }
-        },
-        token: user.token
+    async checkoutOrder (task, shippingData, productData, params) {
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+        params.proxy = this.getProxy(this.activeTask(task))
       }
 
-      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
-
-      let transactionData = {}
+      let orderResult = {}
       const tries = 3
 
       this.updateTask({
@@ -1103,16 +1144,22 @@ export default {
             cancelTokenSource: cancelTokenSource
           })
 
-          const apiResponse = await transactionApi.placeOrder(params, cancelTokenSource.token)
+          let apiResponse = {}
+
+          if (this.activeTask(task).transactionData.method === '2c2p') {
+            apiResponse = await orderApi.placeOrder(params, cancelTokenSource.token)
+          } else if (this.activeTask(task).transactionData.method === 'PayPal') {
+            apiResponse = await cartApi.paymentInformation(params, cancelTokenSource.token)
+          }
 
           sw.stop()
 
           if (apiResponse.status === 200 && apiResponse.data.cookies && this.isRunning(task.id)) {
-            transactionData = apiResponse.data
-            transactionData.time = (sw.read() / 1000.0).toFixed(2)
-            transactionData.order = productData
+            orderResult = apiResponse.data
+            orderResult.time = (sw.read() / 1000.0).toFixed(2)
+            orderResult.order = productData
 
-            this.onSuccess(task, transactionData, shippingData, productData)
+            this.onSuccess(task, orderResult, shippingData, productData)
 
             break
           } else if (index === tries) {
@@ -1136,148 +1183,6 @@ export default {
     },
 
     /**
-     * paypal checkout method
-     *
-     * @param {*} task
-     * @param {*} shippingData
-     * @param {*} user
-     * @param {*} cartData
-     * @param {*} productData
-     */
-    async paypalCheckout (task, shippingData, user, cartData, productData) {
-      this.updateTask({
-        ...this.activeTask(task),
-        logs: `${this.activeTask(task).logs || ''};Placing order...`
-      })
-
-      this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
-
-      const tries = 3
-
-      const defaultBillingAddress = user.profile.addresses.find((val) => val.default_billing)
-
-      const params = {
-        payload: {
-          amcheckout: {},
-          billingAddress: this.setAddresses(defaultBillingAddress, user),
-          cartId: cartData.id.toString(),
-          paymentMethod: {
-            additional_data: {
-              paypal_express_checkout_token: this.paypal.paypalAccounts[0].details.correlationId,
-              paypal_express_checkout_redirect_required: false,
-              paypal_express_checkout_payer_id: this.paypal.paypalAccounts[0].details.payerInfo.payerId
-            },
-            method: 'braintree_paypal',
-            po_number: null
-          }
-        },
-        token: user.token
-      }
-
-      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
-
-      for (let index = 1; index <= tries; index++) {
-        const cancelTokenSource = axios.CancelToken.source()
-
-        this.updateTask({
-          ...this.activeTask(task),
-          cancelTokenSource: cancelTokenSource
-        })
-
-        const apiResponse = await cartApi.paymentInformation(params, cancelTokenSource.token)
-
-        if (apiResponse.status === 200) {
-          this.updateTask({
-            ...this.activeTask(task),
-            status: {
-              id: Constant.TASK.STATUS.STOPPED,
-              msg: 'copped!',
-              class: 'success'
-            },
-            logs: `${this.activeTask(task).logs || ''};Copped!`
-          })
-
-          if (this.settings.sound) {
-            const sound = new Howl({
-              src: [SuccessEffect]
-            })
-
-            sound.play()
-          }
-
-          this.$toast.open({
-            message: '<strong style="font-family: Arial; text-transform: uppercase">checked out</strong>',
-            type: 'success',
-            duration: 3000
-          })
-
-          const url = this.settings.webhook
-          const productName = shippingData.totals.items[0].name
-          const productSize = productData.sizeLabel
-          const profile = this.activeTask(task).profile.name
-          const sku = this.activeTask(task).sku
-          const method = 'PayPal'
-          let img = ''
-
-          const payload = {
-            payload: {
-              searchCriteria: {
-                filterGroups: [
-                  {
-                    filters: [
-                      {
-                        field: 'sku',
-                        value: sku
-                      }
-                    ]
-                  }
-                ]
-              }
-            },
-            token: Config.services.titan22.token
-          }
-
-          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) payload.proxy = this.getProxy(this.activeTask(task))
-
-          const response = await productApi.search(payload)
-
-          try {
-            const image = response.data.items[0].custom_attributes.find((val) => val.attribute_code === 'image')
-            img = `https://www.titan22.com/media/catalog/product${image.value}`
-          } catch (error) {
-            img = ''
-          }
-
-          if (this.settings.webhook) {
-          // send to personal webhook
-            this.sendWebhook(url, productName, productSize, profile, null, sku, null, method, img, this.activeTask(task).proxy)
-
-            // send to public webhook
-            if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, null, sku, null, method, img)
-          } else {
-          // send to public webhook
-            this.sendWebhook(Config.bot.webhook, productName, productSize, null, null, sku, null, method, img)
-          }
-        } else if (index === tries) {
-          this.updateTask({
-            ...this.activeTask(task),
-            logs: `${this.activeTask(task).logs || ''};Trying for restock!`
-          })
-
-          this.init(this.activeTask(task))
-          break
-        } else {
-          this.updateTask({
-            ...this.activeTask(task),
-            logs: `${this.activeTask(task).logs || ''};Out of stock!`
-          })
-
-          continue
-        }
-      }
-    },
-
-    /**
      * Trigger on success event.
      *
      * @param {*} task
@@ -1285,11 +1190,11 @@ export default {
      * @param {*} shippingData
      * @param {*} time
      */
-    async onSuccess (task, transactionData, shippingData, productData) {
+    async onSuccess (task, orderResult, shippingData, productData) {
       this.updateTask({
         ...this.activeTask(task),
         transactionData: {
-          ...transactionData,
+          ...orderResult,
           ...this.activeTask(task).transactionData
         },
         status: {
@@ -1300,12 +1205,8 @@ export default {
         logs: `${this.activeTask(task).logs || ''};Copped!`
       })
 
-      if (this.settings.autoPay && !this.activeTask(task).aco) {
-        if (transactionData.paypal) {
-          ipcRenderer.send('pay-with-paypal', JSON.stringify({ task: task, settings: this.settings }))
-        } else {
-          ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
-        }
+      if (this.settings.autoPay && !this.activeTask(task).aco && this.activeTask(task).transactionData.method !== 'PayPal') {
+        ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
       }
 
       if (this.settings.sound) {
@@ -1326,9 +1227,9 @@ export default {
       const productName = shippingData.totals.items[0].name
       const productSize = productData.sizeLabel
       const profile = this.activeTask(task).profile.name
-      const secs = transactionData.time
+      const secs = orderResult.time
       const sku = this.activeTask(task).sku
-      const method = transactionData.paypal ? 'PayPal' : '2c2p'
+      const method = this.activeTask(task).transactionData.method
       let img = ''
 
       const params = {
@@ -1355,7 +1256,7 @@ export default {
 
       try {
         const image = apiResponse.data.items[0].custom_attributes.find((val) => val.attribute_code === 'image')
-        img = `https://www.titan22.com/media/catalog/product${image.value}`
+        img = `${Config.services.titan22.url}/media/catalog/product${image.value}`
       } catch (error) {
         img = ''
       }
@@ -1371,8 +1272,8 @@ export default {
         this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img)
       }
 
-      if (!transactionData.paypal) {
-        const cookie = transactionData.cookies.value
+      if (this.activeTask(task).transactionData === '2c2p') {
+        const cookie = orderResult.cookies.value
 
         // send to aco webhook
         if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie, method, img)

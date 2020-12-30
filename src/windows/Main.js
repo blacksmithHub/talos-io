@@ -18,10 +18,10 @@ export default {
   },
   createWindow () {
     win = new BrowserWindow({
-      width: 720,
-      height: 800,
-      minWidth: 720,
-      minHeight: 600,
+      width: 1100,
+      height: 900,
+      minWidth: 1100,
+      minHeight: 900,
       frame: false,
       show: false,
       webPreferences: {

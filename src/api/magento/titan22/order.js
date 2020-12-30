@@ -1,14 +1,15 @@
 import api from '../index'
+import Config from '@/config/app'
 
 const { http } = api
 
 /**
  * ===================
- * Transaction API
+ * Order API
  * ===================
  */
 export default {
-  baseUrl: 'http://localhost:5000/api',
+  local: `http://localhost:${Config.services.port}/api`,
   url: 'order',
   http,
 
@@ -17,7 +18,7 @@ export default {
    *
    */
   placeOrder (params, cancelToken) {
-    return this.http(this.baseUrl)
+    return this.http(this.local)
       .post(`${this.url}`, params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
