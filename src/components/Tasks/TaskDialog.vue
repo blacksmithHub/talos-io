@@ -349,8 +349,8 @@ export default {
         this.qty = task.qty || 1
         this.proxy = task.proxy
 
-        this.profile = task.profile
-        this.bank = task.bank
+        this.profile = (task.profile.id) ? task.profile : {}
+        this.bank = (task.bank.id) ? task.bank : {}
 
         this.isEditMode = true
         this.dialog = true

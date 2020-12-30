@@ -4,7 +4,7 @@ export default {
     return {
       items: localStorage.getItem('paypal')
         ? JSON.parse(localStorage.getItem('paypal'))
-        : []
+        : {}
     }
   },
 
@@ -37,7 +37,7 @@ export default {
      */
     reset ({ commit }) {
       commit('RESET')
-      if (localStorage.getItem('paypal')) localStorage.removeItem('paypal')
+      if (localStorage.getItem('paypal')) localStorage.setItem('paypal', JSON.stringify({}))
     },
 
     /**

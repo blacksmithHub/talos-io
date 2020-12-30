@@ -1,4 +1,5 @@
 import MainWindow from '@/windows/Main'
+import ProfileWindow from '@/windows/Profile'
 
 export default {
   /**
@@ -42,6 +43,7 @@ export default {
         browser.close()
 
         MainWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
+        ProfileWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
       }
     })
   }

@@ -27,9 +27,10 @@
           :rounded="$vuetify.breakpoint.lgAndUp"
           :small="$vuetify.breakpoint.lgAndUp"
           :x-small="!$vuetify.breakpoint.lgAndUp"
-          class="primary mr-3"
+          class="mr-3"
+          :class="(paypal && Object.keys(paypal).length) ? 'primary' : 'secondary'"
           depressed
-          @click="$emit('click:paypalLogin')"
+          @click="(paypal && Object.keys(paypal).length) ? dialog=true : paypalLogin()"
         >
           <vue-fontawesome
             icon="paypal"
@@ -120,22 +121,144 @@
         </v-btn>
       </v-col>
     </v-row>
+
+    <v-dialog
+      v-model="dialog"
+      persistent
+      max-width="290"
+    >
+      <v-card>
+        <v-card-title class="headline">
+          PayPal
+
+          <v-spacer />
+
+          <v-btn
+            icon
+            @click="dialog=false"
+          >
+            <v-icon v-text="'mdi-close'" />
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text class="text-center pa-5">
+          <v-row
+            justify="center"
+            align="center"
+            no-gutters
+            class="fill-height"
+          >
+            <v-col
+              align-self="center"
+              cols="9"
+            >
+              Do you wish to logout?
+            </v-col>
+          </v-row>
+        </v-card-text>
+
+        <v-divider />
+
+        <v-card-actions>
+          <v-container class="text-right">
+            <v-btn
+              class="primary mr-2"
+              rounded
+              depressed
+              small
+              @click="dialog=false"
+            >
+              Close
+            </v-btn>
+
+            <v-btn
+              depressed
+              small
+              class="primary"
+              rounded
+              @click="confirmPaypalLogout, dialog=false"
+            >
+              Logout
+            </v-btn>
+          </v-container>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-card-title>
 </template>
 
 <script>
+import { mapState, mapActions } from 'vuex'
+import { ipcRenderer } from 'electron'
+
+import BraintreeApi from '@/api/magento/titan22/braintree'
+import Config from '@/config/app'
+
 export default {
   data () {
     return {
-      search: ''
+      search: '',
+      dialog: false
     }
   },
+  computed: {
+    ...mapState('paypal', { paypal: 'items' }),
+    ...mapState('setting', { settings: 'items' })
+  },
+  created () {
+    ipcRenderer.on('paypalParams', async (event, arg) => {
+      if (!arg.profile) {
+        const params = {
+          paypalAccount: {
+            correlationId: arg.params.token,
+            paymentToken: arg.params.paymentId,
+            payerId: arg.params.PayerID,
+            unilateral: true,
+            intent: 'authorize'
+          },
+          braintreeLibraryVersion: Config.services.braintreeLibraryVersion,
+          authorizationFingerprint: arg.fingerprint
+        }
+
+        const response = await BraintreeApi.getPaypalAccount(params)
+
+        const data = response.data
+
+        data.expiry = this.$moment().add(1, 'hours').add(30, 'minutes').format('HH:mm:ss')
+
+        this.setPaypal(data)
+      }
+    })
+  },
   methods: {
+    ...mapActions('paypal', { setPaypal: 'setItems', confirmPaypalLogout: 'reset' }),
     /**
      * on search input event.
      */
     onInput () {
       this.$emit('input:search', this.search)
+    },
+    /**
+     * Login to paypal
+     */
+    async paypalLogin () {
+      const secret = await BraintreeApi.getSecret()
+
+      const fingerprint = JSON.parse(atob(secret.data)).authorizationFingerprint
+
+      const params = {
+        returnUrl: Config.services.auth.url,
+        cancelUrl: Config.services.auth.url,
+        offerPaypalCredit: false,
+        amount: 1,
+        currencyIsoCode: 'PHP',
+        braintreeLibraryVersion: Config.services.braintreeLibraryVersion,
+        authorizationFingerprint: fingerprint
+      }
+
+      const paypal = await BraintreeApi.createPaymentResource(params)
+
+      ipcRenderer.send('paypal-login', JSON.stringify({ url: paypal.data.paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings }))
     }
   }
 }

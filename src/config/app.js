@@ -40,7 +40,17 @@ export default {
      * ===========================================
      *
      */
-    port: JSON.parse(localStorage.getItem('core')).port
+    port: JSON.parse(localStorage.getItem('core')).port,
+    /**
+     * ===========================================
+     * Braintree Configuration
+     * ===========================================
+     *
+     */
+    braintree: {
+      version: process.env.VUE_APP_BRAINTREE_VERSION,
+      url: process.env.VUE_APP_BRAINTREE_URL
+    }
   },
 
   /**

@@ -87,7 +87,31 @@ autoUpdater.on('update-downloaded', (info) => {
   // Download completed
   sendStatusToWindow('versionUpdate', 're-launch the app')
 
-  setTimeout(() => (app.exit()), 3000)
+  setTimeout(() => {
+    if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
+
+    if (SettingWindow.getWindow()) SettingWindow.getWindow().destroy()
+
+    if (ProxyWindow.getWindow()) ProxyWindow.getWindow().destroy()
+
+    if (ProfileWindow.getWindow()) ProfileWindow.getWindow().destroy()
+
+    if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
+
+    if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
+
+    LoginWindow.closeWindow()
+    SettingWindow.closeWindow()
+    ProxyWindow.closeWindow()
+    MonitorWindow.closeWindow()
+    MainWindow.closeWindow()
+
+    if (win) win.destroy()
+
+    win = null
+
+    app.exit()
+  }, 3000)
 })
 
 /**
