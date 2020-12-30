@@ -40,7 +40,7 @@ export default {
      * ===========================================
      *
      */
-    port: JSON.parse(localStorage.getItem('core')).port,
+    port: localStorage.getItem('core') ? JSON.parse(localStorage.getItem('core')).port : 5000,
     /**
      * ===========================================
      * Braintree Configuration

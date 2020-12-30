@@ -15,7 +15,7 @@ export default {
       drawer: false,
       loading: false,
       package: JSON.parse(unescape(process.env.PACKAGE_JSON || '%7B%7D')),
-      port: JSON.parse(localStorage.getItem('core')).port
+      port: localStorage.getItem('core') ? JSON.parse(localStorage.getItem('core')).port : 5000
     }
   },
   mutations: {

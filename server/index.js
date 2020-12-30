@@ -15,7 +15,7 @@ app.use('/api/order', order)
 
 const getPort = require('get-port')
 
-const port = getPort();
+const port = getPort({ port: getPort.makeRange(5000, 5100) });
 
 (async () => {
   const availPort = await port
