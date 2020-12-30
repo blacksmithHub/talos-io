@@ -37,7 +37,7 @@
         class="d-inline-block text-truncate"
         style="max-width: 15vh"
         :class="{'success--text': item.paid, 'teal--text': item.aco}"
-        v-text="item.proxy.name"
+        v-text="item.proxy.name || 'Localhost'"
       />
     </template>
 

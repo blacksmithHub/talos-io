@@ -197,7 +197,7 @@ export default {
                   sizes: sizes,
                   delay: element.delay || 3200,
                   placeOrder: element.placeOrder || '',
-                  proxy: { id: null, name: 'Localhost', proxies: [] }
+                  proxy: {}
                 }
 
                 if (element.aco) {

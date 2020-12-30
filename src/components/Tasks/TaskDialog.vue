@@ -420,7 +420,7 @@ export default {
           sku: this.sku.trim(),
           sizes: sizes,
           profile: this.profile,
-          proxy: (this.proxy && Object.keys(this.proxy).length && this.proxy.proxies.length) ? this.proxy : { id: null, name: 'Localhost', proxies: [] },
+          proxy: this.proxy,
           bank: this.bank || {},
           delay: this.delay,
           placeOrder: this.placeOrder,
