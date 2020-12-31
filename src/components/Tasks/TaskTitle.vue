@@ -176,7 +176,7 @@
               small
               class="primary"
               rounded
-              @click="confirmPaypalLogout, dialog=false"
+              @click="confirmPaypalLogout(), dialog=false"
             >
               Logout
             </v-btn>
@@ -224,7 +224,7 @@ export default {
 
         const data = response.data
 
-        data.expiry = this.$moment().add(1, 'hours').add(30, 'minutes').format('HH:mm:ss')
+        data.expiry = this.$moment().add(90, 'minutes').format('HH:mm:ss')
 
         this.setPaypal(data)
       }

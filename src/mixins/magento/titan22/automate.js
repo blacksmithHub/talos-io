@@ -1011,53 +1011,78 @@ export default {
               cartId: cartData.id.toString(),
               paymentMethod: {
                 additional_data: null,
-                method: 'ccpp',
+                method: '',
                 po_number: null
               }
             },
             token: user.token
           }
 
-          if (shippingData.payment_methods.find((val) => val.code === 'ccpp')) {
-            params.payload.paymentMethod.method = 'ccpp'
+          switch (shippingData.payment_methods.slice().find((val) => val.code).code) {
+            case 'paymaya_checkout':
+              params.payload.paymentMethod.method = 'paymaya_checkout'
 
-            vm.updateTask({
-              ...vm.activeTask(task),
-              transactionData: {
-                ...vm.activeTask(task).transactionData,
-                method: '2c2p'
+              vm.updateTask({
+                ...vm.activeTask(task),
+                transactionData: {
+                  ...vm.activeTask(task).transactionData,
+                  method: 'PayMaya'
+                }
+              })
+
+              vm.paymayaCheckout(task, shippingData, productData, params)
+
+              break
+
+            case 'ccpp':
+              params.payload.paymentMethod.method = 'ccpp'
+
+              vm.updateTask({
+                ...vm.activeTask(task),
+                transactionData: {
+                  ...vm.activeTask(task).transactionData,
+                  method: '2c2p'
+                }
+              })
+
+              vm.creditCardCheckout(task, shippingData, productData, params)
+
+              break
+
+            case 'braintree_paypal':
+              params.payload.paymentMethod.method = 'braintree_paypal'
+
+              if (vm.activeTask(task).profile.paypal && Object.keys(vm.activeTask(task).profile.paypal).length) {
+                params.payload.paymentMethod.additional_data = {
+                  paypal_express_checkout_token: vm.activeTask(task).profile.paypal.paypalAccounts[0].details.correlationId,
+                  paypal_express_checkout_redirect_required: false,
+                  paypal_express_checkout_payer_id: vm.activeTask(task).profile.paypal.paypalAccounts[0].details.payerInfo.payerId,
+                  payment_method_nonce: vm.activeTask(task).profile.paypal.paypalAccounts[0].nonce
+                }
+              } else if (vm.paypal && Object.keys(vm.paypal).length) {
+                params.payload.paymentMethod.additional_data = {
+                  paypal_express_checkout_token: vm.paypal.paypalAccounts[0].details.correlationId,
+                  paypal_express_checkout_redirect_required: false,
+                  paypal_express_checkout_payer_id: vm.paypal.paypalAccounts[0].details.payerInfo.payerId,
+                  payment_method_nonce: vm.paypal.paypalAccounts[0].nonce
+                }
               }
-            })
 
-            vm.checkoutOrder(task, shippingData, productData, params)
-          } else if (shippingData.payment_methods.find((val) => val.code === 'braintree_paypal')) {
-            params.payload.paymentMethod.method = 'braintree_paypal'
+              vm.updateTask({
+                ...vm.activeTask(task),
+                transactionData: {
+                  ...vm.activeTask(task).transactionData,
+                  method: 'PayPal'
+                }
+              })
 
-            if (vm.activeTask(task).profile.paypal && Object.keys(vm.activeTask(task).profile.paypal).length) {
-              params.payload.paymentMethod.additional_data = {
-                paypal_express_checkout_token: vm.activeTask(task).profile.paypal.paypalAccounts[0].details.correlationId,
-                paypal_express_checkout_redirect_required: false,
-                paypal_express_checkout_payer_id: vm.activeTask(task).profile.paypal.paypalAccounts[0].details.payerInfo.payerId
-              }
-            } else if (vm.paypal && Object.keys(vm.paypal).length) {
-              params.payload.paymentMethod.additional_data = {
-                paypal_express_checkout_token: vm.paypal.paypalAccounts[0].details.correlationId,
-                paypal_express_checkout_redirect_required: false,
-                paypal_express_checkout_payer_id: vm.paypal.paypalAccounts[0].details.payerInfo.payerId
-              }
-            }
+              vm.paypalCheckout(task, shippingData, productData, params)
 
-            vm.updateTask({
-              ...vm.activeTask(task),
-              transactionData: {
-                ...vm.activeTask(task).transactionData,
-                method: 'PayPal'
-              }
-            })
+              break
 
-            vm.checkoutOrder(task, shippingData, productData, params)
-          } else {
-            vm.init(vm.activeTask(task))
+            default:
+              vm.init(vm.activeTask(task))
+              break
           }
         } else {
           vm.init(vm.activeTask(task))
@@ -1108,14 +1133,14 @@ export default {
     },
 
     /**
-     * Checkout order
+     * PayMaya Checkout order
      *
      * @param {*} task
      * @param {*} shippingData
      * @param {*} productData
      * @param {*} params
      */
-    async checkoutOrder (task, shippingData, productData, params) {
+    async paymayaCheckout (task, shippingData, productData, params) {
       if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
         params.proxy = this.getProxy(this.activeTask(task))
       }
@@ -1144,17 +1169,149 @@ export default {
             cancelTokenSource: cancelTokenSource
           })
 
-          let apiResponse = {}
+          const apiResponse = await orderApi.placePaymayaOrder(params, cancelTokenSource.token)
 
-          if (this.activeTask(task).transactionData.method === '2c2p') {
-            apiResponse = await orderApi.placeOrder(params, cancelTokenSource.token)
-          } else if (this.activeTask(task).transactionData.method === 'PayPal') {
-            apiResponse = await cartApi.paymentInformation(params, cancelTokenSource.token)
+          sw.stop()
+
+          if (apiResponse.status === 200 && this.isRunning(task.id)) {
+            orderResult = apiResponse.data
+            orderResult.time = (sw.read() / 1000.0).toFixed(2)
+            orderResult.order = productData
+
+            this.onSuccess(task, orderResult, shippingData, productData)
+
+            break
+          } else if (index === tries) {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Trying for restock!`
+            })
+
+            this.init(this.activeTask(task))
+            break
+          } else {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Out of stock!`
+            })
+
+            continue
           }
+        }
+      }
+    },
+
+    /**
+     * 2c2p Checkout order
+     *
+     * @param {*} task
+     * @param {*} shippingData
+     * @param {*} productData
+     * @param {*} params
+     */
+    async creditCardCheckout (task, shippingData, productData, params) {
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+        params.proxy = this.getProxy(this.activeTask(task))
+      }
+
+      let orderResult = {}
+      const tries = 3
+
+      this.updateTask({
+        ...this.activeTask(task),
+        logs: `${this.activeTask(task).logs || ''};Placing order...`
+      })
+
+      this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
+
+      for (let index = 1; index <= tries; index++) {
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        } else {
+          const sw = new StopWatch(true)
+
+          const cancelTokenSource = axios.CancelToken.source()
+
+          this.updateTask({
+            ...this.activeTask(task),
+            cancelTokenSource: cancelTokenSource
+          })
+
+          const apiResponse = await orderApi.place2c2pOrder(params, cancelTokenSource.token)
 
           sw.stop()
 
           if (apiResponse.status === 200 && apiResponse.data.cookies && this.isRunning(task.id)) {
+            orderResult = apiResponse.data
+            orderResult.time = (sw.read() / 1000.0).toFixed(2)
+            orderResult.order = productData
+
+            this.onSuccess(task, orderResult, shippingData, productData)
+
+            break
+          } else if (index === tries) {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Trying for restock!`
+            })
+
+            this.init(this.activeTask(task))
+            break
+          } else {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Out of stock!`
+            })
+
+            continue
+          }
+        }
+      }
+    },
+
+    /**
+     * PayPal Checkout order
+     *
+     * @param {*} task
+     * @param {*} shippingData
+     * @param {*} productData
+     * @param {*} params
+     */
+    async paypalCheckout (task, shippingData, productData, params) {
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+        params.proxy = this.getProxy(this.activeTask(task))
+      }
+
+      let orderResult = {}
+      const tries = 3
+
+      this.updateTask({
+        ...this.activeTask(task),
+        logs: `${this.activeTask(task).logs || ''};Placing order...`
+      })
+
+      this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${productData.sizeLabel} - placing order`, 'orange')
+
+      for (let index = 1; index <= tries; index++) {
+        if (!this.isRunning(task.id)) {
+          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          break
+        } else {
+          const sw = new StopWatch(true)
+
+          const cancelTokenSource = axios.CancelToken.source()
+
+          this.updateTask({
+            ...this.activeTask(task),
+            cancelTokenSource: cancelTokenSource
+          })
+
+          const apiResponse = await cartApi.paymentInformation(params, cancelTokenSource.token)
+
+          sw.stop()
+
+          if (apiResponse.status === 200 && this.isRunning(task.id)) {
             orderResult = apiResponse.data
             orderResult.time = (sw.read() / 1000.0).toFixed(2)
             orderResult.order = productData
@@ -1205,8 +1362,16 @@ export default {
         logs: `${this.activeTask(task).logs || ''};Copped!`
       })
 
-      if (this.settings.autoPay && !this.activeTask(task).aco && this.activeTask(task).transactionData.method !== 'PayPal') {
-        ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
+      if (this.settings.autoPay && !this.activeTask(task).aco) {
+        switch (this.activeTask(task).transactionData.method) {
+          case '2c2p':
+            ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
+            break
+
+          case 'PayMaya':
+            ipcRenderer.send('pay-with-paymaya', JSON.stringify({ task: task, settings: this.settings }))
+            break
+        }
       }
 
       if (this.settings.sound) {
@@ -1231,6 +1396,7 @@ export default {
       const sku = this.activeTask(task).sku
       const method = this.activeTask(task).transactionData.method
       let img = ''
+      const checkoutLink = (this.activeTask(task).transactionData.method === 'PayMaya') ? orderResult.request.uri.href : ''
 
       const params = {
         payload: {
@@ -1263,7 +1429,7 @@ export default {
 
       if (this.settings.webhook) {
         // send to personal webhook
-        this.sendWebhook(url, productName, productSize, profile, secs, sku, null, method, img, this.activeTask(task).proxy)
+        this.sendWebhook(url, productName, productSize, profile, secs, sku, null, method, img, this.activeTask(task).proxy, checkoutLink)
 
         // send to public webhook
         if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img)
@@ -1276,7 +1442,7 @@ export default {
         const cookie = orderResult.cookies.value
 
         // send to aco webhook
-        if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie, method, img)
+        if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie, method, img, checkoutLink)
       }
     }
   }
