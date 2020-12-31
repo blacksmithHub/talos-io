@@ -16,7 +16,7 @@ export default {
      * @param {*} profile
      * @param {*} secs
      */
-    sendWebhook (url, product, size, profile, secs, sku, cookie, method, img, proxy) {
+    sendWebhook (url, product, size, profile, secs, sku, cookie, method, img, proxy, checkoutLink) {
       const Hook = new webhook.Webhook(url)
 
       const msg = new webhook.MessageBuilder()
@@ -31,6 +31,8 @@ export default {
         .setThumbnail(img || 'https://i.imgur.com/eVt99L8.png')
 
       if (cookie) msg.addField('**Cookie**', `||${cookie}||`)
+
+      if (checkoutLink) msg.addField('**Checkout Link**', `[PayMaya](${checkoutLink})`)
 
       if (profile) msg.addField('**Profile**', `||${profile}||`)
 

@@ -1,4 +1,4 @@
-// import GuardService from '@/services/guard'
+import GuardService from '@/services/guard'
 
 const CheckUpdate = () => import('../pages/CheckUpdate')
 const Login = () => import('../pages/Login')
@@ -32,14 +32,14 @@ export default {
     {
       path: '/check-update',
       name: 'CheckUpdate',
-      component: CheckUpdate
-      // beforeEnter: (to, from, next) => GuardService.authorized(next)
+      component: CheckUpdate,
+      beforeEnter: (to, from, next) => GuardService.authorized(next)
     },
     {
       path: '',
       name: 'Home',
       component: Home,
-      // beforeEnter: (to, from, next) => GuardService.authorized(next),
+      beforeEnter: (to, from, next) => GuardService.authorized(next),
       children: [
         {
           path: '/',

@@ -62,7 +62,7 @@ export default {
     if (task.bank && Object.keys(task.bank).length) {
       switch (task.bank.bank.toLowerCase()) {
         case 'gcash':
-          if (settings.autoPay || settings.autoFill) {
+          if (settings.autoPay) {
             await page.click('#btnGCashSubmit')
             await page.waitForNavigation()
             await page.waitForSelector('.layout-header')
@@ -76,6 +76,19 @@ export default {
 
             await page.type('input[type=number]', task.bank.cardNumber)
             await page.click('.ap-button')
+          } else if (settings.autoFill) {
+            await page.click('#btnGCashSubmit')
+            await page.waitForNavigation()
+            await page.waitForSelector('.layout-header')
+
+            await page.evaluate((array) => {
+              array.forEach(element => {
+                var div = document.getElementsByClassName('layout-header')[0]
+                div.insertAdjacentHTML('beforebegin', element)
+              })
+            }, array)
+
+            await page.type('input[type=number]', task.bank.cardNumber)
           }
           break
 

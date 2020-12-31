@@ -12,6 +12,7 @@ import ProfileWindow from '@/windows/Profile'
 import ProxyWindow from '@/windows/Proxy'
 import SettingWindow from '@/windows/Setting'
 
+import PayMayaCheckout from '@/services/Automate/PayMayaCheckout'
 import CreditCardCheckout from '@/services/Automate/CreditCardCheckout'
 import PayPalAuthorization from '@/services/Automate/PayPalAuthorization'
 
@@ -344,6 +345,13 @@ ipcMain.on('bind', (event, arg) => {
     LoginWindow.getWindow().destroy()
     LoginWindow.closeWindow()
   }
+})
+
+/**
+ * PayMaya checkout method
+ */
+ipcMain.on('pay-with-paymaya', async (event, arg) => {
+  PayMayaCheckout.automate(JSON.parse(arg))
 })
 
 /**

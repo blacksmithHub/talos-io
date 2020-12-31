@@ -267,7 +267,15 @@ export default {
      *
      */
     redirectToCheckout (task) {
-      ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
+      switch (task.transactionData.method) {
+        case 'PayMaya':
+          ipcRenderer.send('pay-with-paymaya', JSON.stringify({ task: task, settings: this.settings }))
+          break
+
+        case '2c2p':
+          ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
+          break
+      }
     },
     /**
      * Start task.
