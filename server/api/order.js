@@ -3,9 +3,9 @@ const express = require('express')
 const router = express.Router()
 
 /**
- * Place order
+ * Place 2c2p order
  */
-router.post('/', async (req, res) => {
+router.post('/2c2p', async (req, res) => {
   let request = require('request')
 
   const option = {}
@@ -79,6 +79,51 @@ router.post('/', async (req, res) => {
           })
         })
       })
+    })
+  })
+})
+
+/**
+ * Place paymaya order
+ */
+router.post('/paymaya', async (req, res) => {
+  let request = require('request')
+
+  const option = {}
+
+  if (req.body.proxy) option.proxy = `http://${req.body.proxy.username}:${req.body.proxy.password}@${req.body.proxy.host}:${req.body.proxy.port}`
+
+  request = request.defaults(option)
+
+  const jar = request.jar()
+
+  const placeOrder = {
+    uri: 'https://www.titan22.com/rest/V1/carts/mine/payment-information',
+    body: JSON.stringify(req.body.payload),
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${req.body.token}`
+    },
+    jar
+  }
+
+  await request(placeOrder, async function (error, response) {
+    if (error || response.statusCode !== 200) res.status(response.statusCode).send({})
+
+    const getTransactionData = {
+      uri: 'https://www.titan22.com/paymaya/checkout/start',
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      jar
+    }
+
+    await request(getTransactionData, async function (error, response) {
+      if (error || response.statusCode !== 200) res.status(response.statusCode).send({})
+
+      res.status(200).send(response)
     })
   })
 })

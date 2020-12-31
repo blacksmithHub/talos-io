@@ -176,7 +176,7 @@
               small
               class="primary"
               rounded
-              @click="confirmPaypalLogout, dialog=false"
+              @click="confirmPaypalLogout(), dialog=false"
             >
               Logout
             </v-btn>

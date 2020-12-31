@@ -12,7 +12,10 @@
           </v-list-item-avatar>
         </v-list-item>
 
-        <v-list-item link>
+        <v-list-item
+          link
+          @click="$refs.account.dialog=true"
+        >
           <v-list-item-content>
             <v-list-item-title
               class="title"
