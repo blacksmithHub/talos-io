@@ -3,6 +3,7 @@ export default {
    * Services Configuration
    */
   services: {
+    local: process.env.VUE_APP_LOCAL,
     /**
      * ===========================================
      * API Service Configuration
