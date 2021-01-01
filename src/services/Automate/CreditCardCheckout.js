@@ -62,9 +62,12 @@ export default {
     if (task.bank && Object.keys(task.bank).length) {
       switch (task.bank.bank.toLowerCase()) {
         case 'gcash':
-          if (settings.autoPay) {
+          if (settings.autoFill || settings.autoPay) {
+            await page.waitForSelector('#btnGCashSubmit')
             await page.click('#btnGCashSubmit')
+
             await page.waitForNavigation()
+
             await page.waitForSelector('.layout-header')
 
             await page.evaluate((array) => {
@@ -74,40 +77,38 @@ export default {
               })
             }, array)
 
-            await page.type('input[type=number]', task.bank.cardNumber)
-            await page.click('.ap-button')
-          } else if (settings.autoFill) {
-            await page.click('#btnGCashSubmit')
-            await page.waitForNavigation()
-            await page.waitForSelector('.layout-header')
-
-            await page.evaluate((array) => {
-              array.forEach(element => {
-                var div = document.getElementsByClassName('layout-header')[0]
-                div.insertAdjacentHTML('beforebegin', element)
-              })
-            }, array)
-
+            await page.waitForSelector('input[type=number]')
             await page.type('input[type=number]', task.bank.cardNumber)
           }
+
+          if (settings.autoPay) await page.click('.ap-button')
+
           break
 
         default:
+          if (settings.autoFill || settings.autoPay) {
+            await page.waitForSelector('#credit_card_number')
+            await page.type('#credit_card_number', task.bank.cardNumber)
+
+            await page.waitForSelector('#credit_card_holder_name')
+            await page.type('#credit_card_holder_name', task.bank.cardHolder)
+
+            await page.waitForSelector('#credit_card_expiry_month')
+            await page.type('#credit_card_expiry_month', task.bank.expiryMonth)
+
+            await page.waitForSelector('#credit_card_expiry_year')
+            await page.type('#credit_card_expiry_year', task.bank.expiryYear)
+
+            await page.waitForSelector('#credit_card_cvv')
+            await page.type('#credit_card_cvv', task.bank.cvv)
+
+            await page.waitForSelector('#credit_card_issuing_bank_name')
+            await page.type('#credit_card_issuing_bank_name', task.bank.bank)
+          }
+
           if (settings.autoPay) {
-            await page.type('#credit_card_number', task.bank.cardNumber)
-            await page.type('#credit_card_holder_name', task.bank.cardHolder)
-            await page.type('#credit_card_expiry_month', task.bank.expiryMonth)
-            await page.type('#credit_card_expiry_year', task.bank.expiryYear)
-            await page.type('#credit_card_cvv', task.bank.cvv)
-            await page.type('#credit_card_issuing_bank_name', task.bank.bank)
+            await page.waitForSelector('#btnCCSubmit')
             await page.click('#btnCCSubmit')
-          } else if (settings.autoFill) {
-            await page.type('#credit_card_number', task.bank.cardNumber)
-            await page.type('#credit_card_holder_name', task.bank.cardHolder)
-            await page.type('#credit_card_expiry_month', task.bank.expiryMonth)
-            await page.type('#credit_card_expiry_year', task.bank.expiryYear)
-            await page.type('#credit_card_cvv', task.bank.cvv)
-            await page.type('#credit_card_issuing_bank_name', task.bank.bank)
           }
           break
       }

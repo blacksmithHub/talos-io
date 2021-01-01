@@ -24,17 +24,21 @@ export default {
     await page.goto(task.transactionData.request.uri.href)
 
     if (task.bank && Object.keys(task.bank).length && task.bank.bank.toLowerCase() === 'paymaya') {
+      if (settings.autoFill || settings.autoPay) {
+        await page.waitForSelector('#cardNumber')
+        await page.type('#cardNumber', task.bank.cardNumber)
+
+        await page.waitForSelector('#expiryDate')
+        await page.type('#expiryDate', task.bank.expiryMonth)
+        await page.type('#expiryDate', task.bank.expiryYear.substring(task.bank.expiryYear.length - 2))
+
+        await page.waitForSelector('#cvv')
+        await page.type('#cvv', task.bank.cvv)
+      }
+
       if (settings.autoPay) {
-        await page.type('#cardNumber', task.bank.cardNumber)
-        await page.type('#expiryDate', task.bank.expiryMonth)
-        await page.type('#expiryDate', task.bank.expiryYear.substring(task.bank.expiryYear.length - 2))
-        await page.type('#cvv', task.bank.cvv)
+        await page.waitForSelector('#pay')
         await page.click('#pay')
-      } else if (settings.autoFill) {
-        await page.type('#cardNumber', task.bank.cardNumber)
-        await page.type('#expiryDate', task.bank.expiryMonth)
-        await page.type('#expiryDate', task.bank.expiryYear.substring(task.bank.expiryYear.length - 2))
-        await page.type('#cvv', task.bank.cvv)
       }
     }
 
