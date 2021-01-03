@@ -1195,6 +1195,8 @@ export default {
               logs: `${this.activeTask(task).logs || ''};Out of stock!`
             })
 
+            await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
             continue
           }
         }
@@ -1264,6 +1266,8 @@ export default {
               logs: `${this.activeTask(task).logs || ''};Out of stock!`
             })
 
+            await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
             continue
           }
         }
@@ -1332,6 +1336,8 @@ export default {
               ...this.activeTask(task),
               logs: `${this.activeTask(task).logs || ''};Out of stock!`
             })
+
+            await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
 
             continue
           }
@@ -1438,7 +1444,7 @@ export default {
         this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img)
       }
 
-      if (this.activeTask(task).transactionData === '2c2p') {
+      if (this.activeTask(task).transactionData.method === '2c2p') {
         const cookie = orderResult.cookies.value
 
         // send to aco webhook

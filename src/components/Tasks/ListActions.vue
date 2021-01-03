@@ -71,6 +71,13 @@
 
         <v-list-item
           link
+          @click="$emit('click:duplicateTask', task)"
+        >
+          <v-list-item-title v-text="'Duplicate'" />
+        </v-list-item>
+
+        <v-list-item
+          link
           @click="$emit('click:openLogs', task)"
         >
           <v-list-item-title v-text="'Logs'" />

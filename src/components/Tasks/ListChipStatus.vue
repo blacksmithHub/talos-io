@@ -22,7 +22,7 @@
       outlined
       small
       color="success"
-      class="text-capitalize task"
+      class="text-capitalize pointer"
       v-text="'copy checkout cookie!'"
     />
 
@@ -31,7 +31,7 @@
       outlined
       small
       color="success"
-      class="text-capitalize task"
+      class="text-capitalize pointer"
       @click="$emit('click:checkout', task)"
       v-text="'proceed to checkout!'"
     />
@@ -95,5 +95,8 @@ export default {
 <style scoped>
 .cursor {
   cursor: default
+}
+.pointer {
+  cursor: pointer
 }
 </style>
