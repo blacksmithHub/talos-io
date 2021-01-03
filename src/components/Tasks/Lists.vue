@@ -96,6 +96,7 @@
         @click:editTask="$emit('click:editTask', item)"
         @click:deleteTask="$emit('click:deleteTask', item)"
         @click:verifyTask="$emit('click:verifyTask', item)"
+        @click:duplicateTask="$emit('click:duplicateTask', item)"
         @click:openLogs="$emit('click:openLogs', item)"
       />
     </template>

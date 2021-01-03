@@ -94,7 +94,7 @@
 
     <v-divider />
 
-    <v-card-text style="max-height: 70vh; overflow: auto">
+    <v-card-text style="max-height: 65vh; overflow: auto">
       <v-list
         v-if="banks.length"
         class="pa-0"

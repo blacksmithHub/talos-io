@@ -62,7 +62,7 @@
                 v-model="proxy"
                 required
                 clearable
-                :items="proxies"
+                :items="allProxies"
                 outlined
                 dense
                 label="Proxies (optional)"
@@ -243,6 +243,16 @@ export default {
     ...mapState('bank', { banks: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
 
+    /**
+     * Return all proxies
+     */
+    allProxies () {
+      const proxies = this.proxies.slice()
+
+      proxies.push({ id: null, name: 'Localhost', proxies: [] })
+
+      return proxies
+    },
     /**
      * Set modal header.
      *

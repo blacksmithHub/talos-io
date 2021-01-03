@@ -60,7 +60,7 @@
       />
       <span
         v-if="$vuetify.breakpoint.lgAndUp"
-        v-text="'edit all'"
+        v-text="'mass edit'"
       />
     </v-btn>
   </v-toolbar>
