@@ -39,7 +39,7 @@
           <span
             v-if="$vuetify.breakpoint.lgAndUp"
             class="ml-2"
-            v-text="'PayPal Login'"
+            v-text="`PayPal ${(paypal && Object.keys(paypal).length) ? 'Logout' : 'Login'}`"
           />
         </v-btn>
       </v-col>

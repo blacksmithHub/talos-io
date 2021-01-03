@@ -42,7 +42,7 @@
                     v-model="proxy"
                     required
                     clearable
-                    :items="proxies"
+                    :items="allProxies"
                     outlined
                     dense
                     label="Proxies"
@@ -203,7 +203,7 @@ export default {
       dialog: false,
       sizes: [],
       sku: '',
-      delay: 3200,
+      delay: '',
       placeOrder: '',
       placeOrderMenu: false,
       proxy: {}
@@ -213,6 +213,16 @@ export default {
     ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
+    /**
+     * Return all proxies
+     */
+    allProxies () {
+      const proxies = this.proxies.slice()
+
+      proxies.push({ id: null, name: 'Localhost', proxies: [] })
+
+      return proxies
+    },
     /**
      * Error messages for delay.
      *
@@ -270,7 +280,7 @@ export default {
 
       this.sizes = []
       this.sku = ''
-      this.delay = 3200
+      this.delay = ''
       this.placeOrder = ''
       this.placeOrderMenu = false
       this.dialog = false

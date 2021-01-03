@@ -32,6 +32,7 @@
             @click:editTask="openEditTaskDialog"
             @click:checkout="redirectToCheckout"
             @click:verifyTask="verifyTask"
+            @click:duplicateTask="duplicateTask"
             @click:openLogs="openLogs"
           />
         </v-card-text>
@@ -165,6 +166,7 @@ export default {
       reset: 'reset'
     }),
     ...mapActions('task', {
+      addTask: 'addItem',
       updateTask: 'updateItem',
       prepareTasks: 'initializeItems',
       resetTask: 'reset',
@@ -261,6 +263,16 @@ export default {
      */
     openEditTaskDialog (task) {
       this.$refs.taskDialog.mapData(task)
+    },
+    /**
+     * Duplicate task event
+     */
+    duplicateTask (task) {
+      const duplicate = { ...task }
+
+      delete duplicate.id
+
+      this.addTask(duplicate)
     },
     /**
      * Redirect to checkout page.
