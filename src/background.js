@@ -333,6 +333,8 @@ ipcMain.on('authenticate', (event, arg) => {
     MainWindow.getWindow().destroy()
     MainWindow.closeWindow()
   }
+
+  if (win) win.destroy()
 })
 
 /**
