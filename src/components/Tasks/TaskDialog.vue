@@ -61,13 +61,14 @@
               <v-autocomplete
                 v-model="proxy"
                 required
-                clearable
                 :items="allProxies"
                 outlined
                 dense
-                label="Proxies (optional)"
+                label="Proxies"
                 item-text="name"
                 return-object
+                :error-messages="proxyErrors"
+                @blur="$v.proxy.$touch()"
               />
 
               <v-row>
@@ -226,7 +227,7 @@ export default {
       sku: '',
       sizes: [],
       profile: {},
-      proxy: {},
+      proxy: { id: null, name: 'Localhost', proxies: [] },
       bank: {},
       isEditMode: false,
       selectedTask: {},
@@ -335,6 +336,19 @@ export default {
       if (!this.$v.qty.$dirty) return errors
 
       this.$v.qty.minValue || errors.push('Invalid input')
+
+      return errors
+    },
+    /**
+     * Error messages for proxy.
+     *
+     */
+    proxyErrors () {
+      const errors = []
+
+      if (!this.$v.proxy.$dirty) return errors
+
+      this.$v.proxy.required || errors.push('Required')
 
       return errors
     }
@@ -458,6 +472,7 @@ export default {
   validations: {
     profile: { required },
     bank: { required },
+    proxy: { required },
     sku: { required },
     sizes: { required },
     delay: { minValue: minValue(0) },
