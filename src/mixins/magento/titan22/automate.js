@@ -1422,7 +1422,9 @@ export default {
         token: Config.services.titan22.token
       }
 
-      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+        params.proxy = this.getProxy(this.activeTask(task))
+      }
 
       const apiResponse = await productApi.search(params)
 
