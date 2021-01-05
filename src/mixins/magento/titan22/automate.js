@@ -276,12 +276,16 @@ export default {
        */
       let shippingData = {}
 
+      task.sw = new StopWatch(true)
+
       await this.setShippingInfo(task, user, productData, (response, authorized) => {
         isAuthorized = authorized
         shippingData = response
       })
 
       if (!isAuthorized) {
+        task.sw.stop()
+
         this.updateTask({
           ...this.activeTask(task),
           transactionData: {}
@@ -291,6 +295,8 @@ export default {
 
         return false
       } else if (!Object.keys(shippingData).length || !this.isRunning(task.id)) {
+        task.sw.stop()
+
         this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
         return false
       }
@@ -1160,8 +1166,6 @@ export default {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
         } else {
-          const sw = new StopWatch(true)
-
           const cancelTokenSource = axios.CancelToken.source()
 
           this.updateTask({
@@ -1171,11 +1175,10 @@ export default {
 
           const apiResponse = await orderApi.placePaymayaOrder(params, cancelTokenSource.token)
 
-          sw.stop()
-
           if (apiResponse.status === 200 && this.isRunning(task.id)) {
+            task.sw.stop()
+
             orderResult = apiResponse.data
-            orderResult.time = (sw.read() / 1000.0).toFixed(2)
             orderResult.order = productData
 
             this.onSuccess(task, orderResult, shippingData, productData)
@@ -1231,8 +1234,6 @@ export default {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
         } else {
-          const sw = new StopWatch(true)
-
           const cancelTokenSource = axios.CancelToken.source()
 
           this.updateTask({
@@ -1242,11 +1243,10 @@ export default {
 
           const apiResponse = await orderApi.place2c2pOrder(params, cancelTokenSource.token)
 
-          sw.stop()
-
           if (apiResponse.status === 200 && apiResponse.data.cookies && this.isRunning(task.id)) {
+            task.sw.stop()
+
             orderResult = apiResponse.data
-            orderResult.time = (sw.read() / 1000.0).toFixed(2)
             orderResult.order = productData
 
             this.onSuccess(task, orderResult, shippingData, productData)
@@ -1302,8 +1302,6 @@ export default {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
         } else {
-          const sw = new StopWatch(true)
-
           const cancelTokenSource = axios.CancelToken.source()
 
           this.updateTask({
@@ -1313,11 +1311,10 @@ export default {
 
           const apiResponse = await cartApi.paymentInformation(params, cancelTokenSource.token)
 
-          sw.stop()
-
           if (apiResponse.status === 200 && this.isRunning(task.id)) {
+            task.sw.stop()
+
             orderResult = apiResponse.data
-            orderResult.time = (sw.read() / 1000.0).toFixed(2)
             orderResult.order = productData
 
             this.onSuccess(task, orderResult, shippingData, productData)
@@ -1398,7 +1395,7 @@ export default {
       const productName = shippingData.totals.items[0].name
       const productSize = productData.sizeLabel
       const profile = this.activeTask(task).profile.name
-      const secs = orderResult.time
+      const secs = (task.sw.read() / 1000.0).toFixed(2)
       const sku = this.activeTask(task).sku
       const method = this.activeTask(task).transactionData.method
       let img = ''

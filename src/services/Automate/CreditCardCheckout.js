@@ -8,26 +8,13 @@ export default {
    */
   async automate (arg) {
     const puppeteer = require('puppeteer')
-    const proxyChain = require('proxy-chain')
 
     const task = arg.task
     const settings = arg.settings
 
-    let proxy = {}
-
-    if (task.proxy && Object.keys(task.proxy).length && task.proxy.proxies.length) proxy = task.proxy.proxies[Math.floor(Math.random() * task.proxy.proxies.length)]
-
-    const args = ['--window-size=800,600']
-
-    if (Object.keys(proxy).length) {
-      const oldProxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
-      const newProxyUrl = await proxyChain.anonymizeProxy(oldProxyUrl)
-      args.push(`--proxy-server=${newProxyUrl}`)
-    }
-
     const browser = await puppeteer.launch({
       headless: false,
-      args: args,
+      args: ['--window-size=800,600'],
       defaultViewport: null,
       executablePath: settings.executablePath || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
     })
