@@ -14,8 +14,11 @@ router.post('/post', async (req, res) => {
   if (proxy) {
     options.proxy = {
       host: proxy.host,
-      port: proxy.port,
-      auth: {
+      port: proxy.port
+    }
+
+    if (proxy.username && proxy.password) {
+      options.proxy.auth = {
         username: proxy.username,
         password: proxy.password
       }
@@ -60,8 +63,11 @@ router.post('/get', async (req, res) => {
   if (proxy) {
     options.proxy = {
       host: proxy.host,
-      port: proxy.port,
-      auth: {
+      port: proxy.port
+    }
+
+    if (proxy.username && proxy.password) {
+      options.proxy.auth = {
         username: proxy.username,
         password: proxy.password
       }
@@ -106,8 +112,11 @@ router.post('/delete', async (req, res) => {
   if (proxy) {
     options.proxy = {
       host: proxy.host,
-      port: proxy.port,
-      auth: {
+      port: proxy.port
+    }
+
+    if (proxy.username && proxy.password) {
+      options.proxy.auth = {
         username: proxy.username,
         password: proxy.password
       }

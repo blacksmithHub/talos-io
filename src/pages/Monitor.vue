@@ -294,9 +294,12 @@ export default {
         const proxy = this.settings.monitorProxy.proxies[Math.floor(Math.random() * this.settings.monitorProxy.proxies.length)]
         params.proxy = {
           host: proxy.host,
-          port: proxy.port,
-          username: proxy.username,
-          password: proxy.password
+          port: proxy.port
+        }
+
+        if (proxy.username && proxy.password) {
+          params.proxy.username = proxy.username
+          params.proxy.password = proxy.password
         }
       }
 

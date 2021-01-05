@@ -1,7 +1,8 @@
 <template>
   <div>
     <v-btn
-      v-if="task.status.id === 1 && task.status.class !== 'error'"
+      v-if="task.status.id === 1"
+      :disabled="task.status.class === 'error'"
       icon
       color="success"
       depressed

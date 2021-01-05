@@ -147,7 +147,13 @@ export default {
       this.proxies = []
 
       const pool = this.pool.slice().map((val) => {
-        return `${val.host}:${val.port}:${val.username}:${val.password}`
+        let ip = `${val.host}:${val.port}`
+
+        if (val.username && val.password) {
+          ip = `${ip}:${val.username}:${val.password}`
+        }
+
+        return ip
       })
 
       this.proxies = pool.join('\n')
@@ -224,15 +230,26 @@ export default {
       proxies = proxies.map(element => {
         const proxy = element.split(':')
 
-        if (proxy.length === 4) {
-          this.pool.push({
-            host: proxy[0],
-            port: proxy[1],
-            username: proxy[2],
-            password: proxy[3]
-          })
-        } else {
-          element = ''
+        switch (proxy.length) {
+          case 4:
+            this.pool.push({
+              host: proxy[0],
+              port: proxy[1],
+              username: proxy[2],
+              password: proxy[3]
+            })
+            break
+
+          case 2:
+            this.pool.push({
+              host: proxy[0],
+              port: proxy[1]
+            })
+            break
+
+          default:
+            element = ''
+            break
         }
 
         return element

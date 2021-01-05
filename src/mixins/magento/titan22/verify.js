@@ -30,12 +30,17 @@ export default {
     genProxy (task) {
       const proxy = this.getActiveTask(task).proxy.proxies[Math.floor(Math.random() * this.getActiveTask(task).proxy.proxies.length)]
 
-      return {
+      const ip = {
         host: proxy.host,
-        port: proxy.port,
-        username: proxy.username,
-        password: proxy.password
+        port: proxy.port
       }
+
+      if (proxy.username && proxy.password) {
+        ip.username = proxy.username
+        ip.password = proxy.password
+      }
+
+      return ip
     },
 
     /**
@@ -200,27 +205,31 @@ export default {
       if (!this.isTaskRunning(task.id)) {
         this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
       } else {
-        const cancelTokenSource = axios.CancelToken.source()
-
-        this.updateTask({
-          ...this.getActiveTask(task),
-          cancelTokenSource: cancelTokenSource
-        })
-
-        const apiResponse = await authApi.fetchToken(params, cancelTokenSource.token)
-
-        if (!this.isTaskRunning(task.id)) {
-          this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-        } else if (apiResponse.status === 200 && apiResponse.data) {
-          token = apiResponse.data
+        try {
+          const cancelTokenSource = axios.CancelToken.source()
 
           this.updateTask({
             ...this.getActiveTask(task),
-            transactionData: {
-              ...this.getActiveTask(task).transactionData,
-              token: token
-            }
+            cancelTokenSource: cancelTokenSource
           })
+
+          const apiResponse = await authApi.fetchToken(params, cancelTokenSource.token)
+
+          if (!this.isTaskRunning(task.id)) {
+            this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          } else if (apiResponse.status === 200 && apiResponse.data) {
+            token = apiResponse.data
+
+            this.updateTask({
+              ...this.getActiveTask(task),
+              transactionData: {
+                ...this.getActiveTask(task).transactionData,
+                token: token
+              }
+            })
+          }
+        } catch (error) {
+          token = null
         }
       }
 
@@ -242,35 +251,39 @@ export default {
       if (!this.isTaskRunning(task.id)) {
         this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
       } else {
-        const cancelTokenSource = axios.CancelToken.source()
-
-        this.updateTask({
-          ...this.getActiveTask(task),
-          cancelTokenSource: cancelTokenSource
-        })
-
-        const params = {
-          token: token
-        }
-
-        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
-          params.proxy = this.genProxy(this.getActiveTask(task))
-        }
-
-        const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
-
-        if (!this.isTaskRunning(task.id)) {
-          this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-        } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
-          user = apiResponse.data
+        try {
+          const cancelTokenSource = axios.CancelToken.source()
 
           this.updateTask({
             ...this.getActiveTask(task),
-            transactionData: {
-              ...this.getActiveTask(task).transactionData,
-              user: user
-            }
+            cancelTokenSource: cancelTokenSource
           })
+
+          const params = {
+            token: token
+          }
+
+          if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
+            params.proxy = this.genProxy(this.getActiveTask(task))
+          }
+
+          const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
+
+          if (!this.isTaskRunning(task.id)) {
+            this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+          } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
+            user = apiResponse.data
+
+            this.updateTask({
+              ...this.getActiveTask(task),
+              transactionData: {
+                ...this.getActiveTask(task).transactionData,
+                user: user
+              }
+            })
+          }
+        } catch (error) {
+          user = {}
         }
       }
 
@@ -296,31 +309,35 @@ export default {
           return false
         }
 
-        const cancelTokenSource = axios.CancelToken.source()
+        try {
+          const cancelTokenSource = axios.CancelToken.source()
 
-        this.updateTask({
-          ...this.getActiveTask(task),
-          cancelTokenSource: cancelTokenSource
-        })
+          this.updateTask({
+            ...this.getActiveTask(task),
+            cancelTokenSource: cancelTokenSource
+          })
 
-        const params = {
-          token: user.token
-        }
+          const params = {
+            token: user.token
+          }
 
-        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
-          params.proxy = this.genProxy(this.getActiveTask(task))
-        }
+          if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
+            params.proxy = this.genProxy(this.getActiveTask(task))
+          }
 
-        const apiResponse = await cartApi.create(params, cancelTokenSource.token)
+          const apiResponse = await cartApi.create(params, cancelTokenSource.token)
 
-        if (!this.isTaskRunning(task.id)) {
-          this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          callback(cartId)
-          return false
-        } else if (apiResponse.status === 200 && apiResponse.data) {
-          cartId = apiResponse.data
-          callback(cartId)
-          return true
+          if (!this.isTaskRunning(task.id)) {
+            this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            callback(cartId)
+            return false
+          } else if (apiResponse.status === 200 && apiResponse.data) {
+            cartId = apiResponse.data
+            callback(cartId)
+            return true
+          }
+        } catch (error) {
+          cartId = null
         }
       }
 
@@ -346,31 +363,35 @@ export default {
           return false
         }
 
-        const cancelTokenSource = axios.CancelToken.source()
+        try {
+          const cancelTokenSource = axios.CancelToken.source()
 
-        this.updateTask({
-          ...this.getActiveTask(task),
-          cancelTokenSource: cancelTokenSource
-        })
+          this.updateTask({
+            ...this.getActiveTask(task),
+            cancelTokenSource: cancelTokenSource
+          })
 
-        const params = {
-          token: user.token
-        }
+          const params = {
+            token: user.token
+          }
 
-        if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
-          params.proxy = this.genProxy(this.getActiveTask(task))
-        }
+          if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
+            params.proxy = this.genProxy(this.getActiveTask(task))
+          }
 
-        const apiResponse = await cartApi.get(params, cancelTokenSource.token)
+          const apiResponse = await cartApi.get(params, cancelTokenSource.token)
 
-        if (!this.isTaskRunning(task.id)) {
-          this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          callback(cart)
-          return false
-        } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
-          cart = apiResponse.data
-          callback(cart)
-          return true
+          if (!this.isTaskRunning(task.id)) {
+            this.updateTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            callback(cart)
+            return false
+          } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
+            cart = apiResponse.data
+            callback(cart)
+            return true
+          }
+        } catch (error) {
+          cart = {}
         }
       }
 
@@ -398,23 +419,27 @@ export default {
             break
           }
 
-          const cancelTokenSource = axios.CancelToken.source()
+          try {
+            const cancelTokenSource = axios.CancelToken.source()
 
-          this.updateTask({
-            ...this.getActiveTask(task),
-            cancelTokenSource: cancelTokenSource
-          })
+            this.updateTask({
+              ...this.getActiveTask(task),
+              cancelTokenSource: cancelTokenSource
+            })
 
-          const params = {
-            id: cart.items[index].item_id,
-            token: user.token
+            const params = {
+              id: cart.items[index].item_id,
+              token: user.token
+            }
+
+            if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
+              params.proxy = this.genProxy(this.getActiveTask(task))
+            }
+
+            await cartApi.delete(params, cancelTokenSource.token)
+          } catch (error) {
+            continue
           }
-
-          if (this.getActiveTask(task).proxy && Object.keys(this.getActiveTask(task).proxy).length && this.getActiveTask(task).proxy.proxies.length) {
-            params.proxy = this.genProxy(this.getActiveTask(task))
-          }
-
-          await cartApi.delete(params, cancelTokenSource.token)
         }
 
         callback()
