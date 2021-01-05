@@ -1241,11 +1241,19 @@ export default {
             cancelTokenSource: cancelTokenSource
           })
 
+          task.sw.stop()
+
+          const sw = new StopWatch(true)
+
           const apiResponse = await orderApi.place2c2pOrder(params, cancelTokenSource.token)
 
-          if (apiResponse.status === 200 && apiResponse.data.cookies && this.isRunning(task.id)) {
-            task.sw.stop()
+          sw.stop()
 
+          console.log((task.sw.read() / 1000.0).toFixed(2))
+          console.log((sw.read() / 1000.0).toFixed(2))
+          console.log(((task.sw.read() + sw.read()) / 1000.0).toFixed(2))
+
+          if (apiResponse.status === 200 && apiResponse.data.cookies && this.isRunning(task.id)) {
             orderResult = apiResponse.data
             orderResult.order = productData
 
