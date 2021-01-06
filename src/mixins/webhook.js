@@ -16,7 +16,7 @@ export default {
      * @param {*} profile
      * @param {*} secs
      */
-    sendWebhook (url, product, size, profile, secs, sku, cookie, method, img, proxy, checkoutLink) {
+    sendWebhook (url, product, size, profile, secs, sku, cookie, method, img, proxy, checkoutLink, speed) {
       const Hook = new webhook.Webhook(url)
 
       const msg = new webhook.MessageBuilder()
@@ -38,7 +38,9 @@ export default {
 
       if (proxy && Object.keys(proxy).length) msg.addField('**Proxy**', `||${proxy.name}||`)
 
-      if (secs) msg.addField('**Checkout Time**', `${secs}s`)
+      if (secs) msg.addField('**Total Time**', `${secs}s`)
+
+      if (speed) msg.addField('**Checkout Time**', `${speed}s`)
 
       if (method) msg.addField('**Checkout Method**', `${method}`)
 
