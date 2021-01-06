@@ -34,58 +34,78 @@ router.post('/2c2p', async (req, res) => {
   }
 
   await request(placeOrder, async function (error, response) {
-    if (error || response.statusCode !== 200) res.status(response.statusCode).send({})
+    try {
+      if (error) {
+        res.status(response.statusCode).send(error)
+      } else {
+        const getTransactionData = {
+          uri: 'https://www.titan22.com/ccpp/htmlredirect/gettransactiondata',
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          jar
+        }
 
-    const getTransactionData = {
-      uri: 'https://www.titan22.com/ccpp/htmlredirect/gettransactiondata',
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      jar
-    }
+        await request(getTransactionData, async function (error, response) {
+          try {
+            if (error) {
+              res.status(response.statusCode).send(error)
+            } else {
+              const parameters = {}
+              const fieldRecords = JSON.parse(response.body).fields
+              const valueRecords = JSON.parse(response.body).values
 
-    await request(getTransactionData, async function (error, response) {
-      if (error || response.statusCode !== 200) res.status(response.statusCode).send({})
+              for (let index = 0; index < fieldRecords.length; index++) {
+                parameters[fieldRecords[index]] = valueRecords[index]
+              }
 
-      const parameters = {}
-      const fieldRecords = JSON.parse(response.body).fields
-      const valueRecords = JSON.parse(response.body).values
+              const payment = {
+                uri: 'https://t.2c2p.com/RedirectV3/Payment',
+                form: parameters,
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                jar
+              }
 
-      for (let index = 0; index < fieldRecords.length; index++) {
-        parameters[fieldRecords[index]] = valueRecords[index]
-      }
+              await request(payment, function (error, response) {
+                try {
+                  if (error) {
+                    res.status(response.statusCode).send(error)
+                  } else {
+                    jar._jar.store.getAllCookies(function (err, cookieArray) {
+                      if (err) {
+                        res.status(500).send(err)
+                      } else {
+                        const collection = cookieArray.find((val) => val.key === 'ASP.NET_SessionId')
 
-      const payment = {
-        uri: 'https://t.2c2p.com/RedirectV3/Payment',
-        form: parameters,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        jar
-      }
-
-      await request(payment, function (error, response) {
-        if (error) res.status(500).send({})
-
-        jar._jar.store.getAllCookies(function (err, cookieArray) {
-          if (err) res.status(500).send({})
-
-          const collection = cookieArray.find((val) => val.key === 'ASP.NET_SessionId')
-
-          res.status(200).send({
-            cookies: {
-              name: 'ASP.NET_SessionId',
-              value: collection.value,
-              domain: '.2c2p.com',
-              expiry: collection.expiry
-            },
-            data: parameters
-          })
+                        res.status(200).send({
+                          cookies: {
+                            name: 'ASP.NET_SessionId',
+                            value: collection.value,
+                            domain: '.2c2p.com',
+                            expiry: collection.expiry
+                          },
+                          data: parameters
+                        })
+                      }
+                    })
+                  }
+                } catch (exception) {
+                  res.status(500).send(exception)
+                }
+              })
+            }
+          } catch (exception) {
+            res.status(500).send(exception)
+          }
         })
-      })
-    })
+      }
+    } catch (exception) {
+      res.status(500).send(exception)
+    }
   })
 })
 
@@ -119,22 +139,34 @@ router.post('/paymaya', async (req, res) => {
   }
 
   await request(placeOrder, async function (error, response) {
-    if (error || response.statusCode !== 200) res.status(response.statusCode).send({})
+    try {
+      if (error) {
+        res.status(response.statusCode).send(error)
+      } else {
+        const getTransactionData = {
+          uri: 'https://www.titan22.com/paymaya/checkout/start',
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          jar
+        }
 
-    const getTransactionData = {
-      uri: 'https://www.titan22.com/paymaya/checkout/start',
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      jar
+        await request(getTransactionData, async function (error, response) {
+          try {
+            if (error) {
+              res.status(response.statusCode).send(error)
+            } else {
+              res.status(200).send(response)
+            }
+          } catch (exception) {
+            res.status(500).send(exception)
+          }
+        })
+      }
+    } catch (exception) {
+      res.status(500).send(exception)
     }
-
-    await request(getTransactionData, async function (error, response) {
-      if (error || response.statusCode !== 200) res.status(response.statusCode).send({})
-
-      res.status(200).send(response)
-    })
   })
 })
 

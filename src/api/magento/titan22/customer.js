@@ -20,9 +20,10 @@ export default {
    */
   profile (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/me`
+    params.method = 'GET'
 
     return this.http(`${this.local}/request`)
-      .post('get', params, { cancelToken: cancelToken })
+      .post('/', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   }
