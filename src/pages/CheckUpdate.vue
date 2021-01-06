@@ -22,7 +22,7 @@
                 cols="6"
               >
                 <v-img
-                  :src="require('@/assets/icon.png')"
+                  :src="require('@/assets/talos.png')"
                   contain
                   width="100"
                 />

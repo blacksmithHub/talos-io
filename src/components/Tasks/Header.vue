@@ -2,7 +2,6 @@
   <v-toolbar
     rounded
     dense
-    flat
   >
     <v-btn
       :fab="!$vuetify.breakpoint.lgAndUp"
@@ -63,5 +62,45 @@
         v-text="'mass edit'"
       />
     </v-btn>
+
+    <v-spacer />
+
+    <v-avatar
+      size="35"
+      class="pointer"
+      style="border:1px solid #d85820"
+      @click="$refs.account.dialog=true"
+    >
+      <img
+        :src="avatar"
+      >
+    </v-avatar>
+
+    <AccountDialog ref="account" />
   </v-toolbar>
 </template>
+
+<script>
+import auth from '@/services/auth'
+import placeholder from '@/assets/placeholder.png'
+import AccountDialog from '@/components/App/AccountDialog'
+
+export default {
+  components: { AccountDialog },
+  computed: {
+    /**
+     * return avatar
+     */
+    avatar () {
+      if (!auth.isAuthenticated()) return placeholder
+      return `https://cdn.discordapp.com/avatars/${auth.getAuth().profile.id}/${auth.getAuth().profile.avatar}.png`
+    }
+  }
+}
+</script>
+
+<style scoped>
+.pointer{
+  cursor: pointer;
+}
+</style>

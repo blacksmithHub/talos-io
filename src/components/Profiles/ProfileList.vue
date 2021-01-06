@@ -1,15 +1,10 @@
 <template>
   <div>
-    <v-card
-      flat
-      class="transparent"
-    >
-      <v-card-title>
+    <v-card>
+      <v-card-title style="border-bottom: 1px solid #d85820">
         <v-toolbar
           dense
           rounded
-          class="transparent"
-          flat
         >
           <v-row
             no-gutters
@@ -178,7 +173,7 @@
                   >
                     <v-btn
                       icon
-                      :color="(profile.paypal && Object.keys(profile.paypal).length) ? 'primary' : 'secondary'"
+                      :color="(profile.paypal && Object.keys(profile.paypal).length) ? 'paypalLogin' : 'paypalLogout'"
                       depressed
                       class="mr-2"
                       @click="(profile.paypal && Object.keys(profile.paypal).length) ? paypalLogout(profile) : paypalLogin(profile)"
