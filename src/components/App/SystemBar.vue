@@ -8,12 +8,7 @@
       <v-col
         cols="6"
         align-self="center"
-      >
-        <span
-          class="text-uppercase"
-          v-text="name"
-        />
-      </v-col>
+      />
 
       <v-col
         v-if="headers"

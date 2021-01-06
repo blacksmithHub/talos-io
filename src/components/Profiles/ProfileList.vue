@@ -178,7 +178,7 @@
                   >
                     <v-btn
                       icon
-                      :color="(profile.paypal && Object.keys(profile.paypal).length) ? 'primary' : 'secondary'"
+                      :color="(profile.paypal && Object.keys(profile.paypal).length) ? 'paypalLogin' : 'paypalLogout'"
                       depressed
                       class="mr-2"
                       @click="(profile.paypal && Object.keys(profile.paypal).length) ? paypalLogout(profile) : paypalLogin(profile)"

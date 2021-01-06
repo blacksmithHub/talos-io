@@ -14,6 +14,7 @@
           <v-icon
             :left="$vuetify.breakpoint.lgAndUp"
             :small="$vuetify.breakpoint.lgAndUp"
+            color="white"
             v-text="'mdi-shield-search'"
           />
           <span
@@ -27,8 +28,8 @@
           :rounded="$vuetify.breakpoint.lgAndUp"
           :small="$vuetify.breakpoint.lgAndUp"
           :x-small="!$vuetify.breakpoint.lgAndUp"
-          class="mr-3"
-          :class="(paypal && Object.keys(paypal).length) ? 'primary' : 'secondary'"
+          class="mr-3 white--text"
+          :class="(paypal && Object.keys(paypal).length) ? 'paypalLogin' : 'paypalLogout'"
           depressed
           @click="(paypal && Object.keys(paypal).length) ? dialog=true : paypalLogin()"
         >

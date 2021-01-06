@@ -11,7 +11,7 @@
           <v-col
             cols="8"
             align-self="center"
-            class="text-center"
+            class="text-center mb-5"
           >
             <v-row
               no-gutters
@@ -23,7 +23,7 @@
                 cols="4"
               >
                 <v-img
-                  :src="require('@/assets/icon.png')"
+                  :src="require('@/assets/talos.png')"
                   contain
                   width="100"
                 />
@@ -138,7 +138,7 @@ export default {
           enableRemoteModule: true,
           webSecurity: false
         },
-        icon: path.join(__static, 'icon.png')
+        icon: path.join(__static, 'talos.png')
       })
 
       win.removeMenu()

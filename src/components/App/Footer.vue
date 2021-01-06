@@ -8,7 +8,7 @@
       class="text-center caption"
       cols="12"
     >
-      <small>{{ new Date().getFullYear() }} — <strong>{{ name }}</strong> {{ version }}</small>
+      <small><strong>{{ name }}</strong> {{ version }}</small>
     </v-col>
   </v-footer>
 </template>
