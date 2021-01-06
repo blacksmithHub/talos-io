@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-card flat>
-      <v-card-title>
+      <v-card-title style="border-bottom:1px solid #d85820">
         <v-toolbar
           dense
           rounded

@@ -7,9 +7,9 @@
     >
       <v-form @submit.prevent="submit">
         <v-card>
-          <v-card-title>
+          <v-card-title style="border-bottom: 1px solid #d85820">
             <span
-              class="headline"
+              class="headline primary--text"
               v-text="'Mass Edit'"
             />
 
@@ -17,6 +17,7 @@
 
             <v-btn
               icon
+              class="primary--text"
               @click="onCancel"
             >
               <v-icon v-text="'mdi-close'" />

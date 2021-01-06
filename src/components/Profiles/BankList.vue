@@ -3,7 +3,7 @@
     flat
     class="transparent"
   >
-    <v-card-title>
+    <v-card-title style="border-bottom: 1px solid #d85820">
       <v-toolbar
         dense
         rounded

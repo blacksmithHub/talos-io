@@ -9,6 +9,7 @@
         <v-btn
           icon
           :disabled="loading"
+          class="primary--text"
           @click="dialog=false"
         >
           <v-icon>mdi-close</v-icon>

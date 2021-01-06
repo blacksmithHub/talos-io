@@ -37,9 +37,10 @@
                   v-text="'mdi-monitor'"
                 />
               </v-list-item-icon>
+              <v-list-item-title v-text="'Monitor'" />
             </v-list-item>
           </template>
-          <span>Tooltip</span>
+          <span>Monitor</span>
         </v-tooltip>
 
         <v-tooltip

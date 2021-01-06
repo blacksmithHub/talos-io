@@ -11,6 +11,7 @@
       />
       <v-card flat>
         <TaskTitle
+          style="border-bottom: 1px solid #d85820"
           @click:verifyAll="verifyAll"
           @click:startAll="startAll"
           @click:stopAll="stopAll"
