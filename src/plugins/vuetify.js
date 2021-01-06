@@ -13,12 +13,15 @@ export default new Vuetify({
     dark: true,
     themes: {
       light: {
-        // primary: '#d85820',
-        // secondary: '#c9c7be'
+        primary: '#d85820',
+        secondary: '#c9c7be',
+        paypalLogin: '#0077be',
+        paypalLogout: '#7d7d7d'
       },
       dark: {
-        // primary: '#fe6726',
-        // secondary: '#eceadf'
+        primary: '#fe6726',
+        secondary: '#eceadf',
+        paypalLogout: '#7d7d7d'
       }
     }
   }

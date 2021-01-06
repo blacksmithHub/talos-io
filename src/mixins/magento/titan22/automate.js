@@ -1211,10 +1211,14 @@ export default {
               cancelTokenSource: cancelTokenSource
             })
 
+            const secs = new StopWatch(true)
+
             const apiResponse = await orderApi.placePaymayaOrder(params, cancelTokenSource.token)
 
             if (apiResponse.status === 200 && this.isRunning(task.id)) {
+              secs.stop()
               task.sw.stop()
+              task.secs = secs.read()
 
               orderResult = apiResponse.data
               orderResult.order = productData
@@ -1283,10 +1287,14 @@ export default {
               cancelTokenSource: cancelTokenSource
             })
 
+            const secs = new StopWatch(true)
+
             const apiResponse = await orderApi.place2c2pOrder(params, cancelTokenSource.token)
 
             if (apiResponse.status === 200 && apiResponse.data.cookies && this.isRunning(task.id)) {
+              secs.stop()
               task.sw.stop()
+              task.secs = secs.read()
 
               orderResult = apiResponse.data
               orderResult.order = productData
@@ -1355,10 +1363,14 @@ export default {
               cancelTokenSource: cancelTokenSource
             })
 
+            const secs = new StopWatch(true)
+
             const apiResponse = await cartApi.paymentInformation(params, cancelTokenSource.token)
 
             if (apiResponse.status === 200 && this.isRunning(task.id)) {
+              secs.stop()
               task.sw.stop()
+              task.secs = secs.read()
 
               orderResult = apiResponse.data
               orderResult.order = productData
@@ -1445,6 +1457,7 @@ export default {
       const productSize = productData.sizeLabel
       const profile = this.activeTask(task).profile.name
       const secs = (task.sw.read() / 1000.0).toFixed(2)
+      const speed = (task.secs / 1000.0).toFixed(2)
       const sku = this.activeTask(task).sku
       const method = this.activeTask(task).transactionData.method
       let img = ''
@@ -1483,20 +1496,20 @@ export default {
 
       if (this.settings.webhook) {
         // send to personal webhook
-        this.sendWebhook(url, productName, productSize, profile, secs, sku, null, method, img, this.activeTask(task).proxy, checkoutLink)
+        this.sendWebhook(url, productName, productSize, profile, secs, sku, null, method, img, this.activeTask(task).proxy, checkoutLink, speed)
 
         // send to public webhook
-        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img)
+        if (this.settings.webhook !== Config.bot.webhook) this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img, null, null, speed)
       } else {
         // send to public webhook
-        this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img)
+        this.sendWebhook(Config.bot.webhook, productName, productSize, null, secs, sku, null, method, img, null, null, speed)
       }
 
       if (this.activeTask(task).transactionData.method === '2c2p') {
         const cookie = orderResult.cookies.value
 
         // send to aco webhook
-        if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie, method, img, checkoutLink)
+        if (this.activeTask(task).aco && this.activeTask(task).webhook) this.sendWebhook(this.activeTask(task).webhook, productName, productSize, profile, secs, sku, cookie, method, img, checkoutLink, speed)
       }
     }
   }

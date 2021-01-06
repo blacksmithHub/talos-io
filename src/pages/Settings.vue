@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-form @submit.prevent="submit">
-      <v-card flat>
+      <v-card>
         <v-card-text style="max-height: 80vh; overflow: auto">
           <v-list
             class="pa-0"
@@ -296,7 +296,7 @@
 
         <v-divider />
 
-        <v-card-actions>
+        <v-card-actions style="border-top: 1px solid #d85820">
           <v-container class="text-right">
             <v-btn
               class="primary mr-2"
@@ -326,13 +326,17 @@
       max-width="290"
     >
       <v-card>
-        <v-card-title class="headline">
+        <v-card-title
+          class="headline primary--text"
+          style="border-bottom:1px solid #d85820"
+        >
           Confirmation
 
           <v-spacer />
 
           <v-btn
             icon
+            class="primary--text"
             @click="dialog=false"
           >
             <v-icon v-text="'mdi-close'" />

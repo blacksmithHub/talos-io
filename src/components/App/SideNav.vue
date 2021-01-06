@@ -3,25 +3,13 @@
     <v-navigation-drawer
       app
       permanent
-      expand-on-hover
+      mini-variant
     >
       <v-list>
         <v-list-item class="px-2">
           <v-list-item-avatar>
-            <v-img :src="avatar" />
+            <v-img :src="require('@/assets/talos.png')" />
           </v-list-item-avatar>
-        </v-list-item>
-
-        <v-list-item
-          link
-          @click="$refs.account.dialog=true"
-        >
-          <v-list-item-content>
-            <v-list-item-title
-              class="title"
-              v-text="username"
-            />
-          </v-list-item-content>
         </v-list-item>
       </v-list>
 
@@ -32,77 +20,106 @@
         dense
         rounded
       >
-        <v-list-item
-          link
-          @click="launchMonitor"
+        <v-tooltip
+          right
+          content-class="primary"
         >
-          <v-list-item-icon>
-            <v-icon v-text="'mdi-monitor'" />
-          </v-list-item-icon>
-          <v-list-item-title v-text="'Monitor'" />
-        </v-list-item>
+          <template v-slot:activator="{ on, attrs }">
+            <v-list-item
+              link
+              v-bind="attrs"
+              @click="launchMonitor"
+              v-on="on"
+            >
+              <v-list-item-icon>
+                <v-icon
+                  color="primary"
+                  v-text="'mdi-monitor'"
+                />
+              </v-list-item-icon>
+              <v-list-item-title v-text="'Monitor'" />
+            </v-list-item>
+          </template>
+          <span>Monitor</span>
+        </v-tooltip>
 
-        <v-list-item
-          link
-          @click="launchProfiles"
+        <v-tooltip
+          right
+          content-class="primary"
         >
-          <v-list-item-icon>
-            <v-icon v-text="'mdi-account-group'" />
-          </v-list-item-icon>
-          <v-list-item-title v-text="'Profiles'" />
-        </v-list-item>
+          <template v-slot:activator="{ on, attrs }">
+            <v-list-item
+              link
+              v-bind="attrs"
+              @click="launchProfiles"
+              v-on="on"
+            >
+              <v-list-item-icon>
+                <v-icon
+                  color="primary"
+                  v-text="'mdi-account-group'"
+                />
+              </v-list-item-icon>
+              <v-list-item-title v-text="'Profiles'" />
+            </v-list-item>
+          </template>
+          <span>Profiles</span>
+        </v-tooltip>
 
-        <v-list-item
-          link
-          @click="launchProxies"
+        <v-tooltip
+          right
+          content-class="primary"
         >
-          <v-list-item-icon>
-            <v-icon v-text="'mdi-incognito'" />
-          </v-list-item-icon>
-          <v-list-item-title v-text="'Proxies'" />
-        </v-list-item>
+          <template v-slot:activator="{ on, attrs }">
+            <v-list-item
+              link
+              v-bind="attrs"
+              @click="launchProxies"
+              v-on="on"
+            >
+              <v-list-item-icon>
+                <v-icon
+                  color="primary"
+                  v-text="'mdi-incognito'"
+                />
+              </v-list-item-icon>
+              <v-list-item-title v-text="'Proxies'" />
+            </v-list-item>
+          </template>
+          <span>Proxies</span>
+        </v-tooltip>
 
-        <v-list-item
-          link
-          @click="launchSettings"
+        <v-tooltip
+          right
+          content-class="primary"
         >
-          <v-list-item-icon>
-            <v-icon v-text="'mdi-tools'" />
-          </v-list-item-icon>
-          <v-list-item-title v-text="'Settings'" />
-        </v-list-item>
+          <template v-slot:activator="{ on, attrs }">
+            <v-list-item
+              link
+              v-bind="attrs"
+              v-on="on"
+              @click="launchSettings"
+            >
+              <v-list-item-icon>
+                <v-icon
+                  color="primary"
+                  v-text="'mdi-tools'"
+                />
+              </v-list-item-icon>
+              <v-list-item-title v-text="'Settings'" />
+            </v-list-item>
+          </template>
+          <span>Settings</span>
+        </v-tooltip>
       </v-list>
     </v-navigation-drawer>
-
-    <AccountDialog ref="account" />
   </div>
 </template>
 
 <script>
 import { ipcRenderer } from 'electron'
 
-import placeholder from '@/assets/placeholder.png'
-import auth from '@/services/auth'
-import AccountDialog from '@/components/App/AccountDialog'
-
 export default {
-  components: { AccountDialog },
-  computed: {
-    /**
-     * return avatar
-     */
-    avatar () {
-      if (!auth.isAuthenticated()) return placeholder
-      return `https://cdn.discordapp.com/avatars/${auth.getAuth().profile.id}/${auth.getAuth().profile.avatar}.png`
-    },
-    /**
-     * return username
-     */
-    username () {
-      if (!auth.isAuthenticated()) return 'John Doe'
-      return auth.getAuth().profile.username
-    }
-  },
   methods: {
     launchMonitor () {
       ipcRenderer.send('launch-monitor', true)
