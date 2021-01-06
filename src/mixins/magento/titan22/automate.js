@@ -42,12 +42,17 @@ export default {
     getProxy (task) {
       const proxy = this.activeTask(task).proxy.proxies[Math.floor(Math.random() * this.activeTask(task).proxy.proxies.length)]
 
-      return {
+      const ip = {
         host: proxy.host,
-        port: proxy.port,
-        username: proxy.username,
-        password: proxy.password
+        port: proxy.port
       }
+
+      if (proxy.username && proxy.password) {
+        ip.username = proxy.username
+        ip.password = proxy.password
+      }
+
+      return ip
     },
     /**
      * Check if the task is running.
@@ -276,12 +281,16 @@ export default {
        */
       let shippingData = {}
 
+      task.sw = new StopWatch(true)
+
       await this.setShippingInfo(task, user, productData, (response, authorized) => {
         isAuthorized = authorized
         shippingData = response
       })
 
       if (!isAuthorized) {
+        task.sw.stop()
+
         this.updateTask({
           ...this.activeTask(task),
           transactionData: {}
@@ -291,6 +300,8 @@ export default {
 
         return false
       } else if (!Object.keys(shippingData).length || !this.isRunning(task.id)) {
+        task.sw.stop()
+
         this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
         return false
       }
@@ -336,36 +347,40 @@ export default {
           break
         }
 
-        const cancelTokenSource = axios.CancelToken.source()
-
-        this.updateTask({
-          ...this.activeTask(task),
-          cancelTokenSource: cancelTokenSource
-        })
-
-        const apiResponse = await authApi.fetchToken(params, cancelTokenSource.token)
-
-        if (!this.isRunning(task.id)) {
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
-        } else if (apiResponse.status === 200 && apiResponse.data) {
-          token = apiResponse.data
+        try {
+          const cancelTokenSource = axios.CancelToken.source()
 
           this.updateTask({
             ...this.activeTask(task),
-            transactionData: {
-              ...this.activeTask(task).transactionData,
-              token: token
-            }
+            cancelTokenSource: cancelTokenSource
           })
 
-          break
-        } else {
-          this.updateTask({
-            ...this.activeTask(task),
-            logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
-          })
+          const apiResponse = await authApi.fetchToken(params, cancelTokenSource.token)
 
+          if (!this.isRunning(task.id)) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            break
+          } else if (apiResponse.status === 200 && apiResponse.data) {
+            token = apiResponse.data
+
+            this.updateTask({
+              ...this.activeTask(task),
+              transactionData: {
+                ...this.activeTask(task).transactionData,
+                token: token
+              }
+            })
+
+            break
+          } else {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+            })
+
+            continue
+          }
+        } catch (error) {
           continue
         }
       }
@@ -397,53 +412,57 @@ export default {
           break
         }
 
-        const cancelTokenSource = axios.CancelToken.source()
-
-        this.updateTask({
-          ...this.activeTask(task),
-          cancelTokenSource: cancelTokenSource
-        })
-
-        const params = {
-          token: token
-        }
-
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
-          params.proxy = this.getProxy(this.activeTask(task))
-        }
-
-        const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
-
-        if (!this.isRunning(task.id)) {
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
-        } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length && apiResponse.data.addresses.length) {
-          user = apiResponse.data
+        try {
+          const cancelTokenSource = axios.CancelToken.source()
 
           this.updateTask({
             ...this.activeTask(task),
-            transactionData: {
-              ...this.activeTask(task).transactionData,
-              user: user
-            }
+            cancelTokenSource: cancelTokenSource
           })
 
-          break
-        } else if (apiResponse.status === 401) {
-          authorized = false
+          const params = {
+            token: token
+          }
 
-          this.updateTask({
-            ...this.activeTask(task),
-            logs: `${this.activeTask(task).logs || ''};Unauthorized!`
-          })
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+            params.proxy = this.getProxy(this.activeTask(task))
+          }
 
-          break
-        } else {
-          this.updateTask({
-            ...this.activeTask(task),
-            logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
-          })
+          const apiResponse = await customerApi.profile(params, cancelTokenSource.token)
 
+          if (!this.isRunning(task.id)) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            break
+          } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length && apiResponse.data.addresses.length) {
+            user = apiResponse.data
+
+            this.updateTask({
+              ...this.activeTask(task),
+              transactionData: {
+                ...this.activeTask(task).transactionData,
+                user: user
+              }
+            })
+
+            break
+          } else if (apiResponse.status === 401) {
+            authorized = false
+
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+            })
+
+            break
+          } else {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+            })
+
+            continue
+          }
+        } catch (error) {
           continue
         }
       }
@@ -475,44 +494,48 @@ export default {
           break
         }
 
-        const cancelTokenSource = axios.CancelToken.source()
-
-        this.updateTask({
-          ...this.activeTask(task),
-          cancelTokenSource: cancelTokenSource
-        })
-
-        const params = {
-          token: user.token
-        }
-
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
-          params.proxy = this.getProxy(this.activeTask(task))
-        }
-
-        const apiResponse = await cartApi.create(params, cancelTokenSource.token)
-
-        if (!this.isRunning(task.id)) {
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
-        } else if (apiResponse.status === 200 && apiResponse.data) {
-          cartId = apiResponse.data
-          break
-        } else if (apiResponse.status === 401) {
-          authorized = false
+        try {
+          const cancelTokenSource = axios.CancelToken.source()
 
           this.updateTask({
             ...this.activeTask(task),
-            logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+            cancelTokenSource: cancelTokenSource
           })
 
-          break
-        } else {
-          this.updateTask({
-            ...this.activeTask(task),
-            logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
-          })
+          const params = {
+            token: user.token
+          }
 
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+            params.proxy = this.getProxy(this.activeTask(task))
+          }
+
+          const apiResponse = await cartApi.create(params, cancelTokenSource.token)
+
+          if (!this.isRunning(task.id)) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            break
+          } else if (apiResponse.status === 200 && apiResponse.data) {
+            cartId = apiResponse.data
+            break
+          } else if (apiResponse.status === 401) {
+            authorized = false
+
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+            })
+
+            break
+          } else {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+            })
+
+            continue
+          }
+        } catch (error) {
           continue
         }
       }
@@ -544,44 +567,48 @@ export default {
           break
         }
 
-        const cancelTokenSource = axios.CancelToken.source()
-
-        this.updateTask({
-          ...this.activeTask(task),
-          cancelTokenSource: cancelTokenSource
-        })
-
-        const params = {
-          token: user.token
-        }
-
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
-          params.proxy = this.getProxy(this.activeTask(task))
-        }
-
-        const apiResponse = await cartApi.get(params, cancelTokenSource.token)
-
-        if (!this.isRunning(task.id)) {
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
-        } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
-          cart = apiResponse.data
-          break
-        } else if (apiResponse.status === 401) {
-          authorized = false
+        try {
+          const cancelTokenSource = axios.CancelToken.source()
 
           this.updateTask({
             ...this.activeTask(task),
-            logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+            cancelTokenSource: cancelTokenSource
           })
 
-          break
-        } else {
-          this.updateTask({
-            ...this.activeTask(task),
-            logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
-          })
+          const params = {
+            token: user.token
+          }
 
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+            params.proxy = this.getProxy(this.activeTask(task))
+          }
+
+          const apiResponse = await cartApi.get(params, cancelTokenSource.token)
+
+          if (!this.isRunning(task.id)) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            break
+          } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
+            cart = apiResponse.data
+            break
+          } else if (apiResponse.status === 401) {
+            authorized = false
+
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+            })
+
+            break
+          } else {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+            })
+
+            continue
+          }
+        } catch (error) {
           continue
         }
       }
@@ -625,44 +652,48 @@ export default {
               break
             }
 
-            const cancelTokenSource = axios.CancelToken.source()
-
-            this.updateTask({
-              ...this.activeTask(task),
-              cancelTokenSource: cancelTokenSource
-            })
-
-            const params = {
-              token: user.token,
-              id: cart.items[index].item_id
-            }
-
-            if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
-              params.proxy = this.getProxy(this.activeTask(task))
-            }
-
-            const apiResponse = await cartApi.delete(params, cancelTokenSource.token)
-
-            if (!this.isRunning(task.id)) {
-              this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-              break
-            } else if (apiResponse.status === 200 && apiResponse.data) {
-              responses.push(apiResponse.data)
-            } else if (apiResponse.status === 401) {
-              authorized = false
+            try {
+              const cancelTokenSource = axios.CancelToken.source()
 
               this.updateTask({
                 ...this.activeTask(task),
-                logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+                cancelTokenSource: cancelTokenSource
               })
 
-              break
-            } else {
-              this.updateTask({
-                ...this.activeTask(task),
-                logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
-              })
+              const params = {
+                token: user.token,
+                id: cart.items[index].item_id
+              }
 
+              if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+                params.proxy = this.getProxy(this.activeTask(task))
+              }
+
+              const apiResponse = await cartApi.delete(params, cancelTokenSource.token)
+
+              if (!this.isRunning(task.id)) {
+                this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+                break
+              } else if (apiResponse.status === 200 && apiResponse.data) {
+                responses.push(apiResponse.data)
+              } else if (apiResponse.status === 401) {
+                authorized = false
+
+                this.updateTask({
+                  ...this.activeTask(task),
+                  logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+                })
+
+                break
+              } else {
+                this.updateTask({
+                  ...this.activeTask(task),
+                  logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+                })
+
+                continue
+              }
+            } catch (error) {
               continue
             }
           }
@@ -721,56 +752,60 @@ export default {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - trying`, 'orange')
           }
 
-          const cancelTokenSource = axios.CancelToken.source()
-
-          this.updateTask({
-            ...this.activeTask(task),
-            cancelTokenSource: cancelTokenSource
-          })
-
-          const params = {
-            token: user.token,
-            payload: order
-          }
-
-          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
-            params.proxy = this.getProxy(this.activeTask(task))
-          }
-
-          const apiResponse = await cartApi.store(params, cancelTokenSource.token)
-
-          if (!this.isRunning(task.id)) {
-            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-            break
-          } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
-            this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - carted`, 'orange')
+          try {
+            const cancelTokenSource = axios.CancelToken.source()
 
             this.updateTask({
               ...this.activeTask(task),
-              logs: `${this.activeTask(task).logs || ''};size: ${this.activeTask(task).sizes[i].label} - carted!`
+              cancelTokenSource: cancelTokenSource
             })
 
-            response = {
-              ...apiResponse.data,
-              sizeLabel: this.activeTask(task).sizes[i].label
+            const params = {
+              token: user.token,
+              payload: order
             }
 
-            break
-          } else if (apiResponse.status === 401) {
-            authorized = false
+            if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+              params.proxy = this.getProxy(this.activeTask(task))
+            }
 
-            this.updateTask({
-              ...this.activeTask(task),
-              logs: `${this.activeTask(task).logs || ''};Unauthorized!`
-            })
+            const apiResponse = await cartApi.store(params, cancelTokenSource.token)
 
-            break
-          } else {
-            this.updateTask({
-              ...this.activeTask(task),
-              logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
-            })
+            if (!this.isRunning(task.id)) {
+              this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+              break
+            } else if (apiResponse.status === 200 && Object.keys(apiResponse.data).length) {
+              this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, `size: ${this.activeTask(task).sizes[i].label} - carted`, 'orange')
 
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};size: ${this.activeTask(task).sizes[i].label} - carted!`
+              })
+
+              response = {
+                ...apiResponse.data,
+                sizeLabel: this.activeTask(task).sizes[i].label
+              }
+
+              break
+            } else if (apiResponse.status === 401) {
+              authorized = false
+
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+              })
+
+              break
+            } else {
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+              })
+
+              continue
+            }
+          } catch (error) {
             continue
           }
         }
@@ -831,45 +866,49 @@ export default {
 
         this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'set shipping info', 'orange')
 
-        const cancelTokenSource = axios.CancelToken.source()
-
-        this.updateTask({
-          ...this.activeTask(task),
-          cancelTokenSource: cancelTokenSource
-        })
-
-        const params = {
-          token: user.token,
-          payload: shippingParams
-        }
-
-        if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
-          params.proxy = this.getProxy(this.activeTask(task))
-        }
-
-        const cartApiResponse = await cartApi.setShippingInformation(params, cancelTokenSource.token)
-
-        if (!this.isRunning(task.id)) {
-          this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-          break
-        } else if (cartApiResponse.status === 200 && cartApiResponse.data.payment_methods.length) {
-          shipping = cartApiResponse.data
-          break
-        } else if (cartApiResponse.status === 401) {
-          isAuthorized = false
+        try {
+          const cancelTokenSource = axios.CancelToken.source()
 
           this.updateTask({
             ...this.activeTask(task),
-            logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+            cancelTokenSource: cancelTokenSource
           })
 
-          break
-        } else {
-          this.updateTask({
-            ...this.activeTask(task),
-            logs: `${this.activeTask(task).logs || ''};Request failed - ${cartApiResponse.status}`
-          })
+          const params = {
+            token: user.token,
+            payload: shippingParams
+          }
 
+          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+            params.proxy = this.getProxy(this.activeTask(task))
+          }
+
+          const cartApiResponse = await cartApi.setShippingInformation(params, cancelTokenSource.token)
+
+          if (!this.isRunning(task.id)) {
+            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+            break
+          } else if (cartApiResponse.status === 200 && cartApiResponse.data.payment_methods.length) {
+            shipping = cartApiResponse.data
+            break
+          } else if (cartApiResponse.status === 401) {
+            isAuthorized = false
+
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+            })
+
+            break
+          } else {
+            this.updateTask({
+              ...this.activeTask(task),
+              logs: `${this.activeTask(task).logs || ''};Request failed - ${cartApiResponse.status}`
+            })
+
+            continue
+          }
+        } catch (error) {
           continue
         }
       }
@@ -914,46 +953,50 @@ export default {
             this.setTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'estimate shipping', 'orange')
           }
 
-          const cancelTokenSource = axios.CancelToken.source()
-
-          this.updateTask({
-            ...this.activeTask(task),
-            cancelTokenSource: cancelTokenSource
-          })
-
-          const params = {
-            token: user.token,
-            payload: estimateParams
-          }
-
-          if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
-            params.proxy = this.getProxy(this.activeTask(task))
-          }
-
-          const apiResponse = await cartApi.estimateShipping(params, cancelTokenSource.token)
-
-          if (!this.isRunning(task.id)) {
-            this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
-            break
-          } else if (apiResponse.status === 200 && apiResponse.data.length) {
-            shippingInfo = apiResponse.data[0]
-            success = true
-            break
-          } else if (apiResponse.status === 401) {
-            authorized = false
+          try {
+            const cancelTokenSource = axios.CancelToken.source()
 
             this.updateTask({
               ...this.activeTask(task),
-              logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+              cancelTokenSource: cancelTokenSource
             })
 
-            break
-          } else {
-            this.updateTask({
-              ...this.activeTask(task),
-              logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
-            })
+            const params = {
+              token: user.token,
+              payload: estimateParams
+            }
 
+            if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+              params.proxy = this.getProxy(this.activeTask(task))
+            }
+
+            const apiResponse = await cartApi.estimateShipping(params, cancelTokenSource.token)
+
+            if (!this.isRunning(task.id)) {
+              this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
+              break
+            } else if (apiResponse.status === 200 && apiResponse.data.length) {
+              shippingInfo = apiResponse.data[0]
+              success = true
+              break
+            } else if (apiResponse.status === 401) {
+              authorized = false
+
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Unauthorized!`
+              })
+
+              break
+            } else {
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Request failed - ${apiResponse.status}`
+              })
+
+              continue
+            }
+          } catch (error) {
             continue
           }
         }
@@ -1160,43 +1203,44 @@ export default {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
         } else {
-          const sw = new StopWatch(true)
+          try {
+            const cancelTokenSource = axios.CancelToken.source()
 
-          const cancelTokenSource = axios.CancelToken.source()
-
-          this.updateTask({
-            ...this.activeTask(task),
-            cancelTokenSource: cancelTokenSource
-          })
-
-          const apiResponse = await orderApi.placePaymayaOrder(params, cancelTokenSource.token)
-
-          sw.stop()
-
-          if (apiResponse.status === 200 && this.isRunning(task.id)) {
-            orderResult = apiResponse.data
-            orderResult.time = (sw.read() / 1000.0).toFixed(2)
-            orderResult.order = productData
-
-            this.onSuccess(task, orderResult, shippingData, productData)
-
-            break
-          } else if (index === tries) {
             this.updateTask({
               ...this.activeTask(task),
-              logs: `${this.activeTask(task).logs || ''};Trying for restock!`
+              cancelTokenSource: cancelTokenSource
             })
 
-            this.init(this.activeTask(task))
-            break
-          } else {
-            this.updateTask({
-              ...this.activeTask(task),
-              logs: `${this.activeTask(task).logs || ''};Out of stock!`
-            })
+            const apiResponse = await orderApi.placePaymayaOrder(params, cancelTokenSource.token)
 
-            await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+            if (apiResponse.status === 200 && this.isRunning(task.id)) {
+              task.sw.stop()
 
+              orderResult = apiResponse.data
+              orderResult.order = productData
+
+              this.onSuccess(task, orderResult, shippingData, productData)
+
+              break
+            } else if (index === tries) {
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Trying for restock!`
+              })
+
+              this.init(this.activeTask(task))
+              break
+            } else {
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Out of stock!`
+              })
+
+              await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
+              continue
+            }
+          } catch (error) {
             continue
           }
         }
@@ -1231,43 +1275,44 @@ export default {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
         } else {
-          const sw = new StopWatch(true)
+          try {
+            const cancelTokenSource = axios.CancelToken.source()
 
-          const cancelTokenSource = axios.CancelToken.source()
-
-          this.updateTask({
-            ...this.activeTask(task),
-            cancelTokenSource: cancelTokenSource
-          })
-
-          const apiResponse = await orderApi.place2c2pOrder(params, cancelTokenSource.token)
-
-          sw.stop()
-
-          if (apiResponse.status === 200 && apiResponse.data.cookies && this.isRunning(task.id)) {
-            orderResult = apiResponse.data
-            orderResult.time = (sw.read() / 1000.0).toFixed(2)
-            orderResult.order = productData
-
-            this.onSuccess(task, orderResult, shippingData, productData)
-
-            break
-          } else if (index === tries) {
             this.updateTask({
               ...this.activeTask(task),
-              logs: `${this.activeTask(task).logs || ''};Trying for restock!`
+              cancelTokenSource: cancelTokenSource
             })
 
-            this.init(this.activeTask(task))
-            break
-          } else {
-            this.updateTask({
-              ...this.activeTask(task),
-              logs: `${this.activeTask(task).logs || ''};Out of stock!`
-            })
+            const apiResponse = await orderApi.place2c2pOrder(params, cancelTokenSource.token)
 
-            await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+            if (apiResponse.status === 200 && apiResponse.data.cookies && this.isRunning(task.id)) {
+              task.sw.stop()
 
+              orderResult = apiResponse.data
+              orderResult.order = productData
+
+              this.onSuccess(task, orderResult, shippingData, productData)
+
+              break
+            } else if (index === tries) {
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Trying for restock!`
+              })
+
+              this.init(this.activeTask(task))
+              break
+            } else {
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Out of stock!`
+              })
+
+              await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
+              continue
+            }
+          } catch (error) {
             continue
           }
         }
@@ -1302,43 +1347,44 @@ export default {
           this.setTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'stopped', 'grey')
           break
         } else {
-          const sw = new StopWatch(true)
+          try {
+            const cancelTokenSource = axios.CancelToken.source()
 
-          const cancelTokenSource = axios.CancelToken.source()
-
-          this.updateTask({
-            ...this.activeTask(task),
-            cancelTokenSource: cancelTokenSource
-          })
-
-          const apiResponse = await cartApi.paymentInformation(params, cancelTokenSource.token)
-
-          sw.stop()
-
-          if (apiResponse.status === 200 && this.isRunning(task.id)) {
-            orderResult = apiResponse.data
-            orderResult.time = (sw.read() / 1000.0).toFixed(2)
-            orderResult.order = productData
-
-            this.onSuccess(task, orderResult, shippingData, productData)
-
-            break
-          } else if (index === tries) {
             this.updateTask({
               ...this.activeTask(task),
-              logs: `${this.activeTask(task).logs || ''};Trying for restock!`
+              cancelTokenSource: cancelTokenSource
             })
 
-            this.init(this.activeTask(task))
-            break
-          } else {
-            this.updateTask({
-              ...this.activeTask(task),
-              logs: `${this.activeTask(task).logs || ''};Out of stock!`
-            })
+            const apiResponse = await cartApi.paymentInformation(params, cancelTokenSource.token)
 
-            await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+            if (apiResponse.status === 200 && this.isRunning(task.id)) {
+              task.sw.stop()
 
+              orderResult = apiResponse.data
+              orderResult.order = productData
+
+              this.onSuccess(task, orderResult, shippingData, productData)
+
+              break
+            } else if (index === tries) {
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Trying for restock!`
+              })
+
+              this.init(this.activeTask(task))
+              break
+            } else {
+              this.updateTask({
+                ...this.activeTask(task),
+                logs: `${this.activeTask(task).logs || ''};Out of stock!`
+              })
+
+              await new Promise(resolve => setTimeout(resolve, this.activeTask(task).delay))
+
+              continue
+            }
+          } catch (error) {
             continue
           }
         }
@@ -1398,7 +1444,7 @@ export default {
       const productName = shippingData.totals.items[0].name
       const productSize = productData.sizeLabel
       const profile = this.activeTask(task).profile.name
-      const secs = orderResult.time
+      const secs = (task.sw.read() / 1000.0).toFixed(2)
       const sku = this.activeTask(task).sku
       const method = this.activeTask(task).transactionData.method
       let img = ''
@@ -1422,7 +1468,9 @@ export default {
         token: Config.services.titan22.token
       }
 
-      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length) params.proxy = this.getProxy(this.activeTask(task))
+      if (this.activeTask(task).proxy && Object.keys(this.activeTask(task).proxy).length && this.activeTask(task).proxy.proxies.length) {
+        params.proxy = this.getProxy(this.activeTask(task))
+      }
 
       const apiResponse = await productApi.search(params)
 

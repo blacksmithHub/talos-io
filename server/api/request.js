@@ -1,144 +1,49 @@
 const express = require('express')
-const axios = require('axios')
 
 const router = express.Router()
 
 /**
- * Post request
+ * API request
  */
-router.post('/post', async (req, res) => {
-  const options = {}
+router.post('/', async (req, res) => {
+  let request = require('request')
 
-  const proxy = req.body.proxy
+  const option = {}
 
-  if (proxy) {
-    options.proxy = {
-      host: proxy.host,
-      port: proxy.port,
-      auth: {
-        username: proxy.username,
-        password: proxy.password
-      }
+  if (req.body.proxy) {
+    if (req.body.proxy.username && req.body.proxy.password) {
+      option.proxy = `http://${req.body.proxy.username}:${req.body.proxy.password}@${req.body.proxy.host}:${req.body.proxy.port}`
+    } else {
+      option.proxy = `http://${req.body.proxy.host}:${req.body.proxy.port}`
     }
   }
 
-  const http = axios.create(options)
+  request = request.defaults(option)
 
-  http.interceptors.request.use(async config => {
-    /**
-     * Set Headers config
-     */
-    config.headers.Accept = 'application/json'
-    if (req.body.token) config.headers.Authorization = `Bearer ${req.body.token}`
+  const jar = request.jar()
 
-    return config
-  })
-
-  await http.post(req.body.url, req.body.payload)
-    .then((response) => res.status(response.status).send(response.data))
-    .catch(({ response }) => {
-      let arg = null
-
-      try {
-        arg = response.data.message
-      } catch (error) {
-        arg = {}
-      }
-
-      res.status(response.status).send(arg)
-    })
-})
-
-/**
- * Get request
- */
-router.post('/get', async (req, res) => {
-  const options = {}
-
-  const proxy = req.body.proxy
-
-  if (proxy) {
-    options.proxy = {
-      host: proxy.host,
-      port: proxy.port,
-      auth: {
-        username: proxy.username,
-        password: proxy.password
-      }
-    }
+  const config = {
+    uri: req.body.url,
+    method: req.body.method,
+    headers: { 'Content-Type': 'application/json' },
+    jar
   }
 
-  const http = axios.create(options)
+  if (req.body.token) config.headers.Authorization = `Bearer ${req.body.token}`
 
-  http.interceptors.request.use(async config => {
-    /**
-     * Set Headers config
-     */
-    config.headers.Accept = 'application/json'
-    if (req.body.token) config.headers.Authorization = `Bearer ${req.body.token}`
+  if (req.body.payload) config.body = JSON.stringify(req.body.payload)
 
-    return config
-  })
-
-  await http.get(req.body.url)
-    .then((response) => res.status(response.status).send(response.data))
-    .catch(({ response }) => {
-      let arg = null
-
-      try {
-        arg = response.data.message
-      } catch (error) {
-        arg = {}
+  await request(config, async function (error, response) {
+    try {
+      if (error) {
+        res.status(response.statusCode).send(error)
+      } else {
+        res.status(response.statusCode).send(response.body)
       }
-
-      res.status(response.status).send(arg)
-    })
-})
-
-/**
- * Delete request
- */
-router.post('/delete', async (req, res) => {
-  const options = {}
-
-  const proxy = req.body.proxy
-
-  if (proxy) {
-    options.proxy = {
-      host: proxy.host,
-      port: proxy.port,
-      auth: {
-        username: proxy.username,
-        password: proxy.password
-      }
+    } catch (exception) {
+      res.status(500).send(exception)
     }
-  }
-
-  const http = axios.create(options)
-
-  http.interceptors.request.use(async config => {
-    /**
-     * Set Headers config
-     */
-    config.headers.Accept = 'application/json'
-    if (req.body.token) config.headers.Authorization = `Bearer ${req.body.token}`
-
-    return config
   })
-
-  await http.delete(req.body.url)
-    .then((response) => res.status(response.status).send(response.data))
-    .catch(({ response }) => {
-      let arg = null
-
-      try {
-        arg = response.data.message
-      } catch (error) {
-        arg = {}
-      }
-
-      res.status(response.status).send(arg)
-    })
 })
 
 module.exports = router

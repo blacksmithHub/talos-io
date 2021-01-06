@@ -20,9 +20,10 @@ export default {
    */
   create (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine`
+    params.method = 'POST'
 
     return this.http(`${this.local}/request`)
-      .post('post', params, { cancelToken: cancelToken })
+      .post('/', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -33,9 +34,10 @@ export default {
    */
   get (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine`
+    params.method = 'GET'
 
     return this.http(`${this.local}/request`)
-      .post('get', params, { cancelToken: cancelToken })
+      .post('/', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -46,9 +48,10 @@ export default {
    */
   delete (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine/items/${params.id}`
+    params.method = 'DELETE'
 
     return this.http(`${this.local}/request`)
-      .post('delete', params, { cancelToken: cancelToken })
+      .post('/', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -59,9 +62,10 @@ export default {
    */
   store (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine/items`
+    params.method = 'POST'
 
     return this.http(`${this.local}/request`)
-      .post('post', params, { cancelToken: cancelToken })
+      .post('/', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -72,9 +76,10 @@ export default {
    */
   estimateShipping (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine/estimate-shipping-methods-by-address-id`
+    params.method = 'POST'
 
     return this.http(`${this.local}/request`)
-      .post('post', params, { cancelToken: cancelToken })
+      .post('/', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -85,9 +90,10 @@ export default {
    */
   setShippingInformation (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine/shipping-information`
+    params.method = 'POST'
 
     return this.http(`${this.local}/request`)
-      .post('post', params, { cancelToken: cancelToken })
+      .post('/', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   },
@@ -97,9 +103,10 @@ export default {
    */
   paymentInformation (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}/mine/payment-information`
+    params.method = 'POST'
 
     return this.http(`${this.local}/request`)
-      .post('post', params, { cancelToken: cancelToken })
+      .post('/', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   }

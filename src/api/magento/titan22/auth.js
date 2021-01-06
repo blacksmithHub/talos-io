@@ -20,9 +20,10 @@ export default {
    */
   fetchToken (params, cancelToken) {
     params.url = `${this.baseUrl}/${this.url}`
+    params.method = 'POST'
 
     return this.http(`${this.local}/request`)
-      .post('post', params, { cancelToken: cancelToken })
+      .post('/', params, { cancelToken: cancelToken })
       .then(response => response)
       .catch(({ response }) => response)
   }
