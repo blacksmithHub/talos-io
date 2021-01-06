@@ -2,7 +2,6 @@
   <v-toolbar
     rounded
     dense
-    flat
   >
     <v-btn
       :fab="!$vuetify.breakpoint.lgAndUp"
@@ -69,6 +68,7 @@
     <v-avatar
       size="35"
       class="pointer"
+      style="border:1px solid #d85820"
       @click="$refs.account.dialog=true"
     >
       <img

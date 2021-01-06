@@ -1,6 +1,6 @@
 <template>
   <div class="pa-5">
-    <v-card flat>
+    <v-card>
       <v-card-title style="border-bottom: 1px solid #d85820">
         <v-row>
           <v-col align-self="center">
@@ -46,7 +46,7 @@
         </v-row>
       </v-card-title>
 
-      <v-divide />
+      <v-divider />
 
       <v-card-text>
         <v-data-table

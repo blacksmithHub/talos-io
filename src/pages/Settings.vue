@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-form @submit.prevent="submit">
-      <v-card flat>
+      <v-card>
         <v-card-text style="max-height: 80vh; overflow: auto">
           <v-list
             class="pa-0"
