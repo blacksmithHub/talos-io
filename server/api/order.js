@@ -117,10 +117,12 @@ router.post('/paymaya', async (req, res) => {
 
   const option = {}
 
-  if (req.body.proxy.username && req.body.proxy.password) {
-    option.proxy = `http://${req.body.proxy.username}:${req.body.proxy.password}@${req.body.proxy.host}:${req.body.proxy.port}`
-  } else {
-    option.proxy = `http://${req.body.proxy.host}:${req.body.proxy.port}`
+  if (req.body.proxy) {
+    if (req.body.proxy.username && req.body.proxy.password) {
+      option.proxy = `http://${req.body.proxy.username}:${req.body.proxy.password}@${req.body.proxy.host}:${req.body.proxy.port}`
+    } else {
+      option.proxy = `http://${req.body.proxy.host}:${req.body.proxy.port}`
+    }
   }
 
   request = request.defaults(option)
