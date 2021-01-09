@@ -5,9 +5,9 @@
     max-width="600px"
   >
     <v-card>
-      <v-card-title>
+      <v-card-title style="border-bottom:1px solid #d85820">
         <span
-          class="headline"
+          class="headline primary--text"
           v-text="`${header}`"
         />
 
@@ -15,11 +15,14 @@
 
         <v-btn
           icon
+          class="primary--text"
           @click="dialog=false"
         >
           <v-icon v-text="'mdi-close'" />
         </v-btn>
       </v-card-title>
+
+      <v-divider />
 
       <v-card-text style="height: 30vh; max-height: 30vh; overflow-y: auto;">
         <ul v-if="logs.length">
@@ -34,7 +37,7 @@
 
         <p
           v-else
-          class="text-center"
+          class="text-center mt-10"
         >
           Nothing to display
         </p>

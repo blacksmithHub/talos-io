@@ -129,18 +129,24 @@
       max-width="290"
     >
       <v-card>
-        <v-card-title class="headline">
+        <v-card-title
+          class="headline primary--text"
+          style="border-bottom:1px solid #d85820"
+        >
           PayPal
 
           <v-spacer />
 
           <v-btn
             icon
+            class="primary--text"
             @click="dialog=false"
           >
             <v-icon v-text="'mdi-close'" />
           </v-btn>
         </v-card-title>
+
+        <v-divider />
 
         <v-card-text class="text-center pa-5">
           <v-row

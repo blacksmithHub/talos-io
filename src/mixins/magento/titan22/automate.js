@@ -1429,11 +1429,11 @@ export default {
       if (this.settings.autoPay && !this.activeTask(task).aco) {
         switch (this.activeTask(task).transactionData.method) {
           case '2c2p':
-            ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
+            ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: this.activeTask(task), settings: this.settings }))
             break
 
           case 'PayMaya':
-            ipcRenderer.send('pay-with-paymaya', JSON.stringify({ task: task, settings: this.settings }))
+            ipcRenderer.send('pay-with-paymaya', JSON.stringify({ task: this.activeTask(task), settings: this.settings }))
             break
         }
       }

@@ -21,6 +21,7 @@ export default new Vuetify({
       dark: {
         primary: '#fe6726',
         secondary: '#eceadf',
+        paypalLogin: '#0077be',
         paypalLogout: '#7d7d7d'
       }
     }
