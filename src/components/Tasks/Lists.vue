@@ -124,12 +124,21 @@ export default {
         { text: 'Proxy List', value: 'proxy.name', width: '12%' },
         { text: 'Product', value: 'sku', width: '12%' },
         { text: 'Status', value: 'status', align: 'center' },
-        { text: 'Actions', value: 'actions', align: 'center', filterable: false, sortable: false, width: '20%' }
+        { text: 'Actions', value: 'actions', align: 'center', filterable: false, sortable: false, width: '25%' }
       ]
     }
   },
   computed: {
     ...mapState('task', { tasks: 'items' })
+  },
+  watch: {
+    tasks () {
+      try {
+        this.selected = this.selected.filter((el) => this.tasks.find((val) => val.id === el.id))
+      } catch (error) {
+        this.selected = []
+      }
+    }
   },
   methods: {
     /**

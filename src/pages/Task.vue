@@ -21,10 +21,7 @@
 
         <v-divider />
 
-        <v-card-text
-          style="max-height: 65vh; overflow: auto"
-          class="pa-0"
-        >
+        <v-card-text class="pa-0">
           <Lists
             ref="list"
             @click:startTask="startTask"
