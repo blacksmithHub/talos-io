@@ -23,7 +23,7 @@
       small
       color="success"
       class="text-capitalize pointer"
-      v-text="'copy checkout cookie!'"
+      v-text="`Size: ${task.transactionData.product.size} - copy checkout cookie!`"
     />
 
     <v-chip
@@ -33,7 +33,7 @@
       color="success"
       class="text-capitalize pointer"
       @click="$emit('click:checkout', task)"
-      v-text="'proceed to checkout!'"
+      v-text="`Size: ${task.transactionData.product.size} - proceed to checkout!`"
     />
 
     <v-chip
@@ -56,7 +56,7 @@
       />
       <small
         class="cursor"
-        v-text="$moment(`${$moment().format('YYYY/MM/DD')} ${task.placeOrder}`).format('h:mm:ss a')"
+        v-text="$moment(task.placeOrder, 'HH:mm').format('h:mm:ss a')"
       />
     </p>
   </div>

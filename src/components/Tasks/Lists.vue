@@ -1,6 +1,6 @@
 <template>
   <v-data-table
-    v-model="selected"
+    v-model="allSelected"
     no-data-text="Nothing to display"
     no-results-text="Nothing to display"
     :headers="headers"
@@ -114,10 +114,16 @@ export default {
     ListActions,
     ListChipStatus
   },
+  props: {
+    selected: {
+      type: Array,
+      required: true
+    }
+  },
   data () {
     return {
       search: '',
-      selected: [],
+      allSelected: this.selected,
       headers: [
         { text: 'Profile', value: 'profile.name', width: '10%' },
         { text: 'Bank', value: 'bank.nickname', width: '12%' },
@@ -132,12 +138,20 @@ export default {
     ...mapState('task', { tasks: 'items' })
   },
   watch: {
+    selected () {
+      this.allSelected = this.selected
+    },
+    allSelected () {
+      this.$emit('updateSelected', this.allSelected)
+    },
     tasks () {
       try {
-        this.selected = this.selected.filter((el) => this.tasks.find((val) => val.id === el.id))
+        this.allSelected = this.selected.filter((el) => this.tasks.find((val) => val.id === el.id))
       } catch (error) {
-        this.selected = []
+        this.allSelected = []
       }
+
+      this.$emit('updateSelected', this.allSelected)
     }
   },
   methods: {

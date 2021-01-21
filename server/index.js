@@ -1,17 +1,50 @@
-const express = require('express')
-const bodyParser = require('body-parser')
-const cors = require('cors')
+const http = require('http').createServer()
+const io = require('socket.io')(http)
 
-const app = express()
+io.on('connection', (socket) => {
+  const service = require('./service')
+  const automate = require('./automate')
 
-app.use(bodyParser.json())
-app.use(cors())
+  // verify task
+  socket.on('socket-verify', async (task) => {
+    service.tasks.push(task)
+    automate.verify(task, socket)
+  })
 
-const request = require('./api/request')
-const order = require('./api/order')
+  // start task
+  socket.on('socket-start', async (task) => {
+    service.tasks.push(task)
+    automate.start(task, socket)
+  })
 
-app.use('/api/request', request)
-app.use('/api/order', order)
+  // stop task
+  socket.on('socket-stop', async (task) => {
+    await automate.stop(task)
+
+    const item = service.tasks.find((el) => el.id === task.id)
+
+    if (item) {
+      const index = service.tasks.indexOf(item)
+      service.tasks.splice(index, 1)
+    }
+  })
+
+  // update task
+  socket.on('socket-update', async (tasks) => {
+    service.tasks = service.tasks.map(element => {
+      const task = tasks.find((val) => val.id === element.id)
+
+      if (task) {
+        element = {
+          ...task,
+          transactionData: element.transactionData
+        }
+      }
+
+      return element
+    })
+  })
+})
 
 const getPort = require('get-port')
 
@@ -19,7 +52,10 @@ const port = getPort({ port: getPort.makeRange(5000, 5100) });
 
 (async () => {
   const availPort = await port
-  app.listen(availPort, () => console.log(`Server started on port ${availPort}`))
+
+  http.listen(availPort, () => {
+    console.log(`Server started on port ${availPort}`)
+  })
 })()
 
 module.exports = port

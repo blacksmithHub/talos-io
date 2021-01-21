@@ -42,8 +42,9 @@ export default {
 
         browser.close()
 
-        MainWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
-        ProfileWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
+        if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
+
+        if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
       }
     })
   }

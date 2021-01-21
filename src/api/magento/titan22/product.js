@@ -17,22 +17,6 @@ export default {
   http,
 
   /**
-   * Search product
-   *
-   */
-  search (params) {
-    const query = qs.stringify(params.payload)
-
-    params.url = `${this.baseUrl}/${this.url}?${query}`
-    params.method = 'GET'
-
-    return this.http(`${this.local}/request`)
-      .post('/', params)
-      .then(response => response)
-      .catch(({ response }) => response)
-  },
-
-  /**
    * Search product attributes
    *
    */

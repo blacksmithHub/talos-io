@@ -22,19 +22,19 @@ export default {
     const page = await browser.newPage()
 
     await page.setCookie({
-      name: task.transactionData.cookies.name,
-      value: task.transactionData.cookies.value,
-      domain: task.transactionData.cookies.domain
+      name: task.transactionData.cookie.key,
+      value: task.transactionData.cookie.value,
+      domain: `.${task.transactionData.cookie.domain}`
     })
 
     await page.goto('https://t.2c2p.com/RedirectV3/Payment/Accept')
 
     const array = [
       `<p><strong>Profile:</strong> ${task.profile.name}</p>`,
-      `<p><strong>Product name:</strong> ${task.transactionData.order.name}</p>`,
-      `<p><strong>Product SKU:</strong> ${task.transactionData.order.sku}</p>`,
-      `<p><strong>Size:</strong> ${task.transactionData.order.sizeLabel}</p>`,
-      `<p><strong>Price:</strong> ${task.transactionData.order.price.toLocaleString()}</p>`
+      `<p><strong>Product name:</strong> ${task.transactionData.product.name}</p>`,
+      `<p><strong>Product SKU:</strong> ${task.transactionData.product.sku}</p>`,
+      `<p><strong>Size:</strong> ${task.transactionData.product.size}</p>`,
+      `<p><strong>Price:</strong> ${task.transactionData.product.price.toLocaleString()}</p>`
     ]
 
     await page.waitForSelector('.navbar-inner')
