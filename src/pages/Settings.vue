@@ -568,7 +568,8 @@ export default {
             expiryYear: element.bank.expiryYear,
             cvv: element.bank.cvv,
             delay: element.delay,
-            placeOrder: element.placeOrder
+            placeOrder: element.placeOrder,
+            mode: element.mode || 'Desktop'
           })
         })
       } else {
@@ -583,7 +584,8 @@ export default {
           expiryMonth: '',
           expiryYear: '',
           cvv: '',
-          delay: 1000
+          delay: 1000,
+          mode: 'Desktop'
         })
       }
 

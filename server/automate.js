@@ -28,26 +28,26 @@ async function http (options, headers, axios, socket, id) {
     cancelToken: cancelTokenSource.token
   }
 
-  switch (currentTask.device) {
-    case 'android':
+  switch (currentTask.mode) {
+    case 'Mobile (Android)':
     {
       const userAgentAnd = new UserAgent({ deviceCategory: 'mobile' })
-      requestHeaders.headers['User-Agent'] = userAgentAnd
-      requestHeaders.headers.client = currentTask.device
+      requestHeaders.headers['User-Agent'] = userAgentAnd.toString()
+      requestHeaders.headers.client = 'android'
       break
     }
 
-    case 'ios':
+    case 'Mobile (iOS)':
     {
       const userAgentIos = new UserAgent({ deviceCategory: 'mobile' })
-      requestHeaders.headers['User-Agent'] = userAgentIos
-      requestHeaders.headers.client = currentTask.device
+      requestHeaders.headers['User-Agent'] = userAgentIos.toString()
+      requestHeaders.headers.client = 'ios'
       break
     }
     default:
     {
       const userAgent = new UserAgent()
-      requestHeaders.headers['User-Agent'] = userAgent
+      requestHeaders.headers['User-Agent'] = userAgent.toString()
       break
     }
   }
@@ -193,6 +193,22 @@ function updateCurrentTaskLog (socket, id, msg) {
     const task = this.getCurrentTask(id)
 
     task.logs = `${task.logs || ''};${msg}`
+
+    return new Promise((resolve) => (socket.emit('socket-response', task, (data) => (resolve(data)))))
+  }
+}
+
+/**
+ * Remove task timer
+ *
+ * @param {*} id
+ * @param {*} socket
+ */
+function removeTimer (id, socket) {
+  if (this.isRunning(id)) {
+    const task = this.getCurrentTask(id)
+
+    task.placeOrder = null
 
     return new Promise((resolve) => (socket.emit('socket-response', task, (data) => (resolve(data)))))
   }
@@ -560,6 +576,7 @@ module.exports = {
   updateCurrentTaskLog,
   isRunning,
   updateTask,
+  removeTimer,
   verify,
   start,
   stop,
@@ -1017,16 +1034,34 @@ module.exports = {
 
     currentTask = this.getCurrentTask(id)
 
-    const eventTime = moment(currentTask.placeOrder, 'HH:mm').unix()
-    const currentTime = moment().unix()
-
-    const diffTime = eventTime - currentTime
-
-    const duration = moment.duration(diffTime * 1000, 'milliseconds')
-
     if (!this.isRunning(id)) return data
 
-    await new Promise(resolve => setTimeout(resolve, duration))
+    await new Promise((resolve) => {
+      const vm = this
+
+      const loop = setInterval(function () {
+        if (!vm.isRunning(id)) {
+          clearInterval(loop)
+          resolve()
+        } else {
+          currentTask = vm.getCurrentTask(id)
+
+          if (currentTask.placeOrder) {
+            const timer = moment(currentTask.placeOrder, 'HH:mm:ss')
+            const current = moment().format('HH:mm:ss')
+
+            if (current >= timer) {
+              vm.removeTimer(id, socket)
+              clearInterval(loop)
+              resolve()
+            }
+          } else {
+            clearInterval(loop)
+            resolve()
+          }
+        }
+      }, 1000)
+    })
 
     if (!this.isRunning(id)) return data
 

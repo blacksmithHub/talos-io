@@ -44,6 +44,60 @@ io.on('connection', (socket) => {
       return element
     })
   })
+
+  // backend monitor
+  socket.on('socket-monitor', async (req, callback) => {
+    const service = require('./service')
+    const qs = require('qs')
+    const UserAgent = require('user-agents')
+    const axios = require('axios')
+    const query = qs.stringify(req.payload)
+    const userAgent = new UserAgent()
+
+    const requestHeaders = {
+      method: 'get',
+      url: `${service.api.search_product}?${query}`,
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${service.token}`,
+        'User-Agent': userAgent.toString()
+      }
+    }
+
+    if (req.proxy) requestHeaders.proxy = req.proxy
+
+    const response = await axios(requestHeaders)
+      .then(({ data }) => data)
+      .catch(({ response }) => response)
+
+    if (callback) return callback(response)
+  })
+
+  // fetch attributes
+  socket.on('socket-attribute', async (req, callback) => {
+    const service = require('./service')
+    const qs = require('qs')
+    const UserAgent = require('user-agents')
+    const axios = require('axios')
+    const query = qs.stringify(req)
+    const userAgent = new UserAgent()
+
+    const requestHeaders = {
+      method: 'get',
+      url: `${service.api.product_attributes}?${query}`,
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${service.token}`,
+        'User-Agent': userAgent.toString()
+      }
+    }
+
+    const response = await axios(requestHeaders)
+      .then(({ data }) => data)
+      .catch(({ response }) => response)
+
+    if (callback) return callback(response)
+  })
 })
 
 const getPort = require('get-port')

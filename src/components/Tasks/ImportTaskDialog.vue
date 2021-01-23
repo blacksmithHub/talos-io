@@ -200,7 +200,8 @@ export default {
                   sizes: sizes,
                   delay: element.delay || 3200,
                   placeOrder: element.placeOrder || '',
-                  proxy: {}
+                  proxy: { id: null, name: 'Localhost', proxies: [] },
+                  mode: element.mode || 'Desktop'
                 }
 
                 if (element.aco) {

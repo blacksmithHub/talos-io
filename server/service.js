@@ -15,7 +15,8 @@ module.exports = {
     paymaya: `${process.env.VUE_APP_TITAN_URL}/paymaya/checkout/start`,
     get_transaction: `${process.env.VUE_APP_TITAN_URL}/ccpp/htmlredirect/gettransactiondata`,
     credit_card_checkout: `${process.env.VUE_APP_2C2P_URL}/RedirectV3/Payment`,
-    search_product: `${process.env.VUE_APP_TITAN_URL}/rest/V2/products`
+    search_product: `${process.env.VUE_APP_TITAN_URL}/rest/V2/products`,
+    product_attributes: `${process.env.VUE_APP_TITAN_URL}/rest/V2/products/attributes`
   },
   site: process.env.VUE_APP_TITAN_URL,
   token: process.env.VUE_APP_TITAN_ADMIN_TOKEN,

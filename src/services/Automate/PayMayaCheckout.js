@@ -8,6 +8,8 @@ export default {
    */
   async automate (arg) {
     const puppeteer = require('puppeteer')
+    const UserAgent = require('user-agents')
+    const userAgent = new UserAgent({ deviceCategory: 'desktop' })
 
     const task = arg.task
     const settings = arg.settings
@@ -21,25 +23,31 @@ export default {
 
     const page = await browser.newPage()
 
+    await page.setUserAgent(userAgent.toString())
+
     await page.goto(task.transactionData.request.uri.href)
 
-    if (task.bank && Object.keys(task.bank).length && task.bank.bank.toLowerCase() === 'paymaya') {
-      if (settings.autoFill || settings.autoPay) {
-        await page.waitForSelector('#cardNumber')
-        await page.type('#cardNumber', task.bank.cardNumber)
+    try {
+      if (task.bank && Object.keys(task.bank).length && task.bank.bank.toLowerCase() === 'paymaya') {
+        if (settings.autoFill || settings.autoPay) {
+          await page.waitForSelector('#cardNumber')
+          await page.type('#cardNumber', task.bank.cardNumber)
 
-        await page.waitForSelector('#expiryDate')
-        await page.type('#expiryDate', task.bank.expiryMonth)
-        await page.type('#expiryDate', task.bank.expiryYear.substring(task.bank.expiryYear.length - 2))
+          await page.waitForSelector('#expiryDate')
+          await page.type('#expiryDate', task.bank.expiryMonth)
+          await page.type('#expiryDate', task.bank.expiryYear.substring(task.bank.expiryYear.length - 2))
 
-        await page.waitForSelector('#cvv')
-        await page.type('#cvv', task.bank.cvv)
+          await page.waitForSelector('#cvv')
+          await page.type('#cvv', task.bank.cvv)
+        }
+
+        if (settings.autoPay) {
+          await page.waitForSelector('#pay')
+          await page.click('#pay')
+        }
       }
-
-      if (settings.autoPay) {
-        await page.waitForSelector('#pay')
-        await page.click('#pay')
-      }
+    } catch (error) {
+      //
     }
 
     page.on('close', () => {

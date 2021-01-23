@@ -61,18 +61,33 @@
                 </v-col>
               </v-row>
 
-              <v-autocomplete
-                v-model="proxy"
-                required
-                :items="allProxies"
-                outlined
-                dense
-                label="Proxies"
-                item-text="name"
-                return-object
-                :error-messages="proxyErrors"
-                @blur="$v.proxy.$touch()"
-              />
+              <v-row>
+                <v-col class="pt-0 pb-0">
+                  <v-autocomplete
+                    v-model="proxy"
+                    required
+                    :items="allProxies"
+                    outlined
+                    dense
+                    label="Proxies"
+                    item-text="name"
+                    return-object
+                    :error-messages="proxyErrors"
+                    @blur="$v.proxy.$touch()"
+                  />
+                </v-col>
+
+                <v-col class="pt-0 pb-0">
+                  <v-select
+                    v-model="mode"
+                    required
+                    dense
+                    :items="modes"
+                    label="Mode"
+                    outlined
+                  />
+                </v-col>
+              </v-row>
 
               <v-row>
                 <v-col class="pt-0 pb-0">
@@ -237,7 +252,9 @@ export default {
       delay: 3200,
       placeOrder: '',
       placeOrderMenu: false,
-      qty: 1
+      qty: 1,
+      mode: 'Desktop',
+      modes: ['Desktop', 'Mobile (iOS)', 'Mobile (Android)']
     }
   },
   computed: {
@@ -375,6 +392,7 @@ export default {
         this.placeOrder = task.placeOrder
         this.qty = task.qty || 1
         this.proxy = task.proxy
+        this.mode = task.mode || 'Desktop'
 
         this.profile = (task.profile.id) ? task.profile : {}
         this.bank = (task.bank.id) ? task.bank : {}
@@ -417,6 +435,7 @@ export default {
       this.placeOrder = ''
       this.placeOrderMenu = false
       this.qty = 1
+      this.mode = 'Desktop'
 
       this.dialog = false
       this.isEditMode = false
@@ -451,7 +470,8 @@ export default {
           bank: this.bank || {},
           delay: this.delay,
           placeOrder: this.placeOrder,
-          qty: this.qty
+          qty: this.qty,
+          mode: this.mode
         }
 
         if (this.isEditMode) {

@@ -9,6 +9,8 @@ export default {
    */
   async automate (arg) {
     const puppeteer = require('puppeteer')
+    const UserAgent = require('user-agents')
+    const userAgent = new UserAgent({ deviceCategory: 'desktop' })
 
     const url = arg.url
     const fingerprint = arg.fingerprint
@@ -23,6 +25,8 @@ export default {
     })
 
     const page = await browser.newPage()
+
+    await page.setUserAgent(userAgent.toString())
 
     await page.goto(url)
 

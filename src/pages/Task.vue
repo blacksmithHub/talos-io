@@ -89,6 +89,8 @@ import ImportTaskDialog from '@/components/Tasks/ImportTaskDialog'
 import LogsDialog from '@/components/Tasks/LogsDialog'
 import TaskTitle from '@/components/Tasks/TaskTitle'
 
+import Webhook from '@/mixins/webhook'
+
 import Constant from '@/config/constant'
 import Config from '@/config/app'
 
@@ -106,6 +108,7 @@ export default {
     MassEditDialog,
     ImportTaskDialog
   },
+  mixins: [Webhook],
   data () {
     return {
       selected: []
