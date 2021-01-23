@@ -21,12 +21,10 @@
 
         <v-divider />
 
-        <v-card-text
-          style="max-height: 65vh; overflow: auto"
-          class="pa-0"
-        >
+        <v-card-text class="pa-0">
           <Lists
             ref="list"
+            :selected="selected"
             @click:startTask="startTask"
             @click:stopTask="stopTask"
             @click:deleteTask="deleteTask"
@@ -35,6 +33,7 @@
             @click:verifyTask="verifyTask"
             @click:duplicateTask="duplicateTask"
             @click:openLogs="openLogs"
+            @updateSelected="updateSelected"
           />
         </v-card-text>
 
@@ -67,7 +66,10 @@
 
     <LogsDialog ref="logsDialog" />
     <TaskDialog ref="taskDialog" />
-    <MassEditDialog ref="massEditDialog" />
+    <MassEditDialog
+      ref="massEditDialog"
+      :selected="selected"
+    />
     <ImportTaskDialog ref="importTaskDialog" />
   </div>
 </template>
@@ -86,7 +88,6 @@ import LogsDialog from '@/components/Tasks/LogsDialog'
 import TaskTitle from '@/components/Tasks/TaskTitle'
 
 import automate from '@/mixins/magento/titan22/automate'
-import verify from '@/mixins/magento/titan22/verify'
 
 import Constant from '@/config/constant'
 
@@ -101,7 +102,12 @@ export default {
     MassEditDialog,
     ImportTaskDialog
   },
-  mixins: [automate, verify],
+  mixins: [automate],
+  data () {
+    return {
+      selected: []
+    }
+  },
   beforeRouteEnter (to, from, next) {
     next(async vm => {
       if (!vm.attributes.length) await vm.prepareAttributes()
@@ -178,6 +184,13 @@ export default {
     ...mapActions('bank', { setBanks: 'setItems' }),
     ...mapActions('proxy', { setProxies: 'setItems' }),
     ...mapActions('attribute', { prepareAttributes: 'initializeItems' }),
+
+    /**
+     * update selected array
+     */
+    updateSelected (allSelected) {
+      this.selected = allSelected
+    },
 
     /**
      * update all proxy tasks
@@ -276,21 +289,6 @@ export default {
       this.addTask(duplicate)
     },
     /**
-     * Redirect to checkout page.
-     *
-     */
-    redirectToCheckout (task) {
-      switch (task.transactionData.method) {
-        case 'PayMaya':
-          ipcRenderer.send('pay-with-paymaya', JSON.stringify({ task: task, settings: this.settings }))
-          break
-
-        case '2c2p':
-          ipcRenderer.send('pay-with-2c2p', JSON.stringify({ task: task, settings: this.settings }))
-          break
-      }
-    },
-    /**
      * Start task.
      *
      */
@@ -307,7 +305,7 @@ export default {
           paid: false
         })
 
-        await this.init(task)
+        await this.start(task)
       }
     },
     /**
@@ -324,8 +322,8 @@ export default {
      *
      */
     async startAll () {
-      if (this.$refs.list.selected.length) {
-        await this.$refs.list.selected.forEach((task) => {
+      if (this.selected.length) {
+        await this.selected.forEach((task) => {
           if (task.status.class !== 'error') this.startTask(task)
         })
       } else {
@@ -340,8 +338,8 @@ export default {
      *
      */
     async stopAll () {
-      if (this.$refs.list.selected.length) {
-        await this.$refs.list.selected.forEach((task) => this.stopTask(task))
+      if (this.selected.length) {
+        await this.selected.forEach((task) => this.stopTask(task))
       } else {
         await this.tasks.forEach((task) => this.stopTask(task))
       }
@@ -375,8 +373,8 @@ export default {
      *
      */
     async deleteAll () {
-      if (this.$refs.list.selected.length) {
-        await this.$refs.list.selected.forEach((task) => {
+      if (this.selected.length) {
+        await this.selected.forEach((task) => {
           this.stopTask(task)
           this.deleteTask(task)
         })
@@ -391,8 +389,8 @@ export default {
      *
      */
     async verifyAll () {
-      if (this.$refs.list.selected.length) {
-        await this.$refs.list.selected.forEach((task) => this.verifyTask(task))
+      if (this.selected.length) {
+        await this.selected.forEach((task) => this.verifyTask(task))
       } else {
         await this.tasks.forEach((task) => this.verifyTask(task))
       }

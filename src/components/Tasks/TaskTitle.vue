@@ -204,9 +204,12 @@ export default {
   },
   computed: {
     ...mapState('paypal', { paypal: 'items' }),
-    ...mapState('setting', { settings: 'items' })
+    ...mapState('setting', { settings: 'items' }),
+    ...mapState('profile', { profiles: 'items' })
   },
   created () {
+    this.clearAllPaypals()
+
     ipcRenderer.on('paypalParams', async (event, arg) => {
       if (!arg.profile) {
         const params = {
@@ -228,13 +231,13 @@ export default {
         data.expiry = this.$moment().add(90, 'minutes').format('HH:mm:ss')
 
         this.setPaypal(data)
+        this.validatePaypal()
       }
     })
-
-    this.validatePaypal()
   },
   methods: {
     ...mapActions('paypal', { setPaypal: 'setItems', confirmPaypalLogout: 'reset' }),
+    ...mapActions('profile', { updateProfile: 'updateItem' }),
     /**
      * on search input event.
      */
@@ -267,21 +270,32 @@ export default {
      * validate paypal expiry
      */
     async validatePaypal () {
-      const vm = this
+      const expiry = this.paypal.expiry
 
-      const loop = setTimeout(async () => {
-        if (vm.paypal && Object.keys(vm.paypal).length) {
-          const timer = vm.paypal.expiry
-          const current = vm.$moment().format('HH:mm:ss')
+      const eventTime = this.$moment(expiry, 'HH:mm').unix()
+      const currentTime = this.$moment().unix()
 
-          if (current >= timer) {
-            vm.setPaypal({})
-          }
-        }
+      const diffTime = eventTime - currentTime
 
-        clearTimeout(loop)
-        vm.validatePaypal()
-      }, 1000)
+      const duration = this.$moment.duration(diffTime * 1000, 'milliseconds')
+
+      await new Promise(resolve => setTimeout(resolve, duration))
+
+      if (this.paypal.expiry && expiry === this.paypal.expiry) this.confirmPaypalLogout()
+    },
+
+    /**
+     * clear all paypal accounts
+     */
+    clearAllPaypals () {
+      this.confirmPaypalLogout()
+
+      this.profiles.forEach(element => {
+        this.updateProfile({
+          ...element,
+          paypal: {}
+        })
+      })
     }
   }
 }

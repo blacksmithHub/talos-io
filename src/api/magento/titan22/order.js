@@ -20,7 +20,7 @@ export default {
   place2c2pOrder (params, cancelToken) {
     return this.http(this.local)
       .post(`${this.url}/2c2p`, params, { cancelToken: cancelToken })
-      .then(response => response)
+      .then(({ data }) => data)
       .catch(({ response }) => response)
   },
 
@@ -31,7 +31,7 @@ export default {
   placePaymayaOrder (params, cancelToken) {
     return this.http(this.local)
       .post(`${this.url}/paymaya`, params, { cancelToken: cancelToken })
-      .then(response => response)
+      .then(({ data }) => data)
       .catch(({ response }) => response)
   }
 }

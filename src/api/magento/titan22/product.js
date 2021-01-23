@@ -28,7 +28,7 @@ export default {
 
     return this.http(`${this.local}/request`)
       .post('/', params)
-      .then(response => response)
+      .then(({ data }) => data)
       .catch(({ response }) => response)
   },
 
@@ -41,7 +41,7 @@ export default {
 
     return this.http(this.baseUrl, token)
       .get(`${this.url}/attributes?${params}`)
-      .then(response => response)
+      .then(({ data }) => data)
       .catch(({ response }) => response)
   }
 }

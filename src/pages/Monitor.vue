@@ -309,15 +309,15 @@ export default {
 
       const response = await productApi.search(params)
 
-      if (response.status === 200) {
-        this.products = []
+      this.products = []
 
-        response.data.items.forEach(element => {
+      if (response) {
+        response.items.forEach(element => {
           const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
           const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
 
           this.products.push({
-            img: (image) ? `https://www.titan22.com/media/catalog/product${image.value}` : placeholder,
+            img: (image) ? `${App.services.titan22.url}/media/catalog/product${image.value}` : placeholder,
             name: element.name,
             sku: element.sku,
             price: element.price.toLocaleString(),

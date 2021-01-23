@@ -1,6 +1,6 @@
 import { mapState } from 'vuex'
 import Config from '@/config/app'
-import webhook from 'webhook-discord'
+import Discord from 'discord.js'
 
 export default {
   computed: {
@@ -10,41 +10,43 @@ export default {
     /**
      * Perform discord webhook.
      *
-     * @param {*} url
-     * @param {*} product
-     * @param {*} size
-     * @param {*} profile
-     * @param {*} secs
+     * @param {*} config
      */
-    sendWebhook (url, product, size, profile, secs, sku, cookie, method, img, proxy, checkoutLink, speed) {
-      const Hook = new webhook.Webhook(url)
+    sendWebhook (options) {
+      const baseUrl = 'https://discordapp.com/api/webhooks/'
+      const url = options.url.slice(baseUrl.length).split('/')
 
-      const msg = new webhook.MessageBuilder()
-        .setAvatar(Config.bot.avatar)
-        .setFooter(`${this.package.productName} ${this.package.version}`, Config.bot.avatar)
-        .setTime()
-        .setName(this.package.productName)
+      const webhookClient = new Discord.WebhookClient(url[0], url[1])
+
+      const embed = new Discord.MessageEmbed()
         .setColor('#f7b586')
         .setTitle('Copped!')
-        .addField(product, sku)
-        .addField('**Size**', size)
-        .setThumbnail(img || 'https://i.imgur.com/eVt99L8.png')
+        .addField(options.productName, options.productSku)
+        .setThumbnail(options.productImage || 'https://i.imgur.com/eVt99L8.png')
+        .setFooter(`${this.package.productName} ${this.package.version}`, Config.bot.avatar)
+        .setTimestamp()
 
-      if (cookie) msg.addField('**Cookie**', `||${cookie}||`)
+      if (options.orderNumber) embed.addField('Order Number', `||${options.orderNumber}||`, true)
 
-      if (checkoutLink) msg.addField('**Checkout Link**', `[PayMaya](${checkoutLink})`)
+      if (options.checkoutCookie) embed.addField('Cookie', `||${options.checkoutCookie}||`, true)
 
-      if (profile) msg.addField('**Profile**', `||${profile}||`)
+      if (options.checkoutLink) embed.addField('Checkout Link', `[PayMaya](${options.checkoutLink})`, true)
 
-      if (proxy && Object.keys(proxy).length) msg.addField('**Proxy**', `||${proxy.name}||`)
+      if (options.profileName) embed.addField('Profile', `||${options.profileName}||`, true)
 
-      if (secs) msg.addField('**Total Time**', `${secs}s`)
+      if (options.proxyList) embed.addField('Proxy List', `||${options.proxyList}||`, true)
 
-      if (speed) msg.addField('**Checkout Time**', `${speed}s`)
+      if (options.checkoutMethod) embed.addField('Checkout Method', `${options.checkoutMethod}`, true)
 
-      if (method) msg.addField('**Checkout Method**', `${method}`)
+      if (options.checkoutTime) embed.addField('Checkout Time', `${options.checkoutTime}s`, true)
 
-      Hook.send(msg)
+      if (options.delay) embed.addField('Delay', `${options.delay}ms`, true)
+
+      webhookClient.send({
+        username: this.package.productName,
+        avatarURL: Config.bot.avatar,
+        embeds: [embed]
+      })
     }
   }
 }

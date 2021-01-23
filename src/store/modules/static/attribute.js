@@ -100,19 +100,21 @@ export default {
 
       const attribute = await productApi.attribute(payload, params.token)
 
-      if (attribute.status !== 200) return {}
+      if (!attribute || attribute.status) return {}
 
-      const sizes = attribute.data.items[0].options.filter((data) => data.value).map((item) => {
-        item.label = item.label.toLowerCase()
-        return item
-      })
+      if (attribute) {
+        const sizes = attribute.data.items[0].options.filter((data) => data.value).map((item) => {
+          item.label = item.label.toLowerCase()
+          return item
+        })
 
-      const response = {
-        attribute_id: attribute.data.items[0].attribute_id,
-        sizes: sizes
+        const response = {
+          attribute_id: attribute.data.items[0].attribute_id,
+          sizes: sizes
+        }
+
+        return response
       }
-
-      return response
     }
   }
 }

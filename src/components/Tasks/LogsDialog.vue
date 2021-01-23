@@ -5,9 +5,9 @@
     max-width="600px"
   >
     <v-card>
-      <v-card-title>
+      <v-card-title style="border-bottom:1px solid #d85820">
         <span
-          class="headline"
+          class="headline primary--text"
           v-text="`${header}`"
         />
 
@@ -15,6 +15,7 @@
 
         <v-btn
           icon
+          class="primary--text"
           @click="dialog=false"
         >
           <v-icon v-text="'mdi-close'" />
@@ -34,7 +35,7 @@
 
         <p
           v-else
-          class="text-center"
+          class="text-center mt-8"
         >
           Nothing to display
         </p>

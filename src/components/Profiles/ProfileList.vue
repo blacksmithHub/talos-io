@@ -337,6 +337,8 @@ export default {
     ...mapState('setting', { settings: 'items' })
   },
   created () {
+    this.validateAllPaypal()
+
     ipcRenderer.on('paypalParams', async (event, arg) => {
       if (arg.profile) {
         const params = {
@@ -357,43 +359,19 @@ export default {
 
         data.expiry = this.$moment().add(90, 'minutes').format('HH:mm:ss')
 
-        this.updateProfile({
+        const profile = {
           ...arg.profile,
           paypal: data
-        })
+        }
+
+        this.updateProfile(profile)
+        this.validatePaypal(profile)
       }
     })
-
-    this.validatePaypal()
   },
   methods: {
     ...mapActions('profile', { setProfiles: 'setItems', updateProfile: 'updateItem', deleteProfile: 'deleteItem', reset: 'reset' }),
 
-    /**
-     * validate paypal expiry
-     */
-    async validatePaypal () {
-      const vm = this
-
-      const loop = setTimeout(async () => {
-        await vm.profiles.slice().forEach(element => {
-          if (element.paypal && Object.keys(element.paypal).length) {
-            const timer = element.paypal.expiry
-            const current = vm.$moment().format('HH:mm:ss')
-
-            if (current >= timer) {
-              vm.updateProfile({
-                ...element,
-                paypal: {}
-              })
-            }
-          }
-        })
-
-        clearTimeout(loop)
-        vm.validatePaypal()
-      }, 1000)
-    },
     /**
      * Trigger add new profile dialog event.
      */
@@ -451,6 +429,42 @@ export default {
       })
 
       this.dialog = false
+    },
+
+    /**
+     * perform paypal validation
+     */
+    async validatePaypal (profile) {
+      const expiry = profile.paypal.expiry
+
+      const eventTime = this.$moment(expiry, 'HH:mm').unix()
+      const currentTime = this.$moment().unix()
+
+      const diffTime = eventTime - currentTime
+
+      const duration = this.$moment.duration(diffTime * 1000, 'milliseconds')
+
+      await new Promise(resolve => setTimeout(resolve, duration))
+
+      const currentProfile = this.profiles.find((el) => el.id === profile.id)
+
+      if (currentProfile &&
+      currentProfile.paypal &&
+      Object.keys(currentProfile.paypal).length &&
+      expiry === currentProfile.paypal.expiry) {
+        this.updateProfile({
+          ...currentProfile,
+          paypal: {}
+        })
+      }
+    },
+    /**
+     * validate all profiles
+     */
+    validateAllPaypal () {
+      this.profiles.forEach(element => {
+        if (element.paypal && Object.keys(element.paypal).length) this.validatePaypal(element)
+      })
     }
   }
 }

@@ -198,6 +198,12 @@ import { mapState, mapActions } from 'vuex'
 import { minValue } from 'vuelidate/lib/validators'
 
 export default {
+  props: {
+    selected: {
+      type: Array,
+      required: true
+    }
+  },
   data () {
     return {
       snackbar: false,
@@ -292,7 +298,9 @@ export default {
      *
      */
     submit () {
-      this.tasks.forEach(element => {
+      const collection = (this.selected.length) ? this.selected : this.tasks
+
+      collection.forEach(element => {
         const params = element
 
         if (this.delay) params.delay = this.delay

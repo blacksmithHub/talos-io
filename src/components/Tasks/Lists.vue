@@ -1,6 +1,6 @@
 <template>
   <v-data-table
-    v-model="selected"
+    v-model="allSelected"
     no-data-text="Nothing to display"
     no-results-text="Nothing to display"
     :headers="headers"
@@ -114,22 +114,44 @@ export default {
     ListActions,
     ListChipStatus
   },
+  props: {
+    selected: {
+      type: Array,
+      required: true
+    }
+  },
   data () {
     return {
       search: '',
-      selected: [],
+      allSelected: this.selected,
       headers: [
         { text: 'Profile', value: 'profile.name', width: '10%' },
         { text: 'Bank', value: 'bank.nickname', width: '12%' },
         { text: 'Proxy List', value: 'proxy.name', width: '12%' },
         { text: 'Product', value: 'sku', width: '12%' },
         { text: 'Status', value: 'status', align: 'center' },
-        { text: 'Actions', value: 'actions', align: 'center', filterable: false, sortable: false, width: '20%' }
+        { text: 'Actions', value: 'actions', align: 'center', filterable: false, sortable: false, width: '25%' }
       ]
     }
   },
   computed: {
     ...mapState('task', { tasks: 'items' })
+  },
+  watch: {
+    selected () {
+      this.allSelected = this.selected
+    },
+    allSelected () {
+      this.$emit('updateSelected', this.allSelected)
+    },
+    tasks () {
+      try {
+        this.allSelected = this.selected.filter((el) => this.tasks.find((val) => val.id === el.id))
+      } catch (error) {
+        this.allSelected = []
+      }
+      this.$emit('updateSelected', this.allSelected)
+    }
   },
   methods: {
     /**

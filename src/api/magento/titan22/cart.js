@@ -24,7 +24,7 @@ export default {
 
     return this.http(`${this.local}/request`)
       .post('/', params, { cancelToken: cancelToken })
-      .then(response => response)
+      .then(({ data }) => data)
       .catch(({ response }) => response)
   },
 
@@ -38,7 +38,7 @@ export default {
 
     return this.http(`${this.local}/request`)
       .post('/', params, { cancelToken: cancelToken })
-      .then(response => response)
+      .then(({ data }) => data)
       .catch(({ response }) => response)
   },
 
@@ -52,7 +52,7 @@ export default {
 
     return this.http(`${this.local}/request`)
       .post('/', params, { cancelToken: cancelToken })
-      .then(response => response)
+      .then(({ data }) => data)
       .catch(({ response }) => response)
   },
 
@@ -66,7 +66,7 @@ export default {
 
     return this.http(`${this.local}/request`)
       .post('/', params, { cancelToken: cancelToken })
-      .then(response => response)
+      .then(({ data }) => data)
       .catch(({ response }) => response)
   },
 
@@ -80,7 +80,7 @@ export default {
 
     return this.http(`${this.local}/request`)
       .post('/', params, { cancelToken: cancelToken })
-      .then(response => response)
+      .then(({ data }) => data)
       .catch(({ response }) => response)
   },
 
@@ -94,7 +94,7 @@ export default {
 
     return this.http(`${this.local}/request`)
       .post('/', params, { cancelToken: cancelToken })
-      .then(response => response)
+      .then(({ data }) => data)
       .catch(({ response }) => response)
   },
 
@@ -107,7 +107,7 @@ export default {
 
     return this.http(`${this.local}/request`)
       .post('/', params, { cancelToken: cancelToken })
-      .then(response => response)
+      .then(({ data }) => data)
       .catch(({ response }) => response)
   }
 }
