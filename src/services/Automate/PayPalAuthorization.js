@@ -9,6 +9,8 @@ export default {
    */
   async automate (arg) {
     const puppeteer = require('puppeteer')
+    const UserAgent = require('user-agents')
+    const userAgent = new UserAgent({ deviceCategory: 'desktop' })
 
     const url = arg.url
     const fingerprint = arg.fingerprint
@@ -23,6 +25,8 @@ export default {
     })
 
     const page = await browser.newPage()
+
+    await page.setUserAgent(userAgent.toString())
 
     await page.goto(url)
 
@@ -42,8 +46,9 @@ export default {
 
         browser.close()
 
-        MainWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
-        ProfileWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
+        if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
+
+        if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
       }
     })
   }
