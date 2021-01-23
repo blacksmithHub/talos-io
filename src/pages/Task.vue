@@ -77,8 +77,6 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import { ipcRenderer } from 'electron'
-import { Howl } from 'howler'
-import SuccessEffect from '@/assets/success.mp3'
 
 import SideNav from '@/components/App/SideNav'
 import Lists from '@/components/Tasks/Lists'
@@ -92,10 +90,6 @@ import TaskTitle from '@/components/Tasks/TaskTitle'
 import automate from '@/mixins/magento/titan22/automate'
 
 import Constant from '@/config/constant'
-import Config from '@/config/app'
-
-const io = require('socket.io-client')
-const socket = io(`http://localhost:${Config.services.port}`)
 
 export default {
   components: {
@@ -140,8 +134,6 @@ export default {
       this.$vuetify.theme.dark = nightMode
     },
     tasks () {
-      socket.emit('socket-update', this.tasks)
-
       try {
         ipcRenderer.send('update-tasks', this.tasks)
       } catch (error) {
@@ -174,20 +166,6 @@ export default {
     ipcRenderer.on('updateProxies', (event, arg) => {
       this.setProxies(arg)
       this.updateAllProxyTask(arg)
-    })
-
-    const vm = this
-    socket.on('socket-response', (task, callback) => {
-      vm.updateTask(task)
-      if (callback) return callback(task)
-    })
-
-    socket.on('socket-success', (task) => {
-      vm.onSuccess(task)
-    })
-
-    socket.on('socket-verified', (task) => {
-      vm.onVerified(task)
     })
   },
   methods: {
@@ -371,7 +349,13 @@ export default {
      *
      */
     async stopTask (task) {
-      await this.updateTask({
+      try {
+        task.cancelTokenSource.cancel()
+      } catch (error) {
+        //
+      }
+
+      this.updateTask({
         ...task,
         status: {
           id: Constant.TASK.STATUS.STOPPED,
@@ -382,8 +366,6 @@ export default {
         paid: false,
         logs: `${task.logs || ''};Stopped!`
       })
-
-      socket.emit('socket-stop', this.tasks.find((data) => data.id === task.id))
     },
 
     /**
@@ -430,96 +412,8 @@ export default {
           paid: false
         })
 
-        socket.emit('socket-verify', this.tasks.find((data) => data.id === task.id))
+        await this.verify(task)
       }
-    },
-
-    /**
-     * on success task event
-     */
-    async onSuccess (task) {
-      socket.emit('socket-stop', task)
-
-      if (this.settings.autoPay && !task.aco) {
-        this.redirectToCheckout(task)
-      }
-
-      if (this.settings.sound) {
-        const sound = new Howl({
-          src: [SuccessEffect]
-        })
-
-        sound.play()
-      }
-
-      this.$toast.open({
-        message: '<strong style="font-family: Arial; text-transform: uppercase">checked out</strong>',
-        type: 'success',
-        duration: 3000
-      })
-
-      const webhook = {
-        productName: task.transactionData.product.name,
-        productSku: task.transactionData.product.sku,
-        productImage: task.transactionData.product.image,
-        checkoutMethod: task.transactionData.method,
-        checkoutTime: task.transactionData.timer,
-        delay: task.delay
-      }
-
-      // send to aco webhook
-      if (task.transactionData.method === '2c2p' && task.aco && task.webhook) {
-        const acoWebhook = {
-          ...webhook,
-          url: task.webhook,
-          profileName: task.profile.name,
-          checkoutLink: (task.transactionData.method === 'PayMaya') ? task.transactionData.checkoutLink : '',
-          checkoutCookie: (task.transactionData.cookie) ? task.transactionData.cookie.value : '',
-          proxyList: task.proxy.name,
-          orderNumber: task.transactionData.order
-        }
-
-        this.sendWebhook(acoWebhook)
-      }
-
-      // send to personal webhook
-      if (this.settings.webhook) {
-        const personalWebhook = {
-          ...webhook,
-          url: this.settings.webhook,
-          profileName: task.profile.name,
-          checkoutLink: (task.transactionData.method === 'PayMaya') ? task.transactionData.checkoutLink : '',
-          checkoutCookie: (task.transactionData.cookie) ? task.transactionData.cookie.value : '',
-          proxyList: task.proxy.name,
-          orderNumber: task.transactionData.order
-        }
-
-        this.sendWebhook(personalWebhook)
-      }
-
-      // send to public webhook
-      const publicWebhook = {
-        ...webhook,
-        url: Config.bot.webhook
-      }
-
-      this.sendWebhook(publicWebhook)
-    },
-
-    /**
-     * on verified event
-     */
-    async onVerified (task) {
-      socket.emit('socket-stop', task)
-
-      this.updateTask({
-        ...task,
-        status: {
-          id: Constant.TASK.STATUS.STOPPED,
-          msg: 'ready',
-          class: 'light-blue'
-        }
-      })
     }
   }
 }

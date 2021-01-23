@@ -1,3 +1,4 @@
+import productApi from '@/api/magento/titan22/product'
 import App from '@/config/app'
 
 export default {
@@ -82,9 +83,6 @@ export default {
      * @param {*} params
      */
     async fetchAttributes ({ commit }, params) {
-      const io = require('socket.io-client')
-      const socket = io(`http://localhost:${App.services.port}`)
-
       const payload = {
         searchCriteria: {
           filterGroups: [
@@ -100,7 +98,7 @@ export default {
         }
       }
 
-      const attribute = await new Promise((resolve) => (socket.emit('socket-attribute', payload, (data) => (resolve(data)))))
+      const attribute = await productApi.attribute(payload, params.token)
 
       if (!attribute || attribute.status) return {}
 

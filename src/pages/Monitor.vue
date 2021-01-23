@@ -134,14 +134,10 @@
 <script>
 import { ipcRenderer } from 'electron'
 import { mapState, mapActions } from 'vuex'
-
 import moment from '@/mixins/moment'
 import App from '@/config/app'
+import productApi from '@/api/magento/titan22/product'
 import placeholder from '@/assets/no_image.png'
-
-const io = require('socket.io-client')
-const socket = io(`http://localhost:${App.services.port}`)
-
 export default {
   mixins: [moment],
   data () {
@@ -229,16 +225,12 @@ export default {
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
     })
-
     await this.fetchProducts()
-
     const vm = this
-
     setTimeout(() => (vm.searchProduct()), vm.settings.monitorInterval)
   },
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
-
     /**
      * On copy event.
      *
@@ -251,7 +243,6 @@ export default {
         position: 'bottom-right'
       })
     },
-
     /**
      * Redirect to product link.
      *
@@ -260,7 +251,6 @@ export default {
       const { shell } = require('electron')
       shell.openExternal(`${App.services.titan22.url}/${slug}.html`)
     },
-
     /**
      * Search product API.
      *
@@ -268,12 +258,10 @@ export default {
     async searchProduct () {
       const interval = this.settings.monitorInterval
       const vm = this
-
       this.loop = setInterval(async () => {
         await vm.fetchProducts()
       }, interval)
     },
-
     /**
      * API call to backend.
      *
@@ -290,36 +278,27 @@ export default {
             ],
             pageSize: this.count
           }
-        }
+        },
+        token: App.services.titan22.token
       }
-
       if (this.settings.monitorProxy && Object.keys(this.settings.monitorProxy).length) {
         const proxy = this.settings.monitorProxy.proxies[Math.floor(Math.random() * this.settings.monitorProxy.proxies.length)]
-
         params.proxy = {
           host: proxy.host,
           port: proxy.port
         }
-
         if (proxy.username && proxy.password) {
-          params.proxy.auth = {
-            username: proxy.username,
-            password: proxy.password
-          }
+          params.proxy.username = proxy.username
+          params.proxy.password = proxy.password
         }
       }
-
       this.loading = true
-
-      const response = await new Promise((resolve) => (socket.emit('socket-monitor', params, (data) => (resolve(data)))))
-
+      const response = await productApi.search(params)
       this.products = []
-
       if (response) {
         response.items.forEach(element => {
           const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
           const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
-
           this.products.push({
             img: (image) ? `${App.services.titan22.url}/media/catalog/product${image.value}` : placeholder,
             name: element.name,
@@ -331,7 +310,6 @@ export default {
           })
         })
       }
-
       this.loading = false
     }
   }
