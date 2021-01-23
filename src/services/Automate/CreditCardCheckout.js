@@ -24,9 +24,9 @@ export default {
     const page = await browser.newPage()
 
     await page.setCookie({
-      name: task.transactionData.cookie.key,
+      name: task.transactionData.cookie.name,
       value: task.transactionData.cookie.value,
-      domain: `.${task.transactionData.cookie.domain}`
+      domain: task.transactionData.cookie.domain
     })
 
     await page.setUserAgent(userAgent.toString())
@@ -37,7 +37,6 @@ export default {
       `<p><strong>Profile:</strong> ${task.profile.name}</p>`,
       `<p><strong>Product name:</strong> ${task.transactionData.product.name}</p>`,
       `<p><strong>Product SKU:</strong> ${task.transactionData.product.sku}</p>`,
-      `<p><strong>Size:</strong> ${task.transactionData.product.size}</p>`,
       `<p><strong>Price:</strong> ${task.transactionData.product.price.toLocaleString()}</p>`
     ]
 

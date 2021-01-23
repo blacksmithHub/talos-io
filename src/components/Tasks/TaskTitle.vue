@@ -277,6 +277,7 @@ export default {
      */
     async validatePaypal () {
       const expiry = this.paypal.expiry
+
       const eventTime = this.$moment(expiry, 'HH:mm').unix()
       const currentTime = this.$moment().unix()
 

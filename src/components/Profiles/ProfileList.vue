@@ -377,6 +377,7 @@ export default {
   },
   methods: {
     ...mapActions('profile', { setProfiles: 'setItems', updateProfile: 'updateItem', deleteProfile: 'deleteItem', reset: 'reset' }),
+
     /**
      * Trigger add new profile dialog event.
      */
@@ -441,6 +442,7 @@ export default {
      */
     async validatePaypal (profile) {
       const expiry = profile.paypal.expiry
+
       const eventTime = this.$moment(expiry, 'HH:mm').unix()
       const currentTime = this.$moment().unix()
 
