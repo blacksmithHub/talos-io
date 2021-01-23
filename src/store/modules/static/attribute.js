@@ -1,3 +1,4 @@
+import productApi from '@/api/magento/titan22/product'
 import App from '@/config/app'
 
 export default {
@@ -82,9 +83,6 @@ export default {
      * @param {*} params
      */
     async fetchAttributes ({ commit }, params) {
-      const io = require('socket.io-client')
-      const socket = io(`http://localhost:${App.services.port}`)
-
       const payload = {
         searchCriteria: {
           filterGroups: [
@@ -100,22 +98,22 @@ export default {
         }
       }
 
-      const attribute = await new Promise((resolve) => (socket.emit('socket-attribute', payload, (data) => (resolve(data)))))
+      const attribute = await productApi.attribute(payload, params.token)
+
+      if (!attribute || attribute.status) return {}
 
       if (attribute) {
-        const sizes = attribute.items[0].options.filter((data) => data.value).map((item) => {
+        const sizes = attribute.data.items[0].options.filter((data) => data.value).map((item) => {
           item.label = item.label.toLowerCase()
           return item
         })
 
         const response = {
-          attribute_id: attribute.items[0].attribute_id,
+          attribute_id: attribute.data.items[0].attribute_id,
           sizes: sizes
         }
 
         return response
-      } else {
-        return {}
       }
     }
   }

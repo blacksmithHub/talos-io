@@ -15,6 +15,7 @@ export default {
     sendWebhook (options) {
       const baseUrl = 'https://discordapp.com/api/webhooks/'
       const url = options.url.slice(baseUrl.length).split('/')
+
       const webhookClient = new Discord.WebhookClient(url[0], url[1])
 
       const embed = new Discord.MessageEmbed()
