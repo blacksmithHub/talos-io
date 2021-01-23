@@ -55,7 +55,7 @@ async function http (options, headers, axios, socket, id) {
   if (currentTask.proxy && currentTask.proxy.proxies.length) {
     let proxy = null
 
-    const pool = currentTask.proxy.proxies[Math.floor(Math.random()) * currentTask.proxy.proxies.length]
+    const pool = currentTask.proxy.proxies[Math.floor(Math.random() * currentTask.proxy.proxies.length)]
 
     proxy = {
       host: pool.host,
@@ -90,6 +90,8 @@ async function http (options, headers, axios, socket, id) {
 
             this.updateTask(callbackResponse)
           }
+        } else if (response.status === 429) {
+          return response
         }
       } catch (error) {
         //
@@ -617,7 +619,7 @@ module.exports = {
           axios, socket, id
         )
 
-        data = response
+        if (!response.status && response) data = response
       } catch (error) {
         continue
       }
@@ -729,7 +731,7 @@ module.exports = {
           axios, socket, id
         )
 
-        data = response
+        if (!response.status && response) data = response
       } catch (error) {
         continue
       }
@@ -774,7 +776,7 @@ module.exports = {
           axios, socket, id
         )
 
-        data = response
+        if (!response.status && response) data = response
       } catch (error) {
         continue
       }
@@ -810,7 +812,7 @@ module.exports = {
               axios, socket, id
             )
 
-            deleted = response
+            if (!response.status && response) deleted = response
           } catch (error) {
             continue
           }
@@ -883,7 +885,7 @@ module.exports = {
 
             if (!this.isRunning(id)) break
 
-            if (response) {
+            if (!response.status && response) {
               data = response
               data.size = currentTask.sizes[index].label.toUpperCase()
 
@@ -952,7 +954,7 @@ module.exports = {
             axios, socket, id
           )
 
-          if (response) params = response[0]
+          if (!response.status && response) params = response[0]
         } catch (error) {
           continue
         }
@@ -1006,7 +1008,7 @@ module.exports = {
           axios, socket, id
         )
 
-        data = response
+        if (!response.status && response) data = response
       } catch (error) {
         continue
       }
@@ -1047,7 +1049,7 @@ module.exports = {
           currentTask = vm.getCurrentTask(id)
 
           if (currentTask.placeOrder) {
-            const timer = moment(currentTask.placeOrder, 'HH:mm:ss')
+            const timer = moment(currentTask.placeOrder, 'HH:mm:ss').format('HH:mm:ss')
             const current = moment().format('HH:mm:ss')
 
             if (current >= timer) {
@@ -1140,40 +1142,62 @@ module.exports = {
 
     const tries = 3
 
+    let currentTask = this.getCurrentTask(id)
+
     for (let index = 1; index <= tries; index++) {
       if (!this.isRunning(id)) break
 
       try {
-        const currentTask = this.getCurrentTask(id)
+        currentTask = this.getCurrentTask(id)
 
-        const response = await this.http(
-          {
-            method: 'post',
-            url: this.service.api.place_order,
-            jar: cookieJar,
-            data: payload
-          },
-          {
-            Accept: 'application/json',
-            Authorization: `Bearer ${currentTask.transactionData.token}`
-          },
-          axios, socket, id
-        )
+        if (index > 1) {
+          const waitingMsg = `Size: ${currentTask.transactionData.product.size} - trying for restock`
 
-        if (response) {
-          const paymaya = await this.http(
+          await this.updateCurrentTaskLog(socket, id, waitingMsg)
+          await this.setCurrentTaskStatus(id, this.service.status.running, waitingMsg, 'orange', socket)
+        }
+
+        while (this.isRunning(id) && !data) {
+          currentTask = this.getCurrentTask(id)
+
+          await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+
+          currentTask = this.getCurrentTask(id)
+
+          const response = await this.http(
             {
-              method: 'get',
-              url: this.service.api.paymaya,
-              jar: cookieJar
+              method: 'post',
+              url: this.service.api.place_order,
+              jar: cookieJar,
+              data: payload
             },
-            { Accept: 'application/json' },
+            {
+              Accept: 'application/json',
+              Authorization: `Bearer ${currentTask.transactionData.token}`
+            },
             axios, socket, id
           )
 
-          data = paymaya.request.uri.href
-          break
+          if (response.status && response.status !== 429) break
+
+          if (!response.status && response) {
+            const paymaya = await this.http(
+              {
+                method: 'get',
+                url: this.service.api.paymaya,
+                jar: cookieJar
+              },
+              { Accept: 'application/json' },
+              axios, socket, id
+            )
+
+            if (!paymaya.status && paymaya) data = paymaya.request.uri.href
+
+            break
+          }
         }
+
+        if (data) break
       } catch (error) {
         continue
       }
@@ -1181,14 +1205,14 @@ module.exports = {
 
     if (!this.isRunning(id)) return null
 
+    currentTask = this.getCurrentTask(id)
+
     if (!data) {
-      const msg = `Size: ${this.getCurrentTask(id).transactionData.product.size} - out of stock`
+      const msg = `Size: ${currentTask.transactionData.product.size} - out of stock`
 
       await this.updateCurrentTaskLog(socket, id, msg)
       await this.setCurrentTaskStatus(id, this.service.status.running, msg, 'orange', socket)
     } else {
-      const currentTask = this.getCurrentTask(id)
-
       const msg = `Size: ${currentTask.transactionData.product.size} - copped!`
 
       currentTask.transactionData.checkoutLink = data
@@ -1238,62 +1262,71 @@ module.exports = {
           await this.setCurrentTaskStatus(id, this.service.status.running, waitingMsg, 'orange', socket)
         }
 
-        currentTask = this.getCurrentTask(id)
+        while (this.isRunning(id) && !data) {
+          currentTask = this.getCurrentTask(id)
 
-        const placeOrderResponse = await this.http(
-          {
-            method: 'post',
-            url: this.service.api.place_order,
-            jar: cookieJar,
-            data: payload
-          },
-          {
-            Accept: 'application/json',
-            Authorization: `Bearer ${currentTask.transactionData.token}`
-          },
-          axios, socket, id
-        )
+          await new Promise(resolve => setTimeout(resolve, currentTask.delay))
 
-        if (!this.isRunning(id)) break
+          currentTask = this.getCurrentTask(id)
 
-        if (placeOrderResponse) {
-          const getTransactionResponse = await this.http(
+          const placeOrderResponse = await this.http(
             {
-              method: 'get',
-              url: this.service.api.get_transaction,
-              jar: cookieJar
+              method: 'post',
+              url: this.service.api.place_order,
+              jar: cookieJar,
+              data: payload
             },
-            { Accept: 'application/json' },
+            {
+              Accept: 'application/json',
+              Authorization: `Bearer ${currentTask.transactionData.token}`
+            },
             axios, socket, id
           )
 
-          if (!this.isRunning(id)) break
+          if (!this.isRunning(id) || (placeOrderResponse.status && placeOrderResponse.status !== 429)) break
 
-          if (getTransactionResponse) {
-            const payload = new URLSearchParams()
-            let orderNumber = null
-
-            for (let i = 0; i < getTransactionResponse.fields.length; i++) {
-              payload.append(getTransactionResponse.fields[i], getTransactionResponse.values[i])
-
-              if (getTransactionResponse.fields[i] === 'order_id') orderNumber = getTransactionResponse.values[i]
-            }
-
-            await this.http(
+          if (!placeOrderResponse.status && placeOrderResponse) {
+            const getTransactionResponse = await this.http(
               {
-                method: 'post',
-                url: this.service.api.credit_card_checkout,
-                jar: cookieJar,
-                data: payload
+                method: 'get',
+                url: this.service.api.get_transaction,
+                jar: cookieJar
               },
-              { Accept: 'application/x-www-form-urlencoded' },
+              { Accept: 'application/json' },
               axios, socket, id
             )
 
-            data = orderNumber
-            break
+            if (!this.isRunning(id) || (getTransactionResponse.status && getTransactionResponse.status !== 429)) break
+
+            if (!getTransactionResponse.status && getTransactionResponse) {
+              const payload = new URLSearchParams()
+              let orderNumber = null
+
+              for (let i = 0; i < getTransactionResponse.fields.length; i++) {
+                payload.append(getTransactionResponse.fields[i], getTransactionResponse.values[i])
+
+                if (getTransactionResponse.fields[i] === 'order_id') orderNumber = getTransactionResponse.values[i]
+              }
+
+              data = orderNumber
+
+              await this.http(
+                {
+                  method: 'post',
+                  url: this.service.api.credit_card_checkout,
+                  jar: cookieJar,
+                  data: payload
+                },
+                { Accept: 'application/x-www-form-urlencoded' },
+                axios, socket, id
+              )
+
+              break
+            }
           }
         }
+
+        if (data) break
       } catch (error) {
         continue
       }
@@ -1350,23 +1383,37 @@ module.exports = {
       if (!this.isRunning(id)) break
 
       try {
-        const response = await this.http(
-          {
-            method: 'post',
-            url: this.service.api.place_order,
-            jar: cookieJar,
-            data: payload
-          },
-          {
-            Accept: 'application/json',
-            Authorization: `Bearer ${currentTask.transactionData.token}`
-          },
-          axios, socket, id
-        )
+        currentTask = this.getCurrentTask(id)
 
-        if (response) {
-          data = response
-          break
+        if (index > 1) {
+          const waitingMsg = `Size: ${currentTask.transactionData.product.size} - trying for restock`
+
+          await this.updateCurrentTaskLog(socket, id, waitingMsg)
+          await this.setCurrentTaskStatus(id, this.service.status.running, waitingMsg, 'orange', socket)
+        }
+
+        while (this.isRunning(id) && !data) {
+          currentTask = this.getCurrentTask(id)
+
+          await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+
+          currentTask = this.getCurrentTask(id)
+
+          const response = await this.http(
+            {
+              method: 'post',
+              url: this.service.api.place_order,
+              jar: cookieJar,
+              data: payload
+            },
+            {
+              Accept: 'application/json',
+              Authorization: `Bearer ${currentTask.transactionData.token}`
+            },
+            axios, socket, id
+          )
+
+          if (!response.status && response) data = response
         }
       } catch (error) {
         continue
