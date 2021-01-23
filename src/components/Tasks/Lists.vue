@@ -150,6 +150,7 @@ export default {
       } catch (error) {
         this.allSelected = []
       }
+
       this.$emit('updateSelected', this.allSelected)
     }
   },

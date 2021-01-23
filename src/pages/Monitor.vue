@@ -137,8 +137,10 @@ import { mapState, mapActions } from 'vuex'
 
 import moment from '@/mixins/moment'
 import App from '@/config/app'
-import productApi from '@/api/magento/titan22/product'
 import placeholder from '@/assets/no_image.png'
+
+const io = require('socket.io-client')
+const socket = io(`http://localhost:${App.services.port}`)
 
 export default {
   mixins: [moment],
@@ -288,26 +290,28 @@ export default {
             ],
             pageSize: this.count
           }
-        },
-        token: App.services.titan22.token
+        }
       }
 
       if (this.settings.monitorProxy && Object.keys(this.settings.monitorProxy).length) {
         const proxy = this.settings.monitorProxy.proxies[Math.floor(Math.random() * this.settings.monitorProxy.proxies.length)]
+
         params.proxy = {
           host: proxy.host,
           port: proxy.port
         }
 
         if (proxy.username && proxy.password) {
-          params.proxy.username = proxy.username
-          params.proxy.password = proxy.password
+          params.proxy.auth = {
+            username: proxy.username,
+            password: proxy.password
+          }
         }
       }
 
       this.loading = true
 
-      const response = await productApi.search(params)
+      const response = await new Promise((resolve) => (socket.emit('socket-monitor', params, (data) => (resolve(data)))))
 
       this.products = []
 

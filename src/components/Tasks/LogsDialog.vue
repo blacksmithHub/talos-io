@@ -22,6 +22,8 @@
         </v-btn>
       </v-card-title>
 
+      <v-divider />
+
       <v-card-text style="height: 30vh; max-height: 30vh; overflow-y: auto;">
         <ul v-if="logs.length">
           <li
@@ -35,7 +37,7 @@
 
         <p
           v-else
-          class="text-center mt-8"
+          class="text-center mt-10"
         >
           Nothing to display
         </p>

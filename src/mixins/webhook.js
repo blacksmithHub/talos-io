@@ -1,6 +1,6 @@
 import { mapState } from 'vuex'
-import Config from '@/config/app'
 import Discord from 'discord.js'
+import Config from '@/config/app'
 
 export default {
   computed: {

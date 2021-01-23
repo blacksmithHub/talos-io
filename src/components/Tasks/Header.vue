@@ -68,7 +68,7 @@
     <v-avatar
       size="35"
       class="pointer"
-      style="border:1px solid #d85820"
+      style="border:2px solid #d85820"
       @click="$refs.account.dialog=true"
     >
       <img

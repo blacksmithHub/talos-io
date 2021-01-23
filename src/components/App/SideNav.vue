@@ -4,6 +4,7 @@
       app
       permanent
       mini-variant
+      style="border-right: 1px solid #d85820"
     >
       <v-list>
         <v-list-item class="px-2">
@@ -103,7 +104,7 @@
               <v-list-item-icon>
                 <v-icon
                   color="primary"
-                  v-text="'mdi-tools'"
+                  v-text="'mdi-cog'"
                 />
               </v-list-item-icon>
               <v-list-item-title v-text="'Settings'" />
