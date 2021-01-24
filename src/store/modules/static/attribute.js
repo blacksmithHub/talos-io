@@ -103,13 +103,13 @@ export default {
       if (!attribute || attribute.status) return {}
 
       if (attribute) {
-        const sizes = attribute.data.items[0].options.filter((data) => data.value).map((item) => {
+        const sizes = attribute.items[0].options.filter((data) => data.value).map((item) => {
           item.label = item.label.toLowerCase()
           return item
         })
 
         const response = {
-          attribute_id: attribute.data.items[0].attribute_id,
+          attribute_id: attribute.items[0].attribute_id,
           sizes: sizes
         }
 
