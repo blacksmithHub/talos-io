@@ -27,7 +27,7 @@
           <v-card-text>
             <v-container>
               <v-row>
-                <v-col cols="6">
+                <v-col cols="12">
                   <v-text-field
                     v-model="sku"
                     label="SKU"
@@ -35,21 +35,6 @@
                     dense
                     hide-details
                     autocomplete="off"
-                  />
-                </v-col>
-
-                <v-col cols="6">
-                  <v-autocomplete
-                    v-model="proxy"
-                    required
-                    clearable
-                    :items="allProxies"
-                    outlined
-                    dense
-                    label="Proxies"
-                    item-text="name"
-                    return-object
-                    hide-details
                   />
                 </v-col>
 
@@ -68,6 +53,34 @@
                     hint="Press Enter per input to apply"
                     hide-details="auto"
                     @input="filterSizes"
+                  />
+                </v-col>
+
+                <v-col cols="6">
+                  <v-select
+                    v-model="mode"
+                    required
+                    dense
+                    :items="modes"
+                    label="Mode"
+                    outlined
+                    clearable
+                    hide-details
+                  />
+                </v-col>
+
+                <v-col cols="6">
+                  <v-autocomplete
+                    v-model="proxy"
+                    required
+                    clearable
+                    :items="allProxies"
+                    outlined
+                    dense
+                    label="Proxies"
+                    item-text="name"
+                    return-object
+                    hide-details
                   />
                 </v-col>
 
@@ -213,7 +226,9 @@ export default {
       delay: '',
       placeOrder: '',
       placeOrderMenu: false,
-      proxy: {}
+      proxy: {},
+      mode: '',
+      modes: ['Desktop', 'Mobile (iOS)', 'Mobile (Android)']
     }
   },
   computed: {
@@ -310,6 +325,8 @@ export default {
         if (this.placeOrder) params.placeOrder = this.placeOrder
 
         if (this.proxy && Object.keys(this.proxy).length) params.proxy = this.proxy
+
+        if (this.mode) params.mode = this.mode
 
         if (this.sizes.length) {
           const sizes = []

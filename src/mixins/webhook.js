@@ -36,6 +36,8 @@ export default {
 
       if (options.proxyList) embed.addField('Proxy List', `||${options.proxyList}||`, true)
 
+      if (options.mode) embed.addField('Mode', `${options.mode}`, true)
+
       if (options.checkoutMethod) embed.addField('Checkout Method', `${options.checkoutMethod}`, true)
 
       if (options.checkoutTime) embed.addField('Checkout Time', `${options.checkoutTime}s`, true)
