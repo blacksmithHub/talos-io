@@ -349,23 +349,27 @@ export default {
      *
      */
     async stopTask (task) {
-      try {
-        task.cancelTokenSource.cancel()
-      } catch (error) {
-        //
-      }
+      const currentTask = this.tasks.find((el) => el.id === task.id)
 
-      this.updateTask({
-        ...task,
-        status: {
+      if (currentTask) {
+        try {
+          currentTask.transactionData.cancelTokenSource.cancel()
+        } catch (error) {
+        //
+        }
+
+        currentTask.status = {
           id: Constant.TASK.STATUS.STOPPED,
           msg: 'stopped',
           class: 'grey'
-        },
-        transactionData: {},
-        paid: false,
-        logs: `${task.logs || ''};Stopped!`
-      })
+        }
+
+        currentTask.paid = false
+        currentTask.logs = `${currentTask.logs || ''};Stopped!`
+        currentTask.transactionData = {}
+
+        this.updateTask(currentTask)
+      }
     },
 
     /**

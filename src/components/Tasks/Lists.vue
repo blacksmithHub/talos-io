@@ -15,30 +15,75 @@
     :search="search"
   >
     <template v-slot:[`item.profile.name`]="{ item }">
-      <span
-        class="d-inline-block text-truncate"
-        style="max-width: 15vh"
-        :class="{'success--text': item.paid, 'teal--text': item.aco}"
-        v-text="item.profile.name"
-      />
+      <v-tooltip
+        bottom
+        content-class="primary text-center"
+        open-delay="500"
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <span
+            class="d-inline-block text-truncate cursor"
+            style="max-width: 15vh"
+            :class="{'success--text': item.paid, 'teal--text': item.aco}"
+            v-bind="attrs"
+            v-on="on"
+            v-text="item.profile.name"
+          />
+        </template>
+        <span
+          class="d-inline-block text-truncate"
+          style="max-width: 50vh"
+          v-text="item.profile.email"
+        />
+      </v-tooltip>
     </template>
 
     <template v-slot:[`item.bank.nickname`]="{ item }">
-      <span
-        class="d-inline-block text-truncate"
-        style="max-width: 15vh"
-        :class="{'success--text': item.paid, 'teal--text': item.aco}"
-        v-text="item.bank.nickname"
-      />
+      <v-tooltip
+        bottom
+        content-class="primary text-center"
+        open-delay="500"
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <span
+            class="d-inline-block text-truncate cursor"
+            style="max-width: 15vh"
+            :class="{'success--text': item.paid, 'teal--text': item.aco}"
+            v-bind="attrs"
+            v-on="on"
+            v-text="item.bank.nickname"
+          />
+        </template>
+        <span
+          class="d-inline-block text-truncate"
+          style="max-width: 50vh"
+          v-text="item.bank.bank"
+        />
+      </v-tooltip>
     </template>
 
     <template v-slot:[`item.proxy.name`]="{ item }">
-      <span
-        class="d-inline-block text-truncate"
-        style="max-width: 15vh"
-        :class="{'success--text': item.paid, 'teal--text': item.aco}"
-        v-text="(item.proxy && Object.keys(item.proxy).length) ? item.proxy.name : 'Localhost'"
-      />
+      <v-tooltip
+        bottom
+        content-class="primary text-center"
+        open-delay="500"
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <span
+            class="d-inline-block text-truncate cursor"
+            style="max-width: 15vh"
+            :class="{'success--text': item.paid, 'teal--text': item.aco}"
+            v-bind="attrs"
+            v-on="on"
+            v-text="(item.proxy && Object.keys(item.proxy).length) ? item.proxy.name : 'Localhost'"
+          />
+        </template>
+        <span
+          class="d-inline-block text-truncate"
+          style="max-width: 50vh"
+          v-text="`${item.proxy.proxies.length} IPs`"
+        />
+      </v-tooltip>
     </template>
 
     <template v-slot:item.sku="{ item }">
