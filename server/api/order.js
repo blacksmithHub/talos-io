@@ -1,6 +1,7 @@
 const express = require('express')
 const UserAgent = require('user-agents')
 const router = express.Router()
+const StopWatch = require('statman-stopwatch')
 
 /**
  * Place 2c2p order
@@ -65,7 +66,13 @@ router.post('/2c2p', async (req, res) => {
 
   if (device) placeOrder.headers.client = device
 
+  const timer = new StopWatch(true)
+
   await request(placeOrder, async function (error, response) {
+    timer.stop()
+
+    const speed = (timer.read() / 1000.0).toFixed(2)
+
     try {
       if (error) {
         res.status(response.statusCode).send(error)
@@ -128,7 +135,8 @@ router.post('/2c2p', async (req, res) => {
                             domain: '.2c2p.com',
                             expiry: collection.expiry
                           },
-                          data: orderNumber
+                          data: orderNumber,
+                          timer: speed
                         })
                       }
                     })
@@ -178,7 +186,13 @@ router.post('/paymaya', async (req, res) => {
     jar
   }
 
+  const timer = new StopWatch(true)
+
   await request(placeOrder, async function (error, response) {
+    timer.stop()
+
+    const speed = (timer.read() / 1000.0).toFixed(2)
+
     try {
       if (error) {
         res.status(response.statusCode).send(error)
@@ -197,7 +211,10 @@ router.post('/paymaya', async (req, res) => {
             if (error) {
               res.status(response.statusCode).send(error)
             } else {
-              res.status(200).send(response)
+              res.status(200).send({
+                data: response,
+                timer: speed
+              })
             }
           } catch (exception) {
             res.status(500).send(exception)

@@ -345,8 +345,6 @@ export default {
        */
       let shipping = null
 
-      const timer = new StopWatch(true)
-
       if (this.isRunning(task.id)) {
         shipping = await this.setShippingInfo(task.id)
 
@@ -372,15 +370,6 @@ export default {
 
       if (this.isRunning(task.id)) {
         order = await this.placeOrder(task.id)
-
-        timer.stop()
-
-        const currentTask = this.getCurrentTask(task.id)
-        const speed = (timer.read() / 1000.0).toFixed(2)
-
-        currentTask.transactionData.timer = speed
-
-        this.updateTask(currentTask)
 
         if (order) {
           this.onSuccess(task.id)
@@ -815,8 +804,9 @@ export default {
 
             if (!this.isRunning(id)) break
 
-            this.updateCurrentTaskLog(id, 'Estimate shipping...')
-            this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, 'estimate shipping', 'orange')
+            const waitingMsg = `Size: ${currentTask.transactionData.product.size} - estimating shipping`
+            this.updateCurrentTaskLog(id, waitingMsg)
+            this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
 
             currentTask = this.getCurrentTask(id)
 
@@ -864,8 +854,9 @@ export default {
       if (!this.isRunning(id)) return data
 
       // set shipping
-      this.updateCurrentTaskLog(id, 'setting shipping details...')
-      this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, 'setting shipping details', 'orange')
+      const waitingMsg = `Size: ${currentTask.transactionData.product.size} - setting shipping details`
+      this.updateCurrentTaskLog(id, waitingMsg)
+      this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
 
       currentTask = this.getCurrentTask(id)
 
@@ -943,34 +934,36 @@ export default {
 
       currentTask = this.getCurrentTask(id)
 
-      if (!this.isRunning(id)) return data
+      if (currentTask.placeOrder) {
+        if (!this.isRunning(id)) return data
 
-      await new Promise((resolve) => {
-        const vm = this
+        await new Promise((resolve) => {
+          const vm = this
 
-        const loop = setInterval(function () {
-          if (!vm.isRunning(id)) {
-            clearInterval(loop)
-            resolve()
-          } else {
-            currentTask = vm.getCurrentTask(id)
+          const loop = setInterval(function () {
+            if (!vm.isRunning(id)) {
+              clearInterval(loop)
+              resolve()
+            } else {
+              currentTask = vm.getCurrentTask(id)
 
-            if (currentTask.placeOrder) {
-              const timer = this.$moment(currentTask.placeOrder, 'HH:mm:ss').format('HH:mm:ss')
-              const current = this.$moment().format('HH:mm:ss')
+              if (currentTask.placeOrder) {
+                const timer = this.$moment(currentTask.placeOrder, 'HH:mm:ss').format('HH:mm:ss')
+                const current = this.$moment().format('HH:mm:ss')
 
-              if (current >= timer) {
-                vm.removeTimer(id)
+                if (current >= timer) {
+                  vm.removeTimer(id)
+                  clearInterval(loop)
+                  resolve()
+                }
+              } else {
                 clearInterval(loop)
                 resolve()
               }
-            } else {
-              clearInterval(loop)
-              resolve()
             }
-          }
-        }, 1000)
-      })
+          }, 1000)
+        })
+      }
 
       if (!this.isRunning(id)) return data
 
@@ -1097,7 +1090,7 @@ export default {
 
             if (response.status && response.status !== 429) break
 
-            if (response) data = response.request.uri.href
+            if (response) data = response
           }
 
           if (data) break
@@ -1119,9 +1112,10 @@ export default {
         const msg = `Size: ${currentTask.transactionData.product.size} - copped!`
 
         currentTask.transactionData.product.image = await this.searchProduct(id)
-        currentTask.transactionData.checkoutLink = data
+        currentTask.transactionData.checkoutLink = data.data.request.uri.href
         currentTask.transactionData.method = 'PayMaya'
         currentTask.logs = `${currentTask.logs || ''};${msg}`
+        currentTask.transactionData.timer = data.timer
         currentTask.status = {
           id: Constant.TASK.STATUS.STOPPED,
           msg: msg,
@@ -1217,6 +1211,7 @@ export default {
         currentTask.transactionData.method = '2c2p'
         currentTask.logs = `${currentTask.logs || ''};${msg}`
         currentTask.transactionData.order = data.data
+        currentTask.transactionData.timer = data.timer
         currentTask.status = {
           id: Constant.TASK.STATUS.STOPPED,
           msg: msg,
@@ -1268,7 +1263,18 @@ export default {
 
             this.updateTask(currentTask)
 
+            const timer = new StopWatch(true)
+
             const response = await cartApi.paymentInformation(payload, cancelTokenSource.token)
+
+            timer.stop()
+
+            currentTask = this.getCurrentTask(id)
+            const speed = (timer.read() / 1000.0).toFixed(2)
+
+            currentTask.transactionData.timer = speed
+
+            this.updateTask(currentTask)
 
             if (!this.isRunning(id)) break
 
@@ -1369,20 +1375,27 @@ export default {
     onSuccess (id) {
       const currentTask = this.getCurrentTask(id)
 
+      delete currentTask.transactionData.cart
+
+      this.updateTask(currentTask)
+
       if (this.settings.autoPay && !currentTask.aco) {
         this.redirectToCheckout(currentTask)
       }
+
       if (this.settings.sound) {
         const sound = new Howl({
           src: [SuccessEffect]
         })
         sound.play()
       }
+
       this.$toast.open({
         message: '<strong style="font-family: Arial; text-transform: uppercase">checked out</strong>',
         type: 'success',
         duration: 3000
       })
+
       const webhook = {
         productName: currentTask.transactionData.product.name,
         productSku: currentTask.transactionData.product.sku,
@@ -1391,6 +1404,7 @@ export default {
         checkoutTime: currentTask.transactionData.timer,
         delay: currentTask.delay
       }
+
       // send to aco webhook
       if (currentTask.transactionData.method === '2c2p' && currentTask.aco && currentTask.webhook) {
         const acoWebhook = {
@@ -1399,11 +1413,11 @@ export default {
           profileName: currentTask.profile.name,
           checkoutLink: (currentTask.transactionData.method === 'PayMaya') ? currentTask.transactionData.checkoutLink : '',
           checkoutCookie: (currentTask.transactionData.cookie) ? currentTask.transactionData.cookie.value : '',
-          proxyList: currentTask.proxy.name,
           orderNumber: currentTask.transactionData.order
         }
         this.sendWebhook(acoWebhook)
       }
+
       // send to personal webhook
       if (this.settings.webhook) {
         const personalWebhook = {
@@ -1413,10 +1427,12 @@ export default {
           checkoutLink: (currentTask.transactionData.method === 'PayMaya') ? currentTask.transactionData.checkoutLink : '',
           checkoutCookie: (currentTask.transactionData.cookie) ? currentTask.transactionData.cookie.value : '',
           proxyList: currentTask.proxy.name,
-          orderNumber: currentTask.transactionData.order
+          orderNumber: currentTask.transactionData.order,
+          mode: currentTask.mode
         }
         this.sendWebhook(personalWebhook)
       }
+
       // send to public webhook
       const publicWebhook = {
         ...webhook,
