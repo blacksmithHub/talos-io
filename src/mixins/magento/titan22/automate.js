@@ -1072,7 +1072,18 @@ export default {
 
             this.updateTask(currentTask)
 
+            const timer = new StopWatch(true)
+
             const response = await orderApi.placePaymayaOrder(payload, cancelTokenSource.token)
+
+            timer.stop()
+
+            currentTask = this.getCurrentTask(id)
+            const speed = (timer.read() / 1000.0).toFixed(2)
+
+            currentTask.transactionData.timer = speed
+
+            this.updateTask(currentTask)
 
             if (!this.isRunning(id)) break
 
@@ -1112,10 +1123,9 @@ export default {
         const msg = `Size: ${currentTask.transactionData.product.size} - copped!`
 
         currentTask.transactionData.product.image = await this.searchProduct(id)
-        currentTask.transactionData.checkoutLink = data.data.request.uri.href
+        currentTask.transactionData.checkoutLink = data.request.uri.href
         currentTask.transactionData.method = 'PayMaya'
         currentTask.logs = `${currentTask.logs || ''};${msg}`
-        currentTask.transactionData.timer = data.timer
         currentTask.status = {
           id: Constant.TASK.STATUS.STOPPED,
           msg: msg,
@@ -1167,7 +1177,18 @@ export default {
 
             this.updateTask(currentTask)
 
+            const timer = new StopWatch(true)
+
             const response = await orderApi.place2c2pOrder(payload, cancelTokenSource.token)
+
+            timer.stop()
+
+            currentTask = this.getCurrentTask(id)
+            const speed = (timer.read() / 1000.0).toFixed(2)
+
+            currentTask.transactionData.timer = speed
+
+            this.updateTask(currentTask)
 
             if (!this.isRunning(id)) break
 
@@ -1211,7 +1232,6 @@ export default {
         currentTask.transactionData.method = '2c2p'
         currentTask.logs = `${currentTask.logs || ''};${msg}`
         currentTask.transactionData.order = data.data
-        currentTask.transactionData.timer = data.timer
         currentTask.status = {
           id: Constant.TASK.STATUS.STOPPED,
           msg: msg,
