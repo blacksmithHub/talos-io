@@ -25,7 +25,7 @@ export default {
 
     await page.setUserAgent(userAgent.toString())
 
-    await page.goto(task.transactionData.request.uri.href)
+    await page.goto(task.transactionData.checkoutLink)
 
     try {
       if (task.bank && Object.keys(task.bank).length && task.bank.bank.toLowerCase() === 'paymaya') {

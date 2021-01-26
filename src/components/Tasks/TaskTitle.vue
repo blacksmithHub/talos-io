@@ -237,7 +237,7 @@ export default {
         data.expiry = this.$moment().add(90, 'minutes').format('HH:mm:ss')
 
         this.setPaypal(data)
-        this.validatePaypal()
+        this.validatePaypal(data)
       }
     })
   },
@@ -275,8 +275,8 @@ export default {
     /**
      * validate paypal expiry
      */
-    async validatePaypal () {
-      const expiry = this.paypal.expiry
+    async validatePaypal (data) {
+      const expiry = data.expiry
 
       const eventTime = this.$moment(expiry, 'HH:mm').unix()
       const currentTime = this.$moment().unix()

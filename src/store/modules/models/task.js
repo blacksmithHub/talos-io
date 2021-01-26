@@ -100,13 +100,15 @@ export default {
      * @param {*} param
      */
     updateItem ({ state, commit }, params) {
-      let tasks = state.items.slice()
+      const tasks = state.items.slice()
 
-      tasks = tasks.map((val) => {
-        if (val.id === params.id) val = params
+      const task = tasks.find((val) => val.id === params.id)
 
-        return val
-      })
+      if (task) {
+        const index = tasks.indexOf(task)
+
+        tasks[index] = params
+      }
 
       commit('SET_ITEMS', tasks)
       localStorage.setItem('tasks', JSON.stringify(tasks))

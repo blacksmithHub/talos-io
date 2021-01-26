@@ -68,7 +68,7 @@ router.post('/2c2p', async (req, res) => {
   await request(placeOrder, async function (error, response) {
     try {
       if (error) {
-        res.status(response.statusCode).send(error)
+        res.status(500).send(error)
       } else {
         const getTransactionData = {
           uri: 'https://www.titan22.com/ccpp/htmlredirect/gettransactiondata',
@@ -85,7 +85,7 @@ router.post('/2c2p', async (req, res) => {
         await request(getTransactionData, async function (error, response) {
           try {
             if (error) {
-              res.status(response.statusCode).send(error)
+              res.status(500).send(error)
             } else {
               let orderNumber = null
               const parameters = {}
@@ -113,7 +113,7 @@ router.post('/2c2p', async (req, res) => {
               await request(payment, function (error, response) {
                 try {
                   if (error) {
-                    res.status(response.statusCode).send(error)
+                    res.status(500).send(error)
                   } else {
                     jar._jar.store.getAllCookies(function (err, cookieArray) {
                       if (err) {
@@ -157,15 +157,46 @@ router.post('/paymaya', async (req, res) => {
 
   const option = {}
 
-  if (req.body.proxy.username && req.body.proxy.password) {
-    option.proxy = `http://${req.body.proxy.username}:${req.body.proxy.password}@${req.body.proxy.host}:${req.body.proxy.port}`
-  } else {
-    option.proxy = `http://${req.body.proxy.host}:${req.body.proxy.port}`
+  if (req.body.proxy && Object.keys(req.body.proxy).length && req.body.proxy.proxies.length) {
+    const proxy = req.body.proxy.proxies[Math.floor(Math.random() * req.body.proxy.proxies.length)]
+
+    if (proxy.username && proxy.password) {
+      option.proxy = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
+    } else {
+      option.proxy = `http://${proxy.host}:${proxy.port}`
+    }
   }
 
   request = request.defaults(option)
 
   const jar = request.jar()
+
+  let device = null
+  let agent = null
+
+  switch (req.body.mode) {
+    case 'Mobile (Android)':
+      {
+        const userAgentAnd = new UserAgent({ deviceCategory: 'mobile' })
+        agent = userAgentAnd.toString()
+        device = 'android'
+      }
+      break
+
+    case 'Mobile (iOS)':
+      {
+        const userAgentIos = new UserAgent({ deviceCategory: 'mobile' })
+        agent = userAgentIos.toString()
+        device = 'ios'
+      }
+      break
+    default:
+      {
+        const userAgent = new UserAgent()
+        agent = userAgent.toString()
+      }
+      break
+  }
 
   const placeOrder = {
     uri: 'https://www.titan22.com/rest/V1/carts/mine/payment-information',
@@ -173,29 +204,35 @@ router.post('/paymaya', async (req, res) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${req.body.token}`
+      Authorization: `Bearer ${req.body.token}`,
+      'User-Agent': agent
     },
     jar
   }
 
+  if (device) placeOrder.headers.client = device
+
   await request(placeOrder, async function (error, response) {
     try {
       if (error) {
-        res.status(response.statusCode).send(error)
+        res.status(500).send(error)
       } else {
         const getTransactionData = {
           uri: 'https://www.titan22.com/paymaya/checkout/start',
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'User-Agent': agent
           },
           jar
         }
 
+        if (device) getTransactionData.headers.client = device
+
         await request(getTransactionData, async function (error, response) {
           try {
             if (error) {
-              res.status(response.statusCode).send(error)
+              res.status(500).send(error)
             } else {
               res.status(200).send(response)
             }
