@@ -1085,60 +1085,40 @@ export default {
 
       if (!currentTask) return data
 
-      payload.payload.paymentMethod.method = 'braintree_paypal'
+      switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
+        case 'paymaya_checkout':
+          payload.payload.paymentMethod.method = 'paymaya_checkout'
+          data = await this.paymayaCheckout(id, payload)
+          break
 
-      if (currentTask.profile.paypal && Object.keys(currentTask.profile.paypal).length) {
-        payload.payload.paymentMethod.additional_data = {
-          paypal_express_checkout_token: currentTask.profile.paypal.paypalAccounts[0].details.correlationId,
-          paypal_express_checkout_redirect_required: false,
-          paypal_express_checkout_payer_id: currentTask.profile.paypal.paypalAccounts[0].details.payerInfo.payerId,
-          payment_method_nonce: currentTask.profile.paypal.paypalAccounts[0].nonce
-        }
-      } else if (this.paypal && Object.keys(this.paypal).length) {
-        payload.payload.paymentMethod.additional_data = {
-          paypal_express_checkout_token: this.paypal.paypalAccounts[0].details.correlationId,
-          paypal_express_checkout_redirect_required: false,
-          paypal_express_checkout_payer_id: this.paypal.paypalAccounts[0].details.payerInfo.payerId,
-          payment_method_nonce: this.paypal.paypalAccounts[0].nonce
-        }
+        case 'ccpp':
+          payload.payload.paymentMethod.method = 'ccpp'
+          data = await this.creditCardCheckout(id, payload)
+          break
+
+        case 'braintree_paypal':
+          payload.payload.paymentMethod.method = 'braintree_paypal'
+
+          if (currentTask.profile.paypal && Object.keys(currentTask.profile.paypal).length) {
+            payload.payload.paymentMethod.additional_data = {
+              paypal_express_checkout_token: currentTask.profile.paypal.paypalAccounts[0].details.correlationId,
+              paypal_express_checkout_redirect_required: false,
+              paypal_express_checkout_payer_id: currentTask.profile.paypal.paypalAccounts[0].details.payerInfo.payerId,
+              payment_method_nonce: currentTask.profile.paypal.paypalAccounts[0].nonce
+            }
+          } else if (this.paypal && Object.keys(this.paypal).length) {
+            payload.payload.paymentMethod.additional_data = {
+              paypal_express_checkout_token: this.paypal.paypalAccounts[0].details.correlationId,
+              paypal_express_checkout_redirect_required: false,
+              paypal_express_checkout_payer_id: this.paypal.paypalAccounts[0].details.payerInfo.payerId,
+              payment_method_nonce: this.paypal.paypalAccounts[0].nonce
+            }
+          }
+
+          data = await this.paypalCheckout(id, payload)
+
+          break
       }
-
-      data = await this.paypalCheckout(id, payload)
-
-      // switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
-      //   case 'paymaya_checkout':
-      //     payload.payload.paymentMethod.method = 'paymaya_checkout'
-      //     data = await this.paymayaCheckout(id, payload)
-      //     break
-
-      //   case 'ccpp':
-      //     payload.payload.paymentMethod.method = 'ccpp'
-      //     data = await this.creditCardCheckout(id, payload)
-      //     break
-
-      //   case 'braintree_paypal':
-      //     payload.payload.paymentMethod.method = 'braintree_paypal'
-
-      //     if (currentTask.profile.paypal && Object.keys(currentTask.profile.paypal).length) {
-      //       payload.payload.paymentMethod.additional_data = {
-      //         paypal_express_checkout_token: currentTask.profile.paypal.paypalAccounts[0].details.correlationId,
-      //         paypal_express_checkout_redirect_required: false,
-      //         paypal_express_checkout_payer_id: currentTask.profile.paypal.paypalAccounts[0].details.payerInfo.payerId,
-      //         payment_method_nonce: currentTask.profile.paypal.paypalAccounts[0].nonce
-      //       }
-      //     } else if (this.paypal && Object.keys(this.paypal).length) {
-      //       payload.payload.paymentMethod.additional_data = {
-      //         paypal_express_checkout_token: this.paypal.paypalAccounts[0].details.correlationId,
-      //         paypal_express_checkout_redirect_required: false,
-      //         paypal_express_checkout_payer_id: this.paypal.paypalAccounts[0].details.payerInfo.payerId,
-      //         payment_method_nonce: this.paypal.paypalAccounts[0].nonce
-      //       }
-      //     }
-
-      //     data = await this.paypalCheckout(id, payload)
-
-      //     break
-      // }
 
       return data
     },
