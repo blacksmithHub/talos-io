@@ -59,7 +59,7 @@ router.post('/', async (req, res) => {
   await request(config, async function (error, response) {
     try {
       if (error) {
-        res.status(response.statusCode).send(error)
+        res.status(500).send(error)
       } else {
         res.status(response.statusCode).send(response.body)
       }
