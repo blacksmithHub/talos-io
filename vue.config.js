@@ -20,7 +20,7 @@ module.exports = {
             provider: 'github',
             repo: 'titan-bot-frontend',
             owner: 'dannielibor',
-            token: '3bb8651970e8e1e4de08b63ef0f384a742d8d837',
+            token: 'cb3c95f6422e28822baf16f898dd2b2238ba4779',
             releaseType: 'draft',
             publishAutoUpdate: true,
             private: true

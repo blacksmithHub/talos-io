@@ -41,42 +41,43 @@ autoUpdater.on('update-not-available', (info) => {
   // no update available
   sendStatusToWindow('versionUpdate', 'up to date')
 
-  if (!MainWindow.getWindow()) {
-    MainWindow.createWindow()
-    win.destroy()
-    win = null
-  }
+  // if (!MainWindow.getWindow()) {
+  //   MainWindow.createWindow()
+  //   win.destroy()
+  //   win = null
+  // }
 })
 
-autoUpdater.on('error', () => {
+autoUpdater.on('error', (info) => {
   // Update Error
   sendStatusToWindow('versionUpdate', 'oops! something went wrong')
+  sendStatusToWindow('testing', info)
 
-  setTimeout(() => {
-    if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
+  // setTimeout(() => {
+  //   if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
 
-    if (SettingWindow.getWindow()) SettingWindow.getWindow().destroy()
+  //   if (SettingWindow.getWindow()) SettingWindow.getWindow().destroy()
 
-    if (ProxyWindow.getWindow()) ProxyWindow.getWindow().destroy()
+  //   if (ProxyWindow.getWindow()) ProxyWindow.getWindow().destroy()
 
-    if (ProfileWindow.getWindow()) ProfileWindow.getWindow().destroy()
+  //   if (ProfileWindow.getWindow()) ProfileWindow.getWindow().destroy()
 
-    if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
+  //   if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
 
-    if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
+  //   if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
 
-    LoginWindow.closeWindow()
-    SettingWindow.closeWindow()
-    ProxyWindow.closeWindow()
-    MonitorWindow.closeWindow()
-    MainWindow.closeWindow()
+  //   LoginWindow.closeWindow()
+  //   SettingWindow.closeWindow()
+  //   ProxyWindow.closeWindow()
+  //   MonitorWindow.closeWindow()
+  //   MainWindow.closeWindow()
 
-    if (win) win.destroy()
+  //   if (win) win.destroy()
 
-    win = null
+  //   win = null
 
-    app.exit()
-  }, 5000)
+  //   app.exit()
+  // }, 5000)
 })
 
 autoUpdater.on('download-progress', (progressObj) => {
@@ -88,31 +89,31 @@ autoUpdater.on('update-downloaded', (info) => {
   // Download completed
   sendStatusToWindow('versionUpdate', 're-launch the app')
 
-  setTimeout(() => {
-    if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
+  // setTimeout(() => {
+  //   if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
 
-    if (SettingWindow.getWindow()) SettingWindow.getWindow().destroy()
+  //   if (SettingWindow.getWindow()) SettingWindow.getWindow().destroy()
 
-    if (ProxyWindow.getWindow()) ProxyWindow.getWindow().destroy()
+  //   if (ProxyWindow.getWindow()) ProxyWindow.getWindow().destroy()
 
-    if (ProfileWindow.getWindow()) ProfileWindow.getWindow().destroy()
+  //   if (ProfileWindow.getWindow()) ProfileWindow.getWindow().destroy()
 
-    if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
+  //   if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
 
-    if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
+  //   if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
 
-    LoginWindow.closeWindow()
-    SettingWindow.closeWindow()
-    ProxyWindow.closeWindow()
-    MonitorWindow.closeWindow()
-    MainWindow.closeWindow()
+  //   LoginWindow.closeWindow()
+  //   SettingWindow.closeWindow()
+  //   ProxyWindow.closeWindow()
+  //   MonitorWindow.closeWindow()
+  //   MainWindow.closeWindow()
 
-    if (win) win.destroy()
+  //   if (win) win.destroy()
 
-    win = null
+  //   win = null
 
-    app.exit()
-  }, 3000)
+  //   app.exit()
+  // }, 3000)
 })
 
 /**
@@ -144,25 +145,29 @@ async function initializeWindows () {
 
     if (isDevelopment) win.webContents.openDevTools()
 
-    setTimeout(() => {
-      if (!MainWindow.getWindow()) {
-        MainWindow.createWindow()
-        win.destroy()
-        win = null
-      }
-    }, 5000)
+    // setTimeout(() => {
+    //   if (!MainWindow.getWindow()) {
+    //     MainWindow.createWindow()
+    //     win.destroy()
+    //     win = null
+    //   }
+    // }, 5000)
   } else {
     createProtocol('app')
     win.loadURL('app://./index.html/#/check-update')
-
-    setTimeout(() => (autoUpdater.checkForUpdatesAndNotify()), 1000)
   }
-
-  const currentPort = await port
-  win.webContents.send('currentPort', currentPort)
 
   win.once('ready-to-show', () => {
     win.show()
+
+    win.webContents.openDevTools()
+
+    setTimeout(async () => {
+      const currentPort = await port
+      win.webContents.send('currentPort', currentPort)
+
+      autoUpdater.checkForUpdatesAndNotify()
+    }, 5000)
   })
 
   win.on('closed', () => {
