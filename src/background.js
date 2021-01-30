@@ -155,15 +155,7 @@ async function initializeWindows () {
     createProtocol('app')
     win.loadURL('app://./index.html/#/check-update')
 
-    // TODO: auto updater
-    // setTimeout(() => (autoUpdater.checkForUpdatesAndNotify()), 1000)
-    setTimeout(() => {
-      if (!MainWindow.getWindow()) {
-        MainWindow.createWindow()
-        win.destroy()
-        win = null
-      }
-    }, 5000)
+    setTimeout(() => (autoUpdater.checkForUpdatesAndNotify()), 1000)
   }
 
   const currentPort = await port
