@@ -18,12 +18,12 @@ module.exports = {
         publish: [
           {
             provider: 'github',
-            repo: 'titan-bot-frontend',
+            repo: 'testing',
             owner: 'dannielibor',
-            token: 'cb3c95f6422e28822baf16f898dd2b2238ba4779',
+            // token: '6e1be45365d30aa19d564cf983d776f6224e2ff9',
             releaseType: 'draft',
-            publishAutoUpdate: true,
-            private: true
+            publishAutoUpdate: true
+            // private: true
           }
         ]
       }
