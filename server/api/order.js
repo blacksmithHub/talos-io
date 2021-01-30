@@ -69,6 +69,8 @@ router.post('/2c2p', async (req, res) => {
     try {
       if (error) {
         res.status(500).send(error)
+      } else if (response.statusCode !== 200) {
+        res.status(response.statusCode).send(response.body)
       } else {
         const getTransactionData = {
           uri: 'https://www.titan22.com/ccpp/htmlredirect/gettransactiondata',
@@ -216,6 +218,8 @@ router.post('/paymaya', async (req, res) => {
     try {
       if (error) {
         res.status(500).send(error)
+      } else if (response.statusCode !== 200) {
+        res.status(response.statusCode).send(response.body)
       } else {
         const getTransactionData = {
           uri: 'https://www.titan22.com/paymaya/checkout/start',

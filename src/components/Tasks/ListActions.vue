@@ -62,6 +62,7 @@
         nav
         dense
         rounded
+        class="text-center"
       >
         <v-list-item
           link

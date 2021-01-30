@@ -59,6 +59,17 @@
           style="max-width: 50vh"
           v-text="item.bank.bank"
         />
+        <br>
+        <span
+          class="d-inline-block text-truncate"
+          style="max-width: 50vh"
+        >
+          <span
+            class="font-weight-bold mr-2"
+            v-text="'Method:'"
+          />
+          <span v-text="getMethod(item.checkoutMethod)" />
+        </span>
       </v-tooltip>
     </template>
 
@@ -153,6 +164,7 @@ import { mapState } from 'vuex'
 
 import ListActions from '@/components/Tasks/ListActions'
 import ListChipStatus from '@/components/Tasks/ListChipStatus'
+import Constant from '@/config/constant'
 
 export default {
   components: {
@@ -212,6 +224,16 @@ export default {
       })
 
       return list.join(' | ')
+    },
+    /**
+     * Return checkout method
+     */
+    getMethod (id) {
+      try {
+        return Constant.METHODS.find((val) => val.id === id).label
+      } catch (error) {
+        return 'Safe Mode'
+      }
     }
   }
 }
