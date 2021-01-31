@@ -48,35 +48,36 @@ autoUpdater.on('update-not-available', () => {
   }
 })
 
-autoUpdater.on('error', () => {
+autoUpdater.on('error', (info) => {
   // Update Error
   sendStatusToWindow('versionUpdate', 'oops! something went wrong')
+  sendStatusToWindow('testing', info)
 
-  setTimeout(() => {
-    if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
+  // setTimeout(() => {
+  //   if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
 
-    if (SettingWindow.getWindow()) SettingWindow.getWindow().destroy()
+  //   if (SettingWindow.getWindow()) SettingWindow.getWindow().destroy()
 
-    if (ProxyWindow.getWindow()) ProxyWindow.getWindow().destroy()
+  //   if (ProxyWindow.getWindow()) ProxyWindow.getWindow().destroy()
 
-    if (ProfileWindow.getWindow()) ProfileWindow.getWindow().destroy()
+  //   if (ProfileWindow.getWindow()) ProfileWindow.getWindow().destroy()
 
-    if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
+  //   if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
 
-    if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
+  //   if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
 
-    LoginWindow.closeWindow()
-    SettingWindow.closeWindow()
-    ProxyWindow.closeWindow()
-    MonitorWindow.closeWindow()
-    MainWindow.closeWindow()
+  //   LoginWindow.closeWindow()
+  //   SettingWindow.closeWindow()
+  //   ProxyWindow.closeWindow()
+  //   MonitorWindow.closeWindow()
+  //   MainWindow.closeWindow()
 
-    if (win) win.destroy()
+  //   if (win) win.destroy()
 
-    win = null
+  //   win = null
 
-    app.exit()
-  }, 5000)
+  //   app.exit()
+  // }, 5000)
 })
 
 autoUpdater.on('download-progress', (progressObj) => {
