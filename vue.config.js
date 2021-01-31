@@ -22,8 +22,8 @@ module.exports = {
             owner: 'dannielibor',
             token: process.env.VUE_APP_GITHUB_TOKEN,
             releaseType: 'draft',
-            publishAutoUpdate: true
-            // private: true
+            publishAutoUpdate: true,
+            private: true
           }
         ]
       }

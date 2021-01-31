@@ -65,10 +65,6 @@ export default {
       this.msg = arg
     })
 
-    ipcRenderer.on('testing', (event, arg) => {
-      console.log(arg)
-    })
-
     ipcRenderer.on('currentPort', (event, arg) => this.setPort(arg))
   },
   methods: {
