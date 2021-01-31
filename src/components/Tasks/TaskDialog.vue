@@ -137,6 +137,7 @@
               <v-row>
                 <v-col>
                   <v-expansion-panels
+                    v-model="panel"
                     flat
                     style="border:1px solid #d85820"
                   >
@@ -285,7 +286,8 @@ export default {
       qty: 1,
       mode: 'Desktop',
       modes: ['Desktop', 'Mobile (iOS)', 'Mobile (Android)'],
-      checkoutMethod: Constant.METHODS[3].id
+      checkoutMethod: Constant.METHODS[3].id,
+      panel: []
     }
   },
   computed: {
@@ -475,9 +477,10 @@ export default {
       this.qty = 1
       this.mode = 'Desktop'
       this.checkoutMethod = Constant.METHODS[3].id
+      this.panel = []
+      this.isEditMode = false
 
       this.dialog = false
-      this.isEditMode = false
     },
     /**
      * On submit event.
