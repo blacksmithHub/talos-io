@@ -32,12 +32,12 @@ function sendStatusToWindow (status, params) {
   win.webContents.send(status, params)
 }
 
-autoUpdater.on('update-available', (info) => {
+autoUpdater.on('update-available', () => {
   // version can be updated
   sendStatusToWindow('versionUpdate', 'preparing to download')
 })
 
-autoUpdater.on('update-not-available', (info) => {
+autoUpdater.on('update-not-available', () => {
   // no update available
   sendStatusToWindow('versionUpdate', 'up to date')
 
@@ -48,7 +48,7 @@ autoUpdater.on('update-not-available', (info) => {
   }
 })
 
-autoUpdater.on('error', (info) => {
+autoUpdater.on('error', () => {
   // Update Error
   sendStatusToWindow('versionUpdate', 'oops! something went wrong')
 
@@ -84,7 +84,7 @@ autoUpdater.on('download-progress', (progressObj) => {
   sendStatusToWindow('versionUpdate', `downloading... ${progressObj.percent.toFixed()}%`)
 })
 
-autoUpdater.on('update-downloaded', (info) => {
+autoUpdater.on('update-downloaded', () => {
   // Download completed
   sendStatusToWindow('versionUpdate', 're-launch the app')
 
