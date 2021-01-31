@@ -305,6 +305,8 @@ export default {
       this.delay = ''
       this.placeOrder = ''
       this.placeOrderMenu = false
+      this.proxy = {}
+      this.mode = ''
       this.dialog = false
     },
 

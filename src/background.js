@@ -32,12 +32,12 @@ function sendStatusToWindow (status, params) {
   win.webContents.send(status, params)
 }
 
-autoUpdater.on('update-available', (info) => {
+autoUpdater.on('update-available', () => {
   // version can be updated
   sendStatusToWindow('versionUpdate', 'preparing to download')
 })
 
-autoUpdater.on('update-not-available', (info) => {
+autoUpdater.on('update-not-available', () => {
   // no update available
   sendStatusToWindow('versionUpdate', 'up to date')
 
@@ -84,7 +84,7 @@ autoUpdater.on('download-progress', (progressObj) => {
   sendStatusToWindow('versionUpdate', `downloading... ${progressObj.percent.toFixed()}%`)
 })
 
-autoUpdater.on('update-downloaded', (info) => {
+autoUpdater.on('update-downloaded', () => {
   // Download completed
   sendStatusToWindow('versionUpdate', 're-launch the app')
 
@@ -154,23 +154,19 @@ async function initializeWindows () {
   } else {
     createProtocol('app')
     win.loadURL('app://./index.html/#/check-update')
-
-    // TODO: auto updater
-    // setTimeout(() => (autoUpdater.checkForUpdatesAndNotify()), 1000)
-    setTimeout(() => {
-      if (!MainWindow.getWindow()) {
-        MainWindow.createWindow()
-        win.destroy()
-        win = null
-      }
-    }, 5000)
   }
-
-  const currentPort = await port
-  win.webContents.send('currentPort', currentPort)
 
   win.once('ready-to-show', () => {
     win.show()
+
+    win.webContents.openDevTools()
+
+    setTimeout(async () => {
+      const currentPort = await port
+      win.webContents.send('currentPort', currentPort)
+
+      autoUpdater.checkForUpdatesAndNotify()
+    }, 5000)
   })
 
   win.on('closed', () => {

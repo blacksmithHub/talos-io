@@ -439,8 +439,11 @@ export default {
       this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, 'authenticating', attr)
 
       let data = null
+      let counter = 0
 
       while (this.isRunning(id) && !data) {
+        counter++
+
         try {
           let currentTask = this.getCurrentTask(id)
 
@@ -450,7 +453,7 @@ export default {
 
           if (!this.isRunning(id)) break
 
-          this.updateCurrentTaskLog(id, 'Logging in...')
+          this.updateCurrentTaskLog(id, `#${counter}: Logging in...`)
 
           currentTask = this.getCurrentTask(id)
 
@@ -475,9 +478,18 @@ export default {
 
           if (!this.isRunning(id)) break
 
-          if (!response.status && response) data = response
+          if (!response.status && response) {
+            data = response
+            break
+          } else if (response && response.status) {
+            try {
+              this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
+            } catch (error) {
+              this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
+            }
+          }
         } catch (error) {
-          this.updateCurrentTaskLog(id, error)
+          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
           continue
         }
       }
@@ -492,8 +504,11 @@ export default {
      */
     async getAccount (id) {
       let data = null
+      let counter = 0
 
       while (this.isRunning(id) && !data) {
+        counter++
+
         try {
           let currentTask = this.getCurrentTask(id)
 
@@ -503,7 +518,7 @@ export default {
 
           if (!this.isRunning(id)) break
 
-          this.updateCurrentTaskLog(id, 'Fetching account...')
+          this.updateCurrentTaskLog(id, `#${counter}: Fetching account...`)
 
           currentTask = this.getCurrentTask(id)
 
@@ -525,6 +540,14 @@ export default {
 
           if (!this.isRunning(id)) break
 
+          if (response && response.status) {
+            try {
+              this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
+            } catch (error) {
+              this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
+            }
+          }
+
           if (response.status && response.status === 401) {
             const token = await this.authenticate(id)
 
@@ -536,11 +559,14 @@ export default {
             } else {
               continue
             }
-          } else if (response && response.addresses.length) {
+          }
+
+          if (response && !response.status && response.addresses.length) {
             data = response
+            break
           }
         } catch (error) {
-          this.updateCurrentTaskLog(id, error)
+          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
           continue
         }
       }
@@ -574,8 +600,11 @@ export default {
      */
     async createCart (id) {
       let data = null
+      let counter = 0
 
       while (this.isRunning(id) && !data) {
+        counter++
+
         try {
           let currentTask = this.getCurrentTask(id)
 
@@ -587,7 +616,7 @@ export default {
 
           if (!this.isRunning(id) || !currentTask) break
 
-          this.updateCurrentTaskLog(id, 'Creating cart...')
+          this.updateCurrentTaskLog(id, `#${counter}: Creating cart...`)
 
           const cancelTokenSource = axios.CancelToken.source()
 
@@ -605,6 +634,14 @@ export default {
 
           if (!this.isRunning(id)) break
 
+          if (response && response.status) {
+            try {
+              this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
+            } catch (error) {
+              this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
+            }
+          }
+
           if (response.status && response.status === 401) {
             const token = await this.authenticate(id)
 
@@ -616,11 +653,14 @@ export default {
             } else {
               continue
             }
-          } else if (!response.status && response) {
+          }
+
+          if (response && !response.status) {
             data = response
+            break
           }
         } catch (error) {
-          this.updateCurrentTaskLog(id, error)
+          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
           continue
         }
       }
@@ -635,8 +675,11 @@ export default {
      */
     async getCart (id) {
       let data = null
+      let counter = 0
 
       while (this.isRunning(id) && !data) {
+        counter++
+
         try {
           let currentTask = this.getCurrentTask(id)
 
@@ -648,7 +691,7 @@ export default {
 
           if (!this.isRunning(id) || !currentTask) break
 
-          this.updateCurrentTaskLog(id, 'Fetching cart...')
+          this.updateCurrentTaskLog(id, `#${counter}: Fetching cart...`)
 
           const cancelTokenSource = axios.CancelToken.source()
 
@@ -666,6 +709,14 @@ export default {
 
           if (!this.isRunning(id)) break
 
+          if (response && response.status) {
+            try {
+              this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
+            } catch (error) {
+              this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
+            }
+          }
+
           if (response.status && response.status === 401) {
             const token = await this.authenticate(id)
 
@@ -677,21 +728,28 @@ export default {
             } else {
               continue
             }
-          } else if (!response.status && response) {
+          }
+
+          if (response && !response.status) {
             data = response
+            break
           }
         } catch (error) {
-          this.updateCurrentTaskLog(id, error)
+          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
           continue
         }
       }
 
       // Clean cart
       if (this.isRunning(id) && data && data.items.length) {
+        counter = 0
+
         for (let index = 0; index < data.items.length; index++) {
           let deleted = false
 
           while (this.isRunning(id) && !deleted) {
+            counter++
+
             try {
               let currentTask = this.getCurrentTask(id)
 
@@ -701,7 +759,7 @@ export default {
 
               if (!this.isRunning(id)) break
 
-              this.updateCurrentTaskLog(id, `Cleaning cart - item ${index + 1}...`)
+              this.updateCurrentTaskLog(id, `#${counter}: Cleaning cart - item ${index + 1}...`)
 
               currentTask = this.getCurrentTask(id)
 
@@ -724,6 +782,14 @@ export default {
 
               if (!this.isRunning(id)) break
 
+              if (response && response.status) {
+                try {
+                  this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
+                } catch (error) {
+                  this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
+                }
+              }
+
               if (response.status && response.status === 401) {
                 const token = await this.authenticate(id)
 
@@ -735,11 +801,13 @@ export default {
                 } else {
                   continue
                 }
-              } else if (!response.status && response) {
+              }
+
+              if (!response.status && response) {
                 deleted = response
               }
             } catch (error) {
-              this.updateCurrentTaskLog(id, error)
+              this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
               continue
             }
           }
@@ -756,8 +824,11 @@ export default {
      */
     async addToCart (id) {
       let data = null
+      let counter = 0
 
       while (this.isRunning(id) && !data) {
+        counter++
+
         try {
           let currentTask = this.getCurrentTask(id)
 
@@ -775,7 +846,7 @@ export default {
 
               const msg = `Size: ${currentTask.sizes[index].label.toUpperCase()} - trying`
               this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
-              this.updateCurrentTaskLog(id, msg)
+              this.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
               const cancelTokenSource = axios.CancelToken.source()
 
@@ -813,6 +884,14 @@ export default {
 
               if (!this.isRunning(id)) break
 
+              if (response && response.status) {
+                try {
+                  this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
+                } catch (error) {
+                  this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
+                }
+              }
+
               if (response.status && response.status === 401) {
                 const token = await this.authenticate(id)
 
@@ -824,7 +903,9 @@ export default {
                 } else {
                   continue
                 }
-              } else if (!response.status && response) {
+              }
+
+              if (response && !response.status) {
                 currentTask = this.getCurrentTask(id)
 
                 if (currentTask) {
@@ -833,7 +914,7 @@ export default {
 
                   const msg = `Size: ${currentTask.sizes[index].label.toUpperCase()} - carted`
                   this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
-                  this.updateCurrentTaskLog(id, msg)
+                  this.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
                   break
                 } else {
@@ -841,12 +922,12 @@ export default {
                 }
               }
             } catch (error) {
-              this.updateCurrentTaskLog(id, error)
+              this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
               continue
             }
           }
         } catch (error) {
-          this.updateCurrentTaskLog(id, error)
+          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
           continue
         }
       }
@@ -861,6 +942,7 @@ export default {
      */
     async setShippingInfo (id) {
       let data = null
+      let counter = 0
 
       let currentTask = this.getCurrentTask(id)
 
@@ -874,6 +956,8 @@ export default {
 
       if (currentTask.transactionData.product.price <= 7000) {
         while (this.isRunning(id) && !params) {
+          counter++
+
           try {
             currentTask = this.getCurrentTask(id)
 
@@ -886,7 +970,7 @@ export default {
             if (!this.isRunning(id) || !currentTask) break
 
             const waitingMsg = `Size: ${currentTask.transactionData.product.size} - estimating shipping`
-            this.updateCurrentTaskLog(id, waitingMsg)
+            this.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
             this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
 
             currentTask = this.getCurrentTask(id)
@@ -910,6 +994,14 @@ export default {
 
             if (!this.isRunning(id)) break
 
+            if (response && response.status) {
+              try {
+                this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
+              } catch (error) {
+                this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
+              }
+            }
+
             if (response.status && response.status === 401) {
               const token = await this.authenticate(id)
 
@@ -921,12 +1013,14 @@ export default {
               } else {
                 continue
               }
-            } else if (!response.status && response) {
+            }
+
+            if (response && !response.status) {
               params = response[0]
               break
             }
           } catch (error) {
-            this.updateCurrentTaskLog(id, error)
+            this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
             continue
           }
         }
@@ -942,10 +1036,6 @@ export default {
       if (!this.isRunning(id) || !currentTask) return data
 
       // set shipping
-      const waitingMsg = `Size: ${currentTask.transactionData.product.size} - setting shipping details`
-      this.updateCurrentTaskLog(id, waitingMsg)
-      this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
-
       const shippingAddress = this.setAddresses(defaultShippingAddress, currentTask.transactionData.account.email)
       const billingAddress = this.setAddresses(defaultBillingAddress, currentTask.transactionData.account.email)
 
@@ -958,9 +1048,17 @@ export default {
         }
       }
 
+      counter = 0
+
       while (this.isRunning(id) && !data) {
+        counter++
+
         try {
           currentTask = this.getCurrentTask(id)
+
+          const waitingMsg = `Size: ${currentTask.transactionData.product.size} - setting shipping details`
+          this.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
+          this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
 
           if (!currentTask) break
 
@@ -987,6 +1085,14 @@ export default {
 
           if (!this.isRunning(id)) break
 
+          if (response && response.status) {
+            try {
+              this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
+            } catch (error) {
+              this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
+            }
+          }
+
           if (response.status && response.status === 401) {
             const token = await this.authenticate(id)
 
@@ -998,11 +1104,14 @@ export default {
             } else {
               continue
             }
-          } else if (!response.status && response) {
+          }
+
+          if (response && !response.status) {
             data = response
+            break
           }
         } catch (error) {
-          this.updateCurrentTaskLog(id, error)
+          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
           continue
         }
       }
@@ -1085,18 +1194,18 @@ export default {
 
       if (!currentTask) return data
 
-      switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
-        case 'paymaya_checkout':
+      switch (currentTask.checkoutMethod) {
+        case 1:
           payload.payload.paymentMethod.method = 'paymaya_checkout'
           data = await this.paymayaCheckout(id, payload)
           break
 
-        case 'ccpp':
+        case 2:
           payload.payload.paymentMethod.method = 'ccpp'
           data = await this.creditCardCheckout(id, payload)
           break
 
-        case 'braintree_paypal':
+        case 3:
           payload.payload.paymentMethod.method = 'braintree_paypal'
 
           if (currentTask.profile.paypal && Object.keys(currentTask.profile.paypal).length) {
@@ -1116,7 +1225,43 @@ export default {
           }
 
           data = await this.paypalCheckout(id, payload)
+          break
 
+        default:
+          switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
+            case 'paymaya_checkout':
+              payload.payload.paymentMethod.method = 'paymaya_checkout'
+              data = await this.paymayaCheckout(id, payload)
+              break
+
+            case 'ccpp':
+              payload.payload.paymentMethod.method = 'ccpp'
+              data = await this.creditCardCheckout(id, payload)
+              break
+
+            case 'braintree_paypal':
+              payload.payload.paymentMethod.method = 'braintree_paypal'
+
+              if (currentTask.profile.paypal && Object.keys(currentTask.profile.paypal).length) {
+                payload.payload.paymentMethod.additional_data = {
+                  paypal_express_checkout_token: currentTask.profile.paypal.paypalAccounts[0].details.correlationId,
+                  paypal_express_checkout_redirect_required: false,
+                  paypal_express_checkout_payer_id: currentTask.profile.paypal.paypalAccounts[0].details.payerInfo.payerId,
+                  payment_method_nonce: currentTask.profile.paypal.paypalAccounts[0].nonce
+                }
+              } else if (this.paypal && Object.keys(this.paypal).length) {
+                payload.payload.paymentMethod.additional_data = {
+                  paypal_express_checkout_token: this.paypal.paypalAccounts[0].details.correlationId,
+                  paypal_express_checkout_redirect_required: false,
+                  paypal_express_checkout_payer_id: this.paypal.paypalAccounts[0].details.payerInfo.payerId,
+                  payment_method_nonce: this.paypal.paypalAccounts[0].nonce
+                }
+              }
+
+              data = await this.paypalCheckout(id, payload)
+
+              break
+          }
           break
       }
 
@@ -1151,7 +1296,11 @@ export default {
             this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
           }
 
+          let counter = 0
+
           while (this.isRunning(id) && !data) {
+            counter++
+
             currentTask = this.getCurrentTask(id)
 
             if (!currentTask) break
@@ -1184,6 +1333,16 @@ export default {
 
             this.updateTask(currentTask)
 
+            if (response && response.status) {
+              try {
+                this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
+              } catch (error) {
+                this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
+              }
+            }
+
+            if (response.status && response.status !== 429) break
+
             if (response.status && response.status === 401) {
               const token = await this.authenticate(id)
 
@@ -1196,8 +1355,6 @@ export default {
                 continue
               }
             }
-
-            if (response.status && response.status !== 429) break
 
             if (response) {
               data = response
@@ -1268,7 +1425,11 @@ export default {
             this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
           }
 
+          let counter = 0
+
           while (this.isRunning(id) && !data) {
+            counter++
+
             currentTask = this.getCurrentTask(id)
 
             if (!this.isRunning(id) || !currentTask) break
@@ -1301,6 +1462,16 @@ export default {
 
             this.updateTask(currentTask)
 
+            if (response && response.status) {
+              try {
+                this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
+              } catch (error) {
+                this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
+              }
+            }
+
+            if (response.status && response.status !== 429) break
+
             if (response.status && response.status === 401) {
               const token = await this.authenticate(id)
 
@@ -1313,8 +1484,6 @@ export default {
                 continue
               }
             }
-
-            if (response.status && response.status !== 429) break
 
             if (response) {
               data = response
@@ -1386,7 +1555,11 @@ export default {
             this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
           }
 
+          let counter = 0
+
           while (this.isRunning(id) && !data) {
+            counter++
+
             currentTask = this.getCurrentTask(id)
 
             if (!this.isRunning(id) || !currentTask) break
@@ -1419,6 +1592,23 @@ export default {
 
             this.updateTask(currentTask)
 
+            if (response.status && response.status === 400) {
+              const msg = 'Transaction has been declined'
+
+              this.updateCurrentTaskLog(id, msg)
+              this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
+
+              break
+            } else if (response && response.status) {
+              try {
+                this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
+              } catch (error) {
+                this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
+              }
+            }
+
+            if (response.status && response.status !== 429) break
+
             if (response.status && response.status === 401) {
               const token = await this.authenticate(id)
 
@@ -1432,18 +1622,7 @@ export default {
               }
             }
 
-            if (response.status && response.status === 400) {
-              const msg = 'Transaction has been declined'
-
-              this.updateCurrentTaskLog(id, msg)
-              this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
-
-              break
-            }
-
-            if (response.status && response.status !== 429) break
-
-            if (!response.status && response) {
+            if (response && !response.status) {
               data = response
               break
             }
