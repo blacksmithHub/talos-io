@@ -34,13 +34,13 @@
             align-self="center"
             cols="2"
           >
-            <v-select
+            <v-text-field
               v-model="count"
-              :items="countItems"
+              label="Items"
+              hide-details
               outlined
               dense
-              hide-details
-              label="Items"
+              @change="onCountChange"
             />
           </v-col>
         </v-row>
@@ -143,7 +143,6 @@ export default {
   data () {
     return {
       count: 100,
-      countItems: [50, 100, 200],
       filterItems: [
         { title: 'Last created', value: 'created_at' },
         { title: 'Last update', value: 'updated_at' }
@@ -215,10 +214,6 @@ export default {
     filter () {
       clearInterval(this.loop)
       this.searchProduct()
-    },
-    count () {
-      clearInterval(this.loop)
-      this.searchProduct()
     }
   },
   async created () {
@@ -231,6 +226,13 @@ export default {
   },
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
+    /**
+     * on count field change
+     */
+    onCountChange () {
+      clearInterval(this.loop)
+      this.searchProduct()
+    },
     /**
      * On copy event.
      *
@@ -281,6 +283,7 @@ export default {
         },
         token: App.services.titan22.token
       }
+
       if (this.settings.monitorProxy && Object.keys(this.settings.monitorProxy).length) {
         const proxy = this.settings.monitorProxy.proxies[Math.floor(Math.random() * this.settings.monitorProxy.proxies.length)]
         params.proxy = {
@@ -292,9 +295,11 @@ export default {
           params.proxy.password = proxy.password
         }
       }
+
       this.loading = true
       const response = await productApi.search(params)
       this.products = []
+
       if (response) {
         response.items.forEach(element => {
           const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')

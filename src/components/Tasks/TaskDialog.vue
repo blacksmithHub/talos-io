@@ -136,55 +136,84 @@
 
               <v-row>
                 <v-col>
-                  <v-text-field
-                    v-model="delay"
-                    dense
-                    outlined
-                    type="number"
-                    hide-details="auto"
-                    :error-messages="delayErrors"
-                    label="Delays"
-                    hint="Input value in milliseconds"
-                    @blur="$v.delay.$touch()"
-                  />
-                </v-col>
-
-                <v-col>
-                  <v-menu
-                    ref="placeOrderMenu"
-                    v-model="placeOrderMenu"
-                    :close-on-content-click="false"
-                    :nudge-right="40"
-                    :return-value.sync="placeOrder"
-                    transition="scale-transition"
-                    offset-y
-                    max-width="350px"
-                    min-width="350px"
+                  <v-expansion-panels
+                    flat
+                    style="border:1px solid #d85820"
                   >
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-text-field
-                        v-model="placeOrder"
-                        dense
-                        hide-details
-                        outlined
-                        readonly
-                        v-bind="attrs"
-                        clearable
-                        label="Place Order At"
-                        v-on="on"
-                      />
-                    </template>
-                    <v-time-picker
-                      v-if="placeOrderMenu"
-                      v-model="placeOrder"
-                      full-width
-                      ampm-in-title
-                      format="ampm"
-                      use-seconds
-                      color="primary"
-                      @click:second="$refs.placeOrderMenu.save(placeOrder)"
-                    />
-                  </v-menu>
+                    <v-expansion-panel>
+                      <v-expansion-panel-header>
+                        Advanced
+                      </v-expansion-panel-header>
+                      <v-expansion-panel-content>
+                        <v-row>
+                          <v-col>
+                            <v-text-field
+                              v-model="delay"
+                              dense
+                              outlined
+                              type="number"
+                              hide-details="auto"
+                              :error-messages="delayErrors"
+                              label="Delays"
+                              hint="Input value in milliseconds"
+                              @blur="$v.delay.$touch()"
+                            />
+                          </v-col>
+
+                          <v-col>
+                            <v-menu
+                              ref="placeOrderMenu"
+                              v-model="placeOrderMenu"
+                              :close-on-content-click="false"
+                              :nudge-right="40"
+                              :return-value.sync="placeOrder"
+                              transition="scale-transition"
+                              offset-y
+                              max-width="350px"
+                              min-width="350px"
+                            >
+                              <template v-slot:activator="{ on, attrs }">
+                                <v-text-field
+                                  v-model="placeOrder"
+                                  dense
+                                  hide-details
+                                  outlined
+                                  readonly
+                                  v-bind="attrs"
+                                  clearable
+                                  label="Place Order At"
+                                  v-on="on"
+                                />
+                              </template>
+                              <v-time-picker
+                                v-if="placeOrderMenu"
+                                v-model="placeOrder"
+                                full-width
+                                ampm-in-title
+                                format="ampm"
+                                use-seconds
+                                color="primary"
+                                @click:second="$refs.placeOrderMenu.save(placeOrder)"
+                              />
+                            </v-menu>
+                          </v-col>
+                        </v-row>
+
+                        <v-radio-group
+                          v-model="checkoutMethod"
+                          row
+                          dense
+                        >
+                          <v-radio
+                            v-for="(method, index) in checkoutMethods"
+                            :key="index"
+                            :label="method.label"
+                            :value="method.id"
+                          />
+                        </v-radio-group>
+                      </v-expansion-panel-content>
+                    </v-expansion-panel>
+                  </v-expansion-panels>
                 </v-col>
               </v-row>
             </v-container>
@@ -235,6 +264,7 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import { required, minValue } from 'vuelidate/lib/validators'
+import Constant from '@/config/constant'
 
 export default {
   data () {
@@ -254,7 +284,8 @@ export default {
       placeOrderMenu: false,
       qty: 1,
       mode: 'Desktop',
-      modes: ['Desktop', 'Mobile (iOS)', 'Mobile (Android)']
+      modes: ['Desktop', 'Mobile (iOS)', 'Mobile (Android)'],
+      checkoutMethod: Constant.METHODS[3].id
     }
   },
   computed: {
@@ -264,6 +295,12 @@ export default {
     ...mapState('bank', { banks: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
 
+    /**
+     * return available checkout methods
+     */
+    checkoutMethods () {
+      return Constant.METHODS
+    },
     /**
      * Return all proxies
      */
@@ -393,6 +430,7 @@ export default {
         this.qty = task.qty || 1
         this.proxy = task.proxy
         this.mode = task.mode || 'Desktop'
+        this.checkoutMethod = task.checkoutMethod || Constant.METHODS[3].id
 
         this.profile = (task.profile.id) ? task.profile : {}
         this.bank = (task.bank.id) ? task.bank : {}
@@ -436,6 +474,7 @@ export default {
       this.placeOrderMenu = false
       this.qty = 1
       this.mode = 'Desktop'
+      this.checkoutMethod = Constant.METHODS[3].id
 
       this.dialog = false
       this.isEditMode = false
@@ -471,7 +510,8 @@ export default {
           delay: this.delay,
           placeOrder: this.placeOrder,
           qty: this.qty,
-          mode: this.mode
+          mode: this.mode,
+          checkoutMethod: this.checkoutMethod
         }
 
         if (this.isEditMode) {
