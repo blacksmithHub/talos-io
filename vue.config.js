@@ -13,14 +13,16 @@ module.exports = {
       builderOptions: {
         nsis: {
           oneClick: false,
-          allowToChangeInstallationDirectory: true
+          allowToChangeInstallationDirectory: true,
+          runAfterFinish: true,
+          deleteAppDataOnUninstall: true
         },
         publish: [
           {
             provider: 'github',
             repo: 'titan-bot-frontend',
             owner: 'dannielibor',
-            token: process.env.VUE_APP_GITHUB_TOKEN,
+            token: process.env.GH_TOKEN,
             releaseType: 'draft',
             publishAutoUpdate: true,
             private: true
