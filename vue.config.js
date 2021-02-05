@@ -22,7 +22,7 @@ module.exports = {
             provider: 'github',
             repo: 'titan-bot-frontend',
             owner: 'dannielibor',
-            token: process.env.GH_TOKEN,
+            token: process.env.VUE_APP_GITHUB_TOKEN,
             releaseType: 'draft',
             publishAutoUpdate: true,
             private: true

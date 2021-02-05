@@ -154,27 +154,13 @@ async function initializeWindows () {
       win.webContents.send('currentPort', currentPort)
 
       // TODO: github bug
-      if (!isDevelopment) {
-        // autoUpdater.setFeedURL({
-        //   provider: 'github',
-        //   owner: 'dannielibor',
-        //   repo: 'titan-bot-frontend',
-        //   token: process.env.GH_TOKEN,
-        //   private: true,
-        //   host: 'github.com',
-        //   protocol: 'https',
-        //   publishAutoUpdate: true,
-        //   releaseType: 'release'
-        // })
+      // if (!isDevelopment) autoUpdater.checkForUpdatesAndNotify()
 
-        autoUpdater.checkForUpdatesAndNotify()
+      if (!MainWindow.getWindow()) {
+        MainWindow.createWindow()
+        win.destroy()
+        win = null
       }
-
-      // if (!MainWindow.getWindow()) {
-      //   MainWindow.createWindow()
-      //   win.destroy()
-      //   win = null
-      // }
     }, 5000)
   })
 
