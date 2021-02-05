@@ -3,8 +3,6 @@
 import { BrowserWindow, globalShortcut } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
-import MainWindow from '@/windows/Main'
-
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -24,7 +22,6 @@ export default {
       height: 800,
       minHeight: 600,
       minWidth: 500,
-      parent: MainWindow.getWindow(),
       show: false,
       frame: false,
       webPreferences: {
@@ -49,7 +46,6 @@ export default {
 
     win.on('close', (e) => {
       win = null
-      MainWindow.getWindow().focus()
     })
 
     if (!isDevelopment) {

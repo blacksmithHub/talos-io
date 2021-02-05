@@ -220,8 +220,11 @@ export default {
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
     })
+
     await this.fetchProducts()
+
     const vm = this
+
     setTimeout(() => (vm.searchProduct()), vm.settings.monitorInterval)
   },
   methods: {
@@ -257,9 +260,11 @@ export default {
      * Search product API.
      *
      */
-    async searchProduct () {
+    searchProduct () {
       const interval = this.settings.monitorInterval
+
       const vm = this
+
       this.loop = setInterval(async () => {
         await vm.fetchProducts()
       }, interval)
@@ -275,7 +280,7 @@ export default {
             sortOrders: [
               {
                 field: this.filter,
-                direction: 'DESC'
+                direction: 'desc'
               }
             ],
             pageSize: this.count
@@ -301,10 +306,11 @@ export default {
       this.products = []
 
       if (response) {
-        response.items.forEach(element => {
+        const items = response.items.slice().map(element => {
           const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
           const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
-          this.products.push({
+
+          return {
             img: (image) ? `${App.services.titan22.url}/media/catalog/product${image.value}` : placeholder,
             name: element.name,
             sku: element.sku,
@@ -312,9 +318,12 @@ export default {
             link: (link) ? link.value : '',
             status: element.extension_attributes.out_of_stock,
             date: this.formatDate(element.updated_at)
-          })
+          }
         })
+
+        this.products = items
       }
+
       this.loading = false
     }
   }

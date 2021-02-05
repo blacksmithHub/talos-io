@@ -122,7 +122,7 @@ export default {
     }
   },
   methods: {
-    async authenticate () {
+    authenticate () {
       this.loading = true
 
       const { BrowserWindow } = electron.remote
@@ -151,7 +151,7 @@ export default {
 
       const vm = this
 
-      await this.getUserCode(win, async (response) => {
+      this.getUserCode(win, async (response) => {
         win.close()
 
         if (response) {

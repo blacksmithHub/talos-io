@@ -4,6 +4,7 @@ import { ipcRenderer } from 'electron'
 
 import axios from 'axios'
 import StopWatch from 'statman-stopwatch'
+import _ from 'lodash'
 
 import SuccessEffect from '@/assets/success.mp3'
 
@@ -27,7 +28,6 @@ import webhook from '@/mixins/webhook'
  *
  * ===============================================
  */
-
 export default {
   mixins: [webhook],
   computed: {
@@ -37,6 +37,7 @@ export default {
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem' }),
+
     /**
      * Identify task status
      *
@@ -65,9 +66,9 @@ export default {
      * @param {*} id
      */
     removeTimer (id) {
-      if (this.getCurrentTask(id)) {
-        const task = this.getCurrentTask(id)
+      const task = this.getCurrentTask(id)
 
+      if (task) {
         task.placeOrder = null
 
         this.updateTask(task)
@@ -83,9 +84,9 @@ export default {
      * @param {*} attr
      */
     setCurrentTaskStatus (id, status, msg, attr) {
-      if (this.getCurrentTask(id)) {
-        const task = this.getCurrentTask(id)
+      const task = this.getCurrentTask(id)
 
+      if (task) {
         task.status = {
           id: status,
           msg: msg,
@@ -125,12 +126,46 @@ export default {
      * @param {*} msg
      */
     updateCurrentTaskLog (id, msg) {
-      if (this.getCurrentTask(id)) {
-        const task = this.getCurrentTask(id)
+      const task = this.getCurrentTask(id)
 
+      if (task) {
         task.logs = `${task.logs || ''};${msg}`
 
         this.updateTask(task)
+      }
+    },
+
+    /**
+     * Handle API error responses
+     *
+     * @param {*} id
+     * @param {*} counter
+     * @param {*} response
+     */
+    async handleError (id, counter, response) {
+      switch (response.status) {
+        case 403:
+          ipcRenderer.send('clear-cache')
+
+          // TODO: under experimentation
+          // if (this.isRunning(id)) {
+          //   const token = await this.authenticate(id)
+          //   const currentTask = this.getCurrentTask(id)
+
+          //   if (token && currentTask) {
+          //     currentTask.transactionData.token = token
+          //     this.updateTask(currentTask)
+          //   }
+          // }
+          break
+
+        default:
+          try {
+            this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message || 'Request failed'}`)
+          } catch (error) {
+            this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - Request failed}`)
+          }
+          break
       }
     },
 
@@ -147,9 +182,8 @@ export default {
        *
        * get user token
        */
-      let token = null
-
       if (this.isRunning(task.id)) {
+        let token = null
         let currentTask = this.getCurrentTask(task.id)
 
         if (currentTask) {
@@ -179,9 +213,8 @@ export default {
        *
        * get account data
        */
-      let account = null
-
       if (this.isRunning(task.id)) {
+        let account = null
         let currentTask = this.getCurrentTask(task.id)
 
         if (currentTask) {
@@ -252,9 +285,8 @@ export default {
        *
        * get user token
        */
-      let token = null
-
       if (this.isRunning(task.id)) {
+        let token = null
         let currentTask = this.getCurrentTask(task.id)
 
         if (currentTask) {
@@ -284,15 +316,14 @@ export default {
        *
        * get account data
        */
-      let account = null
-
       if (this.isRunning(task.id)) {
+        let account = null
         let currentTask = this.getCurrentTask(task.id)
 
         if (currentTask) {
-          account = (!currentTask.transactionData.account)
-            ? await this.getAccount(task.id)
-            : currentTask.transactionData.account
+          account = (currentTask.transactionData.account && Object.keys(currentTask.transactionData.account).length)
+            ? currentTask.transactionData.account
+            : await this.getAccount(task.id)
 
           if (this.isRunning(task.id)) {
             currentTask = this.getCurrentTask(task.id)
@@ -316,15 +347,14 @@ export default {
        *
        * create, get, and clean cart
        */
-      let cart = null
-
       if (this.isRunning(task.id)) {
+        let cart = null
         let currentTask = this.getCurrentTask(task.id)
 
         if (currentTask) {
-          cart = (!currentTask.transactionData.cart)
-            ? await this.initializeCart(task.id)
-            : currentTask.transactionData.cart
+          cart = (currentTask.transactionData.cart && Object.keys(currentTask.transactionData.cart).length)
+            ? currentTask.transactionData.cart
+            : await this.initializeCart(task.id)
 
           if (this.isRunning(task.id)) {
             currentTask = this.getCurrentTask(task.id)
@@ -348,10 +378,8 @@ export default {
        *
        * add to cart
        */
-      let product = null
-
       if (this.isRunning(task.id)) {
-        product = await this.addToCart(task.id)
+        const product = await this.addToCart(task.id)
 
         if (this.isRunning(task.id)) {
           const currentTask = this.getCurrentTask(task.id)
@@ -371,10 +399,8 @@ export default {
        *
        * set shipping details
        */
-      let shipping = null
-
       if (this.isRunning(task.id)) {
-        shipping = await this.setShippingInfo(task.id)
+        const shipping = await this.setShippingInfo(task.id)
 
         if (this.isRunning(task.id)) {
           const currentTask = this.getCurrentTask(task.id)
@@ -394,10 +420,8 @@ export default {
        *
        * place order
        */
-      let order = null
-
       if (this.isRunning(task.id)) {
-        order = await this.placeOrder(task.id)
+        const order = await this.placeOrder(task.id)
 
         if (order) {
           this.onSuccess(task.id)
@@ -449,7 +473,20 @@ export default {
 
           if (!currentTask) break
 
-          await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+          if (counter > 1) {
+            let interval = null
+            let timeout = null
+            await new Promise((resolve) => {
+              interval = setInterval(() => {
+                timeout = setTimeout(() => {
+                  clearInterval(interval)
+                  resolve()
+                }, currentTask.delay)
+              }, 500)
+            })
+            clearInterval(interval)
+            clearTimeout(timeout)
+          }
 
           if (!this.isRunning(id)) break
 
@@ -482,11 +519,8 @@ export default {
             data = response
             break
           } else if (response && response.status) {
-            try {
-              this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
-            } catch (error) {
-              this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
-            }
+            await this.handleError(counter, id, response)
+            continue
           }
         } catch (error) {
           this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
@@ -514,7 +548,18 @@ export default {
 
           if (!currentTask) break
 
-          await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+          let interval = null
+          let timeout = null
+          await new Promise((resolve) => {
+            interval = setInterval(() => {
+              timeout = setTimeout(() => {
+                clearInterval(interval)
+                resolve()
+              }, currentTask.delay)
+            }, 500)
+          })
+          clearInterval(interval)
+          clearTimeout(timeout)
 
           if (!this.isRunning(id)) break
 
@@ -540,13 +585,7 @@ export default {
 
           if (!this.isRunning(id)) break
 
-          if (response && response.status) {
-            try {
-              this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
-            } catch (error) {
-              this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
-            }
-          }
+          if (response && response.status) await this.handleError(counter, id, response)
 
           if (response.status && response.status === 401) {
             const token = await this.authenticate(id)
@@ -610,7 +649,18 @@ export default {
 
           if (!currentTask) break
 
-          await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+          let interval = null
+          let timeout = null
+          await new Promise((resolve) => {
+            interval = setInterval(() => {
+              timeout = setTimeout(() => {
+                clearInterval(interval)
+                resolve()
+              }, currentTask.delay)
+            }, 500)
+          })
+          clearInterval(interval)
+          clearTimeout(timeout)
 
           currentTask = this.getCurrentTask(id)
 
@@ -634,13 +684,7 @@ export default {
 
           if (!this.isRunning(id)) break
 
-          if (response && response.status) {
-            try {
-              this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
-            } catch (error) {
-              this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
-            }
-          }
+          if (response && response.status) await this.handleError(counter, id, response)
 
           if (response.status && response.status === 401) {
             const token = await this.authenticate(id)
@@ -685,7 +729,18 @@ export default {
 
           if (!currentTask) break
 
-          await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+          let interval = null
+          let timeout = null
+          await new Promise((resolve) => {
+            interval = setInterval(() => {
+              timeout = setTimeout(() => {
+                clearInterval(interval)
+                resolve()
+              }, currentTask.delay)
+            }, 500)
+          })
+          clearInterval(interval)
+          clearTimeout(timeout)
 
           currentTask = this.getCurrentTask(id)
 
@@ -709,13 +764,7 @@ export default {
 
           if (!this.isRunning(id)) break
 
-          if (response && response.status) {
-            try {
-              this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
-            } catch (error) {
-              this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
-            }
-          }
+          if (response && response.status) await this.handleError(counter, id, response)
 
           if (response.status && response.status === 401) {
             const token = await this.authenticate(id)
@@ -755,7 +804,18 @@ export default {
 
               if (!currentTask) break
 
-              await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+              let interval = null
+              let timeout = null
+              await new Promise((resolve) => {
+                interval = setInterval(() => {
+                  timeout = setTimeout(() => {
+                    clearInterval(interval)
+                    resolve()
+                  }, currentTask.delay)
+                }, 500)
+              })
+              clearInterval(interval)
+              clearTimeout(timeout)
 
               if (!this.isRunning(id)) break
 
@@ -782,13 +842,7 @@ export default {
 
               if (!this.isRunning(id)) break
 
-              if (response && response.status) {
-                try {
-                  this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
-                } catch (error) {
-                  this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
-                }
-              }
+              if (response && response.status) await this.handleError(counter, id, response)
 
               if (response.status && response.status === 401) {
                 const token = await this.authenticate(id)
@@ -803,9 +857,7 @@ export default {
                 }
               }
 
-              if (!response.status && response) {
-                deleted = response
-              }
+              if (!response.status && response) deleted = response
             } catch (error) {
               this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
               continue
@@ -838,7 +890,20 @@ export default {
             try {
               currentTask = this.getCurrentTask(id)
 
-              await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+              if (counter > 1) {
+                let interval = null
+                let timeout = null
+                await new Promise((resolve) => {
+                  interval = setInterval(() => {
+                    timeout = setTimeout(() => {
+                      clearInterval(interval)
+                      resolve()
+                    }, currentTask.delay)
+                  }, 500)
+                })
+                clearInterval(interval)
+                clearTimeout(timeout)
+              }
 
               currentTask = this.getCurrentTask(id)
 
@@ -848,13 +913,28 @@ export default {
               this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
               this.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
+              currentTask = this.getCurrentTask(id)
+
               const cancelTokenSource = axios.CancelToken.source()
 
               currentTask.transactionData.cancelTokenSource = cancelTokenSource
 
-              this.updateTask(currentTask)
+              let cartId = null
 
-              if (!currentTask) break
+              if (currentTask.transactionData.cart && Object.keys(currentTask.transactionData.cart).length) {
+                cartId = currentTask.transactionData.cart.id.toString()
+              } else {
+                const cart = await this.initializeCart(id)
+
+                currentTask = this.getCurrentTask(id)
+
+                if (cart && currentTask) {
+                  currentTask.transactionData.cart = cart
+                  cartId = cart.id.toString()
+                }
+              }
+
+              this.updateTask(currentTask)
 
               const params = {
                 token: currentTask.transactionData.token || '',
@@ -862,7 +942,7 @@ export default {
                   cartItem: {
                     sku: `${currentTask.sku}-SZ${currentTask.sizes[index].label.replace('.', 'P').toUpperCase()}`,
                     qty: currentTask.qty || 1,
-                    quote_id: currentTask.transactionData.cart.id.toString(),
+                    quote_id: cartId,
                     product_option: {
                       extension_attributes: {
                         configurable_item_options: [
@@ -884,13 +964,7 @@ export default {
 
               if (!this.isRunning(id)) break
 
-              if (response && response.status) {
-                try {
-                  this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
-                } catch (error) {
-                  this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
-                }
-              }
+              if (response && response.status) await this.handleError(counter, id, response)
 
               if (response.status && response.status === 401) {
                 const token = await this.authenticate(id)
@@ -963,7 +1037,18 @@ export default {
 
             if (!currentTask) break
 
-            await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+            let interval = null
+            let timeout = null
+            await new Promise((resolve) => {
+              interval = setInterval(() => {
+                timeout = setTimeout(() => {
+                  clearInterval(interval)
+                  resolve()
+                }, currentTask.delay)
+              }, 500)
+            })
+            clearInterval(interval)
+            clearTimeout(timeout)
 
             currentTask = this.getCurrentTask(id)
 
@@ -994,13 +1079,7 @@ export default {
 
             if (!this.isRunning(id)) break
 
-            if (response && response.status) {
-              try {
-                this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
-              } catch (error) {
-                this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
-              }
-            }
+            if (response && response.status) await this.handleError(counter, id, response)
 
             if (response.status && response.status === 401) {
               const token = await this.authenticate(id)
@@ -1035,9 +1114,26 @@ export default {
 
       if (!this.isRunning(id) || !currentTask) return data
 
+      let email = null
+
+      if (currentTask.transactionData.account && Object.keys(currentTask.transactionData.account).length) {
+        email = currentTask.transactionData.account.email
+      } else {
+        const account = await this.getAccount(id)
+
+        currentTask = this.getCurrentTask(id)
+
+        if (account && currentTask) {
+          currentTask.transactionData.account = account
+          email = account.email
+        }
+      }
+
+      this.updateTask(currentTask)
+
       // set shipping
-      const shippingAddress = this.setAddresses(defaultShippingAddress, currentTask.transactionData.account.email)
-      const billingAddress = this.setAddresses(defaultBillingAddress, currentTask.transactionData.account.email)
+      const shippingAddress = this.setAddresses(defaultShippingAddress, email)
+      const billingAddress = this.setAddresses(defaultBillingAddress, email)
 
       const payload = {
         addressInformation: {
@@ -1062,7 +1158,18 @@ export default {
 
           if (!currentTask) break
 
-          await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+          let interval = null
+          let timeout = null
+          await new Promise((resolve) => {
+            interval = setInterval(() => {
+              timeout = setTimeout(() => {
+                clearInterval(interval)
+                resolve()
+              }, currentTask.delay)
+            }, 500)
+          })
+          clearInterval(interval)
+          clearTimeout(timeout)
 
           currentTask = this.getCurrentTask(id)
 
@@ -1085,13 +1192,7 @@ export default {
 
           if (!this.isRunning(id)) break
 
-          if (response && response.status) {
-            try {
-              this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
-            } catch (error) {
-              this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
-            }
-          }
+          if (response && response.status) await this.handleError(counter, id, response)
 
           if (response.status && response.status === 401) {
             const token = await this.authenticate(id)
@@ -1174,11 +1275,28 @@ export default {
 
       const defaultBillingAddress = currentTask.transactionData.account.addresses.find((val) => val.default_billing)
 
+      let cartId = null
+
+      if (currentTask.transactionData.cart && Object.keys(currentTask.transactionData.cart).length) {
+        cartId = currentTask.transactionData.cart.id.toString()
+      } else {
+        const cart = await this.initializeCart(id)
+
+        currentTask = this.getCurrentTask(id)
+
+        if (cart && currentTask) {
+          currentTask.transactionData.cart = cart
+          cartId = cart.id.toString()
+        }
+      }
+
+      this.updateTask(currentTask)
+
       const payload = {
         payload: {
           amcheckout: {},
           billingAddress: this.setAddresses(defaultBillingAddress, currentTask.transactionData.account.email),
-          cartId: currentTask.transactionData.cart.id.toString(),
+          cartId: cartId,
           paymentMethod: {
             additional_data: null,
             method: '',
@@ -1197,12 +1315,14 @@ export default {
       switch (currentTask.checkoutMethod) {
         case 1:
           payload.payload.paymentMethod.method = 'paymaya_checkout'
-          data = await this.paymayaCheckout(id, payload)
+          data = (currentTask.transactionData.shipping.payment_methods.find((val) => _.includes(val.code, 'paymaya_checkout')))
+            ? await this.paymayaCheckout(id, payload) : null
           break
 
         case 2:
           payload.payload.paymentMethod.method = 'ccpp'
-          data = await this.creditCardCheckout(id, payload)
+          data = (currentTask.transactionData.shipping.payment_methods.find((val) => _.includes(val.code, 'ccpp')))
+            ? await this.creditCardCheckout(id, payload) : null
           break
 
         case 3:
@@ -1224,7 +1344,8 @@ export default {
             }
           }
 
-          data = await this.paypalCheckout(id, payload)
+          data = (currentTask.transactionData.shipping.payment_methods.find((val) => _.includes(val.code, 'braintree_paypal')))
+            ? await this.paypalCheckout(id, payload) : null
           break
 
         default:
@@ -1305,7 +1426,20 @@ export default {
 
             if (!currentTask) break
 
-            await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+            if (counter > 1) {
+              let interval = null
+              let timeout = null
+              await new Promise((resolve) => {
+                interval = setInterval(() => {
+                  timeout = setTimeout(() => {
+                    clearInterval(interval)
+                    resolve()
+                  }, currentTask.delay)
+                }, 500)
+              })
+              clearInterval(interval)
+              clearTimeout(timeout)
+            }
 
             currentTask = this.getCurrentTask(id)
 
@@ -1333,13 +1467,7 @@ export default {
 
             this.updateTask(currentTask)
 
-            if (response && response.status) {
-              try {
-                this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
-              } catch (error) {
-                this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
-              }
-            }
+            if (response && response.status) await this.handleError(counter, id, response)
 
             if (response.status && response.status !== 429) break
 
@@ -1434,7 +1562,20 @@ export default {
 
             if (!this.isRunning(id) || !currentTask) break
 
-            await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+            if (counter > 1) {
+              let interval = null
+              let timeout = null
+              await new Promise((resolve) => {
+                interval = setInterval(() => {
+                  timeout = setTimeout(() => {
+                    clearInterval(interval)
+                    resolve()
+                  }, currentTask.delay)
+                }, 500)
+              })
+              clearInterval(interval)
+              clearTimeout(timeout)
+            }
 
             currentTask = this.getCurrentTask(id)
 
@@ -1462,13 +1603,7 @@ export default {
 
             this.updateTask(currentTask)
 
-            if (response && response.status) {
-              try {
-                this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
-              } catch (error) {
-                this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
-              }
-            }
+            if (response && response.status) await this.handleError(counter, id, response)
 
             if (response.status && response.status !== 429) break
 
@@ -1564,7 +1699,20 @@ export default {
 
             if (!this.isRunning(id) || !currentTask) break
 
-            await new Promise(resolve => setTimeout(resolve, currentTask.delay))
+            if (counter > 1) {
+              let interval = null
+              let timeout = null
+              await new Promise((resolve) => {
+                interval = setInterval(() => {
+                  timeout = setTimeout(() => {
+                    clearInterval(interval)
+                    resolve()
+                  }, currentTask.delay)
+                }, 500)
+              })
+              clearInterval(interval)
+              clearTimeout(timeout)
+            }
 
             currentTask = this.getCurrentTask(id)
 
@@ -1600,11 +1748,7 @@ export default {
 
               break
             } else if (response && response.status) {
-              try {
-                this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message}`)
-              } catch (error) {
-                this.updateCurrentTaskLog(id, `#${counter}: Request failed - ${response.status}`)
-              }
+              await this.handleError(counter, id, response)
             }
 
             if (response.status && response.status !== 429) break
@@ -1627,6 +1771,8 @@ export default {
               break
             }
           }
+
+          if (data) break
         } catch (error) {
           this.updateCurrentTaskLog(id, error)
           continue
