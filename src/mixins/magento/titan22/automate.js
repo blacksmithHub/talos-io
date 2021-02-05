@@ -1479,12 +1479,12 @@ export default {
               if (token && currentTask) {
                 currentTask.transactionData.token = token
                 this.updateTask(currentTask)
-              } else {
-                continue
               }
+
+              continue
             }
 
-            if (response) {
+            if (response && !response.status) {
               data = response
               break
             }
@@ -1615,12 +1615,12 @@ export default {
               if (token && currentTask) {
                 currentTask.transactionData.token = token
                 this.updateTask(currentTask)
-              } else {
-                continue
               }
+
+              continue
             }
 
-            if (response) {
+            if (response && !response.status) {
               data = response
               break
             }
@@ -1761,9 +1761,9 @@ export default {
               if (token && currentTask) {
                 currentTask.transactionData.token = token
                 this.updateTask(currentTask)
-              } else {
-                continue
               }
+
+              continue
             }
 
             if (response && !response.status) {
