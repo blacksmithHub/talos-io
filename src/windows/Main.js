@@ -3,6 +3,12 @@
 import { BrowserWindow, globalShortcut } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
+import LoginWindow from '@/windows/Login'
+import MonitorWindow from '@/windows/Monitor'
+import ProfileWindow from '@/windows/Profile'
+import ProxyWindow from '@/windows/Proxy'
+import SettingWindow from '@/windows/Setting'
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -45,6 +51,31 @@ export default {
     })
 
     win.on('closed', () => {
+      if (LoginWindow.getWindow()) {
+        LoginWindow.getWindow().destroy()
+        LoginWindow.closeWindow()
+      }
+
+      if (MonitorWindow.getWindow()) {
+        MonitorWindow.getWindow().destroy()
+        MonitorWindow.closeWindow()
+      }
+
+      if (ProfileWindow.getWindow()) {
+        ProfileWindow.getWindow().destroy()
+        ProfileWindow.closeWindow()
+      }
+
+      if (ProxyWindow.getWindow()) {
+        ProfileWindow.getWindow().destroy()
+        ProxyWindow.closeWindow()
+      }
+
+      if (SettingWindow.getWindow()) {
+        SettingWindow.getWindow().destroy()
+        SettingWindow.closeWindow()
+      }
+
       win = null
     })
 
