@@ -360,7 +360,7 @@ export default {
             currentTask = this.getCurrentTask(task.id)
 
             if (!cart || !currentTask) {
-              this.start(currentTask || cart)
+              this.start(currentTask || task)
               return false
             } else {
               currentTask.transactionData.cart = cart
