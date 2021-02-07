@@ -109,10 +109,10 @@ export default {
     }
   },
   beforeRouteEnter (to, from, next) {
-    next(async vm => {
-      if (!vm.attributes.length) await vm.prepareAttributes()
+    next(vm => {
+      if (!vm.attributes.length) vm.prepareAttributes()
 
-      if (vm.tasks.length) await vm.prepareTasks()
+      if (vm.tasks.length) vm.prepareTasks()
     })
   },
   computed: {
@@ -292,9 +292,9 @@ export default {
      * Start task.
      *
      */
-    async startTask (task) {
+    startTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
-        await this.updateTask({
+        this.updateTask({
           ...task,
           status: {
             id: Constant.TASK.STATUS.RUNNING,
@@ -305,7 +305,7 @@ export default {
           paid: false
         })
 
-        await this.start(task)
+        this.start(task)
       }
     },
     /**
@@ -314,20 +314,20 @@ export default {
      */
     async deleteTask (task) {
       await this.stopTask(task)
-      await this.removeTask(task.id)
+      this.removeTask(task.id)
     },
 
     /**
      * Perform on start all event.
      *
      */
-    async startAll () {
+    startAll () {
       if (this.selected.length) {
-        await this.selected.forEach((task) => {
+        this.selected.forEach((task) => {
           if (task.status.class !== 'error') this.startTask(task)
         })
       } else {
-        await this.tasks.forEach((task) => {
+        this.tasks.forEach((task) => {
           if (task.status.class !== 'error') this.startTask(task)
         })
       }
@@ -337,18 +337,18 @@ export default {
      * Perform on stop all event.
      *
      */
-    async stopAll () {
+    stopAll () {
       if (this.selected.length) {
-        await this.selected.forEach((task) => this.stopTask(task))
+        this.selected.forEach((task) => this.stopTask(task))
       } else {
-        await this.tasks.forEach((task) => this.stopTask(task))
+        this.tasks.forEach((task) => this.stopTask(task))
       }
     },
     /**
      * Stop task
      *
      */
-    async stopTask (task) {
+    stopTask (task) {
       const currentTask = this.tasks.find((el) => el.id === task.id)
 
       if (currentTask) {
@@ -378,13 +378,13 @@ export default {
      */
     async deleteAll () {
       if (this.selected.length) {
-        await this.selected.forEach((task) => {
+        this.selected.forEach((task) => {
           this.stopTask(task)
           this.deleteTask(task)
         })
       } else {
         await this.stopAll()
-        await this.resetTask()
+        this.resetTask()
       }
     },
 
@@ -392,18 +392,18 @@ export default {
      * verify all tasks
      *
      */
-    async verifyAll () {
+    verifyAll () {
       if (this.selected.length) {
-        await this.selected.forEach((task) => this.verifyTask(task))
+        this.selected.forEach((task) => this.verifyTask(task))
       } else {
-        await this.tasks.forEach((task) => this.verifyTask(task))
+        this.tasks.forEach((task) => this.verifyTask(task))
       }
     },
     /**
      * verify task
      *
      */
-    async verifyTask (task) {
+    verifyTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
         this.updateTask({
           ...task,
@@ -416,7 +416,7 @@ export default {
           paid: false
         })
 
-        await this.verify(task)
+        this.verify(task)
       }
     }
   }

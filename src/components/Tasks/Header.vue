@@ -69,7 +69,7 @@
       size="35"
       class="pointer"
       style="border:2px solid #d85820"
-      @click="$refs.account.dialog=true"
+      @click="openDialog"
     >
       <img
         :src="avatar"
@@ -94,6 +94,14 @@ export default {
     avatar () {
       if (!auth.isAuthenticated()) return placeholder
       return `https://cdn.discordapp.com/avatars/${auth.getAuth().profile.id}/${auth.getAuth().profile.avatar}.png`
+    }
+  },
+  methods: {
+    /**
+     * open dialog event
+     */
+    openDialog () {
+      if (auth.isAuthenticated()) this.$refs.account.dialog = true
     }
   }
 }

@@ -19,7 +19,7 @@ export default {
   http (baseUrl) {
     const http = axios.create({ baseURL: baseUrl })
 
-    http.interceptors.request.use(async config => {
+    http.interceptors.request.use(config => {
       /**
        * Set Headers config
        */

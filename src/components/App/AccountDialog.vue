@@ -93,10 +93,10 @@ export default {
     openDialog () {
       this.dialog = true
     },
-    async reset () {
+    reset () {
       this.loading = true
 
-      await AuthAPI.unbind({
+      AuthAPI.unbind({
         discord_id: AuthService.getAuth().profile.id,
         key: AuthService.getAuth().key
       })
