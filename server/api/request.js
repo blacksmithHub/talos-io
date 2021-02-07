@@ -22,10 +22,13 @@ router.post('/', async (req, res) => {
 
   request = request.defaults(option)
 
+  const jar = request.jar()
+
   const config = {
     uri: req.body.url,
     method: req.body.method,
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
+    jar
   }
 
   switch (req.body.mode) {

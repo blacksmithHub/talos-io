@@ -68,6 +68,7 @@ autoUpdater.on('error', () => {
     LoginWindow.closeWindow()
     SettingWindow.closeWindow()
     ProxyWindow.closeWindow()
+    ProfileWindow.closeWindow()
     MonitorWindow.closeWindow()
     MainWindow.closeWindow()
 
@@ -104,6 +105,7 @@ autoUpdater.on('update-downloaded', () => {
     LoginWindow.closeWindow()
     SettingWindow.closeWindow()
     ProxyWindow.closeWindow()
+    ProfileWindow.closeWindow()
     MonitorWindow.closeWindow()
     MainWindow.closeWindow()
 
@@ -118,7 +120,7 @@ autoUpdater.on('update-downloaded', () => {
 /**
  * Create main window
  */
-async function initializeWindows () {
+function initializeWindows () {
   win = new BrowserWindow({
     width: 250,
     height: 250,
@@ -306,15 +308,50 @@ ipcMain.on('update-proxies', (event, arg) => {
  * clear all local storage
  */
 ipcMain.on('clear-localStorage', (event, arg) => {
-  if (MainWindow.getWindow()) MainWindow.getWindow().reload()
+  if (MainWindow.getWindow()) {
+    MainWindow.getWindow().webContents.session.clearCache()
+    MainWindow.getWindow().webContents.session.clearStorageData()
+    MainWindow.getWindow().reload()
+  }
 
-  if (MonitorWindow.getWindow()) MonitorWindow.getWindow().reload()
+  if (MonitorWindow.getWindow()) {
+    MonitorWindow.getWindow().webContents.session.clearCache()
+    MonitorWindow.getWindow().webContents.session.clearStorageData()
+    MonitorWindow.getWindow().reload()
+  }
 
-  if (SettingWindow.getWindow()) SettingWindow.getWindow().reload()
+  if (SettingWindow.getWindow()) {
+    SettingWindow.getWindow().webContents.session.clearCache()
+    SettingWindow.getWindow().webContents.session.clearStorageData()
+    SettingWindow.getWindow().reload()
+  }
 
-  if (ProfileWindow.getWindow()) ProfileWindow.getWindow().reload()
+  if (ProfileWindow.getWindow()) {
+    ProfileWindow.getWindow().webContents.session.clearCache()
+    ProfileWindow.getWindow().webContents.session.clearStorageData()
+    ProfileWindow.getWindow().reload()
+  }
 
-  if (ProxyWindow.getWindow()) ProxyWindow.getWindow().reload()
+  if (ProxyWindow.getWindow()) {
+    ProxyWindow.getWindow().webContents.session.clearCache()
+    ProxyWindow.getWindow().webContents.session.clearStorageData()
+    ProxyWindow.getWindow().reload()
+  }
+})
+
+/**
+ * Clear cache
+ */
+ipcMain.on('clear-cache', (event, arg) => {
+  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.session.clearCache()
+
+  if (MonitorWindow.getWindow()) MonitorWindow.getWindow().webContents.session.clearCache()
+
+  if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.session.clearCache()
+
+  if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.session.clearCache()
+
+  if (ProxyWindow.getWindow()) ProxyWindow.getWindow().webContents.session.clearCache()
 })
 
 /**
@@ -323,10 +360,25 @@ ipcMain.on('clear-localStorage', (event, arg) => {
 ipcMain.on('authenticate', (event, arg) => {
   if (!LoginWindow.getWindow()) LoginWindow.createWindow()
 
-  MonitorWindow.closeWindow()
-  ProfileWindow.closeWindow()
-  ProxyWindow.closeWindow()
-  SettingWindow.closeWindow()
+  if (MonitorWindow.getWindow()) {
+    MonitorWindow.getWindow().destroy()
+    MonitorWindow.closeWindow()
+  }
+
+  if (ProfileWindow.getWindow()) {
+    ProfileWindow.getWindow().destroy()
+    ProfileWindow.closeWindow()
+  }
+
+  if (ProxyWindow.getWindow()) {
+    ProfileWindow.getWindow().destroy()
+    ProxyWindow.closeWindow()
+  }
+
+  if (SettingWindow.getWindow()) {
+    SettingWindow.getWindow().destroy()
+    SettingWindow.closeWindow()
+  }
 
   if (MainWindow.getWindow()) {
     MainWindow.getWindow().destroy()
@@ -351,20 +403,20 @@ ipcMain.on('bind', (event, arg) => {
 /**
  * PayMaya checkout method
  */
-ipcMain.on('pay-with-paymaya', async (event, arg) => {
+ipcMain.on('pay-with-paymaya', (event, arg) => {
   PayMayaCheckout.automate(JSON.parse(arg))
 })
 
 /**
  * 2c2p checkout method
  */
-ipcMain.on('pay-with-2c2p', async (event, arg) => {
+ipcMain.on('pay-with-2c2p', (event, arg) => {
   CreditCardCheckout.automate(JSON.parse(arg))
 })
 
 /**
  * PayPal authorization
  */
-ipcMain.on('paypal-login', async (event, arg) => {
+ipcMain.on('paypal-login', (event, arg) => {
   PayPalAuthorization.automate(JSON.parse(arg))
 })

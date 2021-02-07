@@ -421,14 +421,14 @@ export default {
     /**
      * Logout to paypal
      */
-    async paypalLogout (profile) {
+    paypalLogout (profile) {
       this.selected = profile
       this.dialog = true
     },
     /**
      * Confirm logout to paypal
      */
-    async confirmPaypalLogout () {
+    confirmPaypalLogout () {
       this.updateProfile({
         ...this.selected,
         paypal: {}

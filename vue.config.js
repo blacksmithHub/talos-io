@@ -13,7 +13,9 @@ module.exports = {
       builderOptions: {
         nsis: {
           oneClick: false,
-          allowToChangeInstallationDirectory: true
+          allowToChangeInstallationDirectory: true,
+          runAfterFinish: true,
+          deleteAppDataOnUninstall: true
         },
         publish: [
           {

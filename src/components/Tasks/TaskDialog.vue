@@ -112,6 +112,7 @@
                     hide-details="auto"
                     :error-messages="qtyErrors"
                     label="Quantity"
+                    required
                     @blur="$v.qty.$touch()"
                   />
                 </v-col>
@@ -130,6 +131,7 @@
                 append-icon=""
                 :error-messages="sizesErrors"
                 hint="Press Enter per input to apply"
+                :disabled="!sku"
                 @blur="$v.sizes.$touch()"
                 @input="filterSizes"
               />
@@ -264,7 +266,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
-import { required, minValue } from 'vuelidate/lib/validators'
+import { required, minValue, requiredIf } from 'vuelidate/lib/validators'
 import Constant from '@/config/constant'
 
 export default {
@@ -368,7 +370,7 @@ export default {
 
       if (!this.$v.sizes.$dirty) return errors
 
-      this.$v.sizes.required || errors.push('Required')
+      this.$v.sizes.requiredIf || errors.push('Required')
 
       return errors
     },
@@ -382,6 +384,7 @@ export default {
       if (!this.$v.delay.$dirty) return errors
 
       this.$v.delay.minValue || errors.push('Invalid input')
+      this.$v.delay.required || errors.push('Required')
 
       return errors
     },
@@ -395,6 +398,7 @@ export default {
       if (!this.$v.qty.$dirty) return errors
 
       this.$v.qty.minValue || errors.push('Invalid input')
+      this.$v.qty.required || errors.push('Required')
 
       return errors
     },
@@ -540,9 +544,19 @@ export default {
     bank: { required },
     proxy: { required },
     sku: { required },
-    sizes: { required },
-    delay: { minValue: minValue(0) },
-    qty: { minValue: minValue(1) }
+    sizes: {
+      requiredIf: requiredIf(function () {
+        return this.sku
+      })
+    },
+    delay: {
+      required,
+      minValue: minValue(0)
+    },
+    qty: {
+      required,
+      minValue: minValue(1)
+    }
   }
 }
 </script>
