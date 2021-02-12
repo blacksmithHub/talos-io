@@ -30,6 +30,7 @@
     "discord-oauth2": "^2.6.0",
     "discord.js": "^12.5.1",
     "electron-updater": "^4.3.5",
+    "file-saver": "^2.0.5",
     "font-awesome": "^4.7.0",
     "howler": "^2.2.0",
     "lodash": "^4.17.20",

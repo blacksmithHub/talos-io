@@ -352,12 +352,6 @@ export default {
       const currentTask = this.tasks.find((el) => el.id === task.id)
 
       if (currentTask) {
-        try {
-          currentTask.transactionData.cancelTokenSource.cancel()
-        } catch (error) {
-        //
-        }
-
         currentTask.status = {
           id: Constant.TASK.STATUS.STOPPED,
           msg: 'stopped',
