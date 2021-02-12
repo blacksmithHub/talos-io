@@ -16,8 +16,6 @@ import PayMayaCheckout from '@/services/Automate/PayMayaCheckout'
 import CreditCardCheckout from '@/services/Automate/CreditCardCheckout'
 import PayPalAuthorization from '@/services/Automate/PayPalAuthorization'
 
-const port = require('../server/index.js')
-
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -151,10 +149,7 @@ function initializeWindows () {
   win.once('ready-to-show', () => {
     win.show()
 
-    setTimeout(async () => {
-      const currentPort = await port
-      win.webContents.send('currentPort', currentPort)
-
+    setTimeout(() => {
       // TODO: github bug
       // if (!isDevelopment) autoUpdater.checkForUpdatesAndNotify()
 

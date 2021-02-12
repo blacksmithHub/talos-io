@@ -2,7 +2,6 @@ import { mapState, mapActions } from 'vuex'
 import { Howl } from 'howler'
 import { ipcRenderer } from 'electron'
 
-import axios from 'axios'
 import StopWatch from 'statman-stopwatch'
 import _ from 'lodash'
 
@@ -143,27 +142,24 @@ export default {
      * @param {*} response
      */
     async handleError (id, counter, response) {
-      switch (response.status) {
-        case 403:
-          ipcRenderer.send('clear-cache')
+      switch (response.statusCode) {
+        case 401:
+          {
+            const token = await this.authenticate(id)
+            const currentTask = this.getCurrentTask(id)
 
-          // TODO: under experimentation
-          // if (this.isRunning(id)) {
-          //   const token = await this.authenticate(id)
-          //   const currentTask = this.getCurrentTask(id)
-
-          //   if (token && currentTask) {
-          //     currentTask.transactionData.token = token
-          //     this.updateTask(currentTask)
-          //   }
-          // }
+            if (token && currentTask) {
+              currentTask.transactionData.token = token
+              this.updateTask(currentTask)
+            }
+          }
           break
 
         default:
           try {
-            this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - ${response.data.message || 'Request failed'}`)
+            this.updateCurrentTaskLog(id, `#${counter}: ${response.statusCode} - ${JSON.parse(response.body).message || 'Request failed'}`)
           } catch (error) {
-            this.updateCurrentTaskLog(id, `#${counter}: ${response.status} - Request failed}`)
+            this.updateCurrentTaskLog(id, `#${counter}: ${response.statusCode} - Request failed`)
           }
           break
       }
@@ -494,12 +490,6 @@ export default {
 
           currentTask = this.getCurrentTask(id)
 
-          const cancelTokenSource = axios.CancelToken.source()
-
-          currentTask.transactionData.cancelTokenSource = cancelTokenSource
-
-          this.updateTask(currentTask)
-
           if (!currentTask) break
 
           const params = {
@@ -511,16 +501,18 @@ export default {
             mode: currentTask.mode
           }
 
-          const response = await authApi.fetchToken(params, cancelTokenSource.token)
+          const response = await authApi.fetchToken(params)
 
           if (!this.isRunning(id)) break
 
-          if (!response.status && response) {
+          if (response && response.statusCode) {
+            await this.handleError(id, counter, response)
+            continue
+          }
+
+          if (response && !response.statusCode) {
             data = response
             break
-          } else if (response && response.status) {
-            await this.handleError(counter, id, response)
-            continue
           }
         } catch (error) {
           this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
@@ -567,12 +559,6 @@ export default {
 
           currentTask = this.getCurrentTask(id)
 
-          const cancelTokenSource = axios.CancelToken.source()
-
-          currentTask.transactionData.cancelTokenSource = cancelTokenSource
-
-          this.updateTask(currentTask)
-
           if (!currentTask) break
 
           const params = {
@@ -581,26 +567,16 @@ export default {
             mode: currentTask.mode
           }
 
-          const response = await customerApi.profile(params, cancelTokenSource.token)
+          const response = await customerApi.profile(params)
 
           if (!this.isRunning(id)) break
 
-          if (response && response.status) await this.handleError(counter, id, response)
-
-          if (response.status && response.status === 401) {
-            const token = await this.authenticate(id)
-
-            currentTask = this.getCurrentTask(id)
-
-            if (token && currentTask) {
-              currentTask.transactionData.token = token
-              this.updateTask(currentTask)
-            } else {
-              continue
-            }
+          if (response && response.statusCode) {
+            await this.handleError(id, counter, response)
+            continue
           }
 
-          if (response && !response.status && response.addresses.length) {
+          if (response && !response.statusCode && response.addresses.length) {
             data = response
             break
           }
@@ -668,38 +644,22 @@ export default {
 
           this.updateCurrentTaskLog(id, `#${counter}: Creating cart...`)
 
-          const cancelTokenSource = axios.CancelToken.source()
-
-          currentTask.transactionData.cancelTokenSource = cancelTokenSource
-
-          this.updateTask(currentTask)
-
           const params = {
             token: currentTask.transactionData.token || '',
             proxy: currentTask.proxy,
             mode: currentTask.mode
           }
 
-          const response = await cartApi.create(params, cancelTokenSource.token)
+          const response = await cartApi.create(params)
 
           if (!this.isRunning(id)) break
 
-          if (response && response.status) await this.handleError(counter, id, response)
-
-          if (response.status && response.status === 401) {
-            const token = await this.authenticate(id)
-
-            currentTask = this.getCurrentTask(id)
-
-            if (token && currentTask) {
-              currentTask.transactionData.token = token
-              this.updateTask(currentTask)
-            } else {
-              continue
-            }
+          if (response && response.statusCode) {
+            await this.handleError(id, counter, response)
+            continue
           }
 
-          if (response && !response.status) {
+          if (response && !response.statusCode) {
             data = response
             break
           }
@@ -748,38 +708,22 @@ export default {
 
           this.updateCurrentTaskLog(id, `#${counter}: Fetching cart...`)
 
-          const cancelTokenSource = axios.CancelToken.source()
-
-          currentTask.transactionData.cancelTokenSource = cancelTokenSource
-
-          this.updateTask(currentTask)
-
           const params = {
             token: currentTask.transactionData.token || '',
             proxy: currentTask.proxy,
             mode: currentTask.mode
           }
 
-          const response = await cartApi.get(params, cancelTokenSource.token)
+          const response = await cartApi.get(params)
 
           if (!this.isRunning(id)) break
 
-          if (response && response.status) await this.handleError(counter, id, response)
-
-          if (response.status && response.status === 401) {
-            const token = await this.authenticate(id)
-
-            currentTask = this.getCurrentTask(id)
-
-            if (token && currentTask) {
-              currentTask.transactionData.token = token
-              this.updateTask(currentTask)
-            } else {
-              continue
-            }
+          if (response && response.statusCode) {
+            await this.handleError(id, counter, response)
+            continue
           }
 
-          if (response && !response.status) {
+          if (response && !response.statusCode) {
             data = response
             break
           }
@@ -823,12 +767,6 @@ export default {
 
               currentTask = this.getCurrentTask(id)
 
-              const cancelTokenSource = axios.CancelToken.source()
-
-              currentTask.transactionData.cancelTokenSource = cancelTokenSource
-
-              this.updateTask(currentTask)
-
               if (!currentTask) break
 
               const params = {
@@ -838,26 +776,19 @@ export default {
                 mode: currentTask.mode
               }
 
-              const response = await cartApi.delete(params, cancelTokenSource.token)
+              const response = await cartApi.delete(params)
 
               if (!this.isRunning(id)) break
 
-              if (response && response.status) await this.handleError(counter, id, response)
-
-              if (response.status && response.status === 401) {
-                const token = await this.authenticate(id)
-
-                currentTask = this.getCurrentTask(id)
-
-                if (token && currentTask) {
-                  currentTask.transactionData.token = token
-                  this.updateTask(currentTask)
-                } else {
-                  continue
-                }
+              if (response && response.statusCode) {
+                await this.handleError(id, counter, response)
+                continue
               }
 
-              if (!response.status && response) deleted = response
+              if (response && !response.statusCode) {
+                deleted = response
+                continue
+              }
             } catch (error) {
               this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
               continue
@@ -915,9 +846,7 @@ export default {
 
               currentTask = this.getCurrentTask(id)
 
-              const cancelTokenSource = axios.CancelToken.source()
-
-              currentTask.transactionData.cancelTokenSource = cancelTokenSource
+              if (!currentTask) break
 
               let cartId = null
 
@@ -960,26 +889,16 @@ export default {
                 mode: currentTask.mode
               }
 
-              const response = await cartApi.store(params, cancelTokenSource.token)
+              const response = await cartApi.store(params)
 
               if (!this.isRunning(id)) break
 
-              if (response && response.status) await this.handleError(counter, id, response)
-
-              if (response.status && response.status === 401) {
-                const token = await this.authenticate(id)
-
-                currentTask = this.getCurrentTask(id)
-
-                if (token && currentTask) {
-                  currentTask.transactionData.token = token
-                  this.updateTask(currentTask)
-                } else {
-                  continue
-                }
+              if (response && response.statusCode) {
+                await this.handleError(id, counter, response)
+                continue
               }
 
-              if (response && !response.status) {
+              if (response && !response.statusCode) {
                 currentTask = this.getCurrentTask(id)
 
                 if (currentTask) {
@@ -1060,12 +979,6 @@ export default {
 
             currentTask = this.getCurrentTask(id)
 
-            const cancelTokenSource = axios.CancelToken.source()
-
-            currentTask.transactionData.cancelTokenSource = cancelTokenSource
-
-            this.updateTask(currentTask)
-
             if (!currentTask) break
 
             const parameters = {
@@ -1075,26 +988,16 @@ export default {
               mode: currentTask.mode
             }
 
-            const response = await cartApi.estimateShipping(parameters, cancelTokenSource.token)
+            const response = await cartApi.estimateShipping(parameters)
 
             if (!this.isRunning(id)) break
 
-            if (response && response.status) await this.handleError(counter, id, response)
-
-            if (response.status && response.status === 401) {
-              const token = await this.authenticate(id)
-
-              currentTask = this.getCurrentTask(id)
-
-              if (token && currentTask) {
-                currentTask.transactionData.token = token
-                this.updateTask(currentTask)
-              } else {
-                continue
-              }
+            if (response && response.statusCode) {
+              await this.handleError(id, counter, response)
+              continue
             }
 
-            if (response && !response.status) {
+            if (response && !response.statusCode) {
               params = response[0]
               break
             }
@@ -1175,12 +1078,6 @@ export default {
 
           if (!this.isRunning(id) || !currentTask) break
 
-          const cancelTokenSource = axios.CancelToken.source()
-
-          currentTask.transactionData.cancelTokenSource = cancelTokenSource
-
-          this.updateTask(currentTask)
-
           const params = {
             token: currentTask.transactionData.token || '',
             payload: payload,
@@ -1188,26 +1085,16 @@ export default {
             mode: currentTask.mode
           }
 
-          const response = await cartApi.setShippingInformation(params, cancelTokenSource.token)
+          const response = await cartApi.setShippingInformation(params)
 
           if (!this.isRunning(id)) break
 
-          if (response && response.status) await this.handleError(counter, id, response)
-
-          if (response.status && response.status === 401) {
-            const token = await this.authenticate(id)
-
-            currentTask = this.getCurrentTask(id)
-
-            if (token && currentTask) {
-              currentTask.transactionData.token = token
-              this.updateTask(currentTask)
-            } else {
-              continue
-            }
+          if (response && response.statusCode) {
+            await this.handleError(id, counter, response)
+            continue
           }
 
-          if (response && !response.status) {
+          if (response && !response.statusCode) {
             data = response
             break
           }
@@ -1237,32 +1124,21 @@ export default {
       this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
 
       if (currentTask.placeOrder) {
+        let interval = null
+        let timeout = null
+        const vm = this
         await new Promise((resolve) => {
-          const vm = this
-
-          const loop = setInterval(function () {
-            if (!vm.isRunning(id)) {
-              clearInterval(loop)
+          interval = setInterval(() => {
+            const now = new Date()
+            const then = new Date(vm.$moment(currentTask.placeOrder, 'HH:mm:ss').format('YYYY-MM-DD HH:mm:ss'))
+            timeout = setTimeout(() => {
+              clearInterval(interval)
               resolve()
-            } else {
-              currentTask = vm.getCurrentTask(id)
-
-              if (currentTask && currentTask.placeOrder) {
-                const timer = this.$moment(currentTask.placeOrder, 'HH:mm:ss').format('HH:mm:ss')
-                const current = this.$moment().format('HH:mm:ss')
-
-                if (current >= timer) {
-                  vm.removeTimer(id)
-                  clearInterval(loop)
-                  resolve()
-                }
-              } else {
-                clearInterval(loop)
-                resolve()
-              }
-            }
-          }, 1000)
+            }, then - now)
+          }, 500)
         })
+        clearInterval(interval)
+        clearTimeout(timeout)
       }
 
       currentTask = this.getCurrentTask(id)
@@ -1445,15 +1321,9 @@ export default {
 
             if (!this.isRunning(id) || !currentTask) break
 
-            const cancelTokenSource = axios.CancelToken.source()
-
-            currentTask.transactionData.cancelTokenSource = cancelTokenSource
-
-            this.updateTask(currentTask)
-
             const timer = new StopWatch(true)
 
-            const response = await orderApi.placePaymayaOrder(payload, cancelTokenSource.token)
+            const response = await orderApi.placePaymayaOrder(payload)
 
             timer.stop()
 
@@ -1467,24 +1337,15 @@ export default {
 
             this.updateTask(currentTask)
 
-            if (response && response.status) await this.handleError(counter, id, response)
+            if (response && response.statusCode) {
+              await this.handleError(id, counter, response)
 
-            if (response.status && response.status !== 429) break
-
-            if (response.status && response.status === 401) {
-              const token = await this.authenticate(id)
-
-              currentTask = this.getCurrentTask(id)
-
-              if (token && currentTask) {
-                currentTask.transactionData.token = token
-                this.updateTask(currentTask)
-              }
+              if (response.statusCode !== 429) break
 
               continue
             }
 
-            if (response && !response.status) {
+            if (response && !response.statusCode) {
               data = response
               break
             }
@@ -1581,15 +1442,9 @@ export default {
 
             if (!this.isRunning(id) || !currentTask) break
 
-            const cancelTokenSource = axios.CancelToken.source()
-
-            currentTask.transactionData.cancelTokenSource = cancelTokenSource
-
-            this.updateTask(currentTask)
-
             const timer = new StopWatch(true)
 
-            const response = await orderApi.place2c2pOrder(payload, cancelTokenSource.token)
+            const response = await orderApi.place2c2pOrder(payload)
 
             timer.stop()
 
@@ -1603,24 +1458,15 @@ export default {
 
             this.updateTask(currentTask)
 
-            if (response && response.status) await this.handleError(counter, id, response)
+            if (response && response.statusCode) {
+              await this.handleError(id, counter, response)
 
-            if (response.status && response.status !== 429) break
-
-            if (response.status && response.status === 401) {
-              const token = await this.authenticate(id)
-
-              currentTask = this.getCurrentTask(id)
-
-              if (token && currentTask) {
-                currentTask.transactionData.token = token
-                this.updateTask(currentTask)
-              }
+              if (response.statusCode !== 429) break
 
               continue
             }
 
-            if (response && !response.status) {
+            if (response && !response.status && response.cookie) {
               data = response
               break
             }
@@ -1645,7 +1491,8 @@ export default {
       } else {
         const msg = `Size: ${currentTask.transactionData.product.size} - copped!`
 
-        currentTask.transactionData.product.image = await this.searchProduct(id)
+        if (currentTask.transactionData.product) currentTask.transactionData.product.image = await this.searchProduct(id)
+
         currentTask.transactionData.cookie = data.cookie
         currentTask.transactionData.method = '2c2p'
         currentTask.logs = `${currentTask.logs || ''};${msg}`
@@ -1718,15 +1565,9 @@ export default {
 
             if (!this.isRunning(id) || !currentTask) break
 
-            const cancelTokenSource = axios.CancelToken.source()
-
-            currentTask.transactionData.cancelTokenSource = cancelTokenSource
-
-            this.updateTask(currentTask)
-
             const timer = new StopWatch(true)
 
-            const response = await cartApi.paymentInformation(payload, cancelTokenSource.token)
+            const response = await cartApi.paymentInformation(payload)
 
             timer.stop()
 
@@ -1740,33 +1581,15 @@ export default {
 
             this.updateTask(currentTask)
 
-            if (response.status && response.status === 400) {
-              const msg = 'Transaction has been declined'
+            if (response && response.statusCode) {
+              await this.handleError(id, counter, response)
 
-              this.updateCurrentTaskLog(id, msg)
-              this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
-
-              break
-            } else if (response && response.status) {
-              await this.handleError(counter, id, response)
-            }
-
-            if (response.status && response.status !== 429) break
-
-            if (response.status && response.status === 401) {
-              const token = await this.authenticate(id)
-
-              currentTask = this.getCurrentTask(id)
-
-              if (token && currentTask) {
-                currentTask.transactionData.token = token
-                this.updateTask(currentTask)
-              }
+              if (response.statusCode !== 429) break
 
               continue
             }
 
-            if (response && !response.status) {
+            if (response && !response.statusCode) {
               data = response
               break
             }

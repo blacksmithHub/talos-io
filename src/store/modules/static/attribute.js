@@ -84,21 +84,24 @@ export default {
      */
     async fetchAttributes ({ commit }, params) {
       const payload = {
-        searchCriteria: {
-          filterGroups: [
-            {
-              filters: [
-                {
-                  field: 'attribute_code',
-                  value: params.value
-                }
-              ]
-            }
-          ]
-        }
+        payload: {
+          searchCriteria: {
+            filterGroups: [
+              {
+                filters: [
+                  {
+                    field: 'attribute_code',
+                    value: params.value
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        token: params.token
       }
 
-      const attribute = await productApi.attribute(payload, params.token)
+      const attribute = await productApi.attribute(payload)
 
       if (!attribute || attribute.status) return {}
 

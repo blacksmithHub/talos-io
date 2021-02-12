@@ -5,7 +5,8 @@ module.exports = {
     'vuetify'
   ],
   devServer: {
-    proxy: process.env.VUE_APP_TITAN_URL
+    proxy: process.env.VUE_APP_TITAN_URL,
+    host: 'localhost'
   },
   pluginOptions: {
     electronBuilder: {

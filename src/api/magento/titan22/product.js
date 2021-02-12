@@ -11,7 +11,6 @@ const { http } = api
  *
  */
 export default {
-  local: `http://localhost:${Config.services.port}/api`,
   baseUrl: `${Config.services.titan22.url}/rest/V2`,
   url: 'products',
   http,
@@ -21,27 +20,44 @@ export default {
    *
    */
   search (params) {
-    const query = qs.stringify(params.payload)
+    try {
+      const query = qs.stringify(params.payload)
 
-    params.url = `${this.baseUrl}/${this.url}?${query}`
-    params.method = 'GET'
+      params.url = `${this.baseUrl}/${this.url}?${query}`
+      params.method = 'GET'
 
-    return this.http(`${this.local}/request`)
-      .post('/', params)
-      .then(({ data }) => data)
-      .catch(({ response }) => response)
+      return this.http(params)
+        .then((response) => {
+          if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
+
+          return response
+        })
+        .catch((err) => err)
+    } catch (error) {
+      return error
+    }
   },
 
   /**
    * Search product attributes
    *
    */
-  attribute (params, token) {
-    params = qs.stringify(params)
+  attribute (params) {
+    try {
+      const query = qs.stringify(params.payload)
 
-    return this.http(this.baseUrl, token)
-      .get(`${this.url}/attributes?${params}`)
-      .then(({ data }) => data)
-      .catch(({ response }) => response)
+      params.url = `${this.baseUrl}/${this.url}/attributes?${query}`
+      params.method = 'GET'
+
+      return this.http(params)
+        .then((response) => {
+          if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
+
+          return response
+        })
+        .catch((err) => err)
+    } catch (error) {
+      return error
+    }
   }
 }

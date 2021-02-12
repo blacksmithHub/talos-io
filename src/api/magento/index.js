@@ -1,4 +1,6 @@
-import axios from 'axios'
+import CloudflareBypasser from 'cloudflare-bypasser'
+import UserAgent from 'user-agents'
+import request from 'request'
 
 /**
  *============================================================
@@ -10,25 +12,56 @@ import axios from 'axios'
  *
  */
 export default {
-  /**
-   * Creates an axios instance with an access token as authorization header
-   *
-   * @param String baseUrl
-   * @return {*} http
-   */
-  http (baseUrl, token = null) {
-    const http = axios.create({ baseURL: baseUrl })
 
-    http.interceptors.request.use(config => {
-      /**
-       * Set Headers config
-       */
-      config.headers.Accept = 'application/json'
-      if (token) config.headers.Authorization = `Bearer ${token}`
+  async http (params) {
+    const cf = new CloudflareBypasser()
+    const jar = request.jar()
 
-      return config
-    })
+    const config = {
+      method: params.method,
+      url: params.url,
+      headers: { 'Content-Type': 'application/json' },
+      jar: jar
+    }
 
-    return http
+    if (params.proxy && Object.keys(params.proxy).length && params.proxy.proxies.length) {
+      const proxy = params.proxy.proxies[Math.floor(Math.random() * params.proxy.proxies.length)]
+
+      if (proxy.username && proxy.password) {
+        config.proxy = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
+      } else {
+        config.proxy = `http://${proxy.host}:${proxy.port}`
+      }
+    }
+
+    if (params.payload) config.body = JSON.stringify(params.payload)
+
+    if (params.token) config.headers.Authorization = `Bearer ${params.token}`
+
+    switch (params.mode) {
+      case 'Mobile (Android)':
+        {
+          const userAgentAnd = new UserAgent({ deviceCategory: 'mobile' })
+          config.headers['User-Agent'] = userAgentAnd.toString()
+          config.headers.client = 'android'
+        }
+        break
+
+      case 'Mobile (iOS)':
+        {
+          const userAgentIos = new UserAgent({ deviceCategory: 'mobile' })
+          config.headers['User-Agent'] = userAgentIos.toString()
+          config.headers.client = 'ios'
+        }
+        break
+      default:
+        {
+          const userAgent = new UserAgent()
+          config.headers['User-Agent'] = userAgent.toString()
+        }
+        break
+    }
+
+    return cf.request(config)
   }
 }
