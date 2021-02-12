@@ -42,6 +42,23 @@
           Nothing to display
         </p>
       </v-card-text>
+
+      <v-card-actions class="justify-center pa-5">
+        <v-btn
+          class="primary"
+          rounded
+          depressed
+          small
+          @click="download"
+        >
+          <v-icon
+            left
+            small
+            v-text="'mdi-download'"
+          />
+          Download
+        </v-btn>
+      </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
@@ -75,6 +92,11 @@ export default {
     mapData (task) {
       this.dialog = true
       this.task = task
+    },
+    download () {
+      var FileSaver = require('file-saver')
+      var blob = new Blob([this.logs.join('\n')], { type: 'text/plain;charset=utf-8' })
+      FileSaver.saveAs(blob, `${this.header}.txt`)
     }
   }
 }

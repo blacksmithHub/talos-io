@@ -1,18 +1,9 @@
 <template>
   <div class="pa-5">
     <v-card>
-      <v-card-title
-        style="border-bottom: 1px solid #d85820"
-        class="text-center"
-      >
-        <v-row
-          justify="center"
-          align="center"
-        >
-          <v-col
-            align-self="center"
-            cols="6"
-          >
+      <v-card-title style="border-bottom: 1px solid #d85820">
+        <v-row>
+          <v-col align-self="center">
             <v-text-field
               v-model="search"
               append-icon="mdi-magnify"
@@ -20,6 +11,36 @@
               hide-details
               outlined
               dense
+            />
+          </v-col>
+
+          <v-col
+            align-self="center"
+            cols="3"
+          >
+            <v-select
+              v-model="filter"
+              :items="filterItems"
+              outlined
+              dense
+              hide-details
+              item-text="title"
+              item-value="value"
+              label="Filter By"
+            />
+          </v-col>
+
+          <v-col
+            align-self="center"
+            cols="2"
+          >
+            <v-text-field
+              v-model="count"
+              label="Items"
+              hide-details
+              outlined
+              dense
+              @change="onCountChange"
             />
           </v-col>
         </v-row>
@@ -87,11 +108,7 @@
             />
           </template>
 
-          <template v-slot:item.created_at="{ value }">
-            <small v-text="value" />
-          </template>
-
-          <template v-slot:item.updated_at="{ value }">
+          <template v-slot:item.date="{ value }">
             <small v-text="value" />
           </template>
         </v-data-table>
@@ -125,6 +142,11 @@ export default {
   mixins: [moment],
   data () {
     return {
+      count: 100,
+      filterItems: [
+        { title: 'Last created', value: 'created_at' },
+        { title: 'Last update', value: 'updated_at' }
+      ],
       filter: 'updated_at',
       interval: null,
       loading: false,
@@ -165,14 +187,9 @@ export default {
           align: 'center'
         },
         {
-          text: 'Created At',
-          value: 'created_at',
-          width: '5%'
-        },
-        {
-          text: 'Updated At',
-          value: 'updated_at',
-          width: '5%'
+          text: 'Date',
+          value: 'date',
+          width: '11%'
         }
       ],
       products: [],
@@ -203,15 +220,19 @@ export default {
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
     })
-
     await this.fetchProducts()
-
     const vm = this
-
     setTimeout(() => (vm.searchProduct()), vm.settings.monitorInterval)
   },
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
+    /**
+     * on count field change
+     */
+    onCountChange () {
+      clearInterval(this.loop)
+      this.searchProduct()
+    },
     /**
      * On copy event.
      *
@@ -236,11 +257,9 @@ export default {
      * Search product API.
      *
      */
-    searchProduct () {
+    async searchProduct () {
       const interval = this.settings.monitorInterval
-
       const vm = this
-
       this.loop = setInterval(async () => {
         await vm.fetchProducts()
       }, interval)
@@ -253,22 +272,13 @@ export default {
       const params = {
         payload: {
           searchCriteria: {
-            filterGroups: [
+            sortOrders: [
               {
-                filters: [
-                  {
-                    field: 'updated_at',
-                    value: this.$moment('00:00:00', 'HH:mm').format('YYYY-MM-DD HH:mm:ss'),
-                    condition_type: 'gteq'
-                  },
-                  {
-                    field: 'created_at',
-                    value: this.$moment('00:00:00', 'HH:mm').format('YYYY-MM-DD HH:mm:ss'),
-                    condition_type: 'gteq'
-                  }
-                ]
+                field: this.filter,
+                direction: 'DESC'
               }
-            ]
+            ],
+            pageSize: this.count
           }
         },
         token: App.services.titan22.token
@@ -277,31 +287,24 @@ export default {
       if (this.settings.monitorProxy) params.proxy = this.settings.monitorProxy
 
       this.loading = true
-
       const response = await productApi.search(params)
-
       this.products = []
 
-      if (response && !response.status) {
-        const items = response.items.slice().map(element => {
+      if (response) {
+        response.items.forEach(element => {
           const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
           const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
-
-          return {
+          this.products.push({
             img: (image) ? `${App.services.titan22.url}/media/catalog/product${image.value}` : placeholder,
             name: element.name,
             sku: element.sku,
             price: element.price.toLocaleString(),
             link: (link) ? link.value : '',
             status: element.extension_attributes.out_of_stock,
-            created_at: this.formatDate(element.created_at),
-            updated_at: this.formatDate(element.updated_at)
-          }
+            date: this.formatDate(element.updated_at)
+          })
         })
-
-        this.products = items
       }
-
       this.loading = false
     }
   }
