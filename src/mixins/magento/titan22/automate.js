@@ -3,7 +3,6 @@ import { Howl } from 'howler'
 import { ipcRenderer } from 'electron'
 
 import StopWatch from 'statman-stopwatch'
-import _ from 'lodash'
 
 import SuccessEffect from '@/assets/success.mp3'
 
@@ -1191,14 +1190,12 @@ export default {
       switch (currentTask.checkoutMethod) {
         case 1:
           payload.payload.paymentMethod.method = 'paymaya_checkout'
-          data = (currentTask.transactionData.shipping.payment_methods.find((val) => _.includes(val.code, 'paymaya_checkout')))
-            ? await this.paymayaCheckout(id, payload) : null
+          data = await this.paymayaCheckout(id, payload)
           break
 
         case 2:
           payload.payload.paymentMethod.method = 'ccpp'
-          data = (currentTask.transactionData.shipping.payment_methods.find((val) => _.includes(val.code, 'ccpp')))
-            ? await this.creditCardCheckout(id, payload) : null
+          data = await this.creditCardCheckout(id, payload)
           break
 
         case 3:
@@ -1220,8 +1217,7 @@ export default {
             }
           }
 
-          data = (currentTask.transactionData.shipping.payment_methods.find((val) => _.includes(val.code, 'braintree_paypal')))
-            ? await this.paypalCheckout(id, payload) : null
+          data = await this.paypalCheckout(id, payload)
           break
 
         default:
