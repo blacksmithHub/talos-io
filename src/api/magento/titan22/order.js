@@ -132,7 +132,7 @@ export default {
                       let response = null
 
                       await jar._jar.store.getAllCookies(function (err, cookieArray) {
-                        if (err) return err
+                        if (err) return { error: err }
 
                         const collection = cookieArray.find((val) => val.key === 'ASP.NET_SessionId')
 
@@ -153,7 +153,7 @@ export default {
                       let response = null
 
                       await jar._jar.store.getAllCookies(function (err, cookieArray) {
-                        if (err) return err
+                        if (err) return { error: err }
 
                         const collection = cookieArray.find((val) => val.key === 'ASP.NET_SessionId')
 
@@ -171,17 +171,21 @@ export default {
                       return response
                     })
                 } else {
-                  return response
+                  return { error: response }
                 }
               })
-              .catch(err => err)
+              .catch(err => {
+                return { error: err }
+              })
           } else {
-            return response
+            return { error: response }
           }
         })
-        .catch(err => err)
+        .catch(err => {
+          return { error: err }
+        })
     } catch (error) {
-      return error
+      return { error: error }
     }
   },
 
@@ -270,14 +274,18 @@ export default {
 
             return cf.request(config)
               .then((response) => response)
-              .catch(err => err)
+              .catch(err => {
+                return { error: err }
+              })
           } else {
-            return response
+            return { error: response }
           }
         })
-        .catch(err => err)
+        .catch(err => {
+          return { error: err }
+        })
     } catch (error) {
-      return error
+      return { error: error }
     }
   }
 }

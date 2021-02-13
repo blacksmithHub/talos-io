@@ -290,7 +290,7 @@ export default {
       const response = await productApi.search(params)
       this.products = []
 
-      if (response) {
+      if (response && !response.error) {
         response.items.forEach(element => {
           const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
           const image = element.custom_attributes.find((val) => val.attribute_code === 'image')

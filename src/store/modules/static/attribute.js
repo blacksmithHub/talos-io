@@ -103,9 +103,9 @@ export default {
 
       const attribute = await productApi.attribute(payload)
 
-      if (!attribute || attribute.status) return {}
+      if (attribute && attribute.error) return {}
 
-      if (attribute) {
+      if (attribute && !attribute.error) {
         const sizes = attribute.items[0].options.filter((data) => data.value).map((item) => {
           item.label = item.label.toLowerCase()
           return item
