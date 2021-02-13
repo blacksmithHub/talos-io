@@ -17,28 +17,66 @@ export default {
    *
    */
   createPaymentResource (params) {
-    return this.http(`${this.baseUrl}`)
-      .post('paypal_hermes/create_payment_resource', params)
-      .then(response => response)
-      .catch(({ response }) => response)
+    try {
+      params.url = `${this.baseUrl}/paypal_hermes/create_payment_resource`
+      params.method = 'POST'
+
+      return this.http(params)
+        .then((response) => {
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
+
+          return { error: response }
+        })
+        .catch((err) => {
+          return { error: err }
+        })
+    } catch (error) {
+      return { error: error }
+    }
   },
   /**
    * Get paypal account
    *
    */
   getPaypalAccount (params) {
-    return this.http(`${this.baseUrl}`)
-      .post('payment_methods/paypal_accounts', params)
-      .then(response => response)
-      .catch(({ response }) => response)
+    try {
+      params.url = `${this.baseUrl}/payment_methods/paypal_accounts`
+      params.method = 'POST'
+
+      return this.http(params)
+        .then((response) => {
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
+
+          return { error: response }
+        })
+        .catch((err) => {
+          return { error: err }
+        })
+    } catch (error) {
+      return { error: error }
+    }
   },
   /**
    * Get merchant secret
    */
   getSecret () {
-    return this.http(`${Config.services.titan22.url}/rest/V1`)
-      .get('braintree/merchant_server')
-      .then(response => response)
-      .catch(({ response }) => response)
+    try {
+      const params = {
+        url: `${Config.services.titan22.url}/rest/V1/braintree/merchant_server`,
+        method: 'GET'
+      }
+
+      return this.http(params)
+        .then((response) => {
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
+
+          return { error: response }
+        })
+        .catch((err) => {
+          return { error: err }
+        })
+    } catch (error) {
+      return { error: error }
+    }
   }
 }

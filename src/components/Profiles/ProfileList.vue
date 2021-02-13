@@ -348,30 +348,34 @@ export default {
     ipcRenderer.on('paypalParams', async (event, arg) => {
       if (arg.profile) {
         const params = {
-          paypalAccount: {
-            correlationId: arg.params.token,
-            paymentToken: arg.params.paymentId,
-            payerId: arg.params.PayerID,
-            unilateral: true,
-            intent: 'authorize'
-          },
-          braintreeLibraryVersion: Config.services.braintree.version,
-          authorizationFingerprint: arg.fingerprint
+          payload: {
+            paypalAccount: {
+              correlationId: arg.params.token,
+              paymentToken: arg.params.paymentId,
+              payerId: arg.params.PayerID,
+              unilateral: true,
+              intent: 'authorize'
+            },
+            braintreeLibraryVersion: Config.services.braintree.version,
+            authorizationFingerprint: arg.fingerprint
+          }
         }
 
         const response = await BraintreeApi.getPaypalAccount(params)
 
-        const data = response.data
+        if (response && !response.error) {
+          const data = response
 
-        data.expiry = this.$moment().add(90, 'minutes').format('HH:mm:ss')
+          data.expiry = this.$moment().add(90, 'minutes').format('HH:mm:ss')
 
-        const profile = {
-          ...arg.profile,
-          paypal: data
+          const profile = {
+            ...arg.profile,
+            paypal: data
+          }
+
+          this.updateProfile(profile)
+          this.validatePaypal(profile)
         }
-
-        this.updateProfile(profile)
-        this.validatePaypal(profile)
       }
     })
   },
@@ -402,21 +406,27 @@ export default {
     async paypalLogin (profile) {
       const secret = await BraintreeApi.getSecret()
 
-      const fingerprint = JSON.parse(atob(secret.data)).authorizationFingerprint
+      if (secret && !secret.error) {
+        const fingerprint = JSON.parse(atob(secret)).authorizationFingerprint
 
-      const params = {
-        returnUrl: Config.services.auth.url,
-        cancelUrl: Config.services.auth.url,
-        offerPaypalCredit: false,
-        amount: 1,
-        currencyIsoCode: 'PHP',
-        braintreeLibraryVersion: Config.services.braintree.version,
-        authorizationFingerprint: fingerprint
+        const params = {
+          payload: {
+            returnUrl: Config.services.auth.url,
+            cancelUrl: Config.services.auth.url,
+            offerPaypalCredit: false,
+            amount: 1,
+            currencyIsoCode: 'PHP',
+            braintreeLibraryVersion: Config.services.braintree.version,
+            authorizationFingerprint: fingerprint
+          }
+        }
+
+        const paypal = await BraintreeApi.createPaymentResource(params)
+
+        if (paypal && !paypal.error) {
+          ipcRenderer.send('paypal-login', JSON.stringify({ url: paypal.paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings, profile: profile }))
+        }
       }
-
-      const paypal = await BraintreeApi.createPaymentResource(params)
-
-      ipcRenderer.send('paypal-login', JSON.stringify({ url: paypal.data.paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings, profile: profile }))
     },
     /**
      * Logout to paypal
