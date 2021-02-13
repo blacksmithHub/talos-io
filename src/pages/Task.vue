@@ -301,7 +301,7 @@ export default {
             msg: 'running',
             class: 'orange'
           },
-          logs: `${task.logs || ''};Started!`,
+          logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Started!`,
           paid: false
         })
 
@@ -359,7 +359,7 @@ export default {
         }
 
         currentTask.paid = false
-        currentTask.logs = `${currentTask.logs || ''};Stopped!`
+        currentTask.logs = `${currentTask.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Stopped!`
         currentTask.transactionData = {}
 
         this.updateTask(currentTask)

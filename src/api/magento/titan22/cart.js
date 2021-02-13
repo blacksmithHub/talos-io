@@ -28,11 +28,13 @@ export default {
         .then((response) => {
           if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
 
-          return response
+          return { error: response }
         })
-        .catch((err) => err)
+        .catch((err) => {
+          return { error: err }
+        })
     } catch (error) {
-      return error
+      return { error: error }
     }
   },
 
@@ -51,11 +53,13 @@ export default {
         .then((response) => {
           if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
 
-          return response
+          return { error: response }
         })
-        .catch((err) => err)
+        .catch((err) => {
+          return { error: err }
+        })
     } catch (error) {
-      return error
+      return { error: error }
     }
   },
 
@@ -74,11 +78,13 @@ export default {
         .then((response) => {
           if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
 
-          return response
+          return { error: response }
         })
-        .catch((err) => err)
+        .catch((err) => {
+          return { error: err }
+        })
     } catch (error) {
-      return error
+      return { error: error }
     }
   },
 
@@ -97,11 +103,13 @@ export default {
         .then((response) => {
           if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
 
-          return response
+          return { error: response }
         })
-        .catch((err) => err)
+        .catch((err) => {
+          return { error: err }
+        })
     } catch (error) {
-      return error
+      return { error: error }
     }
   },
 
@@ -120,11 +128,13 @@ export default {
         .then((response) => {
           if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
 
-          return response
+          return { error: response }
         })
-        .catch((err) => err)
+        .catch((err) => {
+          return { error: err }
+        })
     } catch (error) {
-      return error
+      return { error: error }
     }
   },
 
@@ -143,11 +153,13 @@ export default {
         .then((response) => {
           if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
 
-          return response
+          return { error: response }
         })
-        .catch((err) => err)
+        .catch((err) => {
+          return { error: err }
+        })
     } catch (error) {
-      return error
+      return { error: error }
     }
   },
 
@@ -166,11 +178,13 @@ export default {
         .then((response) => {
           if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
 
-          return response
+          return { error: response }
         })
-        .catch((err) => err)
+        .catch((err) => {
+          return { error: err }
+        })
     } catch (error) {
-      return error
+      return { error: error }
     }
   }
 }

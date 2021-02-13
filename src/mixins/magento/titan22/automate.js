@@ -127,7 +127,7 @@ export default {
       const task = this.getCurrentTask(id)
 
       if (task) {
-        task.logs = `${task.logs || ''};${msg}`
+        task.logs = `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: ${msg}`
 
         this.updateTask(task)
       }
@@ -140,27 +140,31 @@ export default {
      * @param {*} counter
      * @param {*} response
      */
-    async handleError (id, counter, response) {
-      switch (response.statusCode) {
-        case 401:
-          {
-            const token = await this.authenticate(id)
-            const currentTask = this.getCurrentTask(id)
+    async handleError (id, counter, response, attr = 'orange') {
+      try {
+        try {
+          await this.updateCurrentTaskLog(id, `#${counter}: ${response.statusCode} - ${JSON.parse(response.body).message || 'Request failed'}`)
+        } catch (error) {
+          await this.updateCurrentTaskLog(id, `#${counter}: ${response.statusCode} - Request failed`)
+        }
 
-            if (token && currentTask) {
-              currentTask.transactionData.token = token
-              this.updateTask(currentTask)
+        switch (response.statusCode) {
+          case 401:
+            {
+              let currentTask = await this.getCurrentTask(id)
+              if (currentTask) {
+                const token = await this.authenticate(currentTask, attr)
+                currentTask = await this.getCurrentTask(id)
+                if (token && currentTask) {
+                  currentTask.transactionData.token = token
+                  this.updateTask(currentTask)
+                }
+              }
             }
-          }
-          break
-
-        default:
-          try {
-            this.updateCurrentTaskLog(id, `#${counter}: ${response.statusCode} - ${JSON.parse(response.body).message || 'Request failed'}`)
-          } catch (error) {
-            this.updateCurrentTaskLog(id, `#${counter}: ${response.statusCode} - Request failed`)
-          }
-          break
+            break
+        }
+      } catch (error) {
+        this.updateCurrentTaskLog(id, `#${counter}: ${response.statusCode} - Request failed`)
       }
     },
 
@@ -178,28 +182,19 @@ export default {
        * get user token
        */
       if (this.isRunning(task.id)) {
-        let token = null
-        let currentTask = this.getCurrentTask(task.id)
+        const token = await this.authenticate(task, 'cyan')
 
-        if (currentTask) {
-          token = (!currentTask.transactionData.token)
-            ? await this.authenticate(task.id, 'cyan')
-            : currentTask.transactionData.token
+        if (this.isRunning(task.id)) {
+          const currentTask = await this.getCurrentTask(task.id)
 
-          if (this.isRunning(task.id)) {
-            currentTask = this.getCurrentTask(task.id)
-
-            if (!token || !currentTask) {
-              this.verify(currentTask || task)
-              return false
-            } else {
-              currentTask.transactionData.token = token
-              this.updateTask(currentTask)
-            }
+          if (token && currentTask) {
+            currentTask.transactionData.token = token
+            task.transactionData.token = token
+            await this.updateTask(currentTask)
+          } else {
+            this.verify(task)
+            return false
           }
-        } else {
-          this.verify(task)
-          return false
         }
       }
 
@@ -209,28 +204,19 @@ export default {
        * get account data
        */
       if (this.isRunning(task.id)) {
-        let account = null
-        let currentTask = this.getCurrentTask(task.id)
+        const account = await this.getAccount(task, 'cyan')
 
-        if (currentTask) {
-          account = (!currentTask.transactionData.account)
-            ? await this.getAccount(task.id)
-            : currentTask.transactionData.account
+        if (this.isRunning(task.id)) {
+          const currentTask = await this.getCurrentTask(task.id)
 
-          if (this.isRunning(task.id)) {
-            currentTask = this.getCurrentTask(task.id)
-
-            if (!account || !currentTask) {
-              this.verify(currentTask || task)
-              return false
-            } else {
-              currentTask.transactionData.account = account
-              this.updateTask(currentTask)
-            }
+          if (account && currentTask) {
+            currentTask.transactionData.account = account
+            task.transactionData.account = account
+            await this.updateTask(currentTask)
+          } else {
+            this.verify(task)
+            return false
           }
-        } else {
-          this.verify(task)
-          return false
         }
       }
 
@@ -239,32 +225,25 @@ export default {
        *
        * create, get, and clean cart
        */
-
       if (this.isRunning(task.id)) {
-        let currentTask = this.getCurrentTask(task.id)
+        const cart = await this.initializeCart(task, 'cyan')
 
-        if (currentTask) {
-          const cart = (!currentTask.transactionData.cart)
-            ? await this.initializeCart(task.id, 'cyan')
-            : currentTask.transactionData.cart
+        if (this.isRunning(task.id)) {
+          const currentTask = await this.getCurrentTask(task.id)
 
-          if (this.isRunning(task.id)) {
-            currentTask = this.getCurrentTask(task.id)
-
-            if (!cart || !currentTask) {
-              this.verify(currentTask || task)
-              return false
-            } else {
-              currentTask.transactionData.cart = cart
-              this.updateTask(currentTask)
-              this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'ready', 'light-blue')
-            }
+          if (cart && currentTask) {
+            currentTask.transactionData.cart = cart
+            await this.updateTask(currentTask)
+            await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.STOPPED, 'ready', 'light-blue')
+            return true
+          } else {
+            this.verify(task)
+            return false
           }
-        } else {
-          this.verify(task)
-          return false
         }
       }
+
+      return false
     },
 
     /**
@@ -282,27 +261,21 @@ export default {
        */
       if (this.isRunning(task.id)) {
         let token = null
-        let currentTask = this.getCurrentTask(task.id)
+        const currentTask = await this.getCurrentTask(task.id)
 
-        if (currentTask) {
-          token = (!currentTask.transactionData.token)
-            ? await this.authenticate(task.id)
-            : currentTask.transactionData.token
-
-          if (this.isRunning(task.id)) {
-            currentTask = this.getCurrentTask(task.id)
-
-            if (!token || !currentTask) {
-              this.start(currentTask || task)
-              return false
-            } else {
-              currentTask.transactionData.token = token
-              this.updateTask(currentTask)
-            }
-          }
+        if (currentTask && currentTask.transactionData.token) {
+          token = currentTask.transactionData.token
         } else {
-          this.start(task)
-          return false
+          token = await this.authenticate(task)
+        }
+
+        if (this.isRunning(task.id)) {
+          if (token) {
+            task.transactionData.token = token
+          } else {
+            this.start(task)
+            return false
+          }
         }
       }
 
@@ -313,27 +286,21 @@ export default {
        */
       if (this.isRunning(task.id)) {
         let account = null
-        let currentTask = this.getCurrentTask(task.id)
+        const currentTask = await this.getCurrentTask(task.id)
 
-        if (currentTask) {
-          account = (currentTask.transactionData.account && Object.keys(currentTask.transactionData.account).length)
-            ? currentTask.transactionData.account
-            : await this.getAccount(task.id)
-
-          if (this.isRunning(task.id)) {
-            currentTask = this.getCurrentTask(task.id)
-
-            if (!account || !currentTask) {
-              this.start(currentTask || task)
-              return false
-            } else {
-              currentTask.transactionData.account = account
-              this.updateTask(currentTask)
-            }
-          }
+        if (currentTask && currentTask.transactionData.account) {
+          account = currentTask.transactionData.account
         } else {
-          this.start(task)
-          return false
+          account = await this.getAccount(task)
+        }
+
+        if (this.isRunning(task.id)) {
+          if (account) {
+            task.transactionData.account = account
+          } else {
+            this.start(task)
+            return false
+          }
         }
       }
 
@@ -344,27 +311,21 @@ export default {
        */
       if (this.isRunning(task.id)) {
         let cart = null
-        let currentTask = this.getCurrentTask(task.id)
+        const currentTask = await this.getCurrentTask(task.id)
 
-        if (currentTask) {
-          cart = (currentTask.transactionData.cart && Object.keys(currentTask.transactionData.cart).length)
-            ? currentTask.transactionData.cart
-            : await this.initializeCart(task.id)
-
-          if (this.isRunning(task.id)) {
-            currentTask = this.getCurrentTask(task.id)
-
-            if (!cart || !currentTask) {
-              this.start(currentTask || task)
-              return false
-            } else {
-              currentTask.transactionData.cart = cart
-              this.updateTask(currentTask)
-            }
-          }
+        if (currentTask && currentTask.transactionData.cart) {
+          cart = currentTask.transactionData.cart
         } else {
-          this.start(task)
-          return false
+          cart = await this.initializeCart(task)
+        }
+
+        if (this.isRunning(task.id)) {
+          if (cart) {
+            task.transactionData.cart = cart
+          } else {
+            this.start(task)
+            return false
+          }
         }
       }
 
@@ -374,18 +335,20 @@ export default {
        * add to cart
        */
       if (this.isRunning(task.id)) {
-        const product = await this.addToCart(task.id)
+        if (task.transactionData.cart) {
+          const product = await this.addToCart(task)
 
-        if (this.isRunning(task.id)) {
-          const currentTask = this.getCurrentTask(task.id)
-
-          if (!product || !currentTask) {
-            this.start(currentTask || task)
-            return false
-          } else {
-            currentTask.transactionData.product = product
-            this.updateTask(currentTask)
+          if (this.isRunning(task.id)) {
+            if (product) {
+              task.transactionData.product = product
+            } else {
+              this.start(task)
+              return false
+            }
           }
+        } else {
+          this.start(task)
+          return false
         }
       }
 
@@ -395,18 +358,20 @@ export default {
        * set shipping details
        */
       if (this.isRunning(task.id)) {
-        const shipping = await this.setShippingInfo(task.id)
+        if (task.transactionData.product) {
+          const shipping = await this.setShippingInfo(task)
 
-        if (this.isRunning(task.id)) {
-          const currentTask = this.getCurrentTask(task.id)
-
-          if (!shipping || !currentTask) {
-            this.start(currentTask || task)
-            return false
-          } else {
-            currentTask.transactionData.shipping = shipping
-            this.updateTask(currentTask)
+          if (this.isRunning(task.id)) {
+            if (shipping) {
+              task.transactionData.shipping = shipping
+            } else {
+              this.start(task)
+              return false
+            }
           }
+        } else {
+          this.start(task)
+          return false
         }
       }
 
@@ -416,33 +381,30 @@ export default {
        * place order
        */
       if (this.isRunning(task.id)) {
-        const order = await this.placeOrder(task.id)
+        if (task.transactionData.shipping) {
+          const order = await this.placeOrder(task)
 
-        if (order) {
-          this.onSuccess(task.id)
-        } else if (this.isRunning(task.id)) {
-          this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'cleaning cart', 'orange')
-
-          let currentTask = this.getCurrentTask(task.id)
-
-          if (currentTask) {
-            const cart = await this.getCart(task.id)
-
-            if (this.isRunning(task.id)) {
-              currentTask = this.getCurrentTask(task.id)
-
-              if (cart && currentTask) {
-                currentTask.transactionData.cart = cart
-                this.updateTask(currentTask)
-              }
-
-              currentTask = this.getCurrentTask(task.id)
-              this.start(currentTask || task)
-            }
+          if (order) {
+            await this.onSuccess(task)
+            return true
           } else {
-            this.start(task)
-            return false
+            if (this.isRunning(task.id)) {
+              await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'cleaning cart', 'orange')
+
+              const cart = await this.getCart(task.id)
+
+              if (this.isRunning(task.id)) {
+                const currentTask = await this.getCurrentTask(task.id)
+                currentTask.transactionData.cart = cart
+                await this.updateTask(currentTask)
+                this.start(task)
+                return false
+              }
+            }
           }
+        } else {
+          this.start(task)
+          return false
         }
       }
 
@@ -452,19 +414,19 @@ export default {
     /**
      * Perform login
      *
-     * @param {*} id
+     * @param {*} task
      */
-    async authenticate (id, attr = 'orange') {
-      this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, 'authenticating', attr)
+    async authenticate (task, attr = 'orange') {
+      await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'authenticating', attr)
 
       let data = null
       let counter = 0
 
-      while (this.isRunning(id) && !data) {
+      while (this.isRunning(task.id) && !data) {
         counter++
 
         try {
-          let currentTask = this.getCurrentTask(id)
+          let currentTask = await this.getCurrentTask(task.id)
 
           if (!currentTask) break
 
@@ -483,11 +445,11 @@ export default {
             clearTimeout(timeout)
           }
 
-          if (!this.isRunning(id)) break
+          if (!this.isRunning(task.id)) break
 
-          this.updateCurrentTaskLog(id, `#${counter}: Logging in...`)
+          await this.updateCurrentTaskLog(task.id, `#${counter}: Logging in...`)
 
-          currentTask = this.getCurrentTask(id)
+          currentTask = await this.getCurrentTask(task.id)
 
           if (!currentTask) break
 
@@ -502,19 +464,17 @@ export default {
 
           const response = await authApi.fetchToken(params)
 
-          if (!this.isRunning(id)) break
+          if (!this.isRunning(task.id)) break
 
-          if (response && response.statusCode) {
-            await this.handleError(id, counter, response)
+          if (response && response.error) {
+            await this.handleError(task.id, counter, response.error, attr)
             continue
-          }
-
-          if (response && !response.statusCode) {
+          } else if (response && !response.error) {
             data = response
             break
           }
         } catch (error) {
-          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
+          await this.updateCurrentTaskLog(task.id, `#${counter}: ${error}`)
           continue
         }
       }
@@ -525,17 +485,17 @@ export default {
     /**
      * Fetch user account
      *
-     * @param {*} id
+     * @param {*} task
      */
-    async getAccount (id) {
+    async getAccount (task, attr = 'orange') {
       let data = null
       let counter = 0
 
-      while (this.isRunning(id) && !data) {
+      while (this.isRunning(task.id) && !data) {
         counter++
 
         try {
-          let currentTask = this.getCurrentTask(id)
+          let currentTask = await this.getCurrentTask(task.id)
 
           if (!currentTask) break
 
@@ -552,35 +512,33 @@ export default {
           clearInterval(interval)
           clearTimeout(timeout)
 
-          if (!this.isRunning(id)) break
+          if (!this.isRunning(task.id)) break
 
-          this.updateCurrentTaskLog(id, `#${counter}: Fetching account...`)
+          await this.updateCurrentTaskLog(task.id, `#${counter}: Fetching account...`)
 
-          currentTask = this.getCurrentTask(id)
+          currentTask = await this.getCurrentTask(task.id)
 
           if (!currentTask) break
 
           const params = {
-            token: currentTask.transactionData.token || '',
+            token: task.transactionData.token,
             proxy: currentTask.proxy,
             mode: currentTask.mode
           }
 
           const response = await customerApi.profile(params)
 
-          if (!this.isRunning(id)) break
+          if (!this.isRunning(task.id)) break
 
-          if (response && response.statusCode) {
-            await this.handleError(id, counter, response)
+          if (response && response.error) {
+            await this.handleError(task.id, counter, response.error, attr)
             continue
-          }
-
-          if (response && !response.statusCode && response.addresses.length) {
+          } else if (response && !response.error && response.addresses.length) {
             data = response
             break
           }
         } catch (error) {
-          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
+          await this.updateCurrentTaskLog(task.id, `#${counter}: ${error}`)
           continue
         }
       }
@@ -591,17 +549,17 @@ export default {
     /**
      * Perform Create, get, and clean cart
      *
-     * @param {*} id
+     * @param {*} task
      */
-    async initializeCart (id, attr = 'orange') {
-      this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, 'initializing cart', attr)
+    async initializeCart (task, attr = 'orange') {
+      await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, 'initializing cart', attr)
 
-      const cartId = await this.createCart(id)
+      const cartId = await this.createCart(task, attr)
 
       let cart = null
 
       if (cartId) {
-        cart = await this.getCart(id)
+        cart = await this.getCart(task, attr)
       }
 
       return cart
@@ -610,17 +568,17 @@ export default {
     /**
      * Perform cart creation
      *
-     * @param {*} id
+     * @param {*} task
      */
-    async createCart (id) {
+    async createCart (task, attr = 'orange') {
       let data = null
       let counter = 0
 
-      while (this.isRunning(id) && !data) {
+      while (this.isRunning(task.id) && !data) {
         counter++
 
         try {
-          let currentTask = this.getCurrentTask(id)
+          let currentTask = await this.getCurrentTask(task.id)
 
           if (!currentTask) break
 
@@ -637,33 +595,31 @@ export default {
           clearInterval(interval)
           clearTimeout(timeout)
 
-          currentTask = this.getCurrentTask(id)
+          currentTask = await this.getCurrentTask(task.id)
 
-          if (!this.isRunning(id) || !currentTask) break
+          if (!this.isRunning(task.id) || !currentTask) break
 
-          this.updateCurrentTaskLog(id, `#${counter}: Creating cart...`)
+          await this.updateCurrentTaskLog(task.id, `#${counter}: Creating cart...`)
 
           const params = {
-            token: currentTask.transactionData.token || '',
+            token: task.transactionData.token,
             proxy: currentTask.proxy,
             mode: currentTask.mode
           }
 
           const response = await cartApi.create(params)
 
-          if (!this.isRunning(id)) break
+          if (!this.isRunning(task.id)) break
 
-          if (response && response.statusCode) {
-            await this.handleError(id, counter, response)
+          if (response && response.error) {
+            await this.handleError(task.id, counter, response.error, attr)
             continue
-          }
-
-          if (response && !response.statusCode) {
+          } else if (response && !response.error) {
             data = response
             break
           }
         } catch (error) {
-          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
+          await this.updateCurrentTaskLog(task.id, `#${counter}: ${error}`)
           continue
         }
       }
@@ -674,17 +630,17 @@ export default {
     /**
      * Fetch and clean current cart
      *
-     * @param {*} id
+     * @param {*} task
      */
-    async getCart (id) {
+    async getCart (task, attr = 'orange') {
       let data = null
       let counter = 0
 
-      while (this.isRunning(id) && !data) {
+      while (this.isRunning(task.id) && !data) {
         counter++
 
         try {
-          let currentTask = this.getCurrentTask(id)
+          let currentTask = await this.getCurrentTask(task.id)
 
           if (!currentTask) break
 
@@ -701,49 +657,47 @@ export default {
           clearInterval(interval)
           clearTimeout(timeout)
 
-          currentTask = this.getCurrentTask(id)
+          currentTask = await this.getCurrentTask(task.id)
 
-          if (!this.isRunning(id) || !currentTask) break
+          if (!this.isRunning(task.id) || !currentTask) break
 
-          this.updateCurrentTaskLog(id, `#${counter}: Fetching cart...`)
+          await this.updateCurrentTaskLog(task.id, `#${counter}: Fetching cart...`)
 
           const params = {
-            token: currentTask.transactionData.token || '',
+            token: task.transactionData.token,
             proxy: currentTask.proxy,
             mode: currentTask.mode
           }
 
           const response = await cartApi.get(params)
 
-          if (!this.isRunning(id)) break
+          if (!this.isRunning(task.id)) break
 
-          if (response && response.statusCode) {
-            await this.handleError(id, counter, response)
+          if (response && response.error) {
+            await this.handleError(task.id, counter, response.error, attr)
             continue
-          }
-
-          if (response && !response.statusCode) {
+          } else if (response && !response.error) {
             data = response
             break
           }
         } catch (error) {
-          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
+          await this.updateCurrentTaskLog(task.id, `#${counter}: ${error}`)
           continue
         }
       }
 
       // Clean cart
-      if (this.isRunning(id) && data && data.items.length) {
+      if (this.isRunning(task.id) && data && data.items.length) {
         counter = 0
 
         for (let index = 0; index < data.items.length; index++) {
           let deleted = false
 
-          while (this.isRunning(id) && !deleted) {
+          while (this.isRunning(task.id) && !deleted) {
             counter++
 
             try {
-              let currentTask = this.getCurrentTask(id)
+              let currentTask = await this.getCurrentTask(task.id)
 
               if (!currentTask) break
 
@@ -760,16 +714,16 @@ export default {
               clearInterval(interval)
               clearTimeout(timeout)
 
-              if (!this.isRunning(id)) break
+              if (!this.isRunning(task.id)) break
 
-              this.updateCurrentTaskLog(id, `#${counter}: Cleaning cart - item ${index + 1}...`)
+              await this.updateCurrentTaskLog(task.id, `#${counter}: Cleaning cart - item ${index + 1}...`)
 
-              currentTask = this.getCurrentTask(id)
+              currentTask = await this.getCurrentTask(task.id)
 
               if (!currentTask) break
 
               const params = {
-                token: currentTask.transactionData.token || '',
+                token: task.transactionData.token,
                 id: data.items[index].item_id,
                 proxy: currentTask.proxy,
                 mode: currentTask.mode
@@ -777,19 +731,17 @@ export default {
 
               const response = await cartApi.delete(params)
 
-              if (!this.isRunning(id)) break
+              if (!this.isRunning(task.id)) break
 
-              if (response && response.statusCode) {
-                await this.handleError(id, counter, response)
+              if (response && response.error) {
+                await this.handleError(task.id, counter, response.error)
                 continue
-              }
-
-              if (response && !response.statusCode) {
+              } else if (response && !response.error) {
                 deleted = response
                 continue
               }
             } catch (error) {
-              this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
+              await this.updateCurrentTaskLog(task.id, `#${counter}: ${error}`)
               continue
             }
           }
@@ -802,23 +754,23 @@ export default {
     /**
      * Add product to cart
      *
-     * @param {*} id
+     * @param {*} task
      */
-    async addToCart (id) {
+    async addToCart (task) {
       let data = null
       let counter = 0
 
-      while (this.isRunning(id) && !data) {
+      while (this.isRunning(task.id) && !data) {
         counter++
 
         try {
-          let currentTask = this.getCurrentTask(id)
+          let currentTask = await this.getCurrentTask(task.id)
 
           if (!currentTask) break
 
           for (let index = 0; index < currentTask.sizes.length; index++) {
             try {
-              currentTask = this.getCurrentTask(id)
+              currentTask = this.getCurrentTask(task.id)
 
               if (counter > 1) {
                 let interval = null
@@ -835,42 +787,25 @@ export default {
                 clearTimeout(timeout)
               }
 
-              currentTask = this.getCurrentTask(id)
+              currentTask = await this.getCurrentTask(task.id)
 
-              if (!this.isRunning(id) || !currentTask) break
+              if (!this.isRunning(task.id) || !currentTask) break
 
               const msg = `Size: ${currentTask.sizes[index].label.toUpperCase()} - trying`
-              this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
-              this.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
+              await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
+              await this.updateCurrentTaskLog(task.id, `#${counter}: ${msg}`)
 
-              currentTask = this.getCurrentTask(id)
+              currentTask = await this.getCurrentTask(task.id)
 
               if (!currentTask) break
 
-              let cartId = null
-
-              if (currentTask.transactionData.cart && Object.keys(currentTask.transactionData.cart).length) {
-                cartId = currentTask.transactionData.cart.id.toString()
-              } else {
-                const cart = await this.initializeCart(id)
-
-                currentTask = this.getCurrentTask(id)
-
-                if (cart && currentTask) {
-                  currentTask.transactionData.cart = cart
-                  cartId = cart.id.toString()
-                }
-              }
-
-              this.updateTask(currentTask)
-
               const params = {
-                token: currentTask.transactionData.token || '',
+                token: task.transactionData.token,
                 payload: {
                   cartItem: {
                     sku: `${currentTask.sku}-SZ${currentTask.sizes[index].label.replace('.', 'P').toUpperCase()}`,
                     qty: currentTask.qty || 1,
-                    quote_id: cartId,
+                    quote_id: task.transactionData.cart.id.toString(),
                     product_option: {
                       extension_attributes: {
                         configurable_item_options: [
@@ -890,23 +825,21 @@ export default {
 
               const response = await cartApi.store(params)
 
-              if (!this.isRunning(id)) break
+              if (!this.isRunning(task.id)) break
 
-              if (response && response.statusCode) {
-                await this.handleError(id, counter, response)
+              if (response && response.error) {
+                await this.handleError(task.id, counter, response.error)
                 continue
-              }
-
-              if (response && !response.statusCode) {
-                currentTask = this.getCurrentTask(id)
+              } else if (response && !response.error) {
+                currentTask = await this.getCurrentTask(task.id)
 
                 if (currentTask) {
                   data = response
                   data.size = currentTask.sizes[index].label.toUpperCase()
 
                   const msg = `Size: ${currentTask.sizes[index].label.toUpperCase()} - carted`
-                  this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
-                  this.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
+                  await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
+                  await this.updateCurrentTaskLog(task.id, `#${counter}: ${msg}`)
 
                   break
                 } else {
@@ -914,12 +847,12 @@ export default {
                 }
               }
             } catch (error) {
-              this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
+              await this.updateCurrentTaskLog(task.id, `#${counter}: ${error}`)
               continue
             }
           }
         } catch (error) {
-          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
+          await this.updateCurrentTaskLog(task.id, `#${counter}: ${error}`)
           continue
         }
       }
@@ -930,28 +863,28 @@ export default {
     /**
      * Perform setting of shipping information
      *
-     * @param {*} id
+     * @param {*} task
      */
-    async setShippingInfo (id) {
+    async setShippingInfo (task) {
       let data = null
       let counter = 0
 
-      let currentTask = this.getCurrentTask(id)
+      const defaultShippingAddress = task.transactionData.account.addresses.find((val) => val.default_shipping)
+      const defaultBillingAddress = task.transactionData.account.addresses.find((val) => val.default_billing)
+
+      let currentTask = await this.getCurrentTask(task.id)
 
       if (!currentTask) return data
-
-      const defaultShippingAddress = currentTask.transactionData.account.addresses.find((val) => val.default_shipping)
-      const defaultBillingAddress = currentTask.transactionData.account.addresses.find((val) => val.default_billing)
 
       // estimate shipping
       let params = null
 
-      if (currentTask.transactionData.product.price <= 7000) {
-        while (this.isRunning(id) && !params) {
+      if (task.transactionData.product.price <= 7000) {
+        while (this.isRunning(task.id) && !params) {
           counter++
 
           try {
-            currentTask = this.getCurrentTask(id)
+            currentTask = await this.getCurrentTask(task.id)
 
             if (!currentTask) break
 
@@ -968,20 +901,20 @@ export default {
             clearInterval(interval)
             clearTimeout(timeout)
 
-            currentTask = this.getCurrentTask(id)
+            currentTask = await this.getCurrentTask(task.id)
 
-            if (!this.isRunning(id) || !currentTask) break
+            if (!this.isRunning(task.id) || !currentTask) break
 
-            const waitingMsg = `Size: ${currentTask.transactionData.product.size} - estimating shipping`
-            this.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
-            this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
+            const waitingMsg = `Size: ${task.transactionData.product.size} - estimating shipping`
+            await this.updateCurrentTaskLog(task.id, `#${counter}: ${waitingMsg}`)
+            await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
 
-            currentTask = this.getCurrentTask(id)
+            currentTask = await this.getCurrentTask(task.id)
 
             if (!currentTask) break
 
             const parameters = {
-              token: currentTask.transactionData.token || '',
+              token: task.transactionData.token,
               payload: { addressId: defaultShippingAddress.id },
               proxy: currentTask.proxy,
               mode: currentTask.mode
@@ -989,19 +922,17 @@ export default {
 
             const response = await cartApi.estimateShipping(parameters)
 
-            if (!this.isRunning(id)) break
+            if (!this.isRunning(task.id)) break
 
-            if (response && response.statusCode) {
-              await this.handleError(id, counter, response)
+            if (response && response.error) {
+              await this.handleError(task.id, counter, response.error)
               continue
-            }
-
-            if (response && !response.statusCode) {
+            } else if (response && !response.error) {
               params = response[0]
               break
             }
           } catch (error) {
-            this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
+            await this.updateCurrentTaskLog(task.id, `#${counter}: ${error}`)
             continue
           }
         }
@@ -1012,30 +943,13 @@ export default {
         }
       }
 
-      currentTask = this.getCurrentTask(id)
+      if (!this.isRunning(task.id)) return data
 
-      if (!this.isRunning(id) || !currentTask) return data
-
-      let email = null
-
-      if (currentTask.transactionData.account && Object.keys(currentTask.transactionData.account).length) {
-        email = currentTask.transactionData.account.email
-      } else {
-        const account = await this.getAccount(id)
-
-        currentTask = this.getCurrentTask(id)
-
-        if (account && currentTask) {
-          currentTask.transactionData.account = account
-          email = account.email
-        }
-      }
-
-      this.updateTask(currentTask)
+      const email = task.transactionData.account.email
 
       // set shipping
-      const shippingAddress = this.setAddresses(defaultShippingAddress, email)
-      const billingAddress = this.setAddresses(defaultBillingAddress, email)
+      const shippingAddress = await this.setAddresses(defaultShippingAddress, email)
+      const billingAddress = await this.setAddresses(defaultBillingAddress, email)
 
       const payload = {
         addressInformation: {
@@ -1048,15 +962,15 @@ export default {
 
       counter = 0
 
-      while (this.isRunning(id) && !data) {
+      while (this.isRunning(task.id) && !data) {
         counter++
 
         try {
-          currentTask = this.getCurrentTask(id)
+          const waitingMsg = `Size: ${task.transactionData.product.size} - setting shipping details`
+          await this.updateCurrentTaskLog(task.id, `#${counter}: ${waitingMsg}`)
+          await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
 
-          const waitingMsg = `Size: ${currentTask.transactionData.product.size} - setting shipping details`
-          this.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
-          this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
+          currentTask = await this.getCurrentTask(task.id)
 
           if (!currentTask) break
 
@@ -1073,12 +987,12 @@ export default {
           clearInterval(interval)
           clearTimeout(timeout)
 
-          currentTask = this.getCurrentTask(id)
+          currentTask = await this.getCurrentTask(task.id)
 
-          if (!this.isRunning(id) || !currentTask) break
+          if (!this.isRunning(task.id) || !currentTask) break
 
           const params = {
-            token: currentTask.transactionData.token || '',
+            token: task.transactionData.token,
             payload: payload,
             proxy: currentTask.proxy,
             mode: currentTask.mode
@@ -1086,19 +1000,17 @@ export default {
 
           const response = await cartApi.setShippingInformation(params)
 
-          if (!this.isRunning(id)) break
+          if (!this.isRunning(task.id)) break
 
-          if (response && response.statusCode) {
-            await this.handleError(id, counter, response)
+          if (response && response.error) {
+            await this.handleError(task.id, counter, response.error)
             continue
-          }
-
-          if (response && !response.statusCode) {
+          } else if (response && !response.error) {
             data = response
             break
           }
         } catch (error) {
-          this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
+          await this.updateCurrentTaskLog(task.id, `#${counter}: ${error}`)
           continue
         }
       }
@@ -1109,153 +1021,151 @@ export default {
     /**
      * Perform placing of order
      *
-     * @param {*} id
+     * @param {*} task
      */
-    async placeOrder (id) {
+    async placeOrder (task) {
       let data = null
 
-      let currentTask = this.getCurrentTask(id)
+      try {
+        let currentTask = await this.getCurrentTask(task.id)
 
-      if (!this.isRunning(id) || !currentTask) return data
+        if (!this.isRunning(task.id) || !currentTask) return data
 
-      const waitingMsg = `Size: ${currentTask.transactionData.product.size} - waiting to place order`
-      this.updateCurrentTaskLog(id, waitingMsg)
-      this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
-
-      if (currentTask.placeOrder) {
         let interval = null
         let timeout = null
-        const vm = this
         await new Promise((resolve) => {
           interval = setInterval(() => {
-            const now = new Date()
-            const then = new Date(vm.$moment(currentTask.placeOrder, 'HH:mm:ss').format('YYYY-MM-DD HH:mm:ss'))
             timeout = setTimeout(() => {
               clearInterval(interval)
               resolve()
-            }, then - now)
+            }, currentTask.delay)
           }, 500)
         })
         clearInterval(interval)
         clearTimeout(timeout)
-      }
 
-      currentTask = this.getCurrentTask(id)
+        const waitingMsg = `Size: ${task.transactionData.product.size} - waiting to place order`
+        await this.updateCurrentTaskLog(task.id, waitingMsg)
+        await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
 
-      if (!this.isRunning(id) || !currentTask) return data
-
-      const placingMsg = `Size: ${currentTask.transactionData.product.size} - placing order`
-      this.updateCurrentTaskLog(id, placingMsg)
-      this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, placingMsg, 'orange')
-
-      const defaultBillingAddress = currentTask.transactionData.account.addresses.find((val) => val.default_billing)
-
-      let cartId = null
-
-      if (currentTask.transactionData.cart && Object.keys(currentTask.transactionData.cart).length) {
-        cartId = currentTask.transactionData.cart.id.toString()
-      } else {
-        const cart = await this.initializeCart(id)
-
-        currentTask = this.getCurrentTask(id)
-
-        if (cart && currentTask) {
-          currentTask.transactionData.cart = cart
-          cartId = cart.id.toString()
+        if (currentTask.placeOrder) {
+          let interval = null
+          let timeout = null
+          const vm = this
+          await new Promise((resolve) => {
+            interval = setInterval(() => {
+              const now = new Date()
+              const then = new Date(vm.$moment(currentTask.placeOrder, 'HH:mm:ss').format('YYYY-MM-DD HH:mm:ss'))
+              timeout = setTimeout(() => {
+                clearInterval(interval)
+                resolve()
+              }, then - now)
+            }, 500)
+          })
+          clearInterval(interval)
+          clearTimeout(timeout)
         }
-      }
 
-      this.updateTask(currentTask)
+        if (!this.isRunning(task.id)) return data
 
-      const payload = {
-        payload: {
-          amcheckout: {},
-          billingAddress: this.setAddresses(defaultBillingAddress, currentTask.transactionData.account.email),
-          cartId: cartId,
-          paymentMethod: {
-            additional_data: null,
-            method: '',
-            po_number: null
-          }
-        },
-        token: currentTask.transactionData.token || '',
-        proxy: currentTask.proxy,
-        mode: currentTask.mode
-      }
+        const placingMsg = `Size: ${task.transactionData.product.size} - placing order`
+        await this.updateCurrentTaskLog(task.id, placingMsg)
+        await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, placingMsg, 'orange')
 
-      currentTask = this.getCurrentTask(id)
+        const defaultBillingAddress = task.transactionData.account.addresses.find((val) => val.default_billing)
 
-      if (!currentTask) return data
-
-      switch (currentTask.checkoutMethod) {
-        case 1:
-          payload.payload.paymentMethod.method = 'paymaya_checkout'
-          data = await this.paymayaCheckout(id, payload)
-          break
-
-        case 2:
-          payload.payload.paymentMethod.method = 'ccpp'
-          data = await this.creditCardCheckout(id, payload)
-          break
-
-        case 3:
-          payload.payload.paymentMethod.method = 'braintree_paypal'
-
-          if (currentTask.profile.paypal && Object.keys(currentTask.profile.paypal).length) {
-            payload.payload.paymentMethod.additional_data = {
-              paypal_express_checkout_token: currentTask.profile.paypal.paypalAccounts[0].details.correlationId,
-              paypal_express_checkout_redirect_required: false,
-              paypal_express_checkout_payer_id: currentTask.profile.paypal.paypalAccounts[0].details.payerInfo.payerId,
-              payment_method_nonce: currentTask.profile.paypal.paypalAccounts[0].nonce
+        const payload = {
+          payload: {
+            amcheckout: {},
+            billingAddress: this.setAddresses(defaultBillingAddress, task.transactionData.account.email),
+            cartId: task.transactionData.cart.id.toString(),
+            paymentMethod: {
+              additional_data: null,
+              method: '',
+              po_number: null
             }
-          } else if (this.paypal && Object.keys(this.paypal).length) {
-            payload.payload.paymentMethod.additional_data = {
-              paypal_express_checkout_token: this.paypal.paypalAccounts[0].details.correlationId,
-              paypal_express_checkout_redirect_required: false,
-              paypal_express_checkout_payer_id: this.paypal.paypalAccounts[0].details.payerInfo.payerId,
-              payment_method_nonce: this.paypal.paypalAccounts[0].nonce
-            }
-          }
+          },
+          token: task.transactionData.token,
+          proxy: currentTask.proxy,
+          mode: currentTask.mode
+        }
 
-          data = await this.paypalCheckout(id, payload)
-          break
+        currentTask = await this.getCurrentTask(task.id)
 
-        default:
-          switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
-            case 'paymaya_checkout':
-              payload.payload.paymentMethod.method = 'paymaya_checkout'
-              data = await this.paymayaCheckout(id, payload)
-              break
+        if (!currentTask) return data
 
-            case 'ccpp':
-              payload.payload.paymentMethod.method = 'ccpp'
-              data = await this.creditCardCheckout(id, payload)
-              break
+        switch (currentTask.checkoutMethod) {
+          case 1:
+            payload.payload.paymentMethod.method = 'paymaya_checkout'
+            data = await this.paymayaCheckout(task, payload)
+            break
 
-            case 'braintree_paypal':
-              payload.payload.paymentMethod.method = 'braintree_paypal'
+          case 2:
+            payload.payload.paymentMethod.method = 'ccpp'
+            data = await this.creditCardCheckout(task, payload)
+            break
 
-              if (currentTask.profile.paypal && Object.keys(currentTask.profile.paypal).length) {
-                payload.payload.paymentMethod.additional_data = {
-                  paypal_express_checkout_token: currentTask.profile.paypal.paypalAccounts[0].details.correlationId,
-                  paypal_express_checkout_redirect_required: false,
-                  paypal_express_checkout_payer_id: currentTask.profile.paypal.paypalAccounts[0].details.payerInfo.payerId,
-                  payment_method_nonce: currentTask.profile.paypal.paypalAccounts[0].nonce
-                }
-              } else if (this.paypal && Object.keys(this.paypal).length) {
-                payload.payload.paymentMethod.additional_data = {
-                  paypal_express_checkout_token: this.paypal.paypalAccounts[0].details.correlationId,
-                  paypal_express_checkout_redirect_required: false,
-                  paypal_express_checkout_payer_id: this.paypal.paypalAccounts[0].details.payerInfo.payerId,
-                  payment_method_nonce: this.paypal.paypalAccounts[0].nonce
-                }
+          case 3:
+            payload.payload.paymentMethod.method = 'braintree_paypal'
+
+            if (currentTask.profile.paypal && Object.keys(currentTask.profile.paypal).length) {
+              payload.payload.paymentMethod.additional_data = {
+                paypal_express_checkout_token: currentTask.profile.paypal.paypalAccounts[0].details.correlationId,
+                paypal_express_checkout_redirect_required: false,
+                paypal_express_checkout_payer_id: currentTask.profile.paypal.paypalAccounts[0].details.payerInfo.payerId,
+                payment_method_nonce: currentTask.profile.paypal.paypalAccounts[0].nonce
               }
+            } else if (this.paypal && Object.keys(this.paypal).length) {
+              payload.payload.paymentMethod.additional_data = {
+                paypal_express_checkout_token: this.paypal.paypalAccounts[0].details.correlationId,
+                paypal_express_checkout_redirect_required: false,
+                paypal_express_checkout_payer_id: this.paypal.paypalAccounts[0].details.payerInfo.payerId,
+                payment_method_nonce: this.paypal.paypalAccounts[0].nonce
+              }
+            }
 
-              data = await this.paypalCheckout(id, payload)
+            data = await this.paypalCheckout(task, payload)
+            break
 
-              break
-          }
-          break
+          default:
+            switch (task.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
+              case 'paymaya_checkout':
+                payload.payload.paymentMethod.method = 'paymaya_checkout'
+                data = await this.paymayaCheckout(task, payload)
+                break
+
+              case 'ccpp':
+                payload.payload.paymentMethod.method = 'ccpp'
+                data = await this.creditCardCheckout(task, payload)
+                break
+
+              case 'braintree_paypal':
+                payload.payload.paymentMethod.method = 'braintree_paypal'
+
+                if (currentTask.profile.paypal && Object.keys(currentTask.profile.paypal).length) {
+                  payload.payload.paymentMethod.additional_data = {
+                    paypal_express_checkout_token: currentTask.profile.paypal.paypalAccounts[0].details.correlationId,
+                    paypal_express_checkout_redirect_required: false,
+                    paypal_express_checkout_payer_id: currentTask.profile.paypal.paypalAccounts[0].details.payerInfo.payerId,
+                    payment_method_nonce: currentTask.profile.paypal.paypalAccounts[0].nonce
+                  }
+                } else if (this.paypal && Object.keys(this.paypal).length) {
+                  payload.payload.paymentMethod.additional_data = {
+                    paypal_express_checkout_token: this.paypal.paypalAccounts[0].details.correlationId,
+                    paypal_express_checkout_redirect_required: false,
+                    paypal_express_checkout_payer_id: this.paypal.paypalAccounts[0].details.payerInfo.payerId,
+                    payment_method_nonce: this.paypal.paypalAccounts[0].nonce
+                  }
+                }
+
+                data = await this.paypalCheckout(task, payload)
+
+                break
+            }
+            break
+        }
+      } catch (error) {
+        await this.updateCurrentTaskLog(task.id, error)
       }
 
       return data
@@ -1264,37 +1174,29 @@ export default {
     /**
      * PayMaya checkout method
      *
-     * @param {*} id
+     * @param {*} task
      * @param {*} payload
      */
-    async paymayaCheckout (id, payload) {
+    async paymayaCheckout (task, payload) {
       let data = null
-
       const tries = 3
-
-      let currentTask = this.getCurrentTask(id)
-
-      if (!currentTask) return data
 
       for (let index = 1; index <= tries; index++) {
         try {
-          currentTask = this.getCurrentTask(id)
-
-          if (!this.isRunning(id) || !currentTask) break
+          if (!this.isRunning(task.id)) break
 
           if (index > 1) {
-            const waitingMsg = `Size: ${currentTask.transactionData.product.size} - trying for restock`
-
-            this.updateCurrentTaskLog(id, waitingMsg)
-            this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
+            const waitingMsg = `Size: ${task.transactionData.product.size} - retrying`
+            await this.updateCurrentTaskLog(task.id, waitingMsg)
+            await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
           }
 
           let counter = 0
 
-          while (this.isRunning(id) && !data) {
+          while (this.isRunning(task.id) && !data) {
             counter++
 
-            currentTask = this.getCurrentTask(id)
+            const currentTask = await this.getCurrentTask(task.id)
 
             if (!currentTask) break
 
@@ -1313,9 +1215,7 @@ export default {
               clearTimeout(timeout)
             }
 
-            currentTask = this.getCurrentTask(id)
-
-            if (!this.isRunning(id) || !currentTask) break
+            if (!this.isRunning(task.id)) break
 
             const timer = new StopWatch(true)
 
@@ -1323,52 +1223,48 @@ export default {
 
             timer.stop()
 
-            currentTask = this.getCurrentTask(id)
-
-            if (!this.isRunning(id) || !currentTask) break
+            if (!this.isRunning(task.id)) break
 
             const speed = (timer.read() / 1000.0).toFixed(2)
 
-            currentTask.transactionData.timer = speed
+            task.transactionData.timer = speed
 
-            this.updateTask(currentTask)
+            if (response && response.error) {
+              await this.handleError(task.id, counter, response.error)
 
-            if (response && response.statusCode) {
-              await this.handleError(id, counter, response)
-
-              if (response.statusCode !== 429) break
+              if (response.error.statusCode !== 429) break
 
               continue
-            }
-
-            if (response && !response.statusCode) {
-              data = response
+            } else if (response && !response.error && response.request.uri.href) {
+              data = response.request.uri.href
               break
             }
           }
 
           if (data) break
         } catch (error) {
-          this.updateCurrentTaskLog(id, error)
+          await this.updateCurrentTaskLog(task.id, error)
           continue
         }
       }
 
-      currentTask = this.getCurrentTask(id)
-
-      if (!this.isRunning(id) || !currentTask) return null
+      if (!this.isRunning(task.id)) return null
 
       if (!data) {
-        const msg = `Size: ${currentTask.transactionData.product.size} - out of stock`
-
-        this.updateCurrentTaskLog(id, msg)
-        this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
+        const msg = `Size: ${task.transactionData.product.size} - out of luck`
+        await this.updateCurrentTaskLog(task.id, msg)
+        await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
       } else {
-        const msg = `Size: ${currentTask.transactionData.product.size} - copped!`
+        const currentTask = await this.getCurrentTask(task.id)
 
-        currentTask.transactionData.product.image = await this.searchProduct(id)
-        currentTask.transactionData.checkoutLink = data.request.uri.href
-        currentTask.transactionData.method = 'PayMaya'
+        if (!currentTask) return null
+
+        const msg = `Size: ${task.transactionData.product.size} - copped!`
+
+        task.transactionData.product.image = await this.searchProduct(task.id)
+        task.transactionData.checkoutLink = data
+        task.transactionData.method = 'PayMaya'
+
         currentTask.logs = `${currentTask.logs || ''};${msg}`
         currentTask.status = {
           id: Constant.TASK.STATUS.STOPPED,
@@ -1376,7 +1272,12 @@ export default {
           class: 'success'
         }
 
-        this.updateTask(currentTask)
+        currentTask.transactionData = {
+          ...currentTask.transactionData,
+          ...task.transactionData
+        }
+
+        await this.updateTask(currentTask)
       }
 
       return data
@@ -1385,39 +1286,33 @@ export default {
     /**
      * 2c2p checkout method
      *
-     * @param {*} id
+     * @param {*} task
      * @param {*} payload
      */
-    async creditCardCheckout (id, payload) {
+    async creditCardCheckout (task, payload) {
       let data = null
-
       const tries = 3
 
-      let currentTask = this.getCurrentTask(id)
-
-      if (!this.isRunning(id) || !currentTask) return data
+      if (!this.isRunning(task.id)) return data
 
       for (let index = 1; index <= tries; index++) {
         try {
-          currentTask = this.getCurrentTask(id)
-
-          if (!this.isRunning(id) || !currentTask) break
+          if (!this.isRunning(task.id)) break
 
           if (index > 1) {
-            const waitingMsg = `Size: ${currentTask.transactionData.product.size} - trying for restock`
-
-            this.updateCurrentTaskLog(id, waitingMsg)
-            this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
+            const waitingMsg = `Size: ${task.transactionData.product.size} - retrying`
+            await this.updateCurrentTaskLog(task.id, waitingMsg)
+            await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
           }
 
           let counter = 0
 
-          while (this.isRunning(id) && !data) {
+          while (this.isRunning(task.id) && !data) {
             counter++
 
-            currentTask = this.getCurrentTask(id)
+            const currentTask = this.getCurrentTask(task.id)
 
-            if (!this.isRunning(id) || !currentTask) break
+            if (!this.isRunning(task.id) || !currentTask) break
 
             if (counter > 1) {
               let interval = null
@@ -1434,9 +1329,7 @@ export default {
               clearTimeout(timeout)
             }
 
-            currentTask = this.getCurrentTask(id)
-
-            if (!this.isRunning(id) || !currentTask) break
+            if (!this.isRunning(task.id)) break
 
             const timer = new StopWatch(true)
 
@@ -1444,25 +1337,19 @@ export default {
 
             timer.stop()
 
-            currentTask = this.getCurrentTask(id)
-
-            if (!this.isRunning(id) || !currentTask) break
+            if (!this.isRunning(task.id)) break
 
             const speed = (timer.read() / 1000.0).toFixed(2)
 
-            currentTask.transactionData.timer = speed
+            task.transactionData.timer = speed
 
-            this.updateTask(currentTask)
+            if (response && response.error) {
+              await this.handleError(task.id, counter, response.error)
 
-            if (response && response.statusCode) {
-              await this.handleError(id, counter, response)
-
-              if (response.statusCode !== 429) break
+              if (response.error.statusCode !== 429) break
 
               continue
-            }
-
-            if (response && !response.status && response.cookie) {
+            } else if (response && !response.error && response.cookie) {
               data = response
               break
             }
@@ -1470,36 +1357,42 @@ export default {
 
           if (data) break
         } catch (error) {
-          this.updateCurrentTaskLog(id, error)
+          await this.updateCurrentTaskLog(task.id, error)
           continue
         }
       }
 
-      currentTask = this.getCurrentTask(id)
-
-      if (!this.isRunning(id) || !currentTask) return null
+      if (!this.isRunning(task.id)) return null
 
       if (!data) {
-        const msg = `Size: ${currentTask.transactionData.product.size} - out of stock`
-
-        this.updateCurrentTaskLog(id, msg)
-        this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
+        const msg = `Size: ${task.transactionData.product.size} - out of luck`
+        await this.updateCurrentTaskLog(task.id, msg)
+        await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
       } else {
-        const msg = `Size: ${currentTask.transactionData.product.size} - copped!`
+        const currentTask = await this.getCurrentTask(task.id)
 
-        if (currentTask.transactionData.product) currentTask.transactionData.product.image = await this.searchProduct(id)
+        if (!currentTask) return null
 
-        currentTask.transactionData.cookie = data.cookie
-        currentTask.transactionData.method = '2c2p'
+        const msg = `Size: ${task.transactionData.product.size} - copped!`
+
+        task.transactionData.product.image = await this.searchProduct(task.id)
+        task.transactionData.cookie = data.cookie
+        task.transactionData.method = '2c2p'
+        task.transactionData.order = data.data
+
         currentTask.logs = `${currentTask.logs || ''};${msg}`
-        currentTask.transactionData.order = data.data
         currentTask.status = {
           id: Constant.TASK.STATUS.STOPPED,
           msg: msg,
           class: 'success'
         }
 
-        this.updateTask(currentTask)
+        currentTask.transactionData = {
+          ...currentTask.transactionData,
+          ...task.transactionData
+        }
+
+        await this.updateTask(currentTask)
       }
 
       return data
@@ -1508,39 +1401,33 @@ export default {
     /**
      * PayPal checkout method
      *
-     * @param {*} id
+     * @param {*} task
      * @param {*} payload
      */
-    async paypalCheckout (id, payload) {
+    async paypalCheckout (task, payload) {
       let data = null
-
       const tries = 3
 
-      let currentTask = this.getCurrentTask(id)
-
-      if (!this.isRunning(id) || !currentTask) return data
+      if (!this.isRunning(task.id)) return data
 
       for (let index = 1; index <= tries; index++) {
         try {
-          currentTask = this.getCurrentTask(id)
-
-          if (!this.isRunning(id) || !currentTask) break
+          if (!this.isRunning(task.id)) break
 
           if (index > 1) {
-            const waitingMsg = `Size: ${currentTask.transactionData.product.size} - trying for restock`
-
-            this.updateCurrentTaskLog(id, waitingMsg)
-            this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
+            const waitingMsg = `Size: ${task.transactionData.product.size} - retrying`
+            await this.updateCurrentTaskLog(task.id, waitingMsg)
+            await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, waitingMsg, 'orange')
           }
 
           let counter = 0
 
-          while (this.isRunning(id) && !data) {
+          while (this.isRunning(task.id) && !data) {
             counter++
 
-            currentTask = this.getCurrentTask(id)
+            const currentTask = await this.getCurrentTask(task.id)
 
-            if (!this.isRunning(id) || !currentTask) break
+            if (!this.isRunning(task.id) || !currentTask) break
 
             if (counter > 1) {
               let interval = null
@@ -1557,9 +1444,7 @@ export default {
               clearTimeout(timeout)
             }
 
-            currentTask = this.getCurrentTask(id)
-
-            if (!this.isRunning(id) || !currentTask) break
+            if (!this.isRunning(task.id)) break
 
             const timer = new StopWatch(true)
 
@@ -1567,25 +1452,19 @@ export default {
 
             timer.stop()
 
-            currentTask = this.getCurrentTask(id)
-
-            if (!this.isRunning(id) || !currentTask) break
+            if (!this.isRunning(task.id)) break
 
             const speed = (timer.read() / 1000.0).toFixed(2)
 
-            currentTask.transactionData.timer = speed
+            task.transactionData.timer = speed
 
-            this.updateTask(currentTask)
+            if (response && response.error) {
+              await this.handleError(task.id, counter, response.error)
 
-            if (response && response.statusCode) {
-              await this.handleError(id, counter, response)
-
-              if (response.statusCode !== 429) break
+              if (response.error.statusCode !== 429) break
 
               continue
-            }
-
-            if (response && !response.statusCode) {
+            } else if (response && !response.error) {
               data = response
               break
             }
@@ -1593,25 +1472,27 @@ export default {
 
           if (data) break
         } catch (error) {
-          this.updateCurrentTaskLog(id, error)
+          await this.updateCurrentTaskLog(task.id, error)
           continue
         }
       }
 
-      currentTask = this.getCurrentTask(id)
-
-      if (!this.isRunning(id) || !currentTask) return null
+      if (!this.isRunning(task.id)) return null
 
       if (!data) {
-        const msg = `Size: ${currentTask.transactionData.product.size} - out of stock`
-
-        this.updateCurrentTaskLog(id, msg)
-        this.setCurrentTaskStatus(id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
+        const msg = `Size: ${task.transactionData.product.size} - out of luck`
+        await this.updateCurrentTaskLog(task.id, msg)
+        await this.setCurrentTaskStatus(task.id, Constant.TASK.STATUS.RUNNING, msg, 'orange')
       } else {
-        const msg = `Size: ${currentTask.transactionData.product.size} - copped!`
+        const currentTask = await this.getCurrentTask(task.id)
 
-        currentTask.transactionData.product.image = await this.searchProduct(id)
-        currentTask.transactionData.method = 'PayPal'
+        if (!currentTask) return null
+
+        const msg = `Size: ${task.transactionData.product.size} - copped!`
+
+        task.transactionData.product.image = await this.searchProduct(task.id)
+        task.transactionData.method = 'PayPal'
+
         currentTask.logs = `${currentTask.logs || ''};${msg}`
         currentTask.status = {
           id: Constant.TASK.STATUS.STOPPED,
@@ -1619,7 +1500,12 @@ export default {
           class: 'success'
         }
 
-        this.updateTask(currentTask)
+        currentTask.transactionData = {
+          ...currentTask.transactionData,
+          ...task.transactionData
+        }
+
+        await this.updateTask(currentTask)
       }
 
       return data
@@ -1671,14 +1557,14 @@ export default {
     /**
      * Perform on success event
      *
-     * @param {*} id
+     * @param {*} task
      */
-    onSuccess (id) {
-      const currentTask = this.getCurrentTask(id)
+    async onSuccess (task) {
+      const currentTask = await this.getCurrentTask(task.id)
 
       delete currentTask.transactionData.cart
 
-      this.updateTask(currentTask)
+      await this.updateTask(currentTask)
 
       if (this.settings.autoPay && !currentTask.aco) {
         this.redirectToCheckout(currentTask)
