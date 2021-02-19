@@ -143,9 +143,15 @@ export default {
     async handleError (id, counter, response, attr = 'orange') {
       try {
         try {
-          await this.updateCurrentTaskLog(id, `#${counter}: ${response.statusCode} - ${JSON.parse(response.body).message || 'Request failed'}`)
+          if (response.error) {
+            await this.updateCurrentTaskLog(id, `#${counter}: ${response.error.message}`)
+          } else if (response.body) {
+            await this.updateCurrentTaskLog(id, `#${counter}: ${response.statusCode} - ${JSON.parse(response.body).message}`)
+          } else {
+            await this.updateCurrentTaskLog(id, `#${counter}: ${response}`)
+          }
         } catch (error) {
-          await this.updateCurrentTaskLog(id, `#${counter}: ${response.statusCode} - Request failed`)
+          await this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
         }
 
         switch (response.statusCode) {
@@ -164,7 +170,7 @@ export default {
             break
         }
       } catch (error) {
-        this.updateCurrentTaskLog(id, `#${counter}: ${response.statusCode} - Request failed`)
+        this.updateCurrentTaskLog(id, `#${counter}: ${error}`)
       }
     },
 
@@ -459,7 +465,8 @@ export default {
               password: currentTask.profile.password
             },
             proxy: currentTask.proxy,
-            mode: currentTask.mode
+            mode: currentTask.mode,
+            taskId: task.id
           }
 
           const response = await authApi.fetchToken(params)
@@ -523,7 +530,8 @@ export default {
           const params = {
             token: task.transactionData.token,
             proxy: currentTask.proxy,
-            mode: currentTask.mode
+            mode: currentTask.mode,
+            taskId: task.id
           }
 
           const response = await customerApi.profile(params)
@@ -604,7 +612,8 @@ export default {
           const params = {
             token: task.transactionData.token,
             proxy: currentTask.proxy,
-            mode: currentTask.mode
+            mode: currentTask.mode,
+            taskId: task.id
           }
 
           const response = await cartApi.create(params)
@@ -666,7 +675,8 @@ export default {
           const params = {
             token: task.transactionData.token,
             proxy: currentTask.proxy,
-            mode: currentTask.mode
+            mode: currentTask.mode,
+            taskId: task.id
           }
 
           const response = await cartApi.get(params)
@@ -726,7 +736,8 @@ export default {
                 token: task.transactionData.token,
                 id: data.items[index].item_id,
                 proxy: currentTask.proxy,
-                mode: currentTask.mode
+                mode: currentTask.mode,
+                taskId: task.id
               }
 
               const response = await cartApi.delete(params)
@@ -820,7 +831,8 @@ export default {
                   }
                 },
                 proxy: currentTask.proxy,
-                mode: currentTask.mode
+                mode: currentTask.mode,
+                taskId: task.id
               }
 
               const response = await cartApi.store(params)
@@ -917,7 +929,8 @@ export default {
               token: task.transactionData.token,
               payload: { addressId: defaultShippingAddress.id },
               proxy: currentTask.proxy,
-              mode: currentTask.mode
+              mode: currentTask.mode,
+              taskId: task.id
             }
 
             const response = await cartApi.estimateShipping(parameters)
@@ -995,7 +1008,8 @@ export default {
             token: task.transactionData.token,
             payload: payload,
             proxy: currentTask.proxy,
-            mode: currentTask.mode
+            mode: currentTask.mode,
+            taskId: task.id
           }
 
           const response = await cartApi.setShippingInformation(params)
@@ -1087,7 +1101,8 @@ export default {
           },
           token: task.transactionData.token,
           proxy: currentTask.proxy,
-          mode: currentTask.mode
+          mode: currentTask.mode,
+          taskId: task.id
         }
 
         currentTask = await this.getCurrentTask(task.id)
@@ -1604,6 +1619,8 @@ export default {
         }
         this.sendWebhook(acoWebhook)
       }
+
+      await new Promise(resolve => setTimeout(resolve, 3000))
 
       // send to personal webhook
       if (this.settings.webhook) {
