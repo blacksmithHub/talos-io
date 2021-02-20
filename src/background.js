@@ -352,7 +352,7 @@ ipcMain.on('clear-cache', (event, arg) => {
 /**
  * user authentication
  */
-ipcMain.on('authenticate', (event, arg) => {
+ipcMain.on('logout', (event, arg) => {
   if (!LoginWindow.getWindow()) LoginWindow.createWindow()
 
   if (MonitorWindow.getWindow()) {
@@ -386,7 +386,7 @@ ipcMain.on('authenticate', (event, arg) => {
 /**
  * key binding
  */
-ipcMain.on('bind', (event, arg) => {
+ipcMain.on('login', (event, arg) => {
   initializeWindows()
 
   if (LoginWindow.getWindow()) {

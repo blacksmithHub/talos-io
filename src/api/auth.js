@@ -15,30 +15,14 @@ export default {
   /**
    * Bind key
    */
-  bind (params) {
-    return this.http(this.baseUrl)
-      .put('/bind', params)
-      .then(response => response)
-      .catch(({ response }) => response)
-  },
-
-  /**
-   * Unbind key
-   */
-  unbind (params) {
-    return this.http(this.baseUrl)
-      .put('/unbind', params)
-      .then(response => response)
-      .catch(({ response }) => response)
+  login (params) {
+    return this.http(this.baseUrl).post('/login', params)
   },
 
   /**
    * Verify key
    */
   verify (params) {
-    return this.http(this.baseUrl)
-      .post('/verify', params)
-      .then(response => response)
-      .catch(({ response }) => response)
+    return this.http(this.baseUrl).post('/verify', params)
   }
 }

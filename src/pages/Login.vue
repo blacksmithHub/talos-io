@@ -32,22 +32,6 @@
           </v-col>
 
           <v-col
-            v-if="!Object.keys(user).length"
-            cols="12"
-            align-self="center"
-          >
-            <v-btn
-              :loading="loading"
-              small
-              rounded
-              @click="authenticate"
-            >
-              login in with discord
-            </v-btn>
-          </v-col>
-
-          <v-col
-            v-else-if="!hasKey"
             cols="12"
             align-self="center"
             class="pl-5 pr-5"
@@ -59,9 +43,9 @@
               dense
               append-icon="mdi-key-variant"
               :loading="loading"
-              :error-messages="(keyErrors.length) ? keyErrors : apiValidation"
+              :error-messages="(keyErrors.length) ? keyErrors : error"
               hide-details="auto"
-              @click:append="bind"
+              @click:append="login"
               @blur="$v.key.$touch()"
             />
           </v-col>
@@ -72,18 +56,12 @@
 </template>
 
 <script>
-/* global __static */
-
 import { required } from 'vuelidate/lib/validators'
 
 import AuthAPI from '@/api/auth'
 import AuthService from '@/services/auth'
 import SystemBar from '@/components/App/SystemBar'
-import electron, { remote, ipcRenderer } from 'electron'
-import path from 'path'
-import Config from '@/config/app'
-
-let win
+import { ipcRenderer } from 'electron'
 
 export default {
   components: { SystemBar },
@@ -92,20 +70,10 @@ export default {
       loading: false,
       user: {},
       key: '',
-      apiValidation: []
+      error: ''
     }
   },
   computed: {
-    /**
-     * Check if has key stored.
-     */
-    hasKey () {
-      return (AuthService.isAuthenticated()) ? !!(AuthService.getAuth().key) : false
-    },
-    /**
-     * Error messages for key.
-     *
-     */
     keyErrors () {
       const errors = []
 
@@ -118,184 +86,42 @@ export default {
   },
   watch: {
     key () {
-      this.apiValidation = []
+      this.error = ''
     }
   },
   methods: {
-    authenticate () {
-      this.loading = true
-
-      const { BrowserWindow } = electron.remote
-
-      win = new BrowserWindow({
-        width: 600,
-        height: 600,
-        minWidth: 500,
-        minHeight: 500,
-        parent: remote.getCurrentWindow(),
-        webPreferences: {
-          nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
-          enableRemoteModule: true,
-          webSecurity: false
-        },
-        icon: path.join(__static, 'talos.png')
-      })
-
-      win.removeMenu()
-
-      win.loadURL(Config.services.discord.auth)
-
-      win.on('closed', () => {
-        win = null
-      })
-
-      const vm = this
-
-      this.getUserCode(win, async (response) => {
-        win.close()
-
-        if (response) {
-          vm.user = {}
-
-          while (!vm.user.credentials) {
-            await new Promise(resolve => setTimeout(resolve, 1000))
-
-            const DiscordOauth2 = require('discord-oauth2')
-
-            const oauth = new DiscordOauth2()
-
-            const request = {
-              clientId: Config.services.discord.clientId,
-              clientSecret: Config.services.discord.clientSecret,
-              scope: 'identify',
-              grantType: 'authorization_code',
-              code: response.toString(),
-              redirectUri: Config.services.local
-            }
-
-            oauth.tokenRequest(request).then((data) => {
-              vm.user.credentials = data
-            })
-          }
-
-          while (!vm.user.profile) {
-            await new Promise(resolve => setTimeout(resolve, 1000))
-
-            const token = vm.user.credentials.access_token
-
-            const DiscordOauth2 = require('discord-oauth2')
-
-            const oauth = new DiscordOauth2()
-
-            oauth.getUser(token).then((data) => {
-              vm.user.profile = data
-            })
-          }
-        }
-
-        await AuthService.verify({ discord_id: vm.user.profile.id })
-          .then((response) => {
-            switch (response.status) {
-              case 200:
-                {
-                  const details = {
-                    ...vm.user,
-                    expiry: vm.$moment().add(1, 'weeks').format('Y-M-D'),
-                    key: response.data.master_key.key
-                  }
-
-                  AuthService.setAuth(JSON.stringify(details))
-
-                  vm.close()
-                }
-                break
-            }
-          })
-
-        vm.loading = false
-      })
-    },
-    /**
-     * Get user code via discord oauth
-     */
-    getUserCode (win, callback) {
-      let code = ''
-
-      const loop = setInterval(() => {
-        if (win === null) {
-          clearInterval(loop)
-          callback(code)
-        } else {
-          const currentUrl = win.webContents.getURL()
-
-          code = currentUrl.toString().split('?')[1].toString().split('code=')[1]
-
-          const error = currentUrl.toString().split('?')[1].toString().split('error=')[1]
-
-          if (code) {
-            clearInterval(loop)
-            callback(code)
-          } else if (error) {
-            clearInterval(loop)
-            callback(code)
-          }
-        }
-      }, 1000)
-    },
-    /**
-     * Bind master key
-     */
-    async bind () {
+    login () {
       this.$v.$touch()
 
       if (!this.$v.$invalid) {
         this.loading = true
 
-        await AuthAPI.bind({
-          discord_id: this.user.profile.id,
-          username: this.user.profile.username,
-          discriminator: this.user.profile.discriminator,
-          key: this.key
-        })
-          .then((response) => {
-            switch (response.status) {
-              case 200: {
-                const data = {
-                  ...this.user,
-                  key: this.key,
-                  expiry: this.$moment().add(1, 'weeks').format('Y-M-D')
-                }
+        AuthAPI.login({ key: this.key })
+          .then(({ data }) => {
+            this.loading = false
 
-                AuthService.setAuth(JSON.stringify(data))
-
-                this.close()
-
-                break
-              }
-
-              case 422:
-                if (response.data.errors.key) this.apiValidation.push(response.data.errors.key[0])
-
-                if (response.data.errors.discord_id) this.apiValidation.push(response.data.errors.discord_id[0])
-
-                break
+            if (data) {
+              AuthService.setAuth({ key: this.key })
+              this.close()
+            } else {
+              this.error = 'Invalid key'
             }
           })
-
-        this.loading = false
+          .catch(() => {
+            this.loading = false
+            this.error = 'Invalid key'
+          })
       }
     },
-    /**
-     * exit auth
-     */
-    close () {
-      this.key = ''
-      this.user = {}
-      this.apiValidation = []
 
+    close () {
       this.$v.$reset()
 
-      ipcRenderer.send('bind')
+      this.key = ''
+      this.error = ''
+      this.loading = false
+
+      ipcRenderer.send('login')
     }
   },
   validations: {
