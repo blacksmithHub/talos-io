@@ -84,7 +84,7 @@ export default {
 
       return cf.request(config)
         .then((response) => {
-          if (response && response.statusCode && response.statusCode === 200) {
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) {
             const config = {
               method: 'GET',
               url: `${Config.services.titan22.url}/ccpp/htmlredirect/gettransactiondata`,
@@ -101,7 +101,7 @@ export default {
 
             return cf.request(config)
               .then((response) => {
-                if (response && response.statusCode && response.statusCode === 200) {
+                if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) {
                   let orderNumber = null
                   const parameters = {}
                   const fieldRecords = JSON.parse(response.body).fields
@@ -257,7 +257,7 @@ export default {
 
       return cf.request(config)
         .then((response) => {
-          if (response && response.statusCode && response.statusCode === 200) {
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) {
             const config = {
               method: 'GET',
               url: `${Config.services.titan22.url}/paymaya/checkout/start`,

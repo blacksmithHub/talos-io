@@ -1,6 +1,7 @@
 import CloudflareBypasser from 'cloudflare-bypasser'
 import UserAgent from 'user-agents'
 import request from 'request'
+import store from '@/store/index'
 
 /**
  *============================================================
@@ -9,12 +10,10 @@ import request from 'request'
  *
  * Initialize the axios instance with an Authorization header.
  * Refreshes expired token before am API request.
- *
  */
 export default {
-
   async http (params) {
-    const cf = new CloudflareBypasser()
+    let cf = new CloudflareBypasser()
     const jar = request.jar()
 
     const config = {
@@ -62,6 +61,18 @@ export default {
         break
     }
 
-    return cf.request(config)
+    cf = cf.request(config)
+
+    if (params.taskId) {
+      const vuex = store._modules.root._children.task.context
+
+      const task = vuex.state.items.find((val) => val.id === params.taskId)
+
+      task.cf = cf
+
+      vuex.dispatch('updateItem', cf)
+    }
+
+    return cf
   }
 }

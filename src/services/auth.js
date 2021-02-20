@@ -17,7 +17,7 @@ export default {
    * @param data
    */
   setAuth (data) {
-    localStorage.setItem('auth', data)
+    localStorage.setItem('auth', JSON.stringify(data))
   },
 
   /**
@@ -50,6 +50,6 @@ export default {
    * Verification api
    */
   verify (params) {
-    return AuthAPI.verify(params).then(response => response)
+    return AuthAPI.verify(params)
   }
 }

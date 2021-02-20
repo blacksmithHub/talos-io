@@ -26,7 +26,7 @@ export default {
 
       return this.http(params)
         .then((response) => {
-          if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
 
           return { error: response }
         })
@@ -51,7 +51,7 @@ export default {
 
       return this.http(params)
         .then((response) => {
-          if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
 
           return { error: response }
         })
@@ -76,7 +76,7 @@ export default {
 
       return this.http(params)
         .then((response) => {
-          if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
 
           return { error: response }
         })
@@ -101,7 +101,7 @@ export default {
 
       return this.http(params)
         .then((response) => {
-          if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
 
           return { error: response }
         })
@@ -126,7 +126,7 @@ export default {
 
       return this.http(params)
         .then((response) => {
-          if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
 
           return { error: response }
         })
@@ -151,7 +151,7 @@ export default {
 
       return this.http(params)
         .then((response) => {
-          if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
 
           return { error: response }
         })
@@ -176,7 +176,7 @@ export default {
 
       return this.http(params)
         .then((response) => {
-          if (response && response.statusCode && response.statusCode === 200) return JSON.parse(response.body)
+          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
 
           return { error: response }
         })

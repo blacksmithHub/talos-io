@@ -84,7 +84,7 @@ export default {
         ...item,
         status: {
           id: 1,
-          msg: 'stopped',
+          msg: 'idle',
           class: 'grey'
         },
         transactionData: {}
@@ -136,7 +136,7 @@ export default {
       tasks = tasks.map(element => {
         element.status = {
           id: 1,
-          msg: 'stopped',
+          msg: 'idle',
           class: 'grey'
         }
 
