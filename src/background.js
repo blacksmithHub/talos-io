@@ -41,8 +41,10 @@ autoUpdater.on('update-not-available', () => {
 
   if (!MainWindow.getWindow()) {
     MainWindow.createWindow()
-    win.destroy()
-    win = null
+    if (win) {
+      win.destroy()
+      win = null
+    }
   }
 })
 
@@ -155,8 +157,10 @@ function initializeWindows () {
 
       if (!MainWindow.getWindow()) {
         MainWindow.createWindow()
-        win.destroy()
-        win = null
+        if (win) {
+          win.destroy()
+          win = null
+        }
       }
     }, 5000)
   })
@@ -352,7 +356,7 @@ ipcMain.on('clear-cache', (event, arg) => {
 /**
  * user authentication
  */
-ipcMain.on('logout', (event, arg) => {
+ipcMain.on('logout', async (event, arg) => {
   if (!LoginWindow.getWindow()) LoginWindow.createWindow()
 
   if (MonitorWindow.getWindow()) {
