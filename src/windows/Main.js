@@ -3,7 +3,6 @@
 import { BrowserWindow, globalShortcut } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
-import LoginWindow from '@/windows/Login'
 import MonitorWindow from '@/windows/Monitor'
 import ProfileWindow from '@/windows/Profile'
 import ProxyWindow from '@/windows/Proxy'
@@ -51,11 +50,6 @@ export default {
     })
 
     win.on('closed', () => {
-      if (LoginWindow.getWindow()) {
-        LoginWindow.getWindow().destroy()
-        LoginWindow.closeWindow()
-      }
-
       if (MonitorWindow.getWindow()) {
         MonitorWindow.getWindow().destroy()
         MonitorWindow.closeWindow()
