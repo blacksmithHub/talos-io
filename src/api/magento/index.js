@@ -70,7 +70,7 @@ export default {
 
       task.cf = cf
 
-      vuex.dispatch('updateItem', cf)
+      vuex.dispatch('updateItem', task)
     }
 
     return cf
