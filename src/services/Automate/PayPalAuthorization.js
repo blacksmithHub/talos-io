@@ -1,5 +1,6 @@
 import MainWindow from '@/windows/Main'
 import ProfileWindow from '@/windows/Profile'
+import Config from '@/config/app'
 
 export default {
   /**
@@ -31,8 +32,8 @@ export default {
     await page.goto(url)
 
     page.on('framenavigated', frame => {
-      if (frame._url.includes('titan-bot-auth.herokuapp.com')) {
-        const domain = 'https://titan-bot-auth.herokuapp.com/?'
+      if (frame._url.includes(Config.services.auth.domain)) {
+        const domain = `${Config.services.auth.url}/?`
 
         const queries = frame._url.slice(domain.length).split('&')
 

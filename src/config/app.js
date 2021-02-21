@@ -11,6 +11,7 @@ export default {
      *
      */
     auth: {
+      domain: process.env.VUE_APP_API_AUTH_DOMAIN,
       url: process.env.VUE_APP_API_AUTH_URL
     },
     /**
@@ -35,13 +36,6 @@ export default {
       token: process.env.VUE_APP_TITAN_ADMIN_TOKEN,
       checkout: process.env.VUE_APP_2C2P_URL
     },
-    /**
-     * ===========================================
-     * Port Configuration
-     * ===========================================
-     *
-     */
-    port: localStorage.getItem('core') ? JSON.parse(localStorage.getItem('core')).port : 5000,
     /**
      * ===========================================
      * Braintree Configuration
