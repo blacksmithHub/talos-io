@@ -153,15 +153,15 @@ function initializeWindows () {
 
     setTimeout(() => {
       // TODO: github bug
-      // if (!isDevelopment) autoUpdater.checkForUpdatesAndNotify()
+      if (!isDevelopment) autoUpdater.checkForUpdatesAndNotify()
 
-      if (!MainWindow.getWindow()) {
-        MainWindow.createWindow()
-        if (win) {
-          win.destroy()
-          win = null
-        }
-      }
+      // if (!MainWindow.getWindow()) {
+      //   MainWindow.createWindow()
+      //   if (win) {
+      //     win.destroy()
+      //     win = null
+      //   }
+      // }
     }, 5000)
   })
 

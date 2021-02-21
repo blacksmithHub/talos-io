@@ -12,6 +12,7 @@ module.exports = {
     electronBuilder: {
       nodeIntegration: true,
       builderOptions: {
+        copyright: 'Copyright © 2021',
         nsis: {
           oneClick: false,
           allowToChangeInstallationDirectory: true,
