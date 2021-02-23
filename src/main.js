@@ -2,7 +2,6 @@ import Vue from 'vue'
 
 import './plugins/vuelidate'
 import './plugins/vue-moment'
-import './plugins/vue-toast-notification'
 import './plugins/vue-json-csv'
 import './plugins/vue-clipboard2'
 import './plugins/vue-progress-bar'

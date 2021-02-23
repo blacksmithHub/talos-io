@@ -407,10 +407,10 @@
 import { url, minValue } from 'vuelidate/lib/validators'
 import { mapState, mapActions } from 'vuex'
 import { remote, ipcRenderer } from 'electron'
-import webhook from '@/mixins/webhook'
+
+import Bot from '@/services/index'
 
 export default {
-  mixins: [webhook],
   data () {
     return {
       snackbar: false,
@@ -683,7 +683,7 @@ export default {
           productSku: '---'
         }
 
-        this.sendWebhook(options)
+        Bot.sendWebhook(options)
       }
     },
 

@@ -12,9 +12,9 @@ import ProfileWindow from '@/windows/Profile'
 import ProxyWindow from '@/windows/Proxy'
 import SettingWindow from '@/windows/Setting'
 
-import PayMayaCheckout from '@/services/Automate/PayMayaCheckout'
-import CreditCardCheckout from '@/services/Automate/CreditCardCheckout'
-import PayPalAuthorization from '@/services/Automate/PayPalAuthorization'
+import PayMayaCheckout from '@/services/Titan22/PayMayaCheckout'
+import CreditCardCheckout from '@/services/Titan22/CreditCardCheckout'
+import PayPalAuthorization from '@/services/Titan22/PayPalAuthorization'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -399,6 +399,13 @@ ipcMain.on('login', (event, arg) => {
 })
 
 /**
+ * PayPal authorization
+ */
+ipcMain.on('paypal-login', (event, arg) => {
+  PayPalAuthorization.automate(JSON.parse(arg))
+})
+
+/**
  * PayMaya checkout method
  */
 ipcMain.on('pay-with-paymaya', (event, arg) => {
@@ -410,11 +417,4 @@ ipcMain.on('pay-with-paymaya', (event, arg) => {
  */
 ipcMain.on('pay-with-2c2p', (event, arg) => {
   CreditCardCheckout.automate(JSON.parse(arg))
-})
-
-/**
- * PayPal authorization
- */
-ipcMain.on('paypal-login', (event, arg) => {
-  PayPalAuthorization.automate(JSON.parse(arg))
 })

@@ -57,11 +57,11 @@
 
 <script>
 import { required } from 'vuelidate/lib/validators'
+import { ipcRenderer } from 'electron'
 
 import AuthAPI from '@/api/auth'
 import AuthService from '@/services/auth'
 import SystemBar from '@/components/App/SystemBar'
-import { ipcRenderer } from 'electron'
 
 export default {
   components: { SystemBar },

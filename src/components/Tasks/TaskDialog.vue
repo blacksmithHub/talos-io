@@ -41,6 +41,7 @@
                     label="Profile"
                     item-text="name"
                     return-object
+                    :disabled="isRunning"
                     @blur="$v.profile.$touch()"
                   />
                 </v-col>
@@ -298,6 +299,20 @@ export default {
     ...mapState('profile', { profiles: 'items' }),
     ...mapState('bank', { banks: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
+
+    /**
+     * Is task running
+     */
+    isRunning () {
+      let data = false
+
+      if (this.allTasks.length && Object.keys(this.selectedTask).length) {
+        const task = this.allTasks.find((val) => val.id === this.selectedTask.id)
+        data = (task && task.status.id === Constant.TASK.STATUS.RUNNING)
+      }
+
+      return data
+    },
 
     /**
      * return available checkout methods

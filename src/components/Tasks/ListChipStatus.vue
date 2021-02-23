@@ -23,7 +23,7 @@
       small
       color="success"
       class="text-capitalize pointer"
-      v-text="`Size: ${task.transactionData.product.size} - copy checkout cookie!`"
+      v-text="`Size: ${getSize} - copy checkout cookie!`"
     />
 
     <v-chip
@@ -32,8 +32,8 @@
       small
       color="success"
       class="text-capitalize pointer"
-      @click="$emit('click:checkout', task)"
-      v-text="`Size: ${task.transactionData.product.size} - proceed to checkout!`"
+      @click="proceedToCheckout"
+      v-text="`Size: ${getSize} - proceed to checkout!`"
     />
 
     <v-chip
@@ -65,6 +65,11 @@
 <script>
 import { mapState } from 'vuex'
 
+import Toastify from 'toastify-js'
+import 'toastify-js/src/toastify.css'
+
+import Titan22 from '@/services/Titan22/index'
+
 export default {
   props: {
     task: {
@@ -73,7 +78,10 @@ export default {
     }
   },
   computed: {
-    ...mapState('setting', { settings: 'items' })
+    ...mapState('setting', { settings: 'items' }),
+    getSize () {
+      return this.task.transactionData.product.size
+    }
   },
   methods: {
     /**
@@ -81,12 +89,22 @@ export default {
      *
      */
     onCopy () {
-      this.$toast.open({
-        message: '<strong style="font-family: Arial; text-transform: uppercase">you just copied a cookie</strong>',
-        type: 'info',
+      Toastify({
+        text: 'You just copied a cookie',
         duration: 3000,
-        position: 'bottom-left'
-      })
+        newWindow: true,
+        close: false,
+        gravity: 'bottom',
+        position: 'left',
+        backgroundColor: '#399cbd',
+        className: 'toastify'
+      }).showToast()
+    },
+    /**
+     * Redirect to checkout page
+     */
+    proceedToCheckout () {
+      Titan22.redirectToCheckout(this.task.id)
     }
   }
 }
