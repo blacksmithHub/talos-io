@@ -1,5 +1,4 @@
 import MainWindow from '@/windows/Main'
-// import store from '@/store/index'
 
 export default {
   /**
