@@ -29,7 +29,6 @@
             @click:stopTask="stopTask"
             @click:deleteTask="deleteTask"
             @click:editTask="openEditTaskDialog"
-            @click:checkout="redirectToCheckout"
             @click:verifyTask="verifyTask"
             @click:duplicateTask="duplicateTask"
             @click:openLogs="openLogs"
@@ -87,9 +86,9 @@ import ImportTaskDialog from '@/components/Tasks/ImportTaskDialog'
 import LogsDialog from '@/components/Tasks/LogsDialog'
 import TaskTitle from '@/components/Tasks/TaskTitle'
 
-import automate from '@/mixins/magento/titan22/automate'
-
 import Constant from '@/config/constant'
+
+import Titan22 from '@/services/Titan22/index'
 
 export default {
   components: {
@@ -102,7 +101,6 @@ export default {
     MassEditDialog,
     ImportTaskDialog
   },
-  mixins: [automate],
   data () {
     return {
       selected: []
@@ -305,7 +303,7 @@ export default {
           paid: false
         })
 
-        this.start(task)
+        Titan22.start(task.id)
       }
     },
     /**
@@ -413,10 +411,11 @@ export default {
             class: 'cyan'
           },
           transactionData: {},
-          paid: false
+          paid: false,
+          logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Verifying...`
         })
 
-        this.verify(task)
+        Titan22.verify(task.id)
       }
     }
   }

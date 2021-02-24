@@ -6,6 +6,7 @@
       icon
       color="success"
       depressed
+      :loading="loading"
       @click="$emit('click:startTask', task)"
     >
       <v-icon v-text="'mdi-play'" />
@@ -25,6 +26,7 @@
       icon
       color="primary"
       depressed
+      :disabled="loading"
       @click="$emit('click:editTask', task)"
     >
       <v-icon
@@ -37,6 +39,7 @@
       icon
       color="error"
       depressed
+      :disabled="loading"
       @click="dialog=true"
     >
       <v-icon
@@ -52,6 +55,7 @@
           v-bind="attrs"
           icon
           depressed
+          :disabled="loading"
           v-on="on"
         >
           <v-icon v-text="'mdi-dots-vertical'" />
@@ -157,6 +161,8 @@
 </template>
 
 <script>
+import Constant from '@/config/constant'
+
 export default {
   props: {
     task: {
@@ -166,7 +172,17 @@ export default {
   },
   data () {
     return {
-      dialog: false
+      dialog: false,
+      loading: false
+    }
+  },
+  watch: {
+    'task.status.id': async function (status) {
+      if (status === Constant.TASK.STATUS.STOPPED) {
+        this.loading = true
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        this.loading = false
+      }
     }
   },
   methods: {

@@ -138,10 +138,7 @@
     </template>
 
     <template v-slot:item.status="{ item }">
-      <ListChipStatus
-        :task="item"
-        @click:checkout="$emit('click:checkout', item)"
-      />
+      <ListChipStatus :task="item" />
     </template>
 
     <template v-slot:item.actions="{ item }">

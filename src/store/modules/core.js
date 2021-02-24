@@ -12,53 +12,7 @@ export default {
   namespaced: true,
   state () {
     return {
-      drawer: false,
-      loading: false,
       package: JSON.parse(unescape(process.env.PACKAGE_JSON || '%7B%7D'))
-    }
-  },
-  mutations: {
-    /**
-     * Set the loading.
-     *
-     * @param state
-     * @param loading
-     */
-    SET_LOADING (state, loading) {
-      state.loading = loading
-    },
-
-    /**
-     * Toggles the navigation drawer.
-     *
-     * @param state
-     * @param data
-     */
-    TOGGLE_DRAWER (state, data) {
-      state.drawer = data
-    }
-  },
-  actions: {
-    /**
-     * Set the loading state
-     *
-     * @param {*} param
-     * @param {*} loading
-     */
-    setLoading ({ state, commit }, loading) {
-      commit('SET_LOADING', loading)
-      localStorage.setItem('core', JSON.stringify(state))
-    },
-
-    /**
-     * Toggles the navigation drawer.
-     *
-     * @param state
-     * @param data
-     */
-    toggleDrawer ({ state, commit }, data) {
-      commit('TOGGLE_DRAWER', data)
-      localStorage.setItem('core', JSON.stringify(state))
     }
   }
 }

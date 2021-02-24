@@ -134,10 +134,15 @@
 <script>
 import { ipcRenderer } from 'electron'
 import { mapState, mapActions } from 'vuex'
+
+import Toastify from 'toastify-js'
+import 'toastify-js/src/toastify.css'
+
 import moment from '@/mixins/moment'
 import App from '@/config/app'
 import productApi from '@/api/magento/titan22/product'
 import placeholder from '@/assets/no_image.png'
+
 export default {
   mixins: [moment],
   data () {
@@ -238,12 +243,16 @@ export default {
      *
      */
     onCopy (e) {
-      this.$toast.open({
-        message: `<strong style="font-family: Arial; text-transform: uppercase">you just copied: ${e.text}</strong>`,
-        type: 'info',
+      Toastify({
+        text: `You just copied: ${e.text}`,
         duration: 3000,
-        position: 'bottom-right'
-      })
+        newWindow: true,
+        close: false,
+        gravity: 'bottom',
+        position: 'left',
+        backgroundColor: '#399cbd',
+        className: 'toastify'
+      }).showToast()
     },
     /**
      * Redirect to product link.
