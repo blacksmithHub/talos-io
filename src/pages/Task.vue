@@ -411,7 +411,8 @@ export default {
             class: 'cyan'
           },
           transactionData: {},
-          paid: false
+          paid: false,
+          logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Verifying...`
         })
 
         Titan22.verify(task.id)

@@ -135,8 +135,8 @@ export default {
      * get user token
      */
     const token = await this.authenticate(id, 'cyan')
-    currentTask = await Bot.getCurrentTask(id)
 
+    currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
     if (token) {
@@ -156,8 +156,8 @@ export default {
      * get account data
      */
     const account = await this.getAccount(id, 'cyan')
-    currentTask = await Bot.getCurrentTask(id)
 
+    currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
     if (account && Object.keys(account).length) {
@@ -177,13 +177,14 @@ export default {
      * create, get, and clean cart
      */
     const cart = await this.initializeCart(id, 'cyan')
-    currentTask = await Bot.getCurrentTask(id)
 
+    currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
     if (cart && cart.id) {
       currentTask.transactionData.cart = cart
       await Tasks.dispatch('updateItem', currentTask)
+      await Bot.updateCurrentTaskLog(id, 'Ready!')
       Bot.setCurrentTaskStatus(id, { status: Constant.TASK.STATUS.STOPPED, msg: 'ready', attr: 'light-blue' })
     } else {
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -425,7 +426,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line428: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line429: ${error}`)
         continue
       }
     }
@@ -490,7 +491,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line493: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line494: ${error}`)
         continue
       }
     }
@@ -571,7 +572,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line574: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line575: ${error}`)
         continue
       }
     }
@@ -638,7 +639,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line641: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line642: ${error}`)
         continue
       }
     }
@@ -702,7 +703,7 @@ export default {
               continue
             }
           } catch (error) {
-            await Bot.updateCurrentTaskLog(id, `#${counter} at Line705: ${error}`)
+            await Bot.updateCurrentTaskLog(id, `#${counter} at Line706: ${error}`)
             continue
           }
         }
@@ -803,12 +804,12 @@ export default {
               continue
             }
           } catch (error) {
-            await Bot.updateCurrentTaskLog(id, `#${counter} at Line806: ${error}`)
+            await Bot.updateCurrentTaskLog(id, `#${counter} at Line807: ${error}`)
             continue
           }
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line811: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line812: ${error}`)
         continue
       }
     }
@@ -887,7 +888,7 @@ export default {
             break
           }
         } catch (error) {
-          await Bot.updateCurrentTaskLog(id, `#${counter} at Line890: ${error}`)
+          await Bot.updateCurrentTaskLog(id, `#${counter} at Line891: ${error}`)
           continue
         }
       }
@@ -966,7 +967,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line969: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line970: ${error}`)
         continue
       }
     }
@@ -1106,7 +1107,7 @@ export default {
           break
       }
     } catch (error) {
-      await Bot.updateCurrentTaskLog(id, `Line1109: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `Line1110: ${error}`)
     }
 
     return data
@@ -1188,7 +1189,7 @@ export default {
 
         if (data) break
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `Line1191: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line1192: ${error}`)
         continue
       }
     }
@@ -1296,7 +1297,7 @@ export default {
 
         if (data) break
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `Line1299: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line1300: ${error}`)
         continue
       }
     }
@@ -1405,7 +1406,7 @@ export default {
 
         if (data) break
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `Line1408: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line1409: ${error}`)
         continue
       }
     }
