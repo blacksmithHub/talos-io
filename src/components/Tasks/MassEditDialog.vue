@@ -92,7 +92,7 @@
                   >
                     <v-expansion-panel>
                       <v-expansion-panel-header>
-                        Advanced
+                        Advance Options
                       </v-expansion-panel-header>
                       <v-expansion-panel-content>
                         <v-row>
@@ -102,7 +102,6 @@
                               dense
                               outlined
                               type="number"
-                              hide-details="auto"
                               :error-messages="delayErrors"
                               label="Delays"
                               hint="Input value in milliseconds"
@@ -126,7 +125,6 @@
                                 <v-text-field
                                   v-model="placeOrder"
                                   dense
-                                  hide-details
                                   outlined
                                   readonly
                                   v-bind="attrs"
@@ -149,6 +147,7 @@
                           </v-col>
                         </v-row>
 
+                        <p>Checkout Method:</p>
                         <v-radio-group
                           v-model="checkoutMethod"
                           row
