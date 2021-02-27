@@ -15,9 +15,7 @@ module.exports = {
         copyright: 'Copyright © 2021',
         nsis: {
           oneClick: false,
-          allowToChangeInstallationDirectory: true,
-          runAfterFinish: true,
-          deleteAppDataOnUninstall: true
+          allowToChangeInstallationDirectory: true
         },
         publish: [
           {
