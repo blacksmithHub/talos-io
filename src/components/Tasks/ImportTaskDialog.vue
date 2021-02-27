@@ -86,6 +86,8 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 
+import Constant from '@/config/constant'
+
 export default {
   data () {
     return {
@@ -97,10 +99,15 @@ export default {
     }
   },
   computed: {
-    ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
     ...mapState('profile', { profiles: 'items' }),
-    ...mapState('bank', { banks: 'items' })
+    ...mapState('bank', { banks: 'items' }),
+    /**
+     * Return all attributes
+     */
+    attributes () {
+      return Constant.TITAN_ATTRIBUTES
+    }
   },
   watch: {
     newTasks () {

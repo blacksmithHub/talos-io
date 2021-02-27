@@ -77,7 +77,7 @@
                 >
                   <v-text-field
                     v-model="cardNumber"
-                    label="Card number"
+                    :label="(isGcash) ? 'Phone number' : 'Card number'"
                     required
                     outlined
                     dense

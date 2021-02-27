@@ -108,17 +108,19 @@ export default {
   },
   beforeRouteEnter (to, from, next) {
     next(vm => {
-      if (!vm.attributes.length) vm.prepareAttributes()
-
       if (vm.tasks.length) vm.prepareTasks()
     })
   },
   computed: {
-    ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
     ...mapState('setting', { settings: 'items' }),
     ...mapState('profile', { profiles: 'items' }),
-
+    /**
+     * Return all attributes
+     */
+    attributes () {
+      return Constant.TITAN_ATTRIBUTES
+    },
     /**
      * Return success count.
      *
@@ -167,10 +169,6 @@ export default {
     })
   },
   methods: {
-    ...mapActions('attribute', {
-      setAttributes: 'setItems',
-      reset: 'reset'
-    }),
     ...mapActions('task', {
       addTask: 'addItem',
       updateTask: 'updateItem',
@@ -182,7 +180,6 @@ export default {
     ...mapActions('profile', { setProfiles: 'setItems', updateProfile: 'updateItem' }),
     ...mapActions('bank', { setBanks: 'setItems' }),
     ...mapActions('proxy', { setProxies: 'setItems' }),
-    ...mapActions('attribute', { prepareAttributes: 'initializeItems' }),
 
     /**
      * update selected array

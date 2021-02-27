@@ -239,6 +239,7 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import { minValue } from 'vuelidate/lib/validators'
+
 import Constant from '@/config/constant'
 
 export default {
@@ -265,9 +266,14 @@ export default {
     }
   },
   computed: {
-    ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
+    /**
+     * Return all attributes
+     */
+    attributes () {
+      return Constant.TITAN_ATTRIBUTES
+    },
     /**
      * return available checkout methods
      */
