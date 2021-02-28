@@ -305,6 +305,7 @@ export default {
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
 
     /**
      * clear timer
@@ -361,46 +362,51 @@ export default {
      *
      */
     submit () {
-      const collection = (this.selected.length) ? this.selected : this.tasks
+      try {
+        const collection = (this.selected.length) ? this.selected : this.tasks
 
-      collection.forEach(element => {
-        const params = element
+        collection.forEach(element => {
+          const params = element
 
-        if (this.delay) params.delay = this.delay
+          if (this.delay) params.delay = this.delay
 
-        if (this.sku) params.sku = this.sku
+          if (this.sku) params.sku = this.sku
 
-        if (this.placeOrder) params.placeOrder = this.placeOrder
+          if (this.placeOrder) params.placeOrder = this.placeOrder
 
-        if (this.proxy && Object.keys(this.proxy).length) params.proxy = this.proxy
+          if (this.proxy && Object.keys(this.proxy).length) params.proxy = this.proxy
 
-        if (this.mode) params.mode = this.mode
+          if (this.mode) params.mode = this.mode
 
-        if (this.checkoutMethod) params.checkoutMethod = this.checkoutMethod
+          if (this.checkoutMethod) params.checkoutMethod = this.checkoutMethod
 
-        if (this.sizes.length) {
-          const sizes = []
+          if (this.sizes.length) {
+            const sizes = []
 
-          this.sizes.forEach(element => {
-            const attr = this.attributes.find((val) => val.sizes.find((data) => data.label === element))
+            this.sizes.forEach(element => {
+              const attr = this.attributes.find((val) => val.sizes.find((data) => data.label === element))
 
-            const size = attr.sizes.find((data) => data.label === element)
+              const size = attr.sizes.find((data) => data.label === element)
 
-            sizes.push({
-              attribute_id: attr.attribute_id,
-              value: size.value,
-              label: size.label
+              sizes.push({
+                attribute_id: attr.attribute_id,
+                value: size.value,
+                label: size.label
+              })
             })
-          })
 
-          params.sizes = sizes
-        }
+            params.sizes = sizes
+          }
 
-        this.updateTask(params)
-      })
+          this.updateTask(params)
+        })
 
-      this.snackbar = true
-      this.onCancel()
+        this.snackbar = true
+        this.onCancel()
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
+      }
     }
   },
   validations: {

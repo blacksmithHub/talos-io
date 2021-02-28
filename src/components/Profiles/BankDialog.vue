@@ -315,6 +315,7 @@ export default {
   },
   methods: {
     ...mapActions('bank', { addBank: 'addItem', updateBank: 'updateItem' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
 
     /**
      * Map selected bank.
@@ -360,34 +361,39 @@ export default {
      *
      */
     submit () {
-      this.$v.$touch()
+      try {
+        this.$v.$touch()
 
-      if (!this.$v.$invalid) {
-        const params = {
-          nickname: this.nickname.trim(),
-          bank: this.bank.trim(),
-          cardHolder: this.cardHolder.trim(),
-          cardNumber: this.cardNumber,
-          expiryMonth: this.expiryMonth,
-          expiryYear: this.expiryYear,
-          cvv: this.cvv
+        if (!this.$v.$invalid) {
+          const params = {
+            nickname: this.nickname.trim(),
+            bank: this.bank.trim(),
+            cardHolder: this.cardHolder.trim(),
+            cardNumber: this.cardNumber,
+            expiryMonth: this.expiryMonth,
+            expiryYear: this.expiryYear,
+            cvv: this.cvv
+          }
+
+          if (this.isEditMode) {
+            this.updateBank({
+              ...params,
+              nickname: this.nickname.trim() || this.selectedBank.nickname,
+              id: this.selectedBank.id
+            })
+
+            this.snackbarContent = 'updated'
+            this.snackbar = true
+            this.onCancel()
+          } else {
+            this.addBank({ ...params })
+            this.snackbarContent = 'created'
+            this.snackbar = true
+          }
         }
-
-        if (this.isEditMode) {
-          this.updateBank({
-            ...params,
-            nickname: this.nickname.trim() || this.selectedBank.nickname,
-            id: this.selectedBank.id
-          })
-
-          this.snackbarContent = 'updated'
-          this.snackbar = true
-          this.onCancel()
-        } else {
-          this.addBank({ ...params })
-          this.snackbarContent = 'created'
-          this.snackbar = true
-        }
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     }
   },

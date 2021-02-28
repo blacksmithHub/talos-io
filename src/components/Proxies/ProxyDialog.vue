@@ -142,6 +142,7 @@ export default {
   },
   methods: {
     ...mapActions('proxy', { addProxy: 'addItem', updateProxy: 'updateItem' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
 
     /**
      * set all proxies
@@ -198,69 +199,79 @@ export default {
      *
      */
     submit () {
-      this.$v.$touch()
+      try {
+        this.$v.$touch()
 
-      if (!this.$v.$invalid) {
-        const params = {
-          name: this.name.trim(),
-          proxies: this.pool
+        if (!this.$v.$invalid) {
+          const params = {
+            name: this.name.trim(),
+            proxies: this.pool
+          }
+
+          if (this.isEditMode) {
+            this.updateProxy({
+              ...params,
+              name: this.name.trim() || this.selectedProxy.name,
+              id: this.selectedProxy.id
+            })
+
+            this.snackbarContent = 'updated'
+            this.snackbar = true
+            this.onCancel()
+          } else {
+            this.addProxy({ ...params })
+            this.snackbarContent = 'created'
+            this.snackbar = true
+          }
         }
-
-        if (this.isEditMode) {
-          this.updateProxy({
-            ...params,
-            name: this.name.trim() || this.selectedProxy.name,
-            id: this.selectedProxy.id
-          })
-
-          this.snackbarContent = 'updated'
-          this.snackbar = true
-          this.onCancel()
-        } else {
-          this.addProxy({ ...params })
-          this.snackbarContent = 'created'
-          this.snackbar = true
-        }
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     },
     /**
      * on change event
      */
     onChange () {
-      let proxies = this.proxies.split('\n')
-      this.pool = []
+      try {
+        let proxies = this.proxies.split('\n')
+        this.pool = []
 
-      proxies = proxies.map(element => {
-        const proxy = element.split(':')
+        proxies = proxies.map(element => {
+          const proxy = element.split(':')
 
-        switch (proxy.length) {
-          case 4:
-            this.pool.push({
-              host: proxy[0],
-              port: proxy[1],
-              username: proxy[2],
-              password: proxy[3]
-            })
-            break
+          switch (proxy.length) {
+            case 4:
+              this.pool.push({
+                host: proxy[0],
+                port: proxy[1],
+                username: proxy[2],
+                password: proxy[3]
+              })
+              break
 
-          case 2:
-            this.pool.push({
-              host: proxy[0],
-              port: proxy[1]
-            })
-            break
+            case 2:
+              this.pool.push({
+                host: proxy[0],
+                port: proxy[1]
+              })
+              break
 
-          default:
-            element = ''
-            break
+            default:
+              element = ''
+              break
+          }
+
+          return element
+        })
+
+        if (proxies.length) {
+          proxies = proxies.filter((val) => val)
+          this.proxies = proxies.join('\n')
         }
-
-        return element
-      })
-
-      if (proxies.length) {
-        proxies = proxies.filter((val) => val)
-        this.proxies = proxies.join('\n')
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     }
   },

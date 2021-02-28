@@ -425,6 +425,7 @@ export default {
   },
   methods: {
     ...mapActions('task', { addTask: 'addItem', updateTask: 'updateItem' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
 
     /**
      * Map selected task.
@@ -498,51 +499,56 @@ export default {
      *
      */
     submit () {
-      this.$v.$touch()
+      try {
+        this.$v.$touch()
 
-      if (!this.$v.$invalid) {
-        const sizes = []
+        if (!this.$v.$invalid) {
+          const sizes = []
 
-        this.sizes.forEach(element => {
-          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
+          this.sizes.forEach(element => {
+            const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
-          const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
+            const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
 
-          sizes.push({
-            attribute_id: attr.attribute_id,
-            value: size.value,
-            label: size.label
-          })
-        })
-
-        const params = {
-          sku: this.sku.trim(),
-          sizes: sizes,
-          profile: this.profile,
-          proxy: this.proxy,
-          bank: this.bank || {},
-          delay: this.delay,
-          placeOrder: this.placeOrder,
-          qty: this.qty,
-          mode: this.mode,
-          checkoutMethod: this.checkoutMethod
-        }
-
-        if (this.isEditMode) {
-          this.updateTask({
-            ...this.selectedTask,
-            ...params
+            sizes.push({
+              attribute_id: attr.attribute_id,
+              value: size.value,
+              label: size.label
+            })
           })
 
-          this.snackbarContent = 'updated'
-          this.snackbar = true
+          const params = {
+            sku: this.sku.trim(),
+            sizes: sizes,
+            profile: this.profile,
+            proxy: this.proxy,
+            bank: this.bank || {},
+            delay: this.delay,
+            placeOrder: this.placeOrder,
+            qty: this.qty,
+            mode: this.mode,
+            checkoutMethod: this.checkoutMethod
+          }
 
-          this.onCancel()
-        } else {
-          this.addTask({ ...params })
-          this.snackbarContent = 'created'
-          this.snackbar = true
+          if (this.isEditMode) {
+            this.updateTask({
+              ...this.selectedTask,
+              ...params
+            })
+
+            this.snackbarContent = 'updated'
+            this.snackbar = true
+
+            this.onCancel()
+          } else {
+            this.addTask({ ...params })
+            this.snackbarContent = 'created'
+            this.snackbar = true
+          }
         }
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     }
   },

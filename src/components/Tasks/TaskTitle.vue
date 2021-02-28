@@ -31,6 +31,7 @@
           class="mr-3 white--text"
           :class="(paypal && Object.keys(paypal).length) ? 'paypalLogin' : 'paypalLogout'"
           depressed
+          :loading="loading"
           @click="(paypal && Object.keys(paypal).length) ? dialog=true : paypalLogin()"
         >
           <vue-fontawesome
@@ -205,7 +206,8 @@ export default {
   data () {
     return {
       search: '',
-      dialog: false
+      dialog: false,
+      loading: false
     }
   },
   computed: {
@@ -241,13 +243,32 @@ export default {
 
           this.setPaypal(data)
           this.validatePaypal(data)
+
+          this.loading = false
+        } else {
+          this.loading = false
+          this.setDialogComponent({ header: 'Error', content: response.error })
+          this.setDialog(true)
         }
       }
+
+      this.loading = false
+    })
+
+    ipcRenderer.on('paypalError', async (event, arg) => {
+      this.setDialogComponent({ header: 'Error', content: 'Cannot launch Google Chrome' })
+      this.setDialog(true)
+    })
+
+    ipcRenderer.on('paypalClose', async (event, arg) => {
+      this.loading = false
     })
   },
   methods: {
     ...mapActions('paypal', { setPaypal: 'setItems', confirmPaypalLogout: 'reset' }),
     ...mapActions('profile', { updateProfile: 'updateItem' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+
     /**
      * on search input event.
      */
@@ -258,46 +279,67 @@ export default {
      * Login to paypal
      */
     async paypalLogin () {
-      const secret = await BraintreeApi.getSecret()
+      this.loading = true
 
-      if (secret && !secret.error) {
-        const fingerprint = JSON.parse(atob(secret)).authorizationFingerprint
+      try {
+        const secret = await BraintreeApi.getSecret()
 
-        const params = {
-          payload: {
-            returnUrl: Config.services.auth.url,
-            cancelUrl: Config.services.auth.url,
-            offerPaypalCredit: false,
-            amount: 1,
-            currencyIsoCode: 'PHP',
-            braintreeLibraryVersion: Config.services.braintree.version,
-            authorizationFingerprint: fingerprint
+        if (secret && !secret.error) {
+          const fingerprint = JSON.parse(atob(secret)).authorizationFingerprint
+
+          const params = {
+            payload: {
+              returnUrl: Config.services.auth.url,
+              cancelUrl: Config.services.auth.url,
+              offerPaypalCredit: false,
+              amount: 1,
+              currencyIsoCode: 'PHP',
+              braintreeLibraryVersion: Config.services.braintree.version,
+              authorizationFingerprint: fingerprint
+            }
           }
-        }
 
-        const paypal = await BraintreeApi.createPaymentResource(params)
+          const paypal = await BraintreeApi.createPaymentResource(params)
 
-        if (paypal && !paypal.error) {
-          ipcRenderer.send('paypal-login', JSON.stringify({ url: paypal.paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings }))
+          if (paypal && !paypal.error) {
+            ipcRenderer.send('paypal-login', JSON.stringify({ url: paypal.paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings }))
+          } else {
+            this.loading = false
+            this.setDialogComponent({ header: 'Error', content: paypal.error })
+            this.setDialog(true)
+          }
+        } else {
+          this.loading = false
+          this.setDialogComponent({ header: 'Error', content: secret.error })
+          this.setDialog(true)
         }
+      } catch (error) {
+        this.loading = false
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     },
     /**
      * validate paypal expiry
      */
     async validatePaypal (data) {
-      const expiry = data.expiry
+      try {
+        const expiry = data.expiry
 
-      const eventTime = this.$moment(expiry, 'HH:mm').unix()
-      const currentTime = this.$moment().unix()
+        const eventTime = this.$moment(expiry, 'HH:mm').unix()
+        const currentTime = this.$moment().unix()
 
-      const diffTime = eventTime - currentTime
+        const diffTime = eventTime - currentTime
 
-      const duration = this.$moment.duration(diffTime * 1000, 'milliseconds')
+        const duration = this.$moment.duration(diffTime * 1000, 'milliseconds')
 
-      await new Promise(resolve => setTimeout(resolve, duration))
+        await new Promise(resolve => setTimeout(resolve, duration))
 
-      if (this.paypal.expiry && expiry === this.paypal.expiry) this.confirmPaypalLogout()
+        if (this.paypal.expiry && expiry === this.paypal.expiry) this.confirmPaypalLogout()
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
+      }
     },
 
     /**

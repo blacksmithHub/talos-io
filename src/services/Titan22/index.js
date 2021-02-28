@@ -73,6 +73,26 @@ export default {
   },
 
   /**
+   * Check if token is expired
+   *
+   * @param {*} id
+   */
+  async checkTokenExpiration (id) {
+    let currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
+    if (moment(currentTask.transactionData.token.expires_in) >= moment().format('YYYY-MM-DD HH:mm:ss')) {
+      const token = await this.authenticate(id)
+      currentTask = await Bot.getCurrentTask(id)
+
+      if (Bot.isRunning(id) && token && Object.keys(token).length && currentTask) {
+        currentTask.transactionData.token = token
+        Tasks.dispatch('updateItem', currentTask)
+      }
+    }
+  },
+
+  /**
    * Handle API error responses
    *
    * @param {*} id
@@ -105,7 +125,7 @@ export default {
               const token = await this.authenticate(id, attr)
               const currentTask = await Bot.getCurrentTask(id)
 
-              if (Bot.isRunning(id) && token && currentTask) {
+              if (Bot.isRunning(id) && token && Object.keys(token).length && currentTask) {
                 currentTask.transactionData.token = token
                 Tasks.dispatch('updateItem', currentTask)
               }
@@ -150,6 +170,10 @@ export default {
 
     if (!Bot.isRunning(id)) return false
 
+    await this.checkTokenExpiration(id)
+
+    if (!Bot.isRunning(id)) return false
+
     /**
      * Step 2: get account
      *
@@ -168,6 +192,10 @@ export default {
       this.verify(id)
       return false
     }
+
+    if (!Bot.isRunning(id)) return false
+
+    await this.checkTokenExpiration(id)
 
     if (!Bot.isRunning(id)) return false
 
@@ -219,7 +247,7 @@ export default {
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
-    if (token) {
+    if (token && Object.keys(token).length) {
       currentTask.transactionData.token = token
       await Tasks.dispatch('updateItem', currentTask)
     } else {
@@ -227,6 +255,11 @@ export default {
       this.start(id)
       return false
     }
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
+    await this.checkTokenExpiration(id)
 
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
@@ -259,6 +292,11 @@ export default {
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
+    await this.checkTokenExpiration(id)
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
     /**
      * Step 3: initialize cart
      *
@@ -287,6 +325,11 @@ export default {
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
+    await this.checkTokenExpiration(id)
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
     /**
      * Step 4: add to cart
      *
@@ -309,6 +352,11 @@ export default {
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
+    await this.checkTokenExpiration(id)
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
     /**
      * Step 5: set shipping info
      *
@@ -327,6 +375,11 @@ export default {
       this.start(id)
       return false
     }
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
+    await this.checkTokenExpiration(id)
 
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
@@ -422,7 +475,11 @@ export default {
           await this.handleError(id, counter, response.error, attr)
           continue
         } else if (response && !response.error) {
-          data = response
+          data = {
+            token: response,
+            expires_in: moment().add(50, 'minutes').format('YYYY-MM-DD HH:mm:ss')
+          }
+
           break
         }
       } catch (error) {
@@ -471,7 +528,7 @@ export default {
         await Bot.updateCurrentTaskLog(id, `#${counter}: Fetching account...`)
 
         const params = {
-          token: currentTask.transactionData.token,
+          token: currentTask.transactionData.token.token,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
           taskId: id
@@ -552,7 +609,7 @@ export default {
         await Bot.updateCurrentTaskLog(id, `#${counter}: Creating cart...`)
 
         const params = {
-          token: currentTask.transactionData.token,
+          token: currentTask.transactionData.token.token,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
           taskId: id
@@ -619,7 +676,7 @@ export default {
         await Bot.updateCurrentTaskLog(id, `#${counter}: Creating cart...`)
 
         const params = {
-          token: currentTask.transactionData.token,
+          token: currentTask.transactionData.token.token,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
           taskId: id
@@ -682,7 +739,7 @@ export default {
             await Bot.updateCurrentTaskLog(id, `#${counter}: Cleaning cart - item ${index + 1}...`)
 
             const params = {
-              token: currentTask.transactionData.token,
+              token: currentTask.transactionData.token.token,
               id: data.items[index].item_id,
               proxy: currentTask.proxy,
               mode: currentTask.mode,
@@ -697,6 +754,9 @@ export default {
 
             if (response && response.error) {
               await this.handleError(id, counter, response.error)
+
+              if (response.error && response.error.statusCode && response.error.statusCode === 404) deleted = response
+
               continue
             } else if (response && !response.error) {
               deleted = response
@@ -757,7 +817,7 @@ export default {
             await Bot.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
             const params = {
-              token: currentTask.transactionData.token,
+              token: currentTask.transactionData.token.token,
               payload: {
                 cartItem: {
                   sku: `${currentTask.sku}-SZ${currentTask.sizes[index].label.replace('.', 'P').toUpperCase()}`,
@@ -867,7 +927,7 @@ export default {
           await Bot.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
 
           const parameters = {
-            token: currentTask.transactionData.token,
+            token: currentTask.transactionData.token.token,
             payload: { addressId: defaultShippingAddress.id },
             proxy: currentTask.proxy,
             mode: currentTask.mode,
@@ -882,7 +942,15 @@ export default {
 
           if (response && response.error) {
             await this.handleError(id, counter, response.error)
-            continue
+
+            if (response.error && response.error.statusCode && response.error.statusCode === 400) {
+              currentTask = await Bot.getCurrentTask(id)
+              delete currentTask.transactionData.cart
+              await Tasks.dispatch('updateItem', currentTask)
+              break
+            } else {
+              continue
+            }
           } else if (response && !response.error) {
             params = response[0]
             break
@@ -899,7 +967,7 @@ export default {
       }
     }
 
-    if (!Bot.isRunning(id)) return data
+    if (!Bot.isRunning(id) || !params) return data
 
     // set shipping
     const shippingAddress = await this.setAddresses(defaultShippingAddress, email)
@@ -946,7 +1014,7 @@ export default {
         await Bot.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
 
         const params = {
-          token: currentTask.transactionData.token,
+          token: currentTask.transactionData.token.token,
           payload: payload,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
@@ -961,7 +1029,15 @@ export default {
 
         if (response && response.error) {
           await this.handleError(id, counter, response.error)
-          continue
+
+          if (response.error && response.error.statusCode && response.error.statusCode === 400) {
+            currentTask = await Bot.getCurrentTask(id)
+            delete currentTask.transactionData.cart
+            await Tasks.dispatch('updateItem', currentTask)
+            break
+          } else {
+            continue
+          }
         } else if (response && !response.error) {
           data = response
           break
@@ -1030,7 +1106,7 @@ export default {
             po_number: null
           }
         },
-        token: currentTask.transactionData.token,
+        token: currentTask.transactionData.token.token,
         proxy: currentTask.proxy,
         mode: currentTask.mode,
         taskId: id
