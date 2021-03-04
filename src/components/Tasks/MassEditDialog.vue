@@ -92,7 +92,7 @@
                   >
                     <v-expansion-panel>
                       <v-expansion-panel-header>
-                        Advanced
+                        Advance Options
                       </v-expansion-panel-header>
                       <v-expansion-panel-content>
                         <v-row>
@@ -102,7 +102,6 @@
                               dense
                               outlined
                               type="number"
-                              hide-details="auto"
                               :error-messages="delayErrors"
                               label="Delays"
                               hint="Input value in milliseconds"
@@ -126,7 +125,6 @@
                                 <v-text-field
                                   v-model="placeOrder"
                                   dense
-                                  hide-details
                                   outlined
                                   readonly
                                   v-bind="attrs"
@@ -149,6 +147,7 @@
                           </v-col>
                         </v-row>
 
+                        <p>Checkout Method:</p>
                         <v-radio-group
                           v-model="checkoutMethod"
                           row
@@ -239,6 +238,7 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import { minValue } from 'vuelidate/lib/validators'
+
 import Constant from '@/config/constant'
 
 export default {
@@ -265,9 +265,14 @@ export default {
     }
   },
   computed: {
-    ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
+    /**
+     * Return all attributes
+     */
+    attributes () {
+      return Constant.TITAN_ATTRIBUTES
+    },
     /**
      * return available checkout methods
      */
@@ -300,6 +305,7 @@ export default {
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
 
     /**
      * clear timer
@@ -356,46 +362,51 @@ export default {
      *
      */
     submit () {
-      const collection = (this.selected.length) ? this.selected : this.tasks
+      try {
+        const collection = (this.selected.length) ? this.selected : this.tasks
 
-      collection.forEach(element => {
-        const params = element
+        collection.forEach(element => {
+          const params = element
 
-        if (this.delay) params.delay = this.delay
+          if (this.delay) params.delay = this.delay
 
-        if (this.sku) params.sku = this.sku
+          if (this.sku) params.sku = this.sku
 
-        if (this.placeOrder) params.placeOrder = this.placeOrder
+          if (this.placeOrder) params.placeOrder = this.placeOrder
 
-        if (this.proxy && Object.keys(this.proxy).length) params.proxy = this.proxy
+          if (this.proxy && Object.keys(this.proxy).length) params.proxy = this.proxy
 
-        if (this.mode) params.mode = this.mode
+          if (this.mode) params.mode = this.mode
 
-        if (this.checkoutMethod) params.checkoutMethod = this.checkoutMethod
+          if (this.checkoutMethod) params.checkoutMethod = this.checkoutMethod
 
-        if (this.sizes.length) {
-          const sizes = []
+          if (this.sizes.length) {
+            const sizes = []
 
-          this.sizes.forEach(element => {
-            const attr = this.attributes.find((val) => val.sizes.find((data) => data.label === element))
+            this.sizes.forEach(element => {
+              const attr = this.attributes.find((val) => val.sizes.find((data) => data.label === element))
 
-            const size = attr.sizes.find((data) => data.label === element)
+              const size = attr.sizes.find((data) => data.label === element)
 
-            sizes.push({
-              attribute_id: attr.attribute_id,
-              value: size.value,
-              label: size.label
+              sizes.push({
+                attribute_id: attr.attribute_id,
+                value: size.value,
+                label: size.label
+              })
             })
-          })
 
-          params.sizes = sizes
-        }
+            params.sizes = sizes
+          }
 
-        this.updateTask(params)
-      })
+          this.updateTask(params)
+        })
 
-      this.snackbar = true
-      this.onCancel()
+        this.snackbar = true
+        this.onCancel()
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
+      }
     }
   },
   validations: {

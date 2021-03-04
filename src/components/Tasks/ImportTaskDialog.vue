@@ -86,6 +86,8 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 
+import Constant from '@/config/constant'
+
 export default {
   data () {
     return {
@@ -97,10 +99,15 @@ export default {
     }
   },
   computed: {
-    ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
     ...mapState('profile', { profiles: 'items' }),
-    ...mapState('bank', { banks: 'items' })
+    ...mapState('bank', { banks: 'items' }),
+    /**
+     * Return all attributes
+     */
+    attributes () {
+      return Constant.TITAN_ATTRIBUTES
+    }
   },
   watch: {
     newTasks () {
@@ -112,111 +119,118 @@ export default {
   },
   methods: {
     ...mapActions('task', { addTask: 'addItem' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+
     /**
      * Validate input file
      *
      */
     validateFile () {
-      this.fileErrors = []
+      try {
+        this.fileErrors = []
 
-      if (this.csv) {
-        const a = this.csv.name.split('.')
+        if (this.csv) {
+          const a = this.csv.name.split('.')
 
-        if (a[a.length - 1] !== 'csv') {
-          this.fileErrors.push('Invalid file')
-        } else {
-          const csvToJson = require('convert-csv-to-json')
+          if (a[a.length - 1] !== 'csv') {
+            this.fileErrors.push('Invalid file')
+          } else {
+            const csvToJson = require('convert-csv-to-json')
 
-          const json = csvToJson.getJsonFromCsv(this.csv.path)
+            const json = csvToJson.getJsonFromCsv(this.csv.path)
 
-          const result = []
+            const result = []
 
-          json.forEach(element => {
-            for (const [key, value] of Object.entries(element)) {
-              const columns = key.split(',')
-              const rows = value.split(',')
+            json.forEach(element => {
+              for (const [key, value] of Object.entries(element)) {
+                const columns = key.split(',')
+                const rows = value.split(',')
 
-              const parse = {}
+                const parse = {}
 
-              columns.forEach((clm, i) => {
-                parse[clm] = rows[i]
-              })
-
-              result.push(parse)
-            }
-          })
-
-          this.newTasks = []
-
-          result.forEach(element => {
-            const csvSizes = (element.sizes) ? element.sizes.trim().split('+') : []
-
-            if (csvSizes.length && element.email && element.password && element.sku && element.bank && element.cardNumber) {
-              const sizes = []
-
-              csvSizes.forEach((data) => {
-                const attr = this.attributes.find((val) => val.sizes.find((size) => size.label.toLowerCase() === data.toLowerCase()))
-
-                if (attr && !sizes.find((val) => val.label.toLowerCase() === data.toLowerCase())) {
-                  const size = attr.sizes.find((val) => val.label.toLowerCase() === data.toLowerCase())
-
-                  sizes.push({
-                    attribute_id: attr.attribute_id,
-                    label: size.label,
-                    value: size.value
-                  })
-                }
-              })
-
-              if (sizes.length) {
-                let profile = this.profiles.slice().find((data) => {
-                  return data.email === element.email.trim() && data.password === element.password.trim()
+                columns.forEach((clm, i) => {
+                  parse[clm] = rows[i]
                 })
 
-                if (!profile) {
-                  profile = {
-                    id: null,
-                    name: element.email.trim(),
-                    email: element.email.trim(),
-                    password: element.password.trim()
-                  }
-                }
-
-                const bank = {
-                  cardHolder: (element.cardHolder) ? element.cardHolder.trim() : '',
-                  cardNumber: parseInt(element.cardNumber) || '',
-                  cvv: parseInt(element.cvv) || '',
-                  expiryMonth: element.expiryMonth || '',
-                  expiryYear: element.expiryYear || '',
-                  bank: (element.bank) ? element.bank.trim() : '',
-                  nickname: (element.bank) ? element.bank.trim() : '',
-                  id: null
-                }
-
-                const object = {
-                  bank: bank,
-                  profile: profile,
-                  sku: element.sku.trim(),
-                  sizes: sizes,
-                  delay: element.delay || 3200,
-                  placeOrder: element.placeOrder || '',
-                  proxy: { id: null, name: 'Localhost', proxies: [] },
-                  mode: element.mode || 'Desktop'
-                }
-
-                if (element.aco) {
-                  object.profile.name = (element.id) ? element.id.trim() : ''
-                  object.aco = true
-                  object.webhook = (element.webhook) ? element.webhook.trim() : ''
-                }
-
-                this.newTasks.push(object)
+                result.push(parse)
               }
-            }
-          })
+            })
+
+            this.newTasks = []
+
+            result.forEach(element => {
+              const csvSizes = (element.sizes) ? element.sizes.trim().split('+') : []
+
+              if (csvSizes.length && element.email && element.password && element.sku && element.bank && element.cardNumber) {
+                const sizes = []
+
+                csvSizes.forEach((data) => {
+                  const attr = this.attributes.find((val) => val.sizes.find((size) => size.label.toLowerCase() === data.toLowerCase()))
+
+                  if (attr && !sizes.find((val) => val.label.toLowerCase() === data.toLowerCase())) {
+                    const size = attr.sizes.find((val) => val.label.toLowerCase() === data.toLowerCase())
+
+                    sizes.push({
+                      attribute_id: attr.attribute_id,
+                      label: size.label,
+                      value: size.value
+                    })
+                  }
+                })
+
+                if (sizes.length) {
+                  let profile = this.profiles.slice().find((data) => {
+                    return data.email === element.email.trim() && data.password === element.password.trim()
+                  })
+
+                  if (!profile) {
+                    profile = {
+                      id: null,
+                      name: element.email.trim(),
+                      email: element.email.trim(),
+                      password: element.password.trim()
+                    }
+                  }
+
+                  const bank = {
+                    cardHolder: (element.cardHolder) ? element.cardHolder.trim() : '',
+                    cardNumber: parseInt(element.cardNumber) || '',
+                    cvv: parseInt(element.cvv) || '',
+                    expiryMonth: element.expiryMonth || '',
+                    expiryYear: element.expiryYear || '',
+                    bank: (element.bank) ? element.bank.trim() : '',
+                    nickname: (element.bank) ? element.bank.trim() : '',
+                    id: null
+                  }
+
+                  const object = {
+                    bank: bank,
+                    profile: profile,
+                    sku: element.sku.trim(),
+                    sizes: sizes,
+                    delay: element.delay || 3200,
+                    placeOrder: element.placeOrder || '',
+                    proxy: { id: null, name: 'Localhost', proxies: [] },
+                    mode: element.mode || 'Desktop'
+                  }
+
+                  if (element.aco) {
+                    object.profile.name = (element.id) ? element.id.trim() : ''
+                    object.aco = true
+                    object.webhook = (element.webhook) ? element.webhook.trim() : ''
+                  }
+
+                  this.newTasks.push(object)
+                }
+              }
+            })
+          }
+        } else {
+          this.fileErrors.push('Required')
         }
-      } else {
-        this.fileErrors.push('Required')
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     },
     /**

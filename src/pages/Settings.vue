@@ -516,6 +516,7 @@ export default {
   methods: {
     ...mapActions('setting', { updateSettings: 'setItems' }),
     ...mapActions('proxy', { updateProxies: 'setItems' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
 
     /**
      * on change event
@@ -529,7 +530,6 @@ export default {
      *
      */
     clearLocalStorage () {
-      localStorage.removeItem('attributes')
       localStorage.removeItem('settings')
       localStorage.removeItem('tasks')
       localStorage.removeItem('profiles')
@@ -550,46 +550,51 @@ export default {
      *
      */
     exportTasks (tasks) {
-      const jsons = []
+      try {
+        const jsons = []
 
-      if (tasks.length) {
-        tasks.forEach(element => {
-          const sizes = element.sizes.slice().map((val) => val.label).join('+')
+        if (tasks.length) {
+          tasks.forEach(element => {
+            const sizes = element.sizes.slice().map((val) => val.label).join('+')
 
-          jsons.push({
-            email: element.profile.email,
-            password: element.profile.password,
-            sku: element.sku,
-            sizes: sizes,
-            bank: element.bank.bank,
-            cardHolder: element.bank.cardHolder,
-            cardNumber: element.bank.cardNumber,
-            expiryMonth: element.bank.expiryMonth,
-            expiryYear: element.bank.expiryYear,
-            cvv: element.bank.cvv,
-            delay: element.delay,
-            placeOrder: element.placeOrder,
-            mode: element.mode || 'Desktop'
+            jsons.push({
+              email: element.profile.email,
+              password: element.profile.password,
+              sku: element.sku,
+              sizes: sizes,
+              bank: element.bank.bank,
+              cardHolder: element.bank.cardHolder,
+              cardNumber: element.bank.cardNumber,
+              expiryMonth: element.bank.expiryMonth,
+              expiryYear: element.bank.expiryYear,
+              cvv: element.bank.cvv,
+              delay: element.delay,
+              placeOrder: element.placeOrder,
+              mode: element.mode || 'Desktop'
+            })
           })
-        })
-      } else {
-        jsons.push({
-          email: '',
-          password: '',
-          sku: '',
-          sizes: '',
-          bank: '',
-          cardHolder: '',
-          cardNumber: '',
-          expiryMonth: '',
-          expiryYear: '',
-          cvv: '',
-          delay: 1000,
-          mode: 'Desktop'
-        })
-      }
+        } else {
+          jsons.push({
+            email: '',
+            password: '',
+            sku: '',
+            sizes: '',
+            bank: '',
+            cardHolder: '',
+            cardNumber: '',
+            expiryMonth: '',
+            expiryYear: '',
+            cvv: '',
+            delay: 1000,
+            mode: 'Desktop'
+          })
+        }
 
-      this.backupTasks = jsons
+        this.backupTasks = jsons
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
+      }
     },
 
     /**
@@ -597,25 +602,30 @@ export default {
      *
      */
     exportProfiles (profiles) {
-      const jsons = []
+      try {
+        const jsons = []
 
-      if (profiles.length) {
-        profiles.forEach(element => {
-          jsons.push({
-            name: element.name,
-            email: element.email,
-            password: element.password
+        if (profiles.length) {
+          profiles.forEach(element => {
+            jsons.push({
+              name: element.name,
+              email: element.email,
+              password: element.password
+            })
           })
-        })
-      } else {
-        jsons.push({
-          name: '',
-          email: '',
-          password: ''
-        })
-      }
+        } else {
+          jsons.push({
+            name: '',
+            email: '',
+            password: ''
+          })
+        }
 
-      this.backupProfiles = jsons
+        this.backupProfiles = jsons
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
+      }
     },
 
     /**
@@ -623,33 +633,38 @@ export default {
      *
      */
     exportBanks (banks) {
-      const jsons = []
+      try {
+        const jsons = []
 
-      if (banks.length) {
-        banks.forEach(element => {
-          jsons.push({
-            nickname: element.nickname,
-            bank: element.bank,
-            cardHolder: element.cardHolder,
-            cardNumber: element.cardNumber,
-            expiryMonth: element.expiryMonth,
-            expiryYear: element.expiryYear,
-            cvv: element.cvv
+        if (banks.length) {
+          banks.forEach(element => {
+            jsons.push({
+              nickname: element.nickname,
+              bank: element.bank,
+              cardHolder: element.cardHolder,
+              cardNumber: element.cardNumber,
+              expiryMonth: element.expiryMonth,
+              expiryYear: element.expiryYear,
+              cvv: element.cvv
+            })
           })
-        })
-      } else {
-        jsons.push({
-          nickname: '',
-          bank: '',
-          cardHolder: '',
-          cardNumber: '',
-          expiryMonth: '',
-          expiryYear: '',
-          cvv: ''
-        })
-      }
+        } else {
+          jsons.push({
+            nickname: '',
+            bank: '',
+            cardHolder: '',
+            cardNumber: '',
+            expiryMonth: '',
+            expiryYear: '',
+            cvv: ''
+          })
+        }
 
-      this.backupBanks = jsons
+        this.backupBanks = jsons
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
+      }
     },
 
     /**
@@ -692,28 +707,33 @@ export default {
      *
      */
     submit () {
-      this.$v.$touch()
+      try {
+        this.$v.$touch()
 
-      if (!this.$v.$invalid) {
-        this.updateSettings({
-          monitorInterval: this.monitorInterval,
-          webhook: this.webhook,
-          nightMode: this.nightMode,
-          sound: this.sound,
-          autoPay: this.autoPay,
-          autoFill: this.autoFill,
-          manual: this.manual,
-          monitorProxy: this.monitorProxy,
-          executablePath: this.executablePath
-        })
+        if (!this.$v.$invalid) {
+          this.updateSettings({
+            monitorInterval: this.monitorInterval,
+            webhook: this.webhook,
+            nightMode: this.nightMode,
+            sound: this.sound,
+            autoPay: this.autoPay,
+            autoFill: this.autoFill,
+            manual: this.manual,
+            monitorProxy: this.monitorProxy,
+            executablePath: this.executablePath
+          })
 
-        try {
-          ipcRenderer.send('update-settings', this.settings)
-        } catch (error) {
+          try {
+            ipcRenderer.send('update-settings', this.settings)
+          } catch (error) {
           //
-        }
+          }
 
-        this.snackbar = true
+          this.snackbar = true
+        }
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     },
     /**

@@ -56,6 +56,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
 import { required } from 'vuelidate/lib/validators'
 import { ipcRenderer } from 'electron'
 
@@ -90,27 +91,34 @@ export default {
     }
   },
   methods: {
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+
     login () {
-      this.$v.$touch()
+      try {
+        this.$v.$touch()
 
-      if (!this.$v.$invalid) {
-        this.loading = true
+        if (!this.$v.$invalid) {
+          this.loading = true
 
-        AuthAPI.login({ key: this.key })
-          .then(({ data }) => {
-            this.loading = false
+          AuthAPI.login({ key: this.key })
+            .then(({ data }) => {
+              this.loading = false
 
-            if (data) {
-              AuthService.setAuth({ key: this.key })
-              this.close()
-            } else {
+              if (data) {
+                AuthService.setAuth({ key: this.key })
+                this.close()
+              } else {
+                this.error = 'Invalid key'
+              }
+            })
+            .catch(() => {
+              this.loading = false
               this.error = 'Invalid key'
-            }
-          })
-          .catch(() => {
-            this.loading = false
-            this.error = 'Invalid key'
-          })
+            })
+        }
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     },
 

@@ -162,6 +162,7 @@ export default {
   },
   methods: {
     ...mapActions('profile', { addProfile: 'addItem', updateProfile: 'updateItem' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
 
     /**
      * Map selected profile.
@@ -200,31 +201,36 @@ export default {
      *
      */
     submit () {
-      this.$v.$touch()
+      try {
+        this.$v.$touch()
 
-      if (!this.$v.$invalid) {
-        const params = {
-          name: this.name.trim(),
-          email: this.email,
-          password: this.password.trim(),
-          paypal: {}
+        if (!this.$v.$invalid) {
+          const params = {
+            name: this.name.trim(),
+            email: this.email,
+            password: this.password.trim(),
+            paypal: {}
+          }
+
+          if (this.isEditMode) {
+            this.updateProfile({
+              ...params,
+              id: this.selectedProfile.id,
+              name: this.name.trim() || this.selectedProfile.name
+            })
+
+            this.snackbarContent = 'updated'
+            this.snackbar = true
+            this.onCancel()
+          } else {
+            this.addProfile({ ...params })
+            this.snackbarContent = 'created'
+            this.snackbar = true
+          }
         }
-
-        if (this.isEditMode) {
-          this.updateProfile({
-            ...params,
-            id: this.selectedProfile.id,
-            name: this.name.trim() || this.selectedProfile.name
-          })
-
-          this.snackbarContent = 'updated'
-          this.snackbar = true
-          this.onCancel()
-        } else {
-          this.addProfile({ ...params })
-          this.snackbarContent = 'created'
-          this.snackbar = true
-        }
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     }
   },

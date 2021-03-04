@@ -9,48 +9,67 @@ export default {
    * @param {*} arg
    */
   async automate (arg) {
-    const puppeteer = require('puppeteer')
-    const UserAgent = require('user-agents')
-    const userAgent = new UserAgent({ deviceCategory: 'desktop' })
-
-    const url = arg.url
-    const fingerprint = arg.fingerprint
-    const settings = arg.settings
     const profile = ('profile' in arg) ? arg.profile : null
 
-    const browser = await puppeteer.launch({
-      headless: false,
-      args: ['--window-size=800,600'],
-      defaultViewport: null,
-      executablePath: settings.executablePath || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
-    })
+    try {
+      const puppeteer = require('puppeteer')
+      const UserAgent = require('user-agents')
+      const userAgent = new UserAgent({ deviceCategory: 'desktop' })
 
-    const page = await browser.newPage()
+      const url = arg.url
+      const fingerprint = arg.fingerprint
+      const settings = arg.settings
 
-    await page.setUserAgent(userAgent.toString())
+      const browser = await puppeteer.launch({
+        headless: false,
+        args: ['--window-size=800,600'],
+        defaultViewport: null,
+        executablePath: settings.executablePath || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+      })
 
-    await page.goto(url)
+      const page = await browser.newPage()
 
-    page.on('framenavigated', frame => {
-      if (frame._url.includes(Config.services.auth.domain)) {
-        const domain = `${Config.services.auth.url}/?`
+      await page.setUserAgent(userAgent.toString())
 
-        const queries = frame._url.slice(domain.length).split('&')
+      await page.goto(url)
 
-        const params = {}
+      page.on('framenavigated', frame => {
+        if (frame._url.includes(Config.services.auth.domain)) {
+          const domain = `${Config.services.auth.url}/?`
 
-        queries.forEach(element => {
-          const query = element.split('=')
+          const queries = frame._url.slice(domain.length).split('&')
 
-          params[query[0]] = query[1]
-        })
+          const params = {}
 
-        browser.close()
+          queries.forEach(element => {
+            const query = element.split('=')
 
-        if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
+            params[query[0]] = query[1]
+          })
 
-        if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
+          browser.close()
+
+          if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
+
+          if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('paypalParams', { params: params, fingerprint: fingerprint, profile: profile })
+        }
+      })
+
+      page.on('close', () => {
+        if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('paypalClose')
+
+        if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('paypalClose', profile)
+      })
+    } catch (error) {
+      if (error.toString().includes('Could not find browser revision')) {
+        if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('paypalError')
+
+        if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('paypalError')
       }
-    })
+
+      if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('paypalClose')
+
+      if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('paypalClose', profile)
+    }
   }
 }

@@ -105,58 +105,65 @@ export default {
   },
   methods: {
     ...mapActions('bank', { addBank: 'addItem' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+
     /**
      * Validate input file
      *
      */
     validateFile () {
-      this.fileErrors = []
+      try {
+        this.fileErrors = []
 
-      if (this.csv) {
-        const ext = this.csv.name.split('.')
+        if (this.csv) {
+          const ext = this.csv.name.split('.')
 
-        if (ext[ext.length - 1] !== 'csv') {
-          this.fileErrors.push('Invalid file')
+          if (ext[ext.length - 1] !== 'csv') {
+            this.fileErrors.push('Invalid file')
+          } else {
+            const csvToJson = require('convert-csv-to-json')
+
+            const json = csvToJson.getJsonFromCsv(this.csv.path)
+
+            const result = []
+
+            json.forEach(element => {
+              for (const [key, value] of Object.entries(element)) {
+                const columns = key.split(',')
+                const rows = value.split(',')
+
+                const parse = {}
+
+                columns.forEach((clm, i) => {
+                  parse[clm] = rows[i]
+                })
+
+                result.push(parse)
+              }
+            })
+
+            this.newBanks = []
+
+            result.forEach(element => {
+              if (element.bank && parseInt(element.cardNumber)) {
+                this.newBanks.push({
+                  cardHolder: (element.cardHolder) ? element.cardHolder.trim() : null,
+                  cardNumber: parseInt(element.cardNumber),
+                  cvv: parseInt(element.cvv) || null,
+                  expiryMonth: element.expiryMonth || null,
+                  expiryYear: element.expiryYear || null,
+                  bank: element.bank || null,
+                  nickname: (element.nickname) ? element.nickname.trim() : null
+                })
+              }
+            })
+          }
         } else {
-          const csvToJson = require('convert-csv-to-json')
-
-          const json = csvToJson.getJsonFromCsv(this.csv.path)
-
-          const result = []
-
-          json.forEach(element => {
-            for (const [key, value] of Object.entries(element)) {
-              const columns = key.split(',')
-              const rows = value.split(',')
-
-              const parse = {}
-
-              columns.forEach((clm, i) => {
-                parse[clm] = rows[i]
-              })
-
-              result.push(parse)
-            }
-          })
-
-          this.newBanks = []
-
-          result.forEach(element => {
-            if (element.bank && parseInt(element.cardNumber)) {
-              this.newBanks.push({
-                cardHolder: (element.cardHolder) ? element.cardHolder.trim() : null,
-                cardNumber: parseInt(element.cardNumber),
-                cvv: parseInt(element.cvv) || null,
-                expiryMonth: element.expiryMonth || null,
-                expiryYear: element.expiryYear || null,
-                bank: element.bank || null,
-                nickname: (element.nickname) ? element.nickname.trim() : null
-              })
-            }
-          })
+          this.fileErrors.push('Required')
         }
-      } else {
-        this.fileErrors.push('Required')
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     },
     /**

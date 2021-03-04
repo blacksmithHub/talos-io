@@ -1,7 +1,17 @@
 import { Howl } from 'howler'
 import { ipcRenderer } from 'electron'
+
 import StopWatch from 'statman-stopwatch'
 import moment from 'moment-timezone'
+
+import Toastify from 'toastify-js'
+import 'toastify-js/src/toastify.css'
+
+import vanillaPuppeteer from 'puppeteer'
+import { addExtra } from 'puppeteer-extra'
+import StealthPlugin from 'puppeteer-extra-plugin-stealth'
+import ProxyChain from 'proxy-chain'
+import { Cookie } from 'tough-cookie'
 
 import Constant from '@/config/constant'
 import Config from '@/config/app'
@@ -18,12 +28,11 @@ import Bot from '@/services/index'
 
 import store from '@/store/index'
 
-import Toastify from 'toastify-js'
-import 'toastify-js/src/toastify.css'
-
 const Tasks = store._modules.root._children.task.context
 const Settings = store._modules.root._children.setting.context
 const PayPal = store._modules.root._children.paypal.context
+
+const blockedResources = ['queue-it']
 
 /**
  * ===============================================
@@ -73,6 +82,26 @@ export default {
   },
 
   /**
+   * Check if token is expired
+   *
+   * @param {*} id
+   */
+  async checkTokenExpiration (id) {
+    let currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
+    if (moment(currentTask.transactionData.token.expires_in) >= moment().format('YYYY-MM-DD HH:mm:ss')) {
+      const token = await this.authenticate(id)
+      currentTask = await Bot.getCurrentTask(id)
+
+      if (Bot.isRunning(id) && token && Object.keys(token).length && currentTask) {
+        currentTask.transactionData.token = token
+        Tasks.dispatch('updateItem', currentTask)
+      }
+    }
+  },
+
+  /**
    * Handle API error responses
    *
    * @param {*} id
@@ -83,12 +112,10 @@ export default {
   async handleError (id, counter, response, attr = 'orange') {
     try {
       try {
-        if (response.error) {
-          await Bot.updateCurrentTaskLog(id, `#${counter} at Line87: ${response.error.message}`)
-        } else if (response.body) {
-          await Bot.updateCurrentTaskLog(id, `#${counter} at Line 89: ${response.statusCode} - ${response.body}`)
+        if (response.statusCode && response.statusCode === 503) {
+          await Bot.updateCurrentTaskLog(id, `#${counter} at Line87: 503 access denied`)
         } else {
-          await Bot.updateCurrentTaskLog(id, `#${counter} at Line 91: ${response}`)
+          await Bot.updateCurrentTaskLog(id, `#${counter} at Line87: ${response.message}`)
         }
       } catch (error) {
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 94: ${error}`)
@@ -105,10 +132,22 @@ export default {
               const token = await this.authenticate(id, attr)
               const currentTask = await Bot.getCurrentTask(id)
 
-              if (Bot.isRunning(id) && token && currentTask) {
+              if (Bot.isRunning(id) && token && Object.keys(token).length && currentTask) {
                 currentTask.transactionData.token = token
                 Tasks.dispatch('updateItem', currentTask)
               }
+            }
+            break
+
+          case 503:
+            {
+              await Bot.setCurrentTaskStatus(id, { status: Constant.TASK.STATUS.RUNNING, msg: 'Bypassing', attr })
+
+              const options = await this.getCloudflareClearance(id, response)
+
+              const currentTask = await Bot.getCurrentTask(id)
+              currentTask.options = options
+              Tasks.dispatch('updateItem', currentTask)
             }
             break
         }
@@ -118,6 +157,120 @@ export default {
     } catch (error) {
       await Bot.updateCurrentTaskLog(id, `#${counter} at Line 119: ${error}`)
     }
+  },
+
+  /**
+   * Retrieve cloudflare cookies
+   *
+   * @param {*} id
+   * @param {*} response
+   */
+  async getCloudflareClearance (id, response) {
+    const { options } = response
+
+    try {
+      const puppeteer = addExtra(vanillaPuppeteer)
+      const stealth = StealthPlugin()
+      puppeteer.use(stealth)
+
+      const args = ['--no-sandbox', '--disable-setuid-sandbox']
+
+      if (options.proxy) {
+        const oldProxyUrl = options.proxy
+        const newProxyUrl = await ProxyChain.anonymizeProxy(oldProxyUrl)
+
+        args.push(`--proxy-server=${newProxyUrl}`)
+      }
+
+      args.push(`--user-agent=${options.headers['User-Agent']}`)
+
+      const browser = await puppeteer.launch({
+        args,
+        headless: false
+      })
+
+      if (!Bot.isRunning(id)) browser.close()
+
+      const page = await browser.newPage()
+
+      await page.setRequestInterception(true)
+
+      if (!Bot.isRunning(id)) browser.close()
+
+      page.on('request', (request) => {
+        if (!Bot.isRunning(id)) browser.close()
+
+        if (request.url().endsWith('.png') || request.url().endsWith('.jpg')) {
+        // BLOCK IMAGES
+          request.abort()
+        } else if (blockedResources.some(resource => request.url().indexOf(resource) !== -1)) {
+        // BLOCK CERTAIN DOMAINS
+          request.abort()
+        } else {
+        // ALLOW OTHER REQUESTS
+          request.continue()
+        }
+      })
+
+      page.on('response', () => {
+        if (!Bot.isRunning(id)) browser.close()
+      })
+
+      if (!Bot.isRunning(id)) browser.close()
+
+      await page.goto(`${Config.services.titan22.url}/new-arrivals.html`)
+
+      if (!Bot.isRunning(id)) browser.close()
+
+      let content = await page.content()
+
+      if (!Bot.isRunning(id)) browser.close()
+
+      // TODO: captcha
+
+      if (content.includes('cf-browser-verification')) {
+        let counter = 0
+
+        while (content.includes('cf-browser-verification')) {
+          if (!Bot.isRunning(id)) browser.close()
+
+          counter++
+
+          if (counter >= 3) break
+
+          await page.waitForNavigation({
+            timeout: 45000,
+            waitUntil: 'domcontentloaded'
+          })
+
+          if (!Bot.isRunning(id)) browser.close()
+
+          let cookies = await page._client.send('Network.getAllCookies')
+          cookies = cookies.cookies
+
+          for (const cookie of cookies) {
+            const data = new Cookie({
+              key: cookie.name,
+              value: cookie.value,
+              domain: cookie.domain,
+              path: cookie.path
+            }).toString()
+
+            options.jar.setCookie(data, Config.services.titan22.url)
+          }
+
+          content = await page.content()
+        }
+      }
+
+      // TODO: captcha
+
+      await browser.close()
+    } catch (error) {
+      console.log(error)
+    }
+
+    return options
   },
 
   /**
@@ -150,6 +303,10 @@ export default {
 
     if (!Bot.isRunning(id)) return false
 
+    await this.checkTokenExpiration(id)
+
+    if (!Bot.isRunning(id)) return false
+
     /**
      * Step 2: get account
      *
@@ -168,6 +325,10 @@ export default {
       this.verify(id)
       return false
     }
+
+    if (!Bot.isRunning(id)) return false
+
+    await this.checkTokenExpiration(id)
 
     if (!Bot.isRunning(id)) return false
 
@@ -219,7 +380,7 @@ export default {
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
-    if (token) {
+    if (token && Object.keys(token).length) {
       currentTask.transactionData.token = token
       await Tasks.dispatch('updateItem', currentTask)
     } else {
@@ -227,6 +388,11 @@ export default {
       this.start(id)
       return false
     }
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
+    await this.checkTokenExpiration(id)
 
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
@@ -259,6 +425,11 @@ export default {
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
+    await this.checkTokenExpiration(id)
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
     /**
      * Step 3: initialize cart
      *
@@ -287,6 +458,11 @@ export default {
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
+    await this.checkTokenExpiration(id)
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
     /**
      * Step 4: add to cart
      *
@@ -309,6 +485,11 @@ export default {
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
+    await this.checkTokenExpiration(id)
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
     /**
      * Step 5: set shipping info
      *
@@ -327,6 +508,11 @@ export default {
       this.start(id)
       return false
     }
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
+    await this.checkTokenExpiration(id)
 
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
@@ -422,7 +608,11 @@ export default {
           await this.handleError(id, counter, response.error, attr)
           continue
         } else if (response && !response.error) {
-          data = response
+          data = {
+            token: JSON.parse(response),
+            expires_in: moment().add(50, 'minutes').format('YYYY-MM-DD HH:mm:ss')
+          }
+
           break
         }
       } catch (error) {
@@ -471,7 +661,7 @@ export default {
         await Bot.updateCurrentTaskLog(id, `#${counter}: Fetching account...`)
 
         const params = {
-          token: currentTask.transactionData.token,
+          token: currentTask.transactionData.token.token,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
           taskId: id
@@ -486,8 +676,8 @@ export default {
         if (response && response.error) {
           await this.handleError(id, counter, response.error, attr)
           continue
-        } else if (response && !response.error && response.addresses.length) {
-          data = response
+        } else if (response && !response.error && JSON.parse(response) && JSON.parse(response).addresses.length) {
+          data = JSON.parse(response)
           break
         }
       } catch (error) {
@@ -552,7 +742,7 @@ export default {
         await Bot.updateCurrentTaskLog(id, `#${counter}: Creating cart...`)
 
         const params = {
-          token: currentTask.transactionData.token,
+          token: currentTask.transactionData.token.token,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
           taskId: id
@@ -568,7 +758,7 @@ export default {
           await this.handleError(id, counter, response.error, attr)
           continue
         } else if (response && !response.error) {
-          data = response
+          data = JSON.parse(response)
           break
         }
       } catch (error) {
@@ -619,7 +809,7 @@ export default {
         await Bot.updateCurrentTaskLog(id, `#${counter}: Creating cart...`)
 
         const params = {
-          token: currentTask.transactionData.token,
+          token: currentTask.transactionData.token.token,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
           taskId: id
@@ -635,7 +825,7 @@ export default {
           await this.handleError(id, counter, response.error, attr)
           continue
         } else if (response && !response.error) {
-          data = response
+          data = JSON.parse(response)
           break
         }
       } catch (error) {
@@ -682,7 +872,7 @@ export default {
             await Bot.updateCurrentTaskLog(id, `#${counter}: Cleaning cart - item ${index + 1}...`)
 
             const params = {
-              token: currentTask.transactionData.token,
+              token: currentTask.transactionData.token.token,
               id: data.items[index].item_id,
               proxy: currentTask.proxy,
               mode: currentTask.mode,
@@ -697,9 +887,12 @@ export default {
 
             if (response && response.error) {
               await this.handleError(id, counter, response.error)
+
+              if (response.error && response.error.statusCode && response.error.statusCode === 404) deleted = true
+
               continue
             } else if (response && !response.error) {
-              deleted = response
+              deleted = true
               continue
             }
           } catch (error) {
@@ -757,7 +950,7 @@ export default {
             await Bot.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
             const params = {
-              token: currentTask.transactionData.token,
+              token: currentTask.transactionData.token.token,
               payload: {
                 cartItem: {
                   sku: `${currentTask.sku}-SZ${currentTask.sizes[index].label.replace('.', 'P').toUpperCase()}`,
@@ -792,7 +985,7 @@ export default {
               await this.handleError(id, counter, response.error)
               continue
             } else if (response && !response.error) {
-              data = response
+              data = JSON.parse(response)
               data.size = currentTask.sizes[index].label.toUpperCase()
 
               const msg = `Size: ${currentTask.sizes[index].label.toUpperCase()} - carted`
@@ -867,7 +1060,7 @@ export default {
           await Bot.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
 
           const parameters = {
-            token: currentTask.transactionData.token,
+            token: currentTask.transactionData.token.token,
             payload: { addressId: defaultShippingAddress.id },
             proxy: currentTask.proxy,
             mode: currentTask.mode,
@@ -882,9 +1075,17 @@ export default {
 
           if (response && response.error) {
             await this.handleError(id, counter, response.error)
-            continue
+
+            if (response.error && response.error.statusCode && response.error.statusCode === 400) {
+              currentTask = await Bot.getCurrentTask(id)
+              delete currentTask.transactionData.cart
+              await Tasks.dispatch('updateItem', currentTask)
+              break
+            } else {
+              continue
+            }
           } else if (response && !response.error) {
-            params = response[0]
+            params = JSON.parse(response)[0]
             break
           }
         } catch (error) {
@@ -899,7 +1100,7 @@ export default {
       }
     }
 
-    if (!Bot.isRunning(id)) return data
+    if (!Bot.isRunning(id) || !params) return data
 
     // set shipping
     const shippingAddress = await this.setAddresses(defaultShippingAddress, email)
@@ -946,7 +1147,7 @@ export default {
         await Bot.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
 
         const params = {
-          token: currentTask.transactionData.token,
+          token: currentTask.transactionData.token.token,
           payload: payload,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
@@ -961,9 +1162,17 @@ export default {
 
         if (response && response.error) {
           await this.handleError(id, counter, response.error)
-          continue
+
+          if (response.error && response.error.statusCode && response.error.statusCode === 400) {
+            currentTask = await Bot.getCurrentTask(id)
+            delete currentTask.transactionData.cart
+            await Tasks.dispatch('updateItem', currentTask)
+            break
+          } else {
+            continue
+          }
         } else if (response && !response.error) {
-          data = response
+          data = JSON.parse(response)
           break
         }
       } catch (error) {
@@ -1030,7 +1239,7 @@ export default {
             po_number: null
           }
         },
-        token: currentTask.transactionData.token,
+        token: currentTask.transactionData.token.token,
         proxy: currentTask.proxy,
         mode: currentTask.mode,
         taskId: id
@@ -1469,11 +1678,13 @@ export default {
 
     const response = await productApi.search(params)
 
-    try {
-      const image = response.items[0].custom_attributes.find((val) => val.attribute_code === 'image')
-      data = `${Config.services.titan22.url}/media/catalog/product${image.value}`
-    } catch (error) {
-      data = ''
+    if (response && !response.error) {
+      try {
+        const image = JSON.parse(response).items[0].custom_attributes.find((val) => val.attribute_code === 'image')
+        data = `${Config.services.titan22.url}/media/catalog/product${image.value}`
+      } catch (error) {
+        data = ''
+      }
     }
 
     return data

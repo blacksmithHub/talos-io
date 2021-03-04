@@ -37,7 +37,6 @@ export default {
     },
     {
       path: '',
-      name: 'Home',
       component: Home,
       beforeEnter: (to, from, next) => GuardService.authorized(next),
       children: [

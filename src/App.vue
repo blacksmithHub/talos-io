@@ -2,13 +2,17 @@
   <v-app>
     <router-view />
     <vue-progress-bar />
+    <Dialog />
   </v-app>
 </template>
 
 <script>
 import { mapState, mapActions } from 'vuex'
 
+import Dialog from '@/components/App/Dialog'
+
 export default {
+  components: { Dialog },
   computed: {
     ...mapState('setting', { settings: 'items' }),
     ...mapState('task', { tasks: 'items' })

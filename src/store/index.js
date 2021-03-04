@@ -10,8 +10,6 @@ import proxy from './modules/models/proxy'
 import setting from './modules/models/setting'
 import paypal from './modules/models/paypal'
 
-import attribute from './modules/static/attribute'
-
 Vue.use(Vuex)
 
 export default new Vuex.Store({
@@ -23,8 +21,6 @@ export default new Vuex.Store({
     profile,
     bank,
     proxy,
-    paypal,
-
-    attribute
+    paypal
   }
 })

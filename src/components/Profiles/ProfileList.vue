@@ -176,6 +176,7 @@
                       :color="(profile.paypal && Object.keys(profile.paypal).length) ? 'paypalLogin' : 'paypalLogout'"
                       depressed
                       class="mr-2"
+                      :loading="profile.loading"
                       @click="(profile.paypal && Object.keys(profile.paypal).length) ? paypalLogout(profile) : paypalLogin(profile)"
                     >
                       <vue-fontawesome
@@ -364,9 +365,9 @@ export default {
         const response = await BraintreeApi.getPaypalAccount(params)
 
         if (response && !response.error) {
-          const data = response
+          const data = JSON.parse(response)
 
-          data.expiry = this.$moment().add(90, 'minutes').format('HH:mm:ss')
+          data.expiry = this.$moment().add(60, 'minutes').format('HH:mm:ss')
 
           const profile = {
             ...arg.profile,
@@ -375,12 +376,35 @@ export default {
 
           this.updateProfile(profile)
           this.validatePaypal(profile)
+
+          arg.profile.loading = false
+          this.updateProfile(arg.profile)
+        } else {
+          arg.profile.loading = false
+          this.updateProfile(arg.profile)
+
+          this.setDialogComponent({ header: 'Error', content: response.error })
+          this.setDialog(true)
         }
+
+        arg.profile.loading = false
+        this.updateProfile(arg.profile)
       }
+    })
+
+    ipcRenderer.on('paypalError', async (event, arg) => {
+      this.setDialogComponent({ header: 'Error', content: 'Cannot launch Google Chrome' })
+      this.setDialog(true)
+    })
+
+    ipcRenderer.on('paypalClose', async (event, arg) => {
+      arg.loading = false
+      this.updateProfile(arg)
     })
   },
   methods: {
     ...mapActions('profile', { setProfiles: 'setItems', updateProfile: 'updateItem', deleteProfile: 'deleteItem', reset: 'reset' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
 
     /**
      * Trigger add new profile dialog event.
@@ -404,28 +428,48 @@ export default {
      * Login to paypal
      */
     async paypalLogin (profile) {
-      const secret = await BraintreeApi.getSecret()
+      profile.loading = true
+      this.updateProfile(profile)
 
-      if (secret && !secret.error) {
-        const fingerprint = JSON.parse(atob(secret)).authorizationFingerprint
+      try {
+        const secret = await BraintreeApi.getSecret()
 
-        const params = {
-          payload: {
-            returnUrl: Config.services.auth.url,
-            cancelUrl: Config.services.auth.url,
-            offerPaypalCredit: false,
-            amount: 1,
-            currencyIsoCode: 'PHP',
-            braintreeLibraryVersion: Config.services.braintree.version,
-            authorizationFingerprint: fingerprint
+        if (secret && !secret.error) {
+          const fingerprint = JSON.parse(atob(JSON.parse(secret))).authorizationFingerprint
+
+          const params = {
+            payload: {
+              returnUrl: Config.services.auth.url,
+              cancelUrl: Config.services.auth.url,
+              offerPaypalCredit: false,
+              amount: 1,
+              currencyIsoCode: 'PHP',
+              braintreeLibraryVersion: Config.services.braintree.version,
+              authorizationFingerprint: fingerprint
+            }
           }
-        }
 
-        const paypal = await BraintreeApi.createPaymentResource(params)
+          const paypal = await BraintreeApi.createPaymentResource(params)
 
-        if (paypal && !paypal.error) {
-          ipcRenderer.send('paypal-login', JSON.stringify({ url: paypal.paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings, profile: profile }))
+          if (paypal && !paypal.error) {
+            ipcRenderer.send('paypal-login', JSON.stringify({ url: JSON.parse(paypal).paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings, profile: profile }))
+          } else {
+            profile.loading = false
+            this.updateProfile(profile)
+            this.setDialogComponent({ header: 'Error', content: paypal.error })
+            this.setDialog(true)
+          }
+        } else {
+          profile.loading = false
+          this.updateProfile(profile)
+          this.setDialogComponent({ header: 'Error', content: secret.error })
+          this.setDialog(true)
         }
+      } catch (error) {
+        profile.loading = false
+        this.updateProfile(profile)
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     },
     /**
@@ -451,27 +495,32 @@ export default {
      * perform paypal validation
      */
     async validatePaypal (profile) {
-      const expiry = profile.paypal.expiry
+      try {
+        const expiry = profile.paypal.expiry
 
-      const eventTime = this.$moment(expiry, 'HH:mm').unix()
-      const currentTime = this.$moment().unix()
+        const eventTime = this.$moment(expiry, 'HH:mm').unix()
+        const currentTime = this.$moment().unix()
 
-      const diffTime = eventTime - currentTime
+        const diffTime = eventTime - currentTime
 
-      const duration = this.$moment.duration(diffTime * 1000, 'milliseconds')
+        const duration = this.$moment.duration(diffTime * 1000, 'milliseconds')
 
-      await new Promise(resolve => setTimeout(resolve, duration))
+        await new Promise(resolve => setTimeout(resolve, duration))
 
-      const currentProfile = this.profiles.find((el) => el.id === profile.id)
+        const currentProfile = this.profiles.find((el) => el.id === profile.id)
 
-      if (currentProfile &&
+        if (currentProfile &&
       currentProfile.paypal &&
       Object.keys(currentProfile.paypal).length &&
       expiry === currentProfile.paypal.expiry) {
-        this.updateProfile({
-          ...currentProfile,
-          paypal: {}
-        })
+          this.updateProfile({
+            ...currentProfile,
+            paypal: {}
+          })
+        }
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     },
 

@@ -51,7 +51,7 @@
             :class="{'success--text': item.paid, 'teal--text': item.aco}"
             v-bind="attrs"
             v-on="on"
-            v-text="item.bank.nickname"
+            v-text="item.bank.nickname || 'N/A'"
           />
         </template>
         <span

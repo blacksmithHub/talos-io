@@ -231,6 +231,8 @@ export default {
   },
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+
     /**
      * on count field change
      */
@@ -278,43 +280,54 @@ export default {
      *
      */
     async fetchProducts () {
-      const params = {
-        payload: {
-          searchCriteria: {
-            sortOrders: [
-              {
-                field: this.filter,
-                direction: 'DESC'
-              }
-            ],
-            pageSize: this.count
-          }
-        },
-        token: App.services.titan22.token
-      }
+      try {
+        const params = {
+          payload: {
+            searchCriteria: {
+              sortOrders: [
+                {
+                  field: this.filter,
+                  direction: 'DESC'
+                }
+              ],
+              pageSize: this.count
+            }
+          },
+          token: App.services.titan22.token
+        }
 
-      if (this.settings.monitorProxy) params.proxy = this.settings.monitorProxy
+        if (this.settings.monitorProxy) params.proxy = this.settings.monitorProxy
 
-      this.loading = true
-      const response = await productApi.search(params)
-      this.products = []
+        this.loading = true
+        const response = await productApi.search(params)
 
-      if (response && !response.error) {
-        response.items.forEach(element => {
-          const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
-          const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
-          this.products.push({
-            img: (image) ? `${App.services.titan22.url}/media/catalog/product${image.value}` : placeholder,
-            name: element.name,
-            sku: element.sku,
-            price: element.price.toLocaleString(),
-            link: (link) ? link.value : '',
-            status: element.extension_attributes.out_of_stock,
-            date: this.formatDate(element.updated_at)
+        this.products = []
+
+        if (response && !response.error) {
+          JSON.parse(response).items.forEach(element => {
+            const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
+            const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
+            this.products.push({
+              img: (image) ? `${App.services.titan22.url}/media/catalog/product${image.value}` : placeholder,
+              name: element.name,
+              sku: element.sku,
+              price: element.price.toLocaleString(),
+              link: (link) ? link.value : '',
+              status: element.extension_attributes.out_of_stock,
+              date: this.formatDate(element.updated_at)
+            })
           })
-        })
+        } else if (response.error && response.error.statusCode && response.error.statusCode === 503) {
+          // TODO: cf clearance
+        } else {
+          this.setDialogComponent({ header: 'Error', content: response.error })
+          this.setDialog(true)
+        }
+        this.loading = false
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
-      this.loading = false
     }
   }
 }

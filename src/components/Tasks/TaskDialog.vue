@@ -29,7 +29,7 @@
           <v-card-text>
             <v-container>
               <v-row>
-                <v-col class="pt-0 pb-0">
+                <v-col>
                   <v-autocomplete
                     v-model="profile"
                     required
@@ -42,11 +42,12 @@
                     item-text="name"
                     return-object
                     :disabled="isRunning"
+                    hide-details="auto"
                     @blur="$v.profile.$touch()"
                   />
                 </v-col>
 
-                <v-col class="pt-0 pb-0">
+                <v-col>
                   <v-autocomplete
                     v-model="bank"
                     clearable
@@ -56,14 +57,13 @@
                     label="Bank"
                     item-text="nickname"
                     return-object
-                    :error-messages="bankErrors"
-                    @blur="$v.bank.$touch()"
+                    hide-details="auto"
                   />
                 </v-col>
               </v-row>
 
               <v-row>
-                <v-col class="pt-0 pb-0">
+                <v-col>
                   <v-autocomplete
                     v-model="proxy"
                     required
@@ -74,11 +74,12 @@
                     item-text="name"
                     return-object
                     :error-messages="proxyErrors"
+                    hide-details="auto"
                     @blur="$v.proxy.$touch()"
                   />
                 </v-col>
 
-                <v-col class="pt-0 pb-0">
+                <v-col>
                   <v-select
                     v-model="mode"
                     required
@@ -86,12 +87,13 @@
                     :items="modes"
                     label="Mode"
                     outlined
+                    hide-details="auto"
                   />
                 </v-col>
               </v-row>
 
               <v-row>
-                <v-col class="pt-0 pb-0">
+                <v-col>
                   <v-text-field
                     v-model="sku"
                     label="SKU"
@@ -104,13 +106,12 @@
                   />
                 </v-col>
 
-                <v-col class="pt-0 pb-0">
+                <v-col>
                   <v-text-field
                     v-model="qty"
                     dense
                     outlined
                     type="number"
-                    hide-details="auto"
                     :error-messages="qtyErrors"
                     label="Quantity"
                     required
@@ -146,7 +147,7 @@
                   >
                     <v-expansion-panel>
                       <v-expansion-panel-header>
-                        Advanced
+                        Advance Options
                       </v-expansion-panel-header>
                       <v-expansion-panel-content>
                         <v-row>
@@ -156,7 +157,6 @@
                               dense
                               outlined
                               type="number"
-                              hide-details="auto"
                               :error-messages="delayErrors"
                               label="Delays"
                               hint="Input value in milliseconds"
@@ -180,7 +180,6 @@
                                 <v-text-field
                                   v-model="placeOrder"
                                   dense
-                                  hide-details
                                   outlined
                                   readonly
                                   v-bind="attrs"
@@ -203,6 +202,7 @@
                           </v-col>
                         </v-row>
 
+                        <p>Checkout Method:</p>
                         <v-radio-group
                           v-model="checkoutMethod"
                           row
@@ -268,6 +268,7 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import { required, minValue, requiredIf } from 'vuelidate/lib/validators'
+
 import Constant from '@/config/constant'
 
 export default {
@@ -295,11 +296,15 @@ export default {
   },
   computed: {
     ...mapState('task', { allTasks: 'items' }),
-    ...mapState('attribute', { attributes: 'items' }),
     ...mapState('profile', { profiles: 'items' }),
     ...mapState('bank', { banks: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
-
+    /**
+     * Return all attributes
+     */
+    attributes () {
+      return Constant.TITAN_ATTRIBUTES
+    },
     /**
      * Is task running
      */
@@ -347,19 +352,6 @@ export default {
       if (!this.$v.profile.$dirty) return errors
 
       this.$v.profile.required || errors.push('Required')
-
-      return errors
-    },
-    /**
-     * Error messages for bank.
-     *
-     */
-    bankErrors () {
-      const errors = []
-
-      if (!this.$v.bank.$dirty) return errors
-
-      this.$v.bank.required || errors.push('Required')
 
       return errors
     },
@@ -433,6 +425,7 @@ export default {
   },
   methods: {
     ...mapActions('task', { addTask: 'addItem', updateTask: 'updateItem' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
 
     /**
      * Map selected task.
@@ -506,57 +499,61 @@ export default {
      *
      */
     submit () {
-      this.$v.$touch()
+      try {
+        this.$v.$touch()
 
-      if (!this.$v.$invalid) {
-        const sizes = []
+        if (!this.$v.$invalid) {
+          const sizes = []
 
-        this.sizes.forEach(element => {
-          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
+          this.sizes.forEach(element => {
+            const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
-          const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
+            const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
 
-          sizes.push({
-            attribute_id: attr.attribute_id,
-            value: size.value,
-            label: size.label
-          })
-        })
-
-        const params = {
-          sku: this.sku.trim(),
-          sizes: sizes,
-          profile: this.profile,
-          proxy: this.proxy,
-          bank: this.bank || {},
-          delay: this.delay,
-          placeOrder: this.placeOrder,
-          qty: this.qty,
-          mode: this.mode,
-          checkoutMethod: this.checkoutMethod
-        }
-
-        if (this.isEditMode) {
-          this.updateTask({
-            ...this.selectedTask,
-            ...params
+            sizes.push({
+              attribute_id: attr.attribute_id,
+              value: size.value,
+              label: size.label
+            })
           })
 
-          this.snackbarContent = 'updated'
-          this.snackbar = true
+          const params = {
+            sku: this.sku.trim(),
+            sizes: sizes,
+            profile: this.profile,
+            proxy: this.proxy,
+            bank: this.bank || {},
+            delay: this.delay,
+            placeOrder: this.placeOrder,
+            qty: this.qty,
+            mode: this.mode,
+            checkoutMethod: this.checkoutMethod
+          }
 
-          this.onCancel()
-        } else {
-          this.addTask({ ...params })
-          this.snackbarContent = 'created'
-          this.snackbar = true
+          if (this.isEditMode) {
+            this.updateTask({
+              ...this.selectedTask,
+              ...params
+            })
+
+            this.snackbarContent = 'updated'
+            this.snackbar = true
+
+            this.onCancel()
+          } else {
+            this.addTask({ ...params })
+            this.snackbarContent = 'created'
+            this.snackbar = true
+          }
         }
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     }
   },
   validations: {
     profile: { required },
-    bank: { required },
     proxy: { required },
     sku: { required },
     sizes: {
