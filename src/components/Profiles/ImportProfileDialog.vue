@@ -105,55 +105,62 @@ export default {
   },
   methods: {
     ...mapActions('profile', { addProfile: 'addItem' }),
+    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+
     /**
      * Validate input file
      *
      */
     validateFile () {
-      this.fileErrors = []
+      try {
+        this.fileErrors = []
 
-      if (this.csv) {
-        const ext = this.csv.name.split('.')
+        if (this.csv) {
+          const ext = this.csv.name.split('.')
 
-        if (ext[ext.length - 1] !== 'csv') {
-          this.fileErrors.push('Invalid file')
+          if (ext[ext.length - 1] !== 'csv') {
+            this.fileErrors.push('Invalid file')
+          } else {
+            const csvToJson = require('convert-csv-to-json')
+
+            const json = csvToJson.getJsonFromCsv(this.csv.path)
+
+            const result = []
+
+            json.forEach(element => {
+              for (const [key, value] of Object.entries(element)) {
+                const columns = key.split(',')
+                const rows = value.split(',')
+
+                const parse = {}
+
+                columns.forEach((clm, i) => {
+                  parse[clm] = rows[i]
+                })
+
+                result.push(parse)
+              }
+            })
+
+            this.profiles = []
+
+            result.forEach(element => {
+              if (element.email && element.password) {
+                this.profiles.push({
+                  name: (element.name) ? element.name.trim() : null,
+                  email: element.email.trim(),
+                  password: element.password.trim(),
+                  paypal: {}
+                })
+              }
+            })
+          }
         } else {
-          const csvToJson = require('convert-csv-to-json')
-
-          const json = csvToJson.getJsonFromCsv(this.csv.path)
-
-          const result = []
-
-          json.forEach(element => {
-            for (const [key, value] of Object.entries(element)) {
-              const columns = key.split(',')
-              const rows = value.split(',')
-
-              const parse = {}
-
-              columns.forEach((clm, i) => {
-                parse[clm] = rows[i]
-              })
-
-              result.push(parse)
-            }
-          })
-
-          this.profiles = []
-
-          result.forEach(element => {
-            if (element.email && element.password) {
-              this.profiles.push({
-                name: (element.name) ? element.name.trim() : null,
-                email: element.email.trim(),
-                password: element.password.trim(),
-                paypal: {}
-              })
-            }
-          })
+          this.fileErrors.push('Required')
         }
-      } else {
-        this.fileErrors.push('Required')
+      } catch (error) {
+        this.setDialogComponent({ header: 'Error', content: error })
+        this.setDialog(true)
       }
     },
     /**

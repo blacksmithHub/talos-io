@@ -76,6 +76,7 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import { ipcRenderer } from 'electron'
+import UserAgent from 'user-agents'
 
 import SideNav from '@/components/App/SideNav'
 import Lists from '@/components/Tasks/Lists'
@@ -89,6 +90,8 @@ import TaskTitle from '@/components/Tasks/TaskTitle'
 import Constant from '@/config/constant'
 
 import Titan22 from '@/services/Titan22/index'
+
+import rp from 'request-promise'
 
 export default {
   components: {
@@ -108,17 +111,19 @@ export default {
   },
   beforeRouteEnter (to, from, next) {
     next(vm => {
-      if (!vm.attributes.length) vm.prepareAttributes()
-
       if (vm.tasks.length) vm.prepareTasks()
     })
   },
   computed: {
-    ...mapState('attribute', { attributes: 'items' }),
     ...mapState('task', { tasks: 'items' }),
     ...mapState('setting', { settings: 'items' }),
     ...mapState('profile', { profiles: 'items' }),
-
+    /**
+     * Return all attributes
+     */
+    attributes () {
+      return Constant.TITAN_ATTRIBUTES
+    },
     /**
      * Return success count.
      *
@@ -165,12 +170,15 @@ export default {
       this.setProxies(arg)
       this.updateAllProxyTask(arg)
     })
+
+    ipcRenderer.on('checkoutError', (event, arg) => {
+      if (arg) {
+        this.setDialogComponent({ header: 'Error', content: 'Cannot launch Google Chrome' })
+        this.setDialog(true)
+      }
+    })
   },
   methods: {
-    ...mapActions('attribute', {
-      setAttributes: 'setItems',
-      reset: 'reset'
-    }),
     ...mapActions('task', {
       addTask: 'addItem',
       updateTask: 'updateItem',
@@ -182,7 +190,6 @@ export default {
     ...mapActions('profile', { setProfiles: 'setItems', updateProfile: 'updateItem' }),
     ...mapActions('bank', { setBanks: 'setItems' }),
     ...mapActions('proxy', { setProxies: 'setItems' }),
-    ...mapActions('attribute', { prepareAttributes: 'initializeItems' }),
 
     /**
      * update selected array
@@ -290,8 +297,11 @@ export default {
      * Start task.
      *
      */
-    startTask (task) {
+    async startTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
+        const jar = rp.jar()
+        const userAgent = new UserAgent()
+
         this.updateTask({
           ...task,
           status: {
@@ -300,7 +310,10 @@ export default {
             class: 'orange'
           },
           logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Started!`,
-          paid: false
+          paid: false,
+          jar: jar,
+          rp: rp,
+          userAgent: userAgent.toString()
         })
 
         Titan22.start(task.id)
@@ -351,7 +364,7 @@ export default {
 
       if (currentTask) {
         try {
-          currentTask.cf.cancel()
+          currentTask.request.cancel()
         } catch (error) {
           //
         }
@@ -365,6 +378,10 @@ export default {
         currentTask.paid = false
         currentTask.logs = `${currentTask.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Stopped!`
         currentTask.transactionData = {}
+
+        delete currentTask.rp
+        delete currentTask.jar
+        delete currentTask.options
 
         this.updateTask(currentTask)
       }
@@ -403,6 +420,9 @@ export default {
      */
     verifyTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
+        const jar = rp.jar()
+        const userAgent = new UserAgent()
+
         this.updateTask({
           ...task,
           status: {
@@ -412,7 +432,10 @@ export default {
           },
           transactionData: {},
           paid: false,
-          logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Verifying...`
+          logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Verifying...`,
+          jar: jar,
+          rp: rp,
+          userAgent: userAgent.toString()
         })
 
         Titan22.verify(task.id)

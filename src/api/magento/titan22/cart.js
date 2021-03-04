@@ -25,11 +25,7 @@ export default {
       params.method = 'POST'
 
       return this.http(params)
-        .then((response) => {
-          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
-
-          return { error: response }
-        })
+        .then((res) => res)
         .catch((err) => {
           return { error: err }
         })
@@ -50,11 +46,7 @@ export default {
       params.method = 'GET'
 
       return this.http(params)
-        .then((response) => {
-          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
-
-          return { error: response }
-        })
+        .then((res) => res)
         .catch((err) => {
           return { error: err }
         })
@@ -75,11 +67,7 @@ export default {
       params.method = 'DELETE'
 
       return this.http(params)
-        .then((response) => {
-          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
-
-          return { error: response }
-        })
+        .then((res) => res)
         .catch((err) => {
           return { error: err }
         })
@@ -100,11 +88,7 @@ export default {
       params.method = 'POST'
 
       return this.http(params)
-        .then((response) => {
-          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
-
-          return { error: response }
-        })
+        .then((res) => res)
         .catch((err) => {
           return { error: err }
         })
@@ -125,11 +109,7 @@ export default {
       params.method = 'POST'
 
       return this.http(params)
-        .then((response) => {
-          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
-
-          return { error: response }
-        })
+        .then((res) => res)
         .catch((err) => {
           return { error: err }
         })
@@ -150,11 +130,7 @@ export default {
       params.method = 'POST'
 
       return this.http(params)
-        .then((response) => {
-          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
-
-          return { error: response }
-        })
+        .then((res) => res)
         .catch((err) => {
           return { error: err }
         })
@@ -175,11 +151,7 @@ export default {
       params.method = 'POST'
 
       return this.http(params)
-        .then((response) => {
-          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
-
-          return { error: response }
-        })
+        .then((res) => res)
         .catch((err) => {
           return { error: err }
         })

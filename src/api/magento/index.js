@@ -1,6 +1,4 @@
-import CloudflareBypasser from 'cloudflare-bypasser'
-import UserAgent from 'user-agents'
-import request from 'request'
+import Url from 'url-parse'
 import store from '@/store/index'
 
 /**
@@ -13,14 +11,55 @@ import store from '@/store/index'
  */
 export default {
   async http (params) {
-    let cf = new CloudflareBypasser()
-    const jar = request.jar()
+    const url = new Url(params.url)
+    let config = null
+    let rp = null
 
-    const config = {
-      method: params.method,
-      url: params.url,
-      headers: { 'Content-Type': 'application/json' },
-      jar: jar
+    if (params.taskId) {
+      const vuex = store._modules.root._children.task.context
+      const task = vuex.state.items.find((val) => val.id === params.taskId)
+
+      rp = task.rp
+      const jar = task.jar
+      const userAgent = task.userAgent
+
+      config = {
+        method: params.method,
+        url: params.url,
+        headers: {
+          'User-Agent': userAgent,
+          referer: `${url.protocol}//${url.host}/`
+        },
+        jar: jar
+      }
+
+      if (task.options) {
+        config = {
+          ...task.options,
+          method: params.method,
+          url: params.url,
+          headers: {
+            ...task.options.headers,
+            'User-Agent': userAgent,
+            referer: `${url.protocol}//${url.host}/`
+          },
+          jar: task.options.jar
+        }
+      }
+    } else {
+      rp = require('request-promise')
+      const jar = rp.jar()
+      const userAgent = ''
+
+      config = {
+        method: params.method,
+        url: params.url,
+        headers: {
+          'User-Agent': userAgent,
+          referer: `${url.protocol}//${url.host}/`
+        },
+        jar: jar
+      }
     }
 
     if (params.proxy && Object.keys(params.proxy).length && params.proxy.proxies.length) {
@@ -33,46 +72,30 @@ export default {
       }
     }
 
-    if (params.payload) config.body = JSON.stringify(params.payload)
-
-    if (params.token) config.headers.Authorization = `Bearer ${params.token}`
-
-    switch (params.mode) {
-      case 'Mobile (Android)':
-        {
-          const userAgentAnd = new UserAgent({ deviceCategory: 'mobile' })
-          config.headers['User-Agent'] = userAgentAnd.toString()
-          config.headers.client = 'android'
-        }
-        break
-
-      case 'Mobile (iOS)':
-        {
-          const userAgentIos = new UserAgent({ deviceCategory: 'mobile' })
-          config.headers['User-Agent'] = userAgentIos.toString()
-          config.headers.client = 'ios'
-        }
-        break
-      default:
-        {
-          const userAgent = new UserAgent()
-          config.headers['User-Agent'] = userAgent.toString()
-        }
-        break
+    if (params.payload) {
+      config.body = JSON.stringify(params.payload)
+    } else {
+      delete config.body
     }
 
-    cf = cf.request(config)
-
-    if (params.taskId) {
-      const vuex = store._modules.root._children.task.context
-
-      const task = vuex.state.items.find((val) => val.id === params.taskId)
-
-      task.cf = cf
-
-      vuex.dispatch('updateItem', task)
+    if (params.form) {
+      config.form = JSON.stringify(params.form)
+    } else {
+      delete config.form
     }
 
-    return cf
+    if (params.token) {
+      config.headers.Authorization = `Bearer ${params.token}`
+    } else {
+      delete config.headers.Authorization
+    }
+
+    if (params.accept) {
+      config.headers['Content-Type'] = params.accept
+    } else {
+      config.headers['Content-Type'] = 'application/json'
+    }
+
+    return rp(config)
   }
 }
