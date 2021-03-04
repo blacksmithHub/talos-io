@@ -365,7 +365,7 @@ export default {
         const response = await BraintreeApi.getPaypalAccount(params)
 
         if (response && !response.error) {
-          const data = response
+          const data = JSON.parse(response)
 
           data.expiry = this.$moment().add(60, 'minutes').format('HH:mm:ss')
 
@@ -435,7 +435,7 @@ export default {
         const secret = await BraintreeApi.getSecret()
 
         if (secret && !secret.error) {
-          const fingerprint = JSON.parse(atob(secret)).authorizationFingerprint
+          const fingerprint = JSON.parse(atob(JSON.parse(secret))).authorizationFingerprint
 
           const params = {
             payload: {
@@ -452,7 +452,7 @@ export default {
           const paypal = await BraintreeApi.createPaymentResource(params)
 
           if (paypal && !paypal.error) {
-            ipcRenderer.send('paypal-login', JSON.stringify({ url: paypal.paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings, profile: profile }))
+            ipcRenderer.send('paypal-login', JSON.stringify({ url: JSON.parse(paypal).paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings, profile: profile }))
           } else {
             profile.loading = false
             this.updateProfile(profile)

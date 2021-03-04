@@ -76,6 +76,7 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import { ipcRenderer } from 'electron'
+import UserAgent from 'user-agents'
 
 import SideNav from '@/components/App/SideNav'
 import Lists from '@/components/Tasks/Lists'
@@ -89,6 +90,8 @@ import TaskTitle from '@/components/Tasks/TaskTitle'
 import Constant from '@/config/constant'
 
 import Titan22 from '@/services/Titan22/index'
+
+import rp from 'request-promise'
 
 export default {
   components: {
@@ -294,8 +297,11 @@ export default {
      * Start task.
      *
      */
-    startTask (task) {
+    async startTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
+        const jar = rp.jar()
+        const userAgent = new UserAgent()
+
         this.updateTask({
           ...task,
           status: {
@@ -304,7 +310,10 @@ export default {
             class: 'orange'
           },
           logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Started!`,
-          paid: false
+          paid: false,
+          jar: jar,
+          rp: rp,
+          userAgent: userAgent.toString()
         })
 
         Titan22.start(task.id)
@@ -355,7 +364,7 @@ export default {
 
       if (currentTask) {
         try {
-          currentTask.cf.cancel()
+          currentTask.request.cancel()
         } catch (error) {
           //
         }
@@ -369,6 +378,10 @@ export default {
         currentTask.paid = false
         currentTask.logs = `${currentTask.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Stopped!`
         currentTask.transactionData = {}
+
+        delete currentTask.rp
+        delete currentTask.jar
+        delete currentTask.options
 
         this.updateTask(currentTask)
       }
@@ -407,6 +420,9 @@ export default {
      */
     verifyTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
+        const jar = rp.jar()
+        const userAgent = new UserAgent()
+
         this.updateTask({
           ...task,
           status: {
@@ -416,7 +432,10 @@ export default {
           },
           transactionData: {},
           paid: false,
-          logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Verifying...`
+          logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Verifying...`,
+          jar: jar,
+          rp: rp,
+          userAgent: userAgent.toString()
         })
 
         Titan22.verify(task.id)

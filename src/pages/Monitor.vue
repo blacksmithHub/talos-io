@@ -300,10 +300,11 @@ export default {
 
         this.loading = true
         const response = await productApi.search(params)
+
         this.products = []
 
         if (response && !response.error) {
-          response.items.forEach(element => {
+          JSON.parse(response).items.forEach(element => {
             const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
             const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
             this.products.push({
@@ -316,6 +317,8 @@ export default {
               date: this.formatDate(element.updated_at)
             })
           })
+        } else if (response.error && response.error.statusCode && response.error.statusCode === 503) {
+          // TODO: cf clearance
         } else {
           this.setDialogComponent({ header: 'Error', content: response.error })
           this.setDialog(true)

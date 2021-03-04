@@ -144,6 +144,10 @@ export default {
         element.paid = false
         element.logs = ''
 
+        delete element.rp
+        delete element.jar
+        delete element.options
+
         return element
       })
 

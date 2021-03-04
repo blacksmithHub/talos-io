@@ -38,6 +38,12 @@ module.exports = {
           PACKAGE_JSON: '"' + escape(JSON.stringify(require('./package.json'))) + '"'
         }
       })
-    ]
+    ],
+    externals: {
+      puppeteer: 'require("puppeteer")',
+      'puppeteer-extra': 'require("puppeteer-extra")',
+      'puppeteer-extra-plugin-stealth': 'require("puppeteer-extra-plugin-stealth")',
+      'puppeteer-bypass': 'require("puppeteer-bypass")'
+    }
   }
 }

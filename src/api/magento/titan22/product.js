@@ -27,36 +27,7 @@ export default {
       params.method = 'GET'
 
       return this.http(params)
-        .then((response) => {
-          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
-
-          return { error: response }
-        })
-        .catch((err) => {
-          return { error: err }
-        })
-    } catch (error) {
-      return { error: error }
-    }
-  },
-
-  /**
-   * Search product attributes
-   *
-   */
-  attribute (params) {
-    try {
-      const query = qs.stringify(params.payload)
-
-      params.url = `${this.baseUrl}/${this.url}/attributes?${query}`
-      params.method = 'GET'
-
-      return this.http(params)
-        .then((response) => {
-          if (response && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) return JSON.parse(response.body)
-
-          return { error: response }
-        })
+        .then((res) => res)
         .catch((err) => {
           return { error: err }
         })
