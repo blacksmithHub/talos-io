@@ -141,13 +141,20 @@ export default {
 
           case 503:
             {
-              await Bot.setCurrentTaskStatus(id, { status: Constant.TASK.STATUS.RUNNING, msg: 'Bypassing', attr })
+            // await Bot.setCurrentTaskStatus(id, { status: Constant.TASK.STATUS.RUNNING, msg: 'Bypassing', attr })
 
-              const options = await this.getCloudflareClearance(id, response)
+              // const options = await this.getCloudflareClearance(id, response)
+
+              // const currentTask = await Bot.getCurrentTask(id)
+              // currentTask.options = options
+              // Tasks.dispatch('updateItem', currentTask)
+
+              console.log('one')
 
               const currentTask = await Bot.getCurrentTask(id)
-              currentTask.options = options
-              Tasks.dispatch('updateItem', currentTask)
+              const result = await ipcRenderer.invoke('renew-cf-clearance', JSON.stringify({ task: currentTask }))
+
+              console.log(1, result)
             }
             break
         }
@@ -186,7 +193,8 @@ export default {
 
       const browser = await puppeteer.launch({
         args,
-        headless: false
+        headless: false,
+        executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
       })
 
       if (!Bot.isRunning(id)) browser.close()
@@ -218,7 +226,7 @@ export default {
 
       if (!Bot.isRunning(id)) browser.close()
 
-      await page.goto(`${Config.services.titan22.url}/new-arrivals.html`)
+      await page.goto('https://cf-js-challenge.sayem.eu.org/') // `${Config.services.titan22.url}/new-arrivals.html`)
 
       if (!Bot.isRunning(id)) browser.close()
 
@@ -256,7 +264,7 @@ export default {
               path: cookie.path
             }).toString()
 
-            options.jar.setCookie(data, Config.services.titan22.url)
+            options.jar.setCookie(data, 'https://cf-js-challenge.sayem.eu.org/') // Config.services.titan22.url)
           }
 
           content = await page.content()

@@ -11,7 +11,7 @@ import store from '@/store/index'
  */
 export default {
   async http (params) {
-    const url = new Url(params.url)
+    const url = new Url('https://cf-js-challenge.sayem.eu.org/') // params.url)
     let config = null
     let rp = null
 
@@ -24,8 +24,8 @@ export default {
       const userAgent = task.userAgent
 
       config = {
-        method: params.method,
-        url: params.url,
+        method: 'GET', // params.method,
+        url: 'https://cf-js-challenge.sayem.eu.org/', // params.url,
         headers: {
           'User-Agent': userAgent,
           referer: `${url.protocol}//${url.host}/`
@@ -36,8 +36,8 @@ export default {
       if (task.options) {
         config = {
           ...task.options,
-          method: params.method,
-          url: params.url,
+          method: 'GET', // params.method,
+          url: 'https://cf-js-challenge.sayem.eu.org/', // params.url,
           headers: {
             ...task.options.headers,
             'User-Agent': userAgent,
