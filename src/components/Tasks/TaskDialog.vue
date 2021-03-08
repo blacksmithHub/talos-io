@@ -85,6 +85,8 @@
                     required
                     dense
                     :items="modes"
+                    return-object
+                    item-text="label"
                     label="Mode"
                     outlined
                     hide-details="auto"
@@ -271,6 +273,8 @@ import { required, minValue, requiredIf } from 'vuelidate/lib/validators'
 
 import Constant from '@/config/constant'
 
+import Request from '@/services/request'
+
 export default {
   data () {
     return {
@@ -288,8 +292,7 @@ export default {
       placeOrder: '',
       placeOrderMenu: false,
       qty: 1,
-      mode: 'Desktop',
-      modes: ['Desktop', 'Mobile (iOS)', 'Mobile (Android)'],
+      mode: Constant.CLIENT[0],
       checkoutMethod: Constant.METHODS[3].id,
       panel: []
     }
@@ -299,6 +302,12 @@ export default {
     ...mapState('profile', { profiles: 'items' }),
     ...mapState('bank', { banks: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
+    /**
+     * Return all modes
+     */
+    modes () {
+      return Constant.CLIENT
+    },
     /**
      * Return all attributes
      */
@@ -443,7 +452,7 @@ export default {
         this.placeOrder = task.placeOrder
         this.qty = task.qty || 1
         this.proxy = task.proxy
-        this.mode = task.mode || 'Desktop'
+        this.mode = task.mode || Constant.CLIENT[0]
         this.checkoutMethod = task.checkoutMethod || Constant.METHODS[3].id
 
         this.profile = (task.profile.id) ? task.profile : {}
@@ -481,7 +490,7 @@ export default {
       this.sizes = []
       this.bank = {}
       this.profile = {}
-      this.proxy = {}
+      this.proxy = { id: null, name: 'Localhost', proxies: [] }
       this.selectedTask = {}
       this.delay = 3200
       this.placeOrder = ''
@@ -505,7 +514,7 @@ export default {
         if (!this.$v.$invalid) {
           const sizes = []
 
-          this.sizes.forEach(element => {
+          this.sizes.forEach((element) => {
             const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
             const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
@@ -531,10 +540,47 @@ export default {
           }
 
           if (this.isEditMode) {
-            this.updateTask({
+            const task = {
               ...this.selectedTask,
               ...params
-            })
+            }
+
+            if (task.proxy.id !== this.selectedTask.proxy.id) {
+              const configs = []
+
+              if (task.proxy.proxies.length) {
+                task.proxy.proxies.forEach((el) => {
+                  const data = Request.setRequest(task.mode, el)
+                  configs.push(data)
+                })
+              } else {
+                const data = Request.setRequest(task.mode)
+                configs.push(data)
+              }
+
+              task.configs = configs
+            }
+
+            if (task.mode.id !== this.selectedTask.mode.id) {
+              task.configs = task.configs.map(el => {
+                const UserAgent = require('user-agents')
+                const option = {}
+
+                switch (task.mode.id) {
+                  case 2:
+                  case 3:
+                    option.deviceCategory = 'mobile'
+                    break
+                }
+
+                const userAgent = new UserAgent(option)
+                el.userAgent = userAgent.toString()
+
+                return el
+              })
+            }
+
+            this.updateTask(task)
 
             this.snackbarContent = 'updated'
             this.snackbar = true

@@ -76,7 +76,6 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import { ipcRenderer } from 'electron'
-import UserAgent from 'user-agents'
 
 import SideNav from '@/components/App/SideNav'
 import Lists from '@/components/Tasks/Lists'
@@ -90,8 +89,7 @@ import TaskTitle from '@/components/Tasks/TaskTitle'
 import Constant from '@/config/constant'
 
 import Titan22 from '@/services/Titan22/index'
-
-import rp from 'request-promise'
+import Request from '@/services/request'
 
 export default {
   components: {
@@ -156,7 +154,6 @@ export default {
 
     ipcRenderer.on('updateProfiles', (event, arg) => {
       this.setProfiles(arg)
-      this.updateAllProfileTask(arg)
     })
 
     ipcRenderer.on('updateTask', (event, arg) => {
@@ -201,14 +198,27 @@ export default {
      * update all proxy tasks
      */
     updateAllProxyTask (proxies) {
-      this.tasks.forEach(element => {
-        const proxy = proxies.find((val) => val.id === element.proxy.id)
+      this.tasks.forEach((element) => {
+        const newProxy = proxies.find((val) => val.id === element.proxy.id)
 
-        if (proxy) {
-          this.updateTask({
+        if (newProxy) {
+          const task = {
             ...element,
-            proxy: proxy
-          })
+            proxy: newProxy,
+            configs: []
+          }
+
+          if (newProxy.proxies.length) {
+            newProxy.proxies.forEach((el) => {
+              const data = Request.setRequest(task.mode, el)
+              task.configs.push(data)
+            })
+          } else {
+            const data = Request.setRequest(task.mode)
+            task.configs.push(data)
+          }
+
+          this.updateTask(task)
         }
       })
     },
@@ -223,21 +233,6 @@ export default {
           this.updateTask({
             ...element,
             bank: bank
-          })
-        }
-      })
-    },
-    /**
-     * update all profile tasks
-     */
-    updateAllProfileTask (profiles) {
-      this.tasks.forEach(element => {
-        const profile = profiles.find((val) => val.id === element.profile.id)
-
-        if (profile) {
-          this.updateTask({
-            ...element,
-            profile: profile
           })
         }
       })
@@ -299,10 +294,7 @@ export default {
      */
     async startTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
-        const jar = rp.jar()
-        const userAgent = new UserAgent()
-
-        this.updateTask({
+        const updatedTask = {
           ...task,
           status: {
             id: Constant.TASK.STATUS.RUNNING,
@@ -310,12 +302,10 @@ export default {
             class: 'orange'
           },
           logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Started!`,
-          paid: false,
-          jar: jar,
-          rp: rp,
-          userAgent: userAgent.toString()
-        })
+          paid: false
+        }
 
+        await this.updateTask(updatedTask)
         Titan22.start(task.id)
       }
     },
@@ -363,10 +353,14 @@ export default {
       const currentTask = this.tasks.find((el) => el.id === task.id)
 
       if (currentTask) {
-        try {
-          currentTask.request.cancel()
-        } catch (error) {
-          //
+        if (currentTask.configs && currentTask.configs.length) {
+          currentTask.configs.forEach(element => {
+            try {
+              if (element.request) element.request.cancel()
+            } catch (error) {
+              //
+            }
+          })
         }
 
         currentTask.status = {
@@ -378,10 +372,17 @@ export default {
         currentTask.paid = false
         currentTask.logs = `${currentTask.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Stopped!`
         currentTask.transactionData = {}
+        currentTask.configs = []
 
-        delete currentTask.rp
-        delete currentTask.jar
-        delete currentTask.options
+        if (currentTask.proxy && currentTask.proxy.proxies.length) {
+          currentTask.proxy.proxies.forEach((el) => {
+            const data = Request.setRequest(currentTask.mode, el)
+            task.configs.push(data)
+          })
+        } else {
+          const data = Request.setRequest(currentTask.mode)
+          task.configs.push(data)
+        }
 
         this.updateTask(currentTask)
       }
@@ -418,12 +419,9 @@ export default {
      * verify task
      *
      */
-    verifyTask (task) {
+    async verifyTask (task) {
       if (task.status.id !== Constant.TASK.STATUS.RUNNING) {
-        const jar = rp.jar()
-        const userAgent = new UserAgent()
-
-        this.updateTask({
+        const updatedTask = {
           ...task,
           status: {
             id: Constant.TASK.STATUS.RUNNING,
@@ -432,12 +430,10 @@ export default {
           },
           transactionData: {},
           paid: false,
-          logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Verifying...`,
-          jar: jar,
-          rp: rp,
-          userAgent: userAgent.toString()
-        })
+          logs: `${task.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Verifying...`
+        }
 
+        await this.updateTask(updatedTask)
         Titan22.verify(task.id)
       }
     }

@@ -15,7 +15,6 @@ import SettingWindow from '@/windows/Setting'
 import PayMayaCheckout from '@/services/Titan22/PayMayaCheckout'
 import CreditCardCheckout from '@/services/Titan22/CreditCardCheckout'
 import PayPalAuthorization from '@/services/Titan22/PayPalAuthorization'
-import CloudflareClearance from '@/services/Titan22/CloudflareClearance'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -153,17 +152,9 @@ function initializeWindows () {
     win.show()
 
     setTimeout(() => {
-      // if (!isDevelopment) {
-      //   autoUpdater.checkForUpdatesAndNotify()
-      // } else if (!MainWindow.getWindow()) {
-      //   MainWindow.createWindow()
-      //   if (win) {
-      //     win.destroy()
-      //     win = null
-      //   }
-      // }
-
-      if (!MainWindow.getWindow()) {
+      if (!isDevelopment) {
+        autoUpdater.checkForUpdatesAndNotify()
+      } else if (!MainWindow.getWindow()) {
         MainWindow.createWindow()
         if (win) {
           win.destroy()
@@ -426,13 +417,4 @@ ipcMain.on('pay-with-paymaya', (event, arg) => {
  */
 ipcMain.on('pay-with-2c2p', (event, arg) => {
   CreditCardCheckout.automate(JSON.parse(arg))
-})
-
-/**
- *
- */
-ipcMain.handle('renew-cf-clearance', async (event, arg) => {
-  const result = await CloudflareClearance.automate(JSON.parse(arg))
-  console.log(result)
-  return result
 })
