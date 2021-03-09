@@ -16,11 +16,13 @@ export default {
 
     const option = {}
 
-    switch (mode.id) {
-      case 2:
-      case 3:
-        option.deviceCategory = 'mobile'
-        break
+    if (mode) {
+      switch (mode.id) {
+        case 2:
+        case 3:
+          option.deviceCategory = 'mobile'
+          break
+      }
     }
 
     const userAgent = new UserAgent(option)

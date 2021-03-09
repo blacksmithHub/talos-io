@@ -18,13 +18,11 @@ export default {
 
       const url = arg.url
       const fingerprint = arg.fingerprint
-      const settings = arg.settings
 
       const browser = await puppeteer.launch({
         headless: false,
         args: ['--window-size=800,600'],
-        defaultViewport: null,
-        executablePath: settings.executablePath || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+        defaultViewport: null
       })
 
       const page = await browser.newPage()

@@ -17,7 +17,10 @@ export default {
 
     let options = {
       url: params.url,
-      method: params.method
+      method: params.method,
+      headers: {
+        referer: `${url.protocol}//${url.host}/`
+      }
     }
 
     if (params.proxy && Object.keys(params.proxy).length && params.proxy.proxies.length) {
@@ -35,11 +38,7 @@ export default {
     if (config) {
       rp = config.rp
 
-      options.headers = {
-        'User-Agent': config.userAgent,
-        referer: `${url.protocol}//${url.host}/`
-      }
-
+      options.headers['User-Agent'] = config.userAgent
       options.jar = config.jar
 
       if (config.options) {

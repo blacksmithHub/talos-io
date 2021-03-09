@@ -235,9 +235,7 @@ export default {
       if (content.includes('cf-browser-verification')) {
         let counter = 0
 
-        while (content.includes('cf-browser-verification')) {
-          if (!Bot.isRunning(id)) browser.close()
-
+        while (content.includes('cf-browser-verification') && Bot.isRunning(id)) {
           counter++
 
           if (counter >= 3) break
