@@ -1252,11 +1252,13 @@ export default {
           }
         },
         token: currentTask.transactionData.token.token,
-        proxy: { proxies: [{ ...proxy }] },
+        proxy: currentTask.proxy,
         mode: currentTask.mode,
         configs: currentTask.configs,
         taskId: currentTask.id
       }
+
+      if (proxy) payload.proxy = { proxies: [{ ...proxy }] }
 
       switch (currentTask.checkoutMethod) {
         case 1:
