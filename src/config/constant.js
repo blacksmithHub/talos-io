@@ -23,6 +23,23 @@ export default {
       label: 'Safe mode'
     }
   ],
+  CLIENT: [
+    {
+      id: 1,
+      name: 'desktop',
+      label: 'Desktop'
+    },
+    {
+      id: 2,
+      name: 'ios',
+      label: 'Mobile (iOS)'
+    },
+    {
+      id: 3,
+      name: 'android',
+      label: 'Mobile (Android)'
+    }
+  ],
   TITAN_ATTRIBUTES: [
     {
       attribute_id: 139,

@@ -10,6 +10,12 @@ module.exports = {
   },
   pluginOptions: {
     electronBuilder: {
+      externals: [
+        'puppeteer',
+        'puppeteer-extra',
+        'puppeteer-extra-plugin-stealth'
+      ],
+      nodeModulesPath: ['../../node_modules', './node_modules'],
       nodeIntegration: true,
       builderOptions: {
         copyright: 'Copyright © 2021',
@@ -40,10 +46,9 @@ module.exports = {
       })
     ],
     externals: {
-      puppeteer: 'require("puppeteer")',
-      'puppeteer-extra': 'require("puppeteer-extra")',
-      'puppeteer-extra-plugin-stealth': 'require("puppeteer-extra-plugin-stealth")',
-      'puppeteer-bypass': 'require("puppeteer-bypass")'
+      puppeteer: "require('puppeteer')",
+      'puppeteer-extra': "require('puppeteer-extra')",
+      'puppeteer-extra-plugin-stealth': "require('puppeteer-extra-plugin-stealth')"
     }
   }
 }

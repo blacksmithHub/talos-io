@@ -113,7 +113,7 @@ export default {
     try {
       try {
         if (response.statusCode && response.statusCode === 503) {
-          await Bot.updateCurrentTaskLog(id, `#${counter} at Line87: 503 access denied`)
+          await Bot.updateCurrentTaskLog(id, `#${counter} at Line87: 503 Access Denied`)
         } else {
           await Bot.updateCurrentTaskLog(id, `#${counter} at Line87: ${response.message}`)
         }
@@ -144,9 +144,16 @@ export default {
               await Bot.setCurrentTaskStatus(id, { status: Constant.TASK.STATUS.RUNNING, msg: 'Bypassing', attr })
 
               const options = await this.getCloudflareClearance(id, response)
-
               const currentTask = await Bot.getCurrentTask(id)
-              currentTask.options = options
+
+              currentTask.configs = await currentTask.configs.map((el) => {
+                const proxy = options.proxy || 'local'
+
+                if (el.proxy === proxy) el.options = options
+
+                return el
+              })
+
               Tasks.dispatch('updateItem', currentTask)
             }
             break
@@ -184,10 +191,7 @@ export default {
 
       args.push(`--user-agent=${options.headers['User-Agent']}`)
 
-      const browser = await puppeteer.launch({
-        args,
-        headless: false
-      })
+      const browser = await puppeteer.launch({ args })
 
       if (!Bot.isRunning(id)) browser.close()
 
@@ -231,9 +235,7 @@ export default {
       if (content.includes('cf-browser-verification')) {
         let counter = 0
 
-        while (content.includes('cf-browser-verification')) {
-          if (!Bot.isRunning(id)) browser.close()
-
+        while (content.includes('cf-browser-verification') && Bot.isRunning(id)) {
           counter++
 
           if (counter >= 3) break
@@ -248,15 +250,20 @@ export default {
           let cookies = await page._client.send('Network.getAllCookies')
           cookies = cookies.cookies
 
+          if (!cookies.find((el) => el.name === 'cf_clearance')) {
+            content = await page.content()
+            continue
+          }
+
           for (const cookie of cookies) {
             const data = new Cookie({
               key: cookie.name,
               value: cookie.value,
               domain: cookie.domain,
               path: cookie.path
-            }).toString()
+            })
 
-            options.jar.setCookie(data, Config.services.titan22.url)
+            options.jar.setCookie(data.toString(), Config.services.titan22.url)
           }
 
           content = await page.content()
@@ -531,16 +538,7 @@ export default {
       await this.onSuccess(id)
       return false
     } else {
-      const cart = await this.getCart(id)
-
-      currentTask = await Bot.getCurrentTask(id)
-      if (!Bot.isRunning(id) || !currentTask) return false
-
-      if (cart) {
-        currentTask.transactionData.cart = cart
-      } else {
-        delete currentTask.transactionData.cart
-      }
+      delete currentTask.transactionData.cart
 
       await Tasks.dispatch('updateItem', currentTask)
 
@@ -595,7 +593,8 @@ export default {
           },
           proxy: currentTask.proxy,
           mode: currentTask.mode,
-          taskId: id
+          configs: currentTask.configs,
+          taskId: currentTask.id
         }
 
         if (!Bot.isRunning(id)) break
@@ -664,7 +663,8 @@ export default {
           token: currentTask.transactionData.token.token,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
-          taskId: id
+          configs: currentTask.configs,
+          taskId: currentTask.id
         }
 
         if (!Bot.isRunning(id)) break
@@ -745,7 +745,8 @@ export default {
           token: currentTask.transactionData.token.token,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
-          taskId: id
+          configs: currentTask.configs,
+          taskId: currentTask.id
         }
 
         if (!Bot.isRunning(id)) break
@@ -806,13 +807,14 @@ export default {
         if (!Bot.isRunning(id) || !currentTask) break
 
         await Bot.setCurrentTaskStatus(id, { status: Constant.TASK.STATUS.RUNNING, msg: 'initializing cart', attr: attr })
-        await Bot.updateCurrentTaskLog(id, `#${counter}: Creating cart...`)
+        await Bot.updateCurrentTaskLog(id, `#${counter}: Getting cart...`)
 
         const params = {
           token: currentTask.transactionData.token.token,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
-          taskId: id
+          configs: currentTask.configs,
+          taskId: currentTask.id
         }
 
         if (!Bot.isRunning(id)) break
@@ -876,7 +878,8 @@ export default {
               id: data.items[index].item_id,
               proxy: currentTask.proxy,
               mode: currentTask.mode,
-              taskId: id
+              configs: currentTask.configs,
+              taskId: currentTask.id
             }
 
             if (!Bot.isRunning(id)) break
@@ -971,7 +974,8 @@ export default {
               },
               proxy: currentTask.proxy,
               mode: currentTask.mode,
-              taskId: id
+              configs: currentTask.configs,
+              taskId: currentTask.id
             }
 
             if (!Bot.isRunning(id)) break
@@ -1064,7 +1068,8 @@ export default {
             payload: { addressId: defaultShippingAddress.id },
             proxy: currentTask.proxy,
             mode: currentTask.mode,
-            taskId: id
+            configs: currentTask.configs,
+            taskId: currentTask.id
           }
 
           if (!Bot.isRunning(id)) break
@@ -1151,7 +1156,8 @@ export default {
           payload: payload,
           proxy: currentTask.proxy,
           mode: currentTask.mode,
-          taskId: id
+          configs: currentTask.configs,
+          taskId: currentTask.id
         }
 
         if (!Bot.isRunning(id)) break
@@ -1228,6 +1234,12 @@ export default {
 
       const defaultBillingAddress = currentTask.transactionData.account.addresses.find((val) => val.default_billing)
 
+      let proxy = null
+
+      if (currentTask.proxy && Object.keys(currentTask.proxy).length && currentTask.proxy.proxies.length) {
+        proxy = currentTask.proxy.proxies[Math.floor(Math.random() * currentTask.proxy.proxies.length)]
+      }
+
       const payload = {
         payload: {
           amcheckout: {},
@@ -1242,8 +1254,11 @@ export default {
         token: currentTask.transactionData.token.token,
         proxy: currentTask.proxy,
         mode: currentTask.mode,
-        taskId: id
+        configs: currentTask.configs,
+        taskId: currentTask.id
       }
+
+      if (proxy) payload.proxy = { proxies: [{ ...proxy }] }
 
       switch (currentTask.checkoutMethod) {
         case 1:
@@ -1371,7 +1386,7 @@ export default {
 
           const timer = new StopWatch(true)
 
-          const response = await orderApi.placePaymayaOrder(payload)
+          const response = await cartApi.paymentInformation(payload)
 
           timer.stop()
 
@@ -1390,8 +1405,19 @@ export default {
             if (response.error.statusCode !== 429) break
 
             continue
-          } else if (response && !response.error && response.request.uri.href) {
-            data = response.request.uri.href
+          } else if (response && !response.error) {
+            const params = {
+              proxy: payload.proxy,
+              mode: currentTask.mode,
+              configs: currentTask.configs,
+              taskId: currentTask.id
+            }
+
+            const order = await orderApi.paymaya(params)
+
+            if (!Bot.isRunning(id)) break
+
+            data = order.request.uri.href
             break
           }
         }
@@ -1479,7 +1505,7 @@ export default {
 
           const timer = new StopWatch(true)
 
-          const response = await orderApi.place2c2pOrder(payload)
+          const response = await cartApi.paymentInformation(payload)
 
           timer.stop()
 
@@ -1498,9 +1524,71 @@ export default {
             if (response.error.statusCode !== 429) break
 
             continue
-          } else if (response && !response.error && response.cookie) {
-            data = response
-            break
+          } else if (response && !response.error) {
+            const params = {
+              token: currentTask.transactionData.token.token,
+              proxy: payload.proxy,
+              mode: currentTask.mode,
+              configs: currentTask.configs,
+              taskId: currentTask.id
+            }
+
+            const order = await orderApi.getTransactionData(params)
+
+            currentTask = await Bot.getCurrentTask(id)
+            if (!Bot.isRunning(id) || !currentTask) break
+
+            if (order && order.error) {
+              await this.handleError(id, counter, order.error)
+
+              if (order.error.statusCode !== 429) break
+
+              continue
+            } else if (order && !order.error) {
+              const params = {
+                proxy: payload.proxy,
+                mode: currentTask.mode,
+                configs: currentTask.configs,
+                taskId: currentTask.id
+              }
+
+              let orderNumber = null
+              const parameters = {}
+              const fieldRecords = JSON.parse(order).fields
+              const valueRecords = JSON.parse(order).values
+
+              for (let index = 0; index < fieldRecords.length; index++) {
+                parameters[fieldRecords[index]] = valueRecords[index]
+                if (fieldRecords[index] === 'order_id') orderNumber = valueRecords[index]
+              }
+
+              params.form = parameters
+
+              const cookieResponse = await orderApi.place2c2pOrder(params)
+
+              currentTask = await Bot.getCurrentTask(id)
+              if (!Bot.isRunning(id) || !currentTask) break
+
+              let cookie = null
+
+              await cookieResponse.error.options.jar._jar.store.getAllCookies((err, cookieArray) => {
+                if (err) cookie = null
+
+                cookie = cookieArray.find((val) => val.key === 'ASP.NET_SessionId')
+              })
+
+              data = {
+                cookie: {
+                  name: 'ASP.NET_SessionId',
+                  value: cookie.value,
+                  domain: '.2c2p.com',
+                  expiry: cookie.expiry
+                },
+                data: orderNumber
+              }
+
+              break
+            }
           }
         }
 
@@ -1655,7 +1743,7 @@ export default {
     let data = null
 
     const currentTask = await Bot.getCurrentTask(id)
-    if (!currentTask) return data
+    if (!Bot.isRunning(id) || !currentTask) return data
 
     const params = {
       payload: {
@@ -1673,7 +1761,10 @@ export default {
         }
       },
       token: Config.services.titan22.token,
-      proxy: currentTask.proxy
+      proxy: currentTask.proxy,
+      mode: currentTask.mode,
+      configs: currentTask.configs,
+      taskId: currentTask.id
     }
 
     const response = await productApi.search(params)

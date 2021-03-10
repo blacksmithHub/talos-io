@@ -57,11 +57,11 @@
           :loading="loading || !products.length"
           hide-default-footer
           loading-text="Loading... Please wait"
-          :items-per-page="products.length"
           :no-results-text="'Nothing to display'"
           :no-data-text="'Nothing to display'"
           fixed-header
           height="65vh"
+          :items-per-page="products.length || 5"
         >
           <template v-slot:item.img="{ value }">
             <v-img
@@ -137,11 +137,19 @@ import { mapState, mapActions } from 'vuex'
 
 import Toastify from 'toastify-js'
 import 'toastify-js/src/toastify.css'
+import vanillaPuppeteer from 'puppeteer'
+import { addExtra } from 'puppeteer-extra'
+import StealthPlugin from 'puppeteer-extra-plugin-stealth'
+import ProxyChain from 'proxy-chain'
+import { Cookie } from 'tough-cookie'
 
 import moment from '@/mixins/moment'
-import App from '@/config/app'
+import Config from '@/config/app'
 import productApi from '@/api/magento/titan22/product'
 import placeholder from '@/assets/no_image.png'
+import Request from '@/services/request'
+
+const blockedResources = ['queue-it']
 
 export default {
   mixins: [moment],
@@ -198,7 +206,10 @@ export default {
         }
       ],
       products: [],
-      loop: null
+      loop: null,
+      configs: [{
+        ...Request.setRequest()
+      }]
     }
   },
   computed: {
@@ -262,7 +273,7 @@ export default {
      */
     redirect (slug) {
       const { shell } = require('electron')
-      shell.openExternal(`${App.services.titan22.url}/${slug}.html`)
+      shell.openExternal(`${Config.services.titan22.url}/${slug}.html`)
     },
     /**
      * Search product API.
@@ -281,49 +292,136 @@ export default {
      */
     async fetchProducts () {
       try {
-        const params = {
-          payload: {
-            searchCriteria: {
-              sortOrders: [
-                {
-                  field: this.filter,
-                  direction: 'DESC'
-                }
-              ],
-              pageSize: this.count
-            }
-          },
-          token: App.services.titan22.token
-        }
-
-        if (this.settings.monitorProxy) params.proxy = this.settings.monitorProxy
-
-        this.loading = true
-        const response = await productApi.search(params)
-
         this.products = []
+        let counter = 0
 
-        if (response && !response.error) {
-          JSON.parse(response).items.forEach(element => {
-            const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
-            const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
-            this.products.push({
-              img: (image) ? `${App.services.titan22.url}/media/catalog/product${image.value}` : placeholder,
-              name: element.name,
-              sku: element.sku,
-              price: element.price.toLocaleString(),
-              link: (link) ? link.value : '',
-              status: element.extension_attributes.out_of_stock,
-              date: this.formatDate(element.updated_at)
+        while (!this.products.length) {
+          this.loading = true
+
+          counter++
+
+          if (counter > 1) await new Promise(resolve => setTimeout(resolve, 1000))
+
+          const params = {
+            payload: {
+              searchCriteria: {
+                sortOrders: [
+                  {
+                    field: this.filter,
+                    direction: 'DESC'
+                  }
+                ],
+                pageSize: this.count
+              }
+            },
+            token: Config.services.titan22.token,
+            proxy: this.settings.monitorProxy,
+            configs: this.configs
+          }
+
+          const response = await productApi.search(params)
+
+          if (response && !response.error) {
+            JSON.parse(response).items.forEach((element) => {
+              const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
+              const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
+              this.products.push({
+                img: (image) ? `${Config.services.titan22.url}/media/catalog/product${image.value}` : placeholder,
+                name: element.name,
+                sku: element.sku,
+                price: element.price.toLocaleString(),
+                link: (link) ? link.value : '',
+                status: element.extension_attributes.out_of_stock,
+                date: this.formatDate(element.updated_at)
+              })
             })
-          })
-        } else if (response.error && response.error.statusCode && response.error.statusCode === 503) {
-          // TODO: cf clearance
-        } else {
-          this.setDialogComponent({ header: 'Error', content: response.error })
-          this.setDialog(true)
+          } else if (response.error && response.error.statusCode && response.error.statusCode === 503) {
+            const { options } = response.error
+
+            const puppeteer = addExtra(vanillaPuppeteer)
+            const stealth = StealthPlugin()
+            puppeteer.use(stealth)
+
+            const args = ['--no-sandbox', '--disable-setuid-sandbox']
+
+            if (options.proxy) {
+              const oldProxyUrl = options.proxy
+              const newProxyUrl = await ProxyChain.anonymizeProxy(oldProxyUrl)
+
+              args.push(`--proxy-server=${newProxyUrl}`)
+            }
+
+            args.push(`--user-agent=${options.headers['User-Agent']}`)
+
+            const browser = await puppeteer.launch({ args })
+
+            const page = await browser.newPage()
+
+            await page.setRequestInterception(true)
+
+            page.on('request', (request) => {
+              if (request.url().endsWith('.png') || request.url().endsWith('.jpg')) {
+              // BLOCK IMAGES
+                request.abort()
+              } else if (blockedResources.some(resource => request.url().indexOf(resource) !== -1)) {
+              // BLOCK CERTAIN DOMAINS
+                request.abort()
+              } else {
+              // ALLOW OTHER REQUESTS
+                request.continue()
+              }
+            })
+
+            await page.goto(`${Config.services.titan22.url}/new-arrivals.html`)
+
+            let content = await page.content()
+
+            if (content.includes('cf-browser-verification')) {
+              let counter = 0
+
+              while (content.includes('cf-browser-verification')) {
+                counter++
+
+                if (counter >= 3) break
+
+                await page.waitForNavigation({
+                  timeout: 45000,
+                  waitUntil: 'domcontentloaded'
+                })
+
+                let cookies = await page._client.send('Network.getAllCookies')
+                cookies = cookies.cookies
+
+                if (!cookies.find((el) => el.name === 'cf_clearance')) {
+                  content = await page.content()
+                  continue
+                }
+
+                for (const cookie of cookies) {
+                  const data = new Cookie({
+                    key: cookie.name,
+                    value: cookie.value,
+                    domain: cookie.domain,
+                    path: cookie.path
+                  })
+
+                  options.jar.setCookie(data.toString(), Config.services.titan22.url)
+                }
+
+                content = await page.content()
+              }
+            }
+
+            await browser.close()
+
+            this.configs[0].options = options
+          } else {
+            this.setDialogComponent({ header: 'Error', content: response.error })
+            this.setDialog(true)
+          }
+
+          this.loading = false
         }
-        this.loading = false
       } catch (error) {
         this.setDialogComponent({ header: 'Error', content: error })
         this.setDialog(true)

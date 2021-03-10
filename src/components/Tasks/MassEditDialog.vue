@@ -62,6 +62,8 @@
                     required
                     dense
                     :items="modes"
+                    return-object
+                    item-text="label"
                     label="Mode"
                     outlined
                     clearable
@@ -241,6 +243,8 @@ import { minValue } from 'vuelidate/lib/validators'
 
 import Constant from '@/config/constant'
 
+import Request from '@/services/request'
+
 export default {
   props: {
     selected: {
@@ -258,8 +262,7 @@ export default {
       placeOrder: '',
       placeOrderMenu: false,
       proxy: {},
-      mode: '',
-      modes: ['Desktop', 'Mobile (iOS)', 'Mobile (Android)'],
+      mode: {},
       checkoutMethod: null,
       panel: []
     }
@@ -267,6 +270,12 @@ export default {
   computed: {
     ...mapState('task', { tasks: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
+    /**
+     * Return all modes
+     */
+    modes () {
+      return Constant.CLIENT
+    },
     /**
      * Return all attributes
      */
@@ -351,7 +360,7 @@ export default {
       this.placeOrder = ''
       this.placeOrderMenu = false
       this.proxy = {}
-      this.mode = ''
+      this.mode = {}
       this.checkoutMethod = null
       this.panel = []
       this.dialog = false
@@ -365,7 +374,7 @@ export default {
       try {
         const collection = (this.selected.length) ? this.selected : this.tasks
 
-        collection.forEach(element => {
+        collection.forEach((element) => {
           const params = element
 
           if (this.delay) params.delay = this.delay
@@ -374,9 +383,44 @@ export default {
 
           if (this.placeOrder) params.placeOrder = this.placeOrder
 
-          if (this.proxy && Object.keys(this.proxy).length) params.proxy = this.proxy
+          if (this.proxy && Object.keys(this.proxy).length) {
+            params.proxy = this.proxy
 
-          if (this.mode) params.mode = this.mode
+            const configs = []
+
+            if (params.proxy.proxies.length) {
+              params.proxy.proxies.forEach((el) => {
+                const data = Request.setRequest(params.mode, el)
+                configs.push(data)
+              })
+            } else {
+              const data = Request.setRequest(params.mode)
+              configs.push(data)
+            }
+
+            params.configs = configs
+          }
+
+          if (this.mode && Object.keys(this.mode).length) {
+            params.mode = this.mode
+
+            params.configs = params.configs.map(el => {
+              const UserAgent = require('user-agents')
+              const option = {}
+
+              switch (params.mode.id) {
+                case 2:
+                case 3:
+                  option.deviceCategory = 'mobile'
+                  break
+              }
+
+              const userAgent = new UserAgent(option)
+              el.userAgent = userAgent.toString()
+
+              return el
+            })
+          }
 
           if (this.checkoutMethod) params.checkoutMethod = this.checkoutMethod
 

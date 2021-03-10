@@ -1,3 +1,5 @@
+import Request from '@/services/request'
+
 export default {
   namespaced: true,
   state () {
@@ -79,7 +81,7 @@ export default {
         lastItemId = 1
       }
 
-      tasks.push({
+      const task = {
         id: lastItemId,
         ...item,
         status: {
@@ -87,8 +89,21 @@ export default {
           msg: 'idle',
           class: 'grey'
         },
-        transactionData: {}
-      })
+        transactionData: {},
+        configs: []
+      }
+
+      if (task.proxy && task.proxy.proxies.length) {
+        task.proxy.proxies.forEach((element) => {
+          const data = Request.setRequest(task.mode, element)
+          task.configs.push(data)
+        })
+      } else {
+        const data = Request.setRequest(task.mode)
+        task.configs.push(data)
+      }
+
+      tasks.push(task)
 
       commit('SET_ITEMS', tasks)
       localStorage.setItem('tasks', JSON.stringify(tasks))
@@ -133,7 +148,7 @@ export default {
     initializeItems ({ state, commit }) {
       let tasks = state.items.slice()
 
-      tasks = tasks.map(element => {
+      tasks = tasks.map((element) => {
         element.status = {
           id: 1,
           msg: 'idle',
@@ -143,10 +158,17 @@ export default {
         element.transactionData = {}
         element.paid = false
         element.logs = ''
+        element.configs = []
 
-        delete element.rp
-        delete element.jar
-        delete element.options
+        if (element.proxy && element.proxy.proxies.length) {
+          element.proxy.proxies.forEach(el => {
+            const data = Request.setRequest(element.mode, el)
+            element.configs.push(data)
+          })
+        } else {
+          const data = Request.setRequest(element.mode)
+          element.configs.push(data)
+        }
 
         return element
       })
