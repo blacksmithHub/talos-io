@@ -538,16 +538,7 @@ export default {
       await this.onSuccess(id)
       return false
     } else {
-      const cart = await this.getCart(id)
-
-      currentTask = await Bot.getCurrentTask(id)
-      if (!Bot.isRunning(id) || !currentTask) return false
-
-      if (cart) {
-        currentTask.transactionData.cart = cart
-      } else {
-        delete currentTask.transactionData.cart
-      }
+      delete currentTask.transactionData.cart
 
       await Tasks.dispatch('updateItem', currentTask)
 
@@ -816,7 +807,7 @@ export default {
         if (!Bot.isRunning(id) || !currentTask) break
 
         await Bot.setCurrentTaskStatus(id, { status: Constant.TASK.STATUS.RUNNING, msg: 'initializing cart', attr: attr })
-        await Bot.updateCurrentTaskLog(id, `#${counter}: Creating cart...`)
+        await Bot.updateCurrentTaskLog(id, `#${counter}: Getting cart...`)
 
         const params = {
           token: currentTask.transactionData.token.token,
@@ -1243,6 +1234,12 @@ export default {
 
       const defaultBillingAddress = currentTask.transactionData.account.addresses.find((val) => val.default_billing)
 
+      let proxy = null
+
+      if (currentTask.proxy && Object.keys(currentTask.proxy).length && currentTask.proxy.proxies.length) {
+        proxy = currentTask.proxy.proxies[Math.floor(Math.random() * currentTask.proxy.proxies.length)]
+      }
+
       const payload = {
         payload: {
           amcheckout: {},
@@ -1255,7 +1252,7 @@ export default {
           }
         },
         token: currentTask.transactionData.token.token,
-        proxy: currentTask.proxy,
+        proxy: { proxies: [{ ...proxy }] },
         mode: currentTask.mode,
         configs: currentTask.configs,
         taskId: currentTask.id
@@ -1407,14 +1404,14 @@ export default {
 
             continue
           } else if (response && !response.error) {
-            const payload = {
-              proxy: currentTask.proxy,
+            const params = {
+              proxy: payload.proxy,
               mode: currentTask.mode,
               configs: currentTask.configs,
               taskId: currentTask.id
             }
 
-            const order = await orderApi.paymaya(payload)
+            const order = await orderApi.paymaya(params)
 
             if (!Bot.isRunning(id)) break
 
@@ -1526,15 +1523,15 @@ export default {
 
             continue
           } else if (response && !response.error) {
-            const payload = {
+            const params = {
               token: currentTask.transactionData.token.token,
-              proxy: currentTask.proxy,
+              proxy: payload.proxy,
               mode: currentTask.mode,
               configs: currentTask.configs,
               taskId: currentTask.id
             }
 
-            const order = await orderApi.getTransactionData(payload)
+            const order = await orderApi.getTransactionData(params)
 
             currentTask = await Bot.getCurrentTask(id)
             if (!Bot.isRunning(id) || !currentTask) break
@@ -1546,8 +1543,8 @@ export default {
 
               continue
             } else if (order && !order.error) {
-              const payload = {
-                proxy: currentTask.proxy,
+              const params = {
+                proxy: payload.proxy,
                 mode: currentTask.mode,
                 configs: currentTask.configs,
                 taskId: currentTask.id
@@ -1563,11 +1560,9 @@ export default {
                 if (fieldRecords[index] === 'order_id') orderNumber = valueRecords[index]
               }
 
-              payload.form = parameters
+              params.form = parameters
 
-              const cookieResponse = await orderApi.place2c2pOrder(payload)
-
-              console.log(cookieResponse.error)
+              const cookieResponse = await orderApi.place2c2pOrder(params)
 
               currentTask = await Bot.getCurrentTask(id)
               if (!Bot.isRunning(id) || !currentTask) break

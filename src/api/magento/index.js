@@ -24,7 +24,11 @@ export default {
     }
 
     if (params.proxy && Object.keys(params.proxy).length && params.proxy.proxies.length) {
-      const selected = params.proxy.proxies[Math.floor(Math.random() * params.proxy.proxies.length)]
+      let index = 0
+
+      if (params.proxy.proxies.length > 1) index = Math.floor(Math.random() * params.proxy.proxies.length)
+
+      const selected = params.proxy.proxies[index]
 
       if (selected.username && selected.password) {
         proxy = `http://${selected.username}:${selected.password}@${selected.host}:${selected.port}`
