@@ -23,8 +23,7 @@ export default {
         autoPay: false,
         autoFill: false,
         manual: true,
-        monitorProxy: {},
-        executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+        monitorProxy: {}
       }
     },
 

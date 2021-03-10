@@ -327,6 +327,13 @@ import ProfileDialog from '@/components/Profiles/ProfileDialog'
 import ImportProfileDialog from '@/components/Profiles/ImportProfileDialog'
 import BraintreeApi from '@/api/magento/titan22/braintree'
 import Config from '@/config/app'
+import vanillaPuppeteer from 'puppeteer'
+import { addExtra } from 'puppeteer-extra'
+import StealthPlugin from 'puppeteer-extra-plugin-stealth'
+import { Cookie } from 'tough-cookie'
+import Request from '@/services/request'
+
+const blockedResources = ['queue-it']
 
 export default {
   components: {
@@ -340,8 +347,7 @@ export default {
     }
   },
   computed: {
-    ...mapState('profile', { profiles: 'items' }),
-    ...mapState('setting', { settings: 'items' })
+    ...mapState('profile', { profiles: 'items' })
   },
   created () {
     this.validateAllPaypal()
@@ -432,7 +438,9 @@ export default {
       this.updateProfile(profile)
 
       try {
-        const secret = await BraintreeApi.getSecret()
+        const secret = await this.getSecret()
+
+        if (!secret) profile.loading = false
 
         if (secret && !secret.error) {
           const fingerprint = JSON.parse(atob(JSON.parse(secret))).authorizationFingerprint
@@ -452,7 +460,7 @@ export default {
           const paypal = await BraintreeApi.createPaymentResource(params)
 
           if (paypal && !paypal.error) {
-            ipcRenderer.send('paypal-login', JSON.stringify({ url: JSON.parse(paypal).paymentResource.redirectUrl, fingerprint: fingerprint, settings: this.settings, profile: profile }))
+            ipcRenderer.send('paypal-login', JSON.stringify({ url: JSON.parse(paypal).paymentResource.redirectUrl, fingerprint: fingerprint, profile: profile }))
           } else {
             profile.loading = false
             this.updateProfile(profile)
@@ -529,8 +537,115 @@ export default {
      */
     validateAllPaypal () {
       this.profiles.forEach(element => {
+        this.updateProfile({
+          ...element,
+          loading: false
+        })
+
         if (element.paypal && Object.keys(element.paypal).length) this.validatePaypal(element)
       })
+    },
+
+    /**
+     * Fetch company secret
+     */
+    async getSecret () {
+      let data = null
+      const params = { configs: [] }
+
+      for (let index = 0; index < 2; index++) {
+        if (!index) params.configs = [{ ...Request.setRequest() }]
+
+        const response = await BraintreeApi.getSecret(params)
+
+        if (response && response.error) {
+          const options = await this.getCloudflareClearance(response)
+          params.configs[0].options = options
+          continue
+        } else if (response && !response.error) {
+          data = response
+        }
+      }
+
+      return data
+    },
+
+    /**
+     * renew cloudflare clearance cookie
+     */
+    async getCloudflareClearance (response) {
+      const { options } = response.error
+
+      const puppeteer = addExtra(vanillaPuppeteer)
+      const stealth = StealthPlugin()
+      puppeteer.use(stealth)
+
+      const args = ['--no-sandbox', '--disable-setuid-sandbox']
+
+      args.push(`--user-agent=${options.headers['User-Agent']}`)
+
+      const browser = await puppeteer.launch({ args })
+
+      const page = await browser.newPage()
+
+      await page.setRequestInterception(true)
+
+      page.on('request', (request) => {
+        if (request.url().endsWith('.png') || request.url().endsWith('.jpg')) {
+        // BLOCK IMAGES
+          request.abort()
+        } else if (blockedResources.some(resource => request.url().indexOf(resource) !== -1)) {
+        // BLOCK CERTAIN DOMAINS
+          request.abort()
+        } else {
+        // ALLOW OTHER REQUESTS
+          request.continue()
+        }
+      })
+
+      await page.goto(`${Config.services.titan22.url}/new-arrivals.html`)
+
+      let content = await page.content()
+
+      if (content.includes('cf-browser-verification')) {
+        let counter = 0
+
+        while (content.includes('cf-browser-verification')) {
+          counter++
+
+          if (counter >= 3) break
+
+          await page.waitForNavigation({
+            timeout: 45000,
+            waitUntil: 'domcontentloaded'
+          })
+
+          let cookies = await page._client.send('Network.getAllCookies')
+          cookies = cookies.cookies
+
+          if (!cookies.find((el) => el.name === 'cf_clearance')) {
+            content = await page.content()
+            continue
+          }
+
+          for (const cookie of cookies) {
+            const data = new Cookie({
+              key: cookie.name,
+              value: cookie.value,
+              domain: cookie.domain,
+              path: cookie.path
+            })
+
+            options.jar.setCookie(data.toString(), Config.services.titan22.url)
+          }
+
+          content = await page.content()
+        }
+      }
+
+      await browser.close()
+
+      return options
     }
   }
 }

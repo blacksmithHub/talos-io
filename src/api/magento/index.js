@@ -11,91 +11,102 @@ import store from '@/store/index'
  */
 export default {
   async http (params) {
-    const url = new Url(params.url)
-    let config = null
     let rp = null
+    let proxy = 'local'
+    const url = new Url(params.url)
 
-    if (params.taskId) {
-      const vuex = store._modules.root._children.task.context
-      const task = vuex.state.items.find((val) => val.id === params.taskId)
-
-      rp = task.rp
-      const jar = task.jar
-      const userAgent = task.userAgent
-
-      config = {
-        method: params.method,
-        url: params.url,
-        headers: {
-          'User-Agent': userAgent,
-          referer: `${url.protocol}//${url.host}/`
-        },
-        jar: jar
-      }
-
-      if (task.options) {
-        config = {
-          ...task.options,
-          method: params.method,
-          url: params.url,
-          headers: {
-            ...task.options.headers,
-            'User-Agent': userAgent,
-            referer: `${url.protocol}//${url.host}/`
-          },
-          jar: task.options.jar
-        }
-      }
-    } else {
-      rp = require('request-promise')
-      const jar = rp.jar()
-      const userAgent = ''
-
-      config = {
-        method: params.method,
-        url: params.url,
-        headers: {
-          'User-Agent': userAgent,
-          referer: `${url.protocol}//${url.host}/`
-        },
-        jar: jar
+    let options = {
+      url: params.url,
+      method: params.method,
+      headers: {
+        referer: `${url.protocol}//${url.host}/`
       }
     }
 
     if (params.proxy && Object.keys(params.proxy).length && params.proxy.proxies.length) {
-      const proxy = params.proxy.proxies[Math.floor(Math.random() * params.proxy.proxies.length)]
+      let index = 0
 
-      if (proxy.username && proxy.password) {
-        config.proxy = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
+      if (params.proxy.proxies.length > 1) index = Math.floor(Math.random() * params.proxy.proxies.length)
+
+      const selected = params.proxy.proxies[index]
+
+      if (selected.username && selected.password) {
+        proxy = `http://${selected.username}:${selected.password}@${selected.host}:${selected.port}`
       } else {
-        config.proxy = `http://${proxy.host}:${proxy.port}`
+        proxy = `http://${selected.host}:${selected.port}`
       }
     }
 
+    const config = params.configs.find((el) => el.proxy === proxy)
+
+    if (config) {
+      rp = config.rp
+
+      options.headers['User-Agent'] = config.userAgent
+      options.jar = config.jar
+
+      if (config.options) {
+        options = {
+          ...config.options,
+          ...options,
+          headers: {
+            ...config.options.headers,
+            'User-Agent': config.userAgent,
+            referer: `${url.protocol}//${url.host}/`
+          },
+          jar: config.options.jar
+        }
+      }
+
+      if (proxy !== 'local') options.proxy = proxy
+    }
+
     if (params.payload) {
-      config.body = JSON.stringify(params.payload)
+      options.body = JSON.stringify(params.payload)
     } else {
-      delete config.body
+      delete options.body
     }
 
     if (params.form) {
-      config.form = JSON.stringify(params.form)
+      options.form = params.form
     } else {
-      delete config.form
+      delete options.form
     }
 
     if (params.token) {
-      config.headers.Authorization = `Bearer ${params.token}`
+      options.headers.Authorization = `Bearer ${params.token}`
     } else {
-      delete config.headers.Authorization
+      delete options.headers.Authorization
     }
 
     if (params.accept) {
-      config.headers['Content-Type'] = params.accept
+      options.headers['Content-Type'] = params.accept
     } else {
-      config.headers['Content-Type'] = 'application/json'
+      options.headers['Content-Type'] = 'application/json'
     }
 
-    return rp(config)
+    if (params.mode && params.mode.id !== 1) {
+      options.headers.client = params.mode.name
+    }
+
+    const request = rp(options)
+
+    if (params.taskId) {
+      const vuex = store._modules.root._children.task.context
+
+      const task = vuex.state.items.find((val) => val.id === params.taskId)
+
+      task.configs = task.configs.map((el) => {
+        if (el.proxy === proxy) {
+          el.request = request
+        }
+
+        return el
+      })
+
+      vuex.dispatch('updateItem', task)
+    }
+
+    return request
   }
 }

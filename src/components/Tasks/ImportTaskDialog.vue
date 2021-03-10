@@ -161,7 +161,7 @@ export default {
             result.forEach(element => {
               const csvSizes = (element.sizes) ? element.sizes.trim().split('+') : []
 
-              if (csvSizes.length && element.email && element.password && element.sku && element.bank && element.cardNumber) {
+              if (csvSizes.length && element.email && element.password && element.sku) {
                 const sizes = []
 
                 csvSizes.forEach((data) => {
@@ -192,15 +192,19 @@ export default {
                     }
                   }
 
-                  const bank = {
-                    cardHolder: (element.cardHolder) ? element.cardHolder.trim() : '',
-                    cardNumber: parseInt(element.cardNumber) || '',
-                    cvv: parseInt(element.cvv) || '',
-                    expiryMonth: element.expiryMonth || '',
-                    expiryYear: element.expiryYear || '',
-                    bank: (element.bank) ? element.bank.trim() : '',
-                    nickname: (element.bank) ? element.bank.trim() : '',
-                    id: null
+                  let bank = {}
+
+                  if (element.bank && element.cardNumber) {
+                    bank = {
+                      cardHolder: (element.cardHolder) ? element.cardHolder.trim() : '',
+                      cardNumber: parseInt(element.cardNumber) || '',
+                      cvv: parseInt(element.cvv) || '',
+                      expiryMonth: element.expiryMonth || '',
+                      expiryYear: element.expiryYear || '',
+                      bank: (element.bank) ? element.bank.trim() : '',
+                      nickname: (element.bank) ? element.bank.trim() : '',
+                      id: null
+                    }
                   }
 
                   const object = {
@@ -208,10 +212,14 @@ export default {
                     profile: profile,
                     sku: element.sku.trim(),
                     sizes: sizes,
-                    delay: element.delay || 3200,
-                    placeOrder: element.placeOrder || '',
+                    delay: parseInt(element.delay) || 3200,
                     proxy: { id: null, name: 'Localhost', proxies: [] },
-                    mode: element.mode || 'Desktop'
+                    mode: Constant.CLIENT[0],
+                    checkoutMethod: 4,
+                    qty: 1,
+                    logs: '',
+                    paid: false,
+                    placeOrder: ''
                   }
 
                   if (element.aco) {
