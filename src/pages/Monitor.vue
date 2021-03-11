@@ -250,7 +250,7 @@ export default {
      * init request
      */
     init () {
-      if (this.settings.monitorProxy && this.settings.monitorProxy.proxies.length) {
+      if (this.settings.monitorProxy && Object.keys(this.settings.monitorProxy).length && this.settings.monitorProxy.proxies.length) {
         this.settings.monitorProxy.proxies.forEach((element) => {
           const data = Request.setRequest(null, element)
           this.configs.push(data)
