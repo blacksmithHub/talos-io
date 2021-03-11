@@ -19,7 +19,8 @@ export default {
       const browser = await puppeteer.launch({
         headless: false,
         args: ['--window-size=800,600'],
-        defaultViewport: null
+        defaultViewport: null,
+        executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked')
       })
 
       const page = await browser.newPage()

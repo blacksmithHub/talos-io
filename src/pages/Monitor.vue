@@ -207,9 +207,7 @@ export default {
       ],
       products: [],
       loop: null,
-      configs: [{
-        ...Request.setRequest()
-      }]
+      configs: []
     }
   },
   computed: {
@@ -233,9 +231,13 @@ export default {
     }
   },
   async created () {
+    this.init()
+
     ipcRenderer.on('updateSettings', (event, arg) => {
       this.setSettings(arg)
+      this.init()
     })
+
     await this.fetchProducts()
     const vm = this
     setTimeout(() => (vm.searchProduct()), vm.settings.monitorInterval)
@@ -243,6 +245,21 @@ export default {
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
     ...mapActions('core', ['setDialogComponent', 'setDialog']),
+
+    /**
+     * init request
+     */
+    init () {
+      if (this.settings.monitorProxy && this.settings.monitorProxy.proxies.length) {
+        this.settings.monitorProxy.proxies.forEach((element) => {
+          const data = Request.setRequest(null, element)
+          this.configs.push(data)
+        })
+      } else {
+        const data = Request.setRequest()
+        this.configs.push(data)
+      }
+    },
 
     /**
      * on count field change
@@ -353,7 +370,7 @@ export default {
 
             args.push(`--user-agent=${options.headers['User-Agent']}`)
 
-            const browser = await puppeteer.launch({ args })
+            const browser = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked') })
 
             const page = await browser.newPage()
 

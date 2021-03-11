@@ -584,7 +584,7 @@ export default {
 
       args.push(`--user-agent=${options.headers['User-Agent']}`)
 
-      const browser = await puppeteer.launch({ args })
+      const browser = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked') })
 
       const page = await browser.newPage()
 

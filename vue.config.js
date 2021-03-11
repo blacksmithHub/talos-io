@@ -18,6 +18,7 @@ module.exports = {
       nodeModulesPath: ['../../node_modules', './node_modules'],
       nodeIntegration: true,
       builderOptions: {
+        asarUnpack: 'node_modules/puppeteer/.local-chromium/**/*',
         copyright: 'Copyright © 2021',
         nsis: {
           oneClick: false,
