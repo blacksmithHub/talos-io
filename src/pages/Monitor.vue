@@ -308,13 +308,12 @@ export default {
      *
      */
     async fetchProducts () {
+      this.loading = true
+      let counter = 0
+      let done = false
+
       try {
-        this.products = []
-        let counter = 0
-
-        while (!this.products.length) {
-          this.loading = true
-
+        while (!done) {
           counter++
 
           if (counter > 1) await new Promise(resolve => setTimeout(resolve, 1000))
@@ -339,6 +338,8 @@ export default {
           const response = await productApi.search(params)
 
           if (response && !response.error) {
+            this.products = []
+
             JSON.parse(response).items.forEach((element) => {
               const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
               const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
@@ -352,6 +353,8 @@ export default {
                 date: this.formatDate(element.updated_at)
               })
             })
+
+            done = true
           } else if (response.error && response.error.statusCode && response.error.statusCode === 503) {
             const { options } = response.error
 
@@ -436,13 +439,13 @@ export default {
             this.setDialogComponent({ header: 'Error', content: response.error })
             this.setDialog(true)
           }
-
-          this.loading = false
         }
       } catch (error) {
         this.setDialogComponent({ header: 'Error', content: error })
         this.setDialog(true)
       }
+
+      this.loading = false
     }
   }
 }
