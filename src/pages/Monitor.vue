@@ -244,7 +244,7 @@ export default {
   },
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
-    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * init request
@@ -436,13 +436,19 @@ export default {
 
             this.configs[0].options = options
           } else {
-            this.setDialogComponent({ header: 'Error', content: response.error })
-            this.setDialog(true)
+            this.openDialog({
+              title: 'Error',
+              body: response.error,
+              alert: true
+            })
           }
         }
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
 
       this.loading = false

@@ -40,7 +40,7 @@
       color="error"
       depressed
       :disabled="loading"
-      @click="dialog=true"
+      @click="confirm"
     >
       <v-icon
         small
@@ -90,77 +90,11 @@
         </v-list-item>
       </v-list>
     </v-menu>
-
-    <v-dialog
-      v-model="dialog"
-      persistent
-      max-width="290"
-    >
-      <v-card>
-        <v-card-title
-          class="headline primary--text"
-          style="border-bottom:1px solid #d85820"
-        >
-          Confirmation
-
-          <v-spacer />
-
-          <v-btn
-            icon
-            class="primary--text"
-            @click="dialog=false"
-          >
-            <v-icon v-text="'mdi-close'" />
-          </v-btn>
-        </v-card-title>
-
-        <v-card-text class="text-center pa-5">
-          <v-row
-            justify="center"
-            align="center"
-            no-gutters
-            class="fill-height"
-          >
-            <v-col
-              align-self="center"
-              cols="9"
-            >
-              Are you sure you want to delete this task?
-            </v-col>
-          </v-row>
-        </v-card-text>
-
-        <v-divider />
-
-        <v-card-actions>
-          <v-container class="text-right">
-            <v-btn
-              class="primary mr-2"
-              rounded
-              depressed
-              small
-              @click="dialog=false"
-            >
-              Disagree
-            </v-btn>
-
-            <v-btn
-              depressed
-              small
-              class="primary"
-              rounded
-              @click="deleteTask"
-            >
-              Agree
-            </v-btn>
-          </v-container>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </div>
 </template>
 
 <script>
+import { mapActions } from 'vuex'
 import Constant from '@/config/constant'
 
 export default {
@@ -172,7 +106,6 @@ export default {
   },
   data () {
     return {
-      dialog: false,
       loading: false
     }
   },
@@ -186,8 +119,16 @@ export default {
     }
   },
   methods: {
-    deleteTask () {
-      this.$emit('click:deleteTask', this.task)
+    ...mapActions('dialog', ['openDialog']),
+
+    confirm () {
+      this.openDialog({
+        title: 'Confirmation',
+        body: 'Are you sure you want to delete this task?',
+        action: () => {
+          this.$emit('click:deleteTask', this.task)
+        }
+      })
     }
   }
 }

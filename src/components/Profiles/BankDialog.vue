@@ -315,7 +315,7 @@ export default {
   },
   methods: {
     ...mapActions('bank', { addBank: 'addItem', updateBank: 'updateItem' }),
-    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * Map selected bank.
@@ -392,8 +392,11 @@ export default {
           }
         }
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     }
   },

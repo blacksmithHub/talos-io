@@ -71,7 +71,7 @@
                 :x-small="!$vuetify.breakpoint.lgAndUp"
                 class="error"
                 depressed
-                @click="reset"
+                @click="confirmDeleteAll"
               >
                 <v-icon
                   :left="$vuetify.breakpoint.lgAndUp"
@@ -202,7 +202,7 @@
                       icon
                       color="error"
                       depressed
-                      @click="deleteProfile(index)"
+                      @click="confirmDelete(index)"
                     >
                       <v-icon
                         small
@@ -247,75 +247,6 @@
         </v-row>
       </v-card-actions>
     </v-card>
-
-    <v-dialog
-      v-model="dialog"
-      persistent
-      max-width="290"
-    >
-      <v-card>
-        <v-card-title
-          class="headline primary--text"
-          style="border-bottom:1px solid #d85820"
-        >
-          PayPal
-
-          <v-spacer />
-
-          <v-btn
-            icon
-            class="primary--text"
-            @click="dialog=false"
-          >
-            <v-icon v-text="'mdi-close'" />
-          </v-btn>
-        </v-card-title>
-
-        <v-divider />
-
-        <v-card-text class="text-center pa-5">
-          <v-row
-            justify="center"
-            align="center"
-            no-gutters
-            class="fill-height"
-          >
-            <v-col
-              align-self="center"
-              cols="9"
-            >
-              Do you wish to logout?
-            </v-col>
-          </v-row>
-        </v-card-text>
-
-        <v-divider />
-
-        <v-card-actions>
-          <v-container class="text-right">
-            <v-btn
-              class="primary mr-2"
-              rounded
-              depressed
-              small
-              @click="dialog=false"
-            >
-              Close
-            </v-btn>
-
-            <v-btn
-              depressed
-              small
-              class="primary"
-              rounded
-              @click="confirmPaypalLogout"
-            >
-              Logout
-            </v-btn>
-          </v-container>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </div>
 </template>
 
@@ -342,7 +273,6 @@ export default {
   },
   data () {
     return {
-      dialog: false,
       selected: {}
     }
   },
@@ -377,30 +307,23 @@ export default {
 
           const profile = {
             ...arg.profile,
+            loading: false,
             paypal: data
           }
 
           this.updateProfile(profile)
           this.validatePaypal(profile)
-
-          arg.profile.loading = false
-          this.updateProfile(arg.profile)
         } else {
           arg.profile.loading = false
           this.updateProfile(arg.profile)
 
-          this.setDialogComponent({ header: 'Error', content: response.error })
-          this.setDialog(true)
+          this.openDialog({
+            title: 'Error',
+            body: response.error,
+            alert: true
+          })
         }
-
-        arg.profile.loading = false
-        this.updateProfile(arg.profile)
       }
-    })
-
-    ipcRenderer.on('paypalError', async (event, arg) => {
-      this.setDialogComponent({ header: 'Error', content: 'Cannot launch Google Chrome' })
-      this.setDialog(true)
     })
 
     ipcRenderer.on('paypalClose', async (event, arg) => {
@@ -410,7 +333,7 @@ export default {
   },
   methods: {
     ...mapActions('profile', { setProfiles: 'setItems', updateProfile: 'updateItem', deleteProfile: 'deleteItem', reset: 'reset' }),
-    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * Trigger add new profile dialog event.
@@ -464,20 +387,32 @@ export default {
           } else {
             profile.loading = false
             this.updateProfile(profile)
-            this.setDialogComponent({ header: 'Error', content: paypal.error })
-            this.setDialog(true)
+
+            this.openDialog({
+              title: 'Error',
+              body: paypal.error,
+              alert: true
+            })
           }
         } else {
           profile.loading = false
           this.updateProfile(profile)
-          this.setDialogComponent({ header: 'Error', content: secret.error })
-          this.setDialog(true)
+
+          this.openDialog({
+            title: 'Error',
+            body: secret.error,
+            alert: true
+          })
         }
       } catch (error) {
         profile.loading = false
         this.updateProfile(profile)
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     },
     /**
@@ -485,18 +420,16 @@ export default {
      */
     paypalLogout (profile) {
       this.selected = profile
-      this.dialog = true
-    },
-    /**
-     * Confirm logout to paypal
-     */
-    confirmPaypalLogout () {
-      this.updateProfile({
-        ...this.selected,
-        paypal: {}
+      this.openDialog({
+        title: 'PayPal',
+        body: 'Do you wish to logout?',
+        action: () => {
+          this.updateProfile({
+            ...this.selected,
+            paypal: {}
+          })
+        }
       })
-
-      this.dialog = false
     },
 
     /**
@@ -527,8 +460,11 @@ export default {
           })
         }
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     },
 
@@ -646,6 +582,28 @@ export default {
       await browser.close()
 
       return options
+    },
+
+    confirmDelete (index) {
+      this.openDialog({
+        title: 'Confirmation',
+        body: 'Are you sure you want to delete this profile?',
+        action: () => {
+          this.deleteProfile(index)
+        }
+      })
+    },
+
+    confirmDeleteAll () {
+      if (this.profiles.length) {
+        this.openDialog({
+          title: 'Confirmation',
+          body: 'Are you sure you want to delete all profiles?',
+          action: () => {
+            this.reset()
+          }
+        })
+      }
     }
   }
 }

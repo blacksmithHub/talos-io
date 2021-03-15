@@ -7,12 +7,13 @@ export default {
    * @param {*} arg
    */
   async automate (arg) {
+    const task = arg.task
+
     try {
       const puppeteer = require('puppeteer')
       const UserAgent = require('user-agents')
       const userAgent = new UserAgent({ deviceCategory: 'desktop' })
 
-      const task = arg.task
       const settings = arg.settings
 
       const browser = await puppeteer.launch({
@@ -53,9 +54,7 @@ export default {
 
       page.on('close', () => { if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateTask', task) })
     } catch (error) {
-      if (error.toString().includes('Could not find browser revision')) {
-        if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('checkoutError', error)
-      }
+      if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateTask', task)
     }
   }
 }

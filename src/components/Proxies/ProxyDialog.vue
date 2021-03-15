@@ -142,7 +142,7 @@ export default {
   },
   methods: {
     ...mapActions('proxy', { addProxy: 'addItem', updateProxy: 'updateItem' }),
-    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * set all proxies
@@ -225,8 +225,11 @@ export default {
           }
         }
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     },
     /**
@@ -270,8 +273,11 @@ export default {
           this.proxies = proxies.join('\n')
         }
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     }
   },
