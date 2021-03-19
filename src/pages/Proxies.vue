@@ -71,7 +71,7 @@
                 :x-small="!$vuetify.breakpoint.lgAndUp"
                 class="error"
                 depressed
-                @click="reset"
+                @click="confirmDeleteAll()"
               >
                 <v-icon
                   :left="$vuetify.breakpoint.lgAndUp"
@@ -159,7 +159,7 @@
                     <v-btn
                       icon
                       color="error"
-                      @click="deleteProxy(index)"
+                      @click="confirmDelete(index)"
                     >
                       <v-icon
                         small
@@ -239,6 +239,8 @@ export default {
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
     ...mapActions('proxy', { deleteProxy: 'deleteItem', reset: 'reset' }),
+    ...mapActions('dialog', ['openDialog']),
+
     /**
      * Trigger add new proxies dialog event.
      */
@@ -256,6 +258,28 @@ export default {
      */
     importProxies () {
       this.$refs.importProxyDialog.dialog = true
+    },
+
+    confirmDeleteAll () {
+      if (this.proxies.length) {
+        this.openDialog({
+          title: 'Confirmation',
+          body: 'Are you sure you want to delete all proxy lists?',
+          action: () => {
+            this.reset()
+          }
+        })
+      }
+    },
+
+    confirmDelete (index) {
+      this.openDialog({
+        title: 'Confirmation',
+        body: 'Are you sure you want to delete this proxy list?',
+        action: () => {
+          this.deleteProxy(index)
+        }
+      })
     }
   }
 }

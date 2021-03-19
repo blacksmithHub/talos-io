@@ -32,7 +32,7 @@
           :class="(paypal && Object.keys(paypal).length) ? 'paypalLogin' : 'paypalLogout'"
           depressed
           :loading="loading"
-          @click="(paypal && Object.keys(paypal).length) ? dialog=true : paypalLogin()"
+          @click="(paypal && Object.keys(paypal).length) ? confirm() : paypalLogin()"
         >
           <vue-fontawesome
             icon="paypal"
@@ -109,7 +109,7 @@
           :x-small="!$vuetify.breakpoint.lgAndUp"
           class="error"
           depressed
-          @click="$emit('click:deleteAll')"
+          @click="confirmDeleteAll"
         >
           <v-icon
             :left="$vuetify.breakpoint.lgAndUp"
@@ -123,75 +123,6 @@
         </v-btn>
       </v-col>
     </v-row>
-
-    <v-dialog
-      v-model="dialog"
-      persistent
-      max-width="290"
-    >
-      <v-card>
-        <v-card-title
-          class="headline primary--text"
-          style="border-bottom:1px solid #d85820"
-        >
-          PayPal
-
-          <v-spacer />
-
-          <v-btn
-            icon
-            class="primary--text"
-            @click="dialog=false"
-          >
-            <v-icon v-text="'mdi-close'" />
-          </v-btn>
-        </v-card-title>
-
-        <v-divider />
-
-        <v-card-text class="text-center pa-5">
-          <v-row
-            justify="center"
-            align="center"
-            no-gutters
-            class="fill-height"
-          >
-            <v-col
-              align-self="center"
-              cols="9"
-            >
-              Do you wish to logout?
-            </v-col>
-          </v-row>
-        </v-card-text>
-
-        <v-divider />
-
-        <v-card-actions>
-          <v-container class="text-right">
-            <v-btn
-              class="primary mr-2"
-              rounded
-              depressed
-              small
-              @click="dialog=false"
-            >
-              Close
-            </v-btn>
-
-            <v-btn
-              depressed
-              small
-              class="primary"
-              rounded
-              @click="confirmPaypalLogout(), dialog=false"
-            >
-              Logout
-            </v-btn>
-          </v-container>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </v-card-title>
 </template>
 
@@ -213,13 +144,13 @@ export default {
   data () {
     return {
       search: '',
-      dialog: false,
       loading: false
     }
   },
   computed: {
     ...mapState('paypal', { paypal: 'items' }),
-    ...mapState('profile', { profiles: 'items' })
+    ...mapState('profile', { profiles: 'items' }),
+    ...mapState('task', { tasks: 'items' })
   },
   created () {
     this.clearAllPaypals()
@@ -253,17 +184,16 @@ export default {
           this.loading = false
         } else {
           this.loading = false
-          this.setDialogComponent({ header: 'Error', content: response.error })
-          this.setDialog(true)
+
+          this.openDialog({
+            title: 'Error',
+            body: response.error,
+            alert: true
+          })
         }
       }
 
       this.loading = false
-    })
-
-    ipcRenderer.on('paypalError', async (event, arg) => {
-      this.setDialogComponent({ header: 'Error', content: 'Cannot launch Google Chrome' })
-      this.setDialog(true)
     })
 
     ipcRenderer.on('paypalClose', async (event, arg) => {
@@ -273,7 +203,7 @@ export default {
   methods: {
     ...mapActions('paypal', { setPaypal: 'setItems', confirmPaypalLogout: 'reset' }),
     ...mapActions('profile', { updateProfile: 'updateItem' }),
-    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * on search input event.
@@ -313,18 +243,29 @@ export default {
             ipcRenderer.send('paypal-login', JSON.stringify({ url: JSON.parse(paypal).paymentResource.redirectUrl, fingerprint: fingerprint }))
           } else {
             this.loading = false
-            this.setDialogComponent({ header: 'Error', content: paypal.error })
-            this.setDialog(true)
+
+            this.openDialog({
+              title: 'Error',
+              body: paypal.error,
+              alert: true
+            })
           }
         } else {
           this.loading = false
-          this.setDialogComponent({ header: 'Error', content: secret.error })
-          this.setDialog(true)
+
+          this.openDialog({
+            title: 'Error',
+            body: secret.error,
+            alert: true
+          })
         }
       } catch (error) {
         this.loading = false
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     },
     /**
@@ -345,8 +286,11 @@ export default {
 
         if (this.paypal.expiry && expiry === this.paypal.expiry) this.confirmPaypalLogout()
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     },
 
@@ -464,6 +408,28 @@ export default {
       await browser.close()
 
       return options
+    },
+
+    confirm () {
+      this.openDialog({
+        title: 'PayPal',
+        body: 'Do you wish to logout?',
+        action: () => {
+          this.confirmPaypalLogout()
+        }
+      })
+    },
+
+    confirmDeleteAll () {
+      if (this.tasks.length) {
+        this.openDialog({
+          title: 'Confirmation',
+          body: 'Are you sure you want to delete all tasks?',
+          action: () => {
+            this.$emit('click:deleteAll')
+          }
+        })
+      }
     }
   }
 }

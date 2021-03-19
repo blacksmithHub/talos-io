@@ -70,7 +70,7 @@
               :x-small="!$vuetify.breakpoint.lgAndUp"
               class="error"
               depressed
-              @click="reset"
+              @click="confirmDeleteAll()"
             >
               <v-icon
                 :left="$vuetify.breakpoint.lgAndUp"
@@ -203,7 +203,7 @@
                     icon
                     color="error"
                     class="mr-2"
-                    @click="deleteBank(index)"
+                    @click="confirmDelete(index)"
                   >
                     <v-icon
                       small
@@ -266,6 +266,7 @@ export default {
   },
   methods: {
     ...mapActions('bank', { deleteBank: 'deleteItem', reset: 'reset' }),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * Trigger add new bank dialog event.
@@ -284,6 +285,28 @@ export default {
      */
     importBanks () {
       this.$refs.importBankDialog.dialog = true
+    },
+
+    confirmDelete (index) {
+      this.openDialog({
+        title: 'Confirmation',
+        body: 'Are you sure you want to delete this bank?',
+        action: () => {
+          this.deleteBank(index)
+        }
+      })
+    },
+
+    confirmDeleteAll () {
+      if (this.banks.length) {
+        this.openDialog({
+          title: 'Confirmation',
+          body: 'Are you sure you want to delete all banks?',
+          action: () => {
+            this.reset()
+          }
+        })
+      }
     }
   }
 }

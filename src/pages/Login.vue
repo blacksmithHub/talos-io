@@ -91,7 +91,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+    ...mapActions('dialog', ['openDialog']),
 
     login () {
       try {
@@ -117,8 +117,11 @@ export default {
             })
         }
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     },
 

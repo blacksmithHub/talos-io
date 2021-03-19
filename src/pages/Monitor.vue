@@ -244,7 +244,7 @@ export default {
   },
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
-    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * init request
@@ -308,13 +308,12 @@ export default {
      *
      */
     async fetchProducts () {
+      this.loading = true
+      let counter = 0
+      let done = false
+
       try {
-        this.products = []
-        let counter = 0
-
-        while (!this.products.length) {
-          this.loading = true
-
+        while (!done) {
           counter++
 
           if (counter > 1) await new Promise(resolve => setTimeout(resolve, 1000))
@@ -339,6 +338,8 @@ export default {
           const response = await productApi.search(params)
 
           if (response && !response.error) {
+            this.products = []
+
             JSON.parse(response).items.forEach((element) => {
               const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
               const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
@@ -352,7 +353,20 @@ export default {
                 date: this.formatDate(element.updated_at)
               })
             })
+
+            done = true
           } else if (response.error && response.error.statusCode && response.error.statusCode === 503) {
+            Toastify({
+              text: 'Bypassing bot protection...',
+              duration: 3000,
+              newWindow: true,
+              close: false,
+              gravity: 'bottom',
+              position: 'left',
+              backgroundColor: '#399cbd',
+              className: 'toastify'
+            }).showToast()
+
             const { options } = response.error
 
             const puppeteer = addExtra(vanillaPuppeteer)
@@ -433,16 +447,22 @@ export default {
 
             this.configs[0].options = options
           } else {
-            this.setDialogComponent({ header: 'Error', content: response.error })
-            this.setDialog(true)
+            this.openDialog({
+              title: 'Error',
+              body: response.error,
+              alert: true
+            })
           }
-
-          this.loading = false
         }
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
+
+      this.loading = false
     }
   }
 }

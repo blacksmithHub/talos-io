@@ -167,13 +167,6 @@ export default {
       this.setProxies(arg)
       this.updateAllProxyTask(arg)
     })
-
-    ipcRenderer.on('checkoutError', (event, arg) => {
-      if (arg) {
-        this.setDialogComponent({ header: 'Error', content: 'Cannot launch Google Chrome' })
-        this.setDialog(true)
-      }
-    })
   },
   methods: {
     ...mapActions('task', {

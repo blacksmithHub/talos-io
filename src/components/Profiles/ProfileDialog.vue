@@ -162,7 +162,7 @@ export default {
   },
   methods: {
     ...mapActions('profile', { addProfile: 'addItem', updateProfile: 'updateItem' }),
-    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * Map selected profile.
@@ -229,8 +229,11 @@ export default {
           }
         }
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     }
   },
