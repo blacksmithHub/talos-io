@@ -356,6 +356,17 @@ export default {
 
             done = true
           } else if (response.error && response.error.statusCode && response.error.statusCode === 503) {
+            Toastify({
+              text: 'Bypassing bot protection...',
+              duration: 3000,
+              newWindow: true,
+              close: false,
+              gravity: 'bottom',
+              position: 'left',
+              backgroundColor: '#399cbd',
+              className: 'toastify'
+            }).showToast()
+
             const { options } = response.error
 
             const puppeteer = addExtra(vanillaPuppeteer)

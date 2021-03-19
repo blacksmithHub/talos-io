@@ -77,7 +77,11 @@ export default {
      * @return string
      */
     content () {
-      return this.body ? this.body.split('\n') : []
+      try {
+        return this.body ? this.body.split('\n') : []
+      } catch (error) {
+        return ['Error encountered!']
+      }
     }
   },
   methods: {
