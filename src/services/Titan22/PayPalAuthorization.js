@@ -60,12 +60,6 @@ export default {
         if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('paypalClose', profile)
       })
     } catch (error) {
-      if (error.toString().includes('Could not find browser revision')) {
-        if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('paypalError')
-
-        if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('paypalError')
-      }
-
       if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('paypalClose')
 
       if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('paypalClose', profile)

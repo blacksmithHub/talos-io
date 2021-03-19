@@ -314,7 +314,7 @@ export default {
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem' }),
-    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * clear timer
@@ -448,8 +448,11 @@ export default {
         this.snackbar = true
         this.onCancel()
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     }
   },

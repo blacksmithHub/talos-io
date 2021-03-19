@@ -116,11 +116,7 @@ export default {
 
       page.on('close', () => { if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateTask', task) })
     } catch (error) {
-      if (error.toString().includes('Could not find browser revision')) {
-        if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('checkoutError', error)
-      } else {
-        if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateTask', task)
-      }
+      if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateTask', task)
     }
   }
 }

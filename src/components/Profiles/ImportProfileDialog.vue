@@ -105,7 +105,7 @@ export default {
   },
   methods: {
     ...mapActions('profile', { addProfile: 'addItem' }),
-    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * Validate input file
@@ -159,8 +159,11 @@ export default {
           this.fileErrors.push('Required')
         }
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     },
     /**

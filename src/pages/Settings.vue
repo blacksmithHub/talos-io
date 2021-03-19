@@ -263,7 +263,7 @@
                   rounded
                   small
                   depressed
-                  @click="dialog = true"
+                  @click="confirm"
                   v-text="'Clear'"
                 />
               </v-list-item-action>
@@ -297,73 +297,6 @@
       </v-card>
     </v-form>
 
-    <v-dialog
-      v-model="dialog"
-      persistent
-      max-width="290"
-    >
-      <v-card>
-        <v-card-title
-          class="headline primary--text"
-          style="border-bottom:1px solid #d85820"
-        >
-          Confirmation
-
-          <v-spacer />
-
-          <v-btn
-            icon
-            class="primary--text"
-            @click="dialog=false"
-          >
-            <v-icon v-text="'mdi-close'" />
-          </v-btn>
-        </v-card-title>
-
-        <v-card-text class="text-center pa-5">
-          <v-row
-            justify="center"
-            align="center"
-            no-gutters
-            class="fill-height"
-          >
-            <v-col
-              align-self="center"
-              cols="9"
-            >
-              Do you wish to clear all saved records?
-            </v-col>
-          </v-row>
-        </v-card-text>
-
-        <v-divider />
-
-        <v-card-actions>
-          <v-container class="text-right">
-            <v-btn
-              class="primary mr-2"
-              rounded
-              depressed
-              small
-              @click="dialog=false"
-            >
-              Disagree
-            </v-btn>
-
-            <v-btn
-              depressed
-              small
-              class="primary"
-              rounded
-              @click="clearLocalStorage"
-            >
-              Agree
-            </v-btn>
-          </v-container>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
     <v-snackbar v-model="snackbar">
       Settings successfully saved
 
@@ -391,7 +324,6 @@ export default {
   data () {
     return {
       snackbar: false,
-      dialog: false,
       monitorInterval: 1,
       webhook: '',
       nightMode: false,
@@ -492,7 +424,7 @@ export default {
   methods: {
     ...mapActions('setting', { updateSettings: 'setItems' }),
     ...mapActions('proxy', { updateProxies: 'setItems' }),
-    ...mapActions('core', ['setDialogComponent', 'setDialog']),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * Clear all local storage.
@@ -558,8 +490,11 @@ export default {
 
         this.backupTasks = jsons
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     },
 
@@ -589,8 +524,11 @@ export default {
 
         this.backupProfiles = jsons
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     },
 
@@ -628,8 +566,11 @@ export default {
 
         this.backupBanks = jsons
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     },
 
@@ -696,8 +637,11 @@ export default {
           this.snackbar = true
         }
       } catch (error) {
-        this.setDialogComponent({ header: 'Error', content: error })
-        this.setDialog(true)
+        this.openDialog({
+          title: 'Error',
+          body: error,
+          alert: true
+        })
       }
     },
     /**
@@ -708,6 +652,16 @@ export default {
       this.prepareDetails()
 
       remote.getCurrentWindow().close()
+    },
+
+    confirm () {
+      this.openDialog({
+        title: 'Confirmation',
+        body: 'Do you wish to clear all saved records?',
+        action: () => {
+          this.clearLocalStorage()
+        }
+      })
     }
   },
   validations: {
