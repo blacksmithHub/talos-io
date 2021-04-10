@@ -1,5 +1,5 @@
 'use strict'
-//
+
 import { app, protocol, ipcMain, globalShortcut, BrowserWindow } from 'electron'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { autoUpdater } from 'electron-updater'
