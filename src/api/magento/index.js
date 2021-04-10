@@ -13,6 +13,7 @@ export default {
   async http (params) {
     let rp = null
     let proxy = 'local'
+    let host = 'local'
     const url = new Url(params.url)
 
     let options = {
@@ -30,6 +31,8 @@ export default {
 
       const selected = params.proxy.proxies[index]
 
+      host = selected.host
+
       if (selected.username && selected.password) {
         proxy = `http://${selected.username}:${selected.password}@${selected.host}:${selected.port}`
       } else {
@@ -37,7 +40,7 @@ export default {
       }
     }
 
-    const config = params.configs.find((el) => el.proxy === proxy)
+    const config = params.configs.find((el) => el.host === host)
 
     if (config) {
       rp = config.rp

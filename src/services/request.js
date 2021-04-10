@@ -27,20 +27,14 @@ export default {
 
     const userAgent = new UserAgent(option)
     const jar = rp.jar()
-    let proxy = 'local'
+    let host = 'local'
 
-    if (data) {
-      if (data.username && data.password) {
-        proxy = `http://${data.username}:${data.password}@${data.host}:${data.port}`
-      } else {
-        proxy = `http://${data.host}:${data.port}`
-      }
-    }
+    if (data) host = data.host
 
     return {
       jar: jar,
       rp: rp,
-      proxy: proxy,
+      host: host,
       userAgent: userAgent.toString(),
       options: null,
       request: null

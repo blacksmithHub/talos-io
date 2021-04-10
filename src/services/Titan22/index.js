@@ -274,7 +274,7 @@ export default {
 
       await browser.close()
     } catch (error) {
-      console.log(error)
+      //
     }
 
     return options

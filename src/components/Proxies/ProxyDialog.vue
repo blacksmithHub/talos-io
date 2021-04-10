@@ -100,6 +100,8 @@
 import { mapActions } from 'vuex'
 import { required } from 'vuelidate/lib/validators'
 
+import Constants from '@/config/constant'
+
 export default {
   data () {
     return {
@@ -205,7 +207,9 @@ export default {
         if (!this.$v.$invalid) {
           const params = {
             name: this.name.trim(),
-            proxies: this.pool
+            proxies: this.pool,
+            configs: [],
+            status: Constants.TASK.STATUS.STOPPED
           }
 
           if (this.isEditMode) {

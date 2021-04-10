@@ -125,16 +125,33 @@
                         cols="12"
                         align-self="center"
                       >
-                        <span
-                          class="d-inline-block text-truncate"
-                          style="max-width: 40vh"
-                        >
-                          <span
-                            class="text-capitalize font-weight-bold"
-                            v-text="'Total:'"
-                          />
-                          {{ proxy.proxies.length }}
-                        </span>
+                        <v-row no-gutters>
+                          <v-col cols="6">
+                            <span
+                              class="d-inline-block text-truncate"
+                              style="max-width: 40vh"
+                            >
+                              <span
+                                class="text-capitalize font-weight-bold"
+                                v-text="'Total:'"
+                              />
+                              {{ proxy.proxies.length }}
+                            </span>
+                          </v-col>
+
+                          <v-col cols="6">
+                            <span
+                              class="d-inline-block text-truncate"
+                              style="max-width: 40vh"
+                            >
+                              <span
+                                class="text-capitalize font-weight-bold"
+                                v-text="'Cookies:'"
+                              />
+                              {{ proxy.configs.filter((el) => el.options).length }}
+                            </span>
+                          </v-col>
+                        </v-row>
                       </v-col>
                     </v-row>
                   </v-col>
@@ -145,9 +162,30 @@
                     cols="6"
                   >
                     <v-btn
+                      v-if="proxy.status === Constants.TASK.STATUS.STOPPED"
+                      icon
+                      color="brown"
+                      class="mr-2"
+                      @click="onStart(proxy)"
+                    >
+                      <v-icon v-text="'mdi-cookie'" />
+                    </v-btn>
+
+                    <v-btn
+                      v-else
+                      icon
+                      color="warning"
+                      class="mr-2"
+                      @click="onStop(proxy)"
+                    >
+                      <v-icon v-text="'mdi-stop'" />
+                    </v-btn>
+
+                    <v-btn
                       icon
                       color="primary"
                       class="mr-2"
+                      :disabled="proxy.status === Constants.TASK.STATUS.RUNNING"
                       @click="editProxy(proxy)"
                     >
                       <v-icon
@@ -159,7 +197,7 @@
                     <v-btn
                       icon
                       color="error"
-                      @click="confirmDelete(index)"
+                      @click="confirmDelete(index, proxy)"
                     >
                       <v-icon
                         small
@@ -214,10 +252,18 @@ import { ipcRenderer } from 'electron'
 import ProxyDialog from '@/components/Proxies/ProxyDialog'
 import ImportProxyDialog from '@/components/Proxies/ImportProxyDialog'
 
+import Config from '@/config/app'
+import Constants from '@/config/constant'
+
+const blockedResources = ['queue-it']
+
 export default {
   components: { ProxyDialog, ImportProxyDialog },
   computed: {
-    ...mapState('proxy', { proxies: 'items' })
+    ...mapState('proxy', { proxies: 'items' }),
+    Constants () {
+      return Constants
+    }
   },
   watch: {
     'settings.nightMode': function (nightMode) {
@@ -225,7 +271,7 @@ export default {
     },
     proxies () {
       try {
-        ipcRenderer.send('update-proxies', this.proxies)
+        ipcRenderer.send('update-proxies', JSON.stringify(this.proxies.slice()))
       } catch (error) {
         //
       }
@@ -238,8 +284,12 @@ export default {
   },
   methods: {
     ...mapActions('setting', { setSettings: 'setItems' }),
-    ...mapActions('proxy', { deleteProxy: 'deleteItem', reset: 'reset' }),
     ...mapActions('dialog', ['openDialog']),
+    ...mapActions('proxy', {
+      deleteProxy: 'deleteItem',
+      reset: 'reset',
+      updateProxy: 'updateItem'
+    }),
 
     /**
      * Trigger add new proxies dialog event.
@@ -272,14 +322,316 @@ export default {
       }
     },
 
-    confirmDelete (index) {
+    confirmDelete (index, proxy) {
       this.openDialog({
         title: 'Confirmation',
         body: 'Are you sure you want to delete this proxy list?',
-        action: () => {
+        action: async () => {
+          await this.onStop(proxy)
           this.deleteProxy(index)
         }
       })
+    },
+
+    async onStart (proxy) {
+      proxy.status = Constants.TASK.STATUS.RUNNING
+      proxy.configs = []
+      this.updateProxy(proxy)
+
+      for (let index = 0; index < proxy.proxies.length; index++) {
+        const rp = require('request-promise')
+        const jar = rp.jar()
+
+        const data = {
+          host: proxy.proxies[index].host,
+          rp: rp,
+          jar: jar
+        }
+
+        const UserAgent = require('user-agents')
+        const userAgent = new UserAgent()
+
+        const site = 'https://cf-js-challenge.sayem.eu.org/' // `${Config.services.titan22.url}/new-arrivals.html`
+        const Url = require('url-parse')
+        const url = new Url(site)
+
+        const request = rp({
+          url: site,
+          method: 'get',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': userAgent.toString(),
+            referer: `${url.protocol}//${url.host}/`
+          },
+          proxy: `http://${proxy.proxies[index].username}:${proxy.proxies[index].password}@${proxy.proxies[index].host}:${proxy.proxies[index].port}`,
+          jar: jar
+        })
+
+        data.request = request
+        proxy.configs.push(data)
+        this.updateProxy(proxy)
+
+        await request
+          .then((res) => {
+            if (index + 1 === proxy.proxies.length) {
+              proxy.status = Constants.TASK.STATUS.STOPPED
+              this.updateProxy(proxy)
+            }
+          })
+          .catch(async (err) => {
+            if (err.statusCode === 503) {
+              let options = null
+
+              while (!options) {
+                options = await this.generateCookies(err, proxy.id)
+                if (options) data.options = options
+              }
+
+              proxy.configs = proxy.configs.map((el) => {
+                if (el.host === data.host) el = data
+                return el
+              })
+
+              if (index + 1 === proxy.proxies.length) {
+                proxy.status = Constants.TASK.STATUS.STOPPED
+                this.updateProxy(proxy)
+              }
+
+              return err
+            } else if (err.statusCode === 403) {
+              let options = null
+
+              while (!options) {
+                options = await this.generateCookies(err, proxy.id)
+                if (options) data.options = options
+              }
+
+              proxy.configs = proxy.configs.map((el) => {
+                if (el.host === data.host) el = data
+                return el
+              })
+
+              if (index + 1 === proxy.proxies.length) {
+                proxy.status = Constants.TASK.STATUS.STOPPED
+                this.updateProxy(proxy)
+              }
+
+              return err
+            } else {
+              if (index + 1 === proxy.proxies.length) {
+                proxy.status = Constants.TASK.STATUS.STOPPED
+                this.updateProxy(proxy)
+              }
+
+              return err
+            }
+          })
+      }
+    },
+
+    onStop (proxy) {
+      for (let index = 0; index < proxy.configs.length; index++) {
+        try {
+          const conf = proxy.configs[index]
+          if (conf.request) conf.request.cancel()
+        } catch (error) {
+          //
+        }
+      }
+
+      proxy.status = Constants.TASK.STATUS.STOPPED
+      this.updateProxy(proxy)
+    },
+
+    isRunning (id) {
+      const proxy = this.proxies.find((el) => el.id === id)
+
+      if (proxy) return proxy.status === Constants.TASK.STATUS.RUNNING
+
+      return false
+    },
+
+    async generateCookies (error, id) {
+      const vanillaPuppeteer = require('puppeteer')
+      const { addExtra } = require('puppeteer-extra')
+      const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+      const ProxyChain = require('proxy-chain')
+      const { Cookie } = require('tough-cookie')
+
+      let passed = false
+
+      try {
+        const { options } = error
+        const { jar } = options
+
+        const puppeteer = addExtra(vanillaPuppeteer)
+        const stealth = StealthPlugin()
+        puppeteer.use(stealth)
+
+        const oldProxyUrl = options.proxy
+        const newProxyUrl = await ProxyChain.anonymizeProxy(oldProxyUrl)
+
+        const args = ['--no-sandbox', '--disable-setuid-sandbox', `--user-agent=${options.headers['User-Agent']}`, `--proxy-server=${newProxyUrl}`, '--window-size=500,300']
+
+        const browser = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked') })
+
+        if (!this.isRunning(id)) await browser.close()
+
+        const page = await browser.newPage()
+
+        await page.setRequestInterception(true)
+
+        page.on('request', (request) => {
+          if (!this.isRunning(id)) browser.close()
+
+          if (request.url().endsWith('.png') || request.url().endsWith('.jpg')) {
+            // BLOCK IMAGES
+            request.abort()
+          } else if (blockedResources.some(resource => request.url().indexOf(resource) !== -1)) {
+            // BLOCK CERTAIN DOMAINS
+            request.abort()
+          } else {
+            // ALLOW OTHER REQUESTS
+            request.continue()
+          }
+        })
+
+        page.on('response', () => {
+          if (!this.isRunning(id)) browser.close()
+        })
+
+        await page.goto(options.url)
+
+        let content = await page.content()
+
+        if (content.includes('cf-browser-verification') && this.isRunning(id)) {
+          let counter = 0
+
+          while (content.includes('cf-browser-verification') && this.isRunning(id)) {
+            counter++
+
+            if (counter >= 3) break
+
+            await page.waitForNavigation({
+              timeout: 45000,
+              waitUntil: 'domcontentloaded'
+            })
+
+            const cookies = await page.cookies()
+
+            if (!cookies.find((el) => el.name === 'cf_clearance')) {
+              content = await page.content()
+              continue
+            } else {
+              passed = true
+            }
+
+            for (const cookie of cookies) {
+              const { name, value, expires, domain, path } = cookie
+
+              const expiresDate = new Date(expires * 1000)
+
+              const val = new Cookie({
+                key: name,
+                value,
+                expires: expiresDate,
+                domain: domain.startsWith('.') ? domain.substring(1) : domain,
+                path
+              }).toString()
+
+              jar.setCookie(val, 'https://cf-js-challenge.sayem.eu.org/') // Config.services.titan22.url)
+            }
+
+            content = await page.content()
+          }
+
+          await browser.close()
+        } else if (content.includes('cf_captcha_kind') && this.isRunning(id)) {
+          await browser.close()
+
+          const browser1 = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'), headless: false })
+
+          if (!this.isRunning(id)) await browser1.close()
+
+          const page1 = await browser1.newPage()
+
+          await page1.setRequestInterception(true)
+
+          page1.on('request', (request) => {
+            if (!this.isRunning(id)) browser1.close()
+
+            if (request.url().endsWith('.png') || request.url().endsWith('.jpg')) {
+            // BLOCK IMAGES
+              request.abort()
+            } else if (blockedResources.some(resource => request.url().indexOf(resource) !== -1)) {
+            // BLOCK CERTAIN DOMAINS
+              request.abort()
+            } else {
+            // ALLOW OTHER REQUESTS
+              request.continue()
+            }
+          })
+
+          page1.on('response', async () => {
+            if (!this.isRunning(id)) browser1.close()
+          })
+
+          await page1.goto(options.url)
+
+          const content1 = await page1.content()
+
+          const vm = this
+          setInterval(async () => {
+            if (!vm.isRunning(id)) await browser1.close()
+          }, 1000)
+
+          await new Promise((resolve) => {
+            (async () => {
+              while (content1.includes('cf_captcha_kind') && this.isRunning(id) && !passed) {
+                const cookies = await page1.cookies()
+
+                if (!cookies.find((el) => el.name === 'cf_clearance')) {
+                  continue
+                } else {
+                  passed = true
+                }
+
+                for (const cookie of cookies) {
+                  const { name, value, expires, domain, path } = cookie
+
+                  const expiresDate = new Date(expires * 1000)
+
+                  const val = new Cookie({
+                    key: name,
+                    value,
+                    expires: expiresDate,
+                    domain: domain.startsWith('.') ? domain.substring(1) : domain,
+                    path
+                  }).toString()
+
+                  jar.setCookie(val, Config.services.titan22.url)
+                }
+
+                resolve()
+              }
+            })()
+          })
+
+          try {
+            await browser1.close()
+          } catch (error) {
+            //
+          }
+        } else {
+          await browser.close()
+        }
+
+        if (passed) return options
+
+        return null
+      } catch (error) {
+        return null
+      }
     }
   }
 }

@@ -110,12 +110,15 @@ export default {
   beforeRouteEnter (to, from, next) {
     next(vm => {
       if (vm.tasks.length) vm.prepareTasks()
+
+      if (vm.proxies.length) vm.prepareProxies()
     })
   },
   computed: {
     ...mapState('task', { tasks: 'items' }),
     ...mapState('setting', { settings: 'items' }),
     ...mapState('profile', { profiles: 'items' }),
+    ...mapState('proxy', { proxies: 'items' }),
     /**
      * Return all attributes
      */
@@ -164,8 +167,8 @@ export default {
     })
 
     ipcRenderer.on('updateProxies', (event, arg) => {
-      this.setProxies(arg)
-      this.updateAllProxyTask(arg)
+      this.setProxies(JSON.parse(arg))
+      this.updateAllProxyTask(JSON.parse(arg))
     })
   },
   methods: {
@@ -179,7 +182,7 @@ export default {
     ...mapActions('setting', { setSettings: 'setItems' }),
     ...mapActions('profile', { setProfiles: 'setItems', updateProfile: 'updateItem' }),
     ...mapActions('bank', { setBanks: 'setItems' }),
-    ...mapActions('proxy', { setProxies: 'setItems' }),
+    ...mapActions('proxy', { setProxies: 'setItems', prepareProxies: 'initializeItems' }),
 
     /**
      * update selected array
@@ -201,7 +204,36 @@ export default {
             configs: []
           }
 
-          if (newProxy.proxies.length) {
+          if (newProxy.configs && newProxy.configs.filter((el) => el.options).length) {
+            task.configs = newProxy.configs.filter((el) => el.options)
+
+            task.configs = task.configs.map((el) => {
+              const UserAgent = require('user-agents')
+              const option = {}
+
+              switch (task.mode.id) {
+                case 2:
+                case 3:
+                  option.deviceCategory = 'mobile'
+                  break
+              }
+
+              const userAgent = new UserAgent(option)
+              el.userAgent = userAgent.toString()
+              el.request = null
+
+              return el
+            })
+
+            if (task.configs.length !== task.proxy.proxies.length) {
+              task.proxy.proxies.forEach((value) => {
+                if (!task.configs.find((el) => el.host === value.host)) {
+                  const data = Request.setRequest(task.mode, value)
+                  task.configs.push(data)
+                }
+              })
+            }
+          } else if (newProxy.proxies.length) {
             newProxy.proxies.forEach((el) => {
               const data = Request.setRequest(task.mode, el)
               task.configs.push(data)
@@ -365,17 +397,6 @@ export default {
         currentTask.paid = false
         currentTask.logs = `${currentTask.logs || ''};[${this.$moment().format('YYYY-MM-DD h:mm:ss a')}]: Stopped!`
         currentTask.transactionData = {}
-        currentTask.configs = []
-
-        if (currentTask.proxy && currentTask.proxy.proxies.length) {
-          currentTask.proxy.proxies.forEach((el) => {
-            const data = Request.setRequest(currentTask.mode, el)
-            task.configs.push(data)
-          })
-        } else {
-          const data = Request.setRequest(currentTask.mode)
-          task.configs.push(data)
-        }
 
         this.updateTask(currentTask)
       }

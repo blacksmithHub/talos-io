@@ -115,6 +115,25 @@ export default {
     deleteItem ({ state, commit }, key) {
       commit('DELETE_ITEM', key)
       localStorage.setItem('proxies', JSON.stringify(state.items))
+    },
+
+    /**
+     * Initialize items.
+     *
+     * @param {*} param
+     */
+    initializeItems ({ state, commit }) {
+      let items = state.items.slice()
+
+      items = items.map((element) => {
+        element.status = 1
+        element.configs = []
+
+        return element
+      })
+
+      commit('SET_ITEMS', items)
+      localStorage.setItem('proxies', JSON.stringify(items))
     }
   }
 }

@@ -545,6 +545,7 @@ export default {
               ...params
             }
 
+            // When proxy list is changed
             if (task.proxy.id !== this.selectedTask.proxy.id) {
               const configs = []
 
@@ -561,6 +562,7 @@ export default {
               task.configs = configs
             }
 
+            // When mode is changed
             if (task.mode.id !== this.selectedTask.mode.id) {
               task.configs = task.configs.map(el => {
                 const UserAgent = require('user-agents')
@@ -587,6 +589,47 @@ export default {
 
             this.onCancel()
           } else {
+            params.configs = []
+
+            if (params.proxy && params.proxy.configs && params.proxy.configs.filter((el) => el.options).length) {
+              params.configs = params.proxy.configs.filter((el) => el.options)
+
+              params.configs = params.configs.map(el => {
+                const UserAgent = require('user-agents')
+                const option = {}
+
+                switch (params.mode.id) {
+                  case 2:
+                  case 3:
+                    option.deviceCategory = 'mobile'
+                    break
+                }
+
+                const userAgent = new UserAgent(option)
+                el.userAgent = userAgent.toString()
+                el.request = null
+
+                return el
+              })
+
+              if (params.configs.length !== params.proxy.proxies.length) {
+                params.proxy.proxies.forEach((element) => {
+                  if (!params.configs.find((el) => el.host === element.host)) {
+                    const data = Request.setRequest(params.mode, element)
+                    params.configs.push(data)
+                  }
+                })
+              }
+            } else if (params.proxy && params.proxy.proxies.length) {
+              params.proxy.proxies.forEach((element) => {
+                const data = Request.setRequest(params.mode, element)
+                params.configs.push(data)
+              })
+            } else {
+              const data = Request.setRequest(params.mode)
+              params.configs.push(data)
+            }
+
             this.addTask({ ...params })
             this.snackbarContent = 'created'
             this.snackbar = true

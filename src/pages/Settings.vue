@@ -416,7 +416,7 @@ export default {
     })
 
     ipcRenderer.on('updateProxies', (event, arg) => {
-      this.updateProxies(arg)
+      this.updateProxies(JSON.parse(arg))
     })
 
     this.prepareDetails()

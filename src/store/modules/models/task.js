@@ -89,18 +89,7 @@ export default {
           msg: 'idle',
           class: 'grey'
         },
-        transactionData: {},
-        configs: []
-      }
-
-      if (task.proxy && task.proxy.proxies.length) {
-        task.proxy.proxies.forEach((element) => {
-          const data = Request.setRequest(task.mode, element)
-          task.configs.push(data)
-        })
-      } else {
-        const data = Request.setRequest(task.mode)
-        task.configs.push(data)
+        transactionData: {}
       }
 
       tasks.push(task)
