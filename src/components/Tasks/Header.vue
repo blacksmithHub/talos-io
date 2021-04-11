@@ -1,0 +1,90 @@
+<template>
+  <v-row
+    align="center"
+    justify="center"
+    class="pa-3"
+  >
+    <v-col
+      cols="5"
+      align-self="center"
+    >
+      <v-btn
+        rounded
+        small
+        color="primary"
+        depressed
+        outlined
+        class="mr-3"
+      >
+        <v-icon
+          left
+          v-text="'mdi-plus'"
+        />
+        <span v-text="'create task'" />
+      </v-btn>
+
+      <v-btn
+        rounded
+        small
+        color="primary"
+        depressed
+        outlined
+        class="mr-3"
+      >
+        <v-icon
+          left
+          v-text="'mdi-upload'"
+        />
+        <span v-text="'import'" />
+      </v-btn>
+
+      <v-btn
+        rounded
+        small
+        color="primary"
+        depressed
+        outlined
+      >
+        <v-icon
+          left
+          v-text="'mdi-download'"
+        />
+        <span v-text="'export'" />
+      </v-btn>
+    </v-col>
+
+    <v-col
+      cols="5"
+      align-self="center"
+    >
+      <v-text-field
+        v-model="search"
+        append-icon="mdi-magnify"
+        label="Search"
+        hide-details
+        outlined
+        dense
+      />
+    </v-col>
+
+    <v-col
+      cols="2"
+      align-self="center"
+      class="text-right"
+    >
+      <v-btn
+        rounded
+        small
+        color="primary"
+        depressed
+        outlined
+      >
+        <v-icon
+          left
+          v-text="'mdi-monitor'"
+        />
+        <span v-text="'Monitor'" />
+      </v-btn>
+    </v-col>
+  </v-row>
+</template>
