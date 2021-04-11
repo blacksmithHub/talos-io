@@ -24,11 +24,12 @@
 
         <v-col align-self="center">
           <v-tabs
-            v-model="tab"
+            :value="tab"
             background-color="transparent"
             grow
             slider-color="primary"
             centered
+            @change="setCurrentTab"
           >
             <v-tab
               v-for="item in items"
@@ -106,7 +107,10 @@
             <Tasks v-if="item === 'Tasks'" />
             <Profiles v-else-if="item === 'Profiles'" />
             <Proxies v-else-if="item === 'Proxies'" />
-            <Settings v-else-if="item === 'Settings'" />
+            <Settings
+              v-else-if="item === 'Settings'"
+              ref="settings"
+            />
           </v-container>
         </v-tab-item>
       </v-tabs-items>
@@ -115,6 +119,7 @@
 </template>
 
 <script>
+import { mapActions, mapState } from 'vuex'
 import { remote } from 'electron'
 
 import Tasks from '@/components/Tasks/Index.vue'
@@ -131,11 +136,15 @@ export default {
   },
   data () {
     return {
-      tab: null,
       items: ['Tasks', 'Profiles', 'Proxies', 'Settings']
     }
   },
+  computed: {
+    ...mapState('core', ['tab'])
+  },
   methods: {
+    ...mapActions('core', ['setCurrentTab']),
+
     onClose () {
       remote.getCurrentWindow().close()
     },

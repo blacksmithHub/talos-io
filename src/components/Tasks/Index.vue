@@ -8,7 +8,7 @@
         v-model="allSelected"
         :height="windowSize.y - 67 - 27 - 62 - 39"
         style="width: 100%"
-        class="elevation-3"
+        class="elevation-2"
         no-data-text="Nothing to display"
         no-results-text="Nothing to display"
         :headers="headers"
@@ -22,7 +22,7 @@
         :search="search"
       >
         <template v-slot:top>
-          <Header />
+          <Header :search="search" />
           <v-divider style="border:1px solid #d85820" />
         </template>
 
@@ -240,7 +240,7 @@ export default {
           align: 'center',
           filterable: false,
           sortable: false,
-          width: '18%'
+          width: '17%'
         }
       ],
       tasks: [

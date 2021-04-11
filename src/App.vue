@@ -1,8 +1,40 @@
 <template>
   <v-app>
     <router-view />
+    <SnackBar />
   </v-app>
 </template>
+
+<script>
+import { mapState, mapActions } from 'vuex'
+
+import SnackBar from '@/components/App/SnackBar.vue'
+
+export default {
+  components: {
+    SnackBar
+  },
+  data () {
+    return {
+      //
+    }
+  },
+  computed: {
+    ...mapState('settings', { settings: 'items' })
+  },
+  watch: {
+    'settings.nightMode': function (nightMode) {
+      this.$vuetify.theme.dark = nightMode
+    }
+  },
+  created () {
+    if (!Object.keys(this.settings).length) this.initSettings()
+  },
+  methods: {
+    ...mapActions('settings', { initSettings: 'reset' })
+  }
+}
+</script>
 
 <style>
 html {
