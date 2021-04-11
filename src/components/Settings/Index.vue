@@ -1,5 +1,37 @@
 <template>
   <v-form @submit.prevent="submit">
+    <v-row
+      class="mt-2"
+      justify="center"
+      align="center"
+    >
+      <v-col cols="12">
+        <v-card
+          class="transparent pa-0"
+          flat
+        >
+          <v-card-text class="pa-0">
+            Version: {{ about.version }}
+            <v-btn
+              x-small
+              class="ml-1"
+              depressed
+              @click="checkUpdate"
+            >
+              <v-icon
+                left
+                small
+                v-text="'mdi-reload'"
+              />
+              check for updates
+            </v-btn>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <br>
+
     <v-card>
       <v-card-text>
         <v-row>
@@ -200,7 +232,7 @@ export default {
     }
   },
   computed: {
-    ...mapState('core', ['tab']),
+    ...mapState('core', ['tab', 'about']),
     ...mapState('settings', { settings: 'items' }),
 
     /**
@@ -272,7 +304,7 @@ export default {
           monitorProxy: this.monitorProxy
         })
 
-        this.showSnackbar({ message: 'Settings successfully saved' })
+        this.showSnackbar({ message: 'Saved successfully' })
       }
     },
 
@@ -292,6 +324,13 @@ export default {
 
         Bot.sendWebhook(options)
       }
+    },
+
+    /**
+     *
+     */
+    checkUpdate () {
+      // TODO: check update
     }
   },
   validations: {

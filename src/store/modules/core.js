@@ -12,7 +12,7 @@ export default {
   namespaced: true,
   state () {
     return {
-      package: JSON.parse(unescape(process.env.PACKAGE_JSON || '%7B%7D')),
+      about: JSON.parse(unescape(process.env.PACKAGE_JSON || '%7B%7D')),
       tab: null
     }
   },

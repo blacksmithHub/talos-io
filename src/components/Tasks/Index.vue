@@ -5,7 +5,7 @@
       fluid
     >
       <v-data-table
-        v-model="allSelected"
+        v-model="selected"
         :height="windowSize.y - 67 - 27 - 62 - 39"
         style="width: 100%"
         class="elevation-2"
@@ -125,7 +125,10 @@
               color="success"
               depressed
             >
-              <v-icon v-text="'mdi-play'" />
+              <v-icon
+                small
+                v-text="'mdi-play'"
+              />
             </v-btn>
 
             <v-btn
@@ -159,7 +162,10 @@
                   depressed
                   v-on="on"
                 >
-                  <v-icon v-text="'mdi-dots-vertical'" />
+                  <v-icon
+                    small
+                    v-text="'mdi-dots-vertical'"
+                  />
                 </v-btn>
               </template>
 
@@ -207,7 +213,7 @@ export default {
   data () {
     return {
       search: '',
-      allSelected: this.selected,
+      selected: [],
       headers: [
         {
           text: 'Profile',

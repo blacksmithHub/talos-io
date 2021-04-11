@@ -2,6 +2,7 @@
   <v-app>
     <router-view />
     <SnackBar />
+    <Dialog />
   </v-app>
 </template>
 
@@ -9,10 +10,12 @@
 import { mapState, mapActions } from 'vuex'
 
 import SnackBar from '@/components/App/SnackBar.vue'
+import Dialog from '@/components/App/Dialog.vue'
 
 export default {
   components: {
-    SnackBar
+    SnackBar,
+    Dialog
   },
   data () {
     return {
