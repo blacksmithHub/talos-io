@@ -32,9 +32,12 @@ export default {
   },
   created () {
     if (!Object.keys(this.settings).length) this.initSettings()
+
+    this.initProxy()
   },
   methods: {
-    ...mapActions('settings', { initSettings: 'reset' })
+    ...mapActions('settings', { initSettings: 'reset' }),
+    ...mapActions('proxy', { initProxy: 'init' })
   }
 }
 </script>

@@ -87,6 +87,8 @@
 import { mapState, mapActions } from 'vuex'
 import { required } from 'vuelidate/lib/validators'
 
+import Constant from '@/config/constant'
+
 export default {
   data () {
     return {
@@ -187,16 +189,20 @@ export default {
         if (this.id) {
           this.updateProxy({
             ...params,
-            id: this.id
+            id: this.id,
+            configs: [],
+            status: Constant.STATUS.STOPPED,
+            loading: false,
+            name: (params.name) ? params.name.trim() : `Proxy List ${this.id}`
           })
 
           this.showSnackbar({ message: 'Updated successfully' })
-          this.onCancel()
         } else {
           this.addProxy({ ...params })
           this.showSnackbar({ message: 'Created successfully' })
-          this.onCancel()
         }
+
+        this.onCancel()
       }
     },
     /**

@@ -31,6 +31,7 @@
           depressed
           outlined
           class="mr-3"
+          @click="importData"
         >
           <v-icon
             left
@@ -45,6 +46,7 @@
           color="primary"
           depressed
           outlined
+          @click="exportJson(proxies, 'Export Proxies To JSON')"
         >
           <v-icon
             left
@@ -116,13 +118,14 @@
 import { mapState, mapActions } from 'vuex'
 
 import ProxyDialog from '@/components/Proxies/ProxyDialog.vue'
-
 import Constant from '@/config/constant'
+import File from '@/mixins/file'
 
 export default {
   components: {
     ProxyDialog
   },
+  mixins: [File],
   props: {
     selected: {
       type: Array,
@@ -136,43 +139,45 @@ export default {
     }
   },
   methods: {
-    ...mapActions('proxy', ['updateItem', 'reset', 'deleteItem']),
+    ...mapActions('proxy', ['addItem']),
     ...mapActions('dialog', ['openDialog']),
 
     generateAll () {
       const items = (this.selected.length) ? this.selected : this.proxies
 
       items.forEach(element => {
-        this.updateItem({
-          ...element,
-          status: this.status.RUNNING,
-          configs: []
-        })
+        this.$emit('start', element)
       })
     },
     stopAll () {
       const items = (this.selected.length) ? this.selected : this.proxies
 
       items.forEach(element => {
-        this.updateItem({
-          ...element,
-          status: this.status.STOPPED
-        })
+        this.$emit('stop', element)
       })
     },
     deleteAll () {
       this.openDialog({
         title: 'Confirmation',
         body: 'Are you sure you want to delete this bank?',
-        action: () => {
+        action: async () => {
           const items = (this.selected.length) ? this.selected : this.proxies
 
           items.forEach(element => {
-            const index = this.proxies.findIndex((el) => el.id === element.id)
-            this.deleteItem(index)
+            this.$emit('delete', element)
           })
         }
       })
+    },
+    async importData () {
+      const data = await this.importJson('Import Proxies')
+
+      if (data && data.length) {
+        data.forEach((el) => {
+          delete el.id
+          this.addItem(el)
+        })
+      }
     }
   }
 }

@@ -216,7 +216,7 @@
 import { mapState, mapActions } from 'vuex'
 import { required, url, minValue } from 'vuelidate/lib/validators'
 
-import Bot from '@/services/task'
+import Webhook from '@/services/webhook'
 import Constant from '@/config/constant'
 
 export default {
@@ -237,7 +237,6 @@ export default {
 
     /**
      * Error messages for monitorInterval.
-     *
      */
     monitorIntervalErrors () {
       const errors = []
@@ -252,7 +251,6 @@ export default {
 
     /**
      * Error messages for webhook.
-     *
      */
     webhookErrors () {
       const errors = []
@@ -310,7 +308,6 @@ export default {
 
     /**
      * Trigger test webhook event.
-     *
      */
     testWebhook () {
       this.$v.$touch()
@@ -322,7 +319,7 @@ export default {
           productSku: '---'
         }
 
-        Bot.sendWebhook(options)
+        Webhook.sendWebhook(options)
       }
     },
 

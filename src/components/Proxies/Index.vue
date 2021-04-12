@@ -6,7 +6,7 @@
     >
       <v-data-table
         v-model="selected"
-        :height="windowSize.y - 67 - 27 - 62 - 39"
+        :height="windowSize.y - 50 - 10 - 45 - 22"
         style="width: 100%"
         class="elevation-2"
         no-data-text="Nothing to display"
@@ -21,7 +21,12 @@
         disable-pagination
       >
         <template v-slot:top>
-          <Header :selected="(selected.length) ? selected : proxies" />
+          <Header
+            :selected="(selected.length) ? selected : proxies"
+            @start="onStart"
+            @stop="onStop"
+            @delete="onDelete"
+          />
           <v-divider style="border:1px solid #d85820" />
         </template>
 
@@ -126,11 +131,13 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
+import { Cookie } from 'tough-cookie'
 
 import Header from '@/components/Proxies/Header.vue'
 import ProxyDialog from '@/components/Proxies/ProxyDialog.vue'
 
 import Constant from '@/config/constant'
+import CF from '@/services/cloudflare-bypass'
 
 export default {
   components: {
@@ -175,24 +182,138 @@ export default {
   },
   methods: {
     ...mapActions('proxy', { updateProxy: 'updateItem', deleteProxy: 'deleteItem' }),
+
     onResize () {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
     },
-    onStart (item) {
+    async onStart (item) {
+      let configs = []
+
       this.updateProxy({
         ...item,
         status: this.status.RUNNING,
-        configs: []
+        configs: configs
       })
+
+      for (let index = 0; index < item.proxies.length; index++) {
+        const UserAgent = require('user-agents')
+        const userAgent = new UserAgent()
+        const rp = require('request-promise')
+        const jar = rp.jar()
+
+        const site = 'https://www.titan22.com/new-arrivals.html' // 'https://cf-js-challenge.sayem.eu.org/'
+        const Url = require('url-parse')
+        const url = new Url(site)
+
+        const data = {
+          proxy: item.proxies[index].proxy,
+          rp: rp,
+          jar: jar
+        }
+
+        const request = rp({
+          url: site,
+          method: 'get',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': userAgent.toString(),
+            referer: `${url.protocol}//${url.host}/`
+          },
+          proxy: item.proxies[index].proxy,
+          jar: jar
+        })
+
+        data.request = request
+        configs.push(data)
+
+        const proxy = this.proxies.find((el) => el.id === item.id)
+
+        this.updateProxy({
+          ...proxy,
+          configs: configs
+        })
+
+        await request
+          .then((res) => {
+            if (index + 1 === item.proxies.length) {
+              const proxy = this.proxies.find((el) => el.id === item.id)
+
+              this.updateProxy({
+                ...proxy,
+                configs: configs,
+                status: this.status.STOPPED
+              })
+            }
+
+            return res
+          })
+          .catch(async (err) => {
+            if (err.statusCode === 503 || err.statusCode === 403) {
+              const { options } = err
+              const { jar } = options
+
+              const cookies = await CF.bypass(options, item.id)
+
+              if (cookies.length) {
+                for (const cookie of cookies) {
+                  const { name, value, expires, domain, path } = cookie
+
+                  const expiresDate = new Date(expires * 1000)
+
+                  const val = new Cookie({
+                    key: name,
+                    value,
+                    expires: expiresDate,
+                    domain: domain.startsWith('.') ? domain.substring(1) : domain,
+                    path
+                  }).toString()
+
+                  jar.setCookie(val, options.headers.referer)
+                }
+
+                data.options = options
+              }
+            }
+
+            configs = configs.map((el) => {
+              if (el.proxy === item.proxies[index].proxy) el = data
+
+              return el
+            })
+
+            const proxy = this.proxies.find((el) => el.id === item.id)
+
+            const obj = {
+              ...proxy,
+              configs: configs
+            }
+
+            if (index + 1 === item.proxies.length) obj.status = this.status.STOPPED
+
+            this.updateProxy(obj)
+
+            return err
+          })
+      }
     },
     onStop (item) {
+      for (let index = 0; index < item.configs.length; index++) {
+        try {
+          const conf = item.configs[index]
+          if (conf.request) conf.request.cancel()
+        } catch (error) {
+          //
+        }
+      }
+
       this.updateProxy({
         ...item,
         status: this.status.STOPPED
       })
     },
-    onDelete (item) {
+    async onDelete (item) {
       const index = this.proxies.findIndex((el) => el.id === item.id)
+      await this.onStop(item)
       this.deleteProxy(index)
     },
     onEdit (item) {

@@ -12,15 +12,6 @@ export default {
 
   mutations: {
     /**
-     * Reset all items.
-     *
-     * @param {*} state
-     */
-    RESET (state) {
-      state.items = []
-    },
-
-    /**
      * Store all items.
      *
      * @param {*} state
@@ -28,30 +19,10 @@ export default {
      */
     SET_ITEMS (state, items) {
       state.items = items
-    },
-
-    /**
-     * Delete an item.
-     *
-     * @param {*} state
-     * @param {*} key
-     */
-    DELETE_ITEM (state, key) {
-      state.items.splice(key, 1)
     }
   },
 
   actions: {
-    /**
-     * Trigger reset.
-     *
-     * @param {*} param
-     */
-    reset ({ commit }) {
-      commit('RESET')
-      if (localStorage.getItem('proxies')) localStorage.removeItem('proxies')
-    },
-
     /**
      * Trigger store items.
      *
@@ -95,13 +66,7 @@ export default {
       let proxies = state.items.slice()
 
       proxies = proxies.map((val) => {
-        if (val.id === params.id) {
-          val = params
-          val.configs = []
-          val.status = Constant.STATUS.STOPPED
-          val.loading = false
-          val.name = (params.name) ? params.name.trim() : `Proxy List ${params.id}`
-        }
+        if (val.id === params.id) val = params
 
         return val
       })
@@ -117,8 +82,29 @@ export default {
      * @param {*} key
      */
     deleteItem ({ state, commit }, key) {
-      commit('DELETE_ITEM', key)
-      localStorage.setItem('proxies', JSON.stringify(state.items))
+      const proxies = state.items.slice()
+
+      proxies.splice(key, 1)
+
+      commit('SET_ITEMS', proxies)
+      localStorage.setItem('proxies', JSON.stringify(proxies))
+    },
+
+    /**
+     * Initialize proxies
+     */
+    init ({ state, commit }) {
+      let proxies = state.items.slice()
+
+      proxies = proxies.map((val) => {
+        val.status = Constant.STATUS.STOPPED
+        val.loading = false
+
+        return val
+      })
+
+      commit('SET_ITEMS', proxies)
+      localStorage.setItem('proxies', JSON.stringify(proxies))
     }
   }
 }
