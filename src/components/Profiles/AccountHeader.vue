@@ -114,9 +114,10 @@ export default {
       }
     },
     paypalLogin () {
-      this.accounts.forEach((el) => {
-        if (!el.loading && !el.paypal.account) this.$emit('paypalLogin', el)
-      })
+      // TODO: paypal for all
+      // this.accounts.forEach((el) => {
+      //   if (!el.loading && !el.paypal.account) this.$emit('paypalLogin', el)
+      // })
     }
   }
 }

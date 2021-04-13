@@ -3,6 +3,7 @@ import Vue from 'vue'
 import vuetify from './plugins/vuetify'
 import './plugins/vuelidate'
 import './plugins/vue-fontawesome'
+import './plugins/vue-moment'
 
 import App from './App.vue'
 import store from './store'

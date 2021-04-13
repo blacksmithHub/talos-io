@@ -121,6 +121,7 @@
 <script>
 import { mapActions, mapState } from 'vuex'
 import { remote } from 'electron'
+import moment from 'moment-timezone'
 
 import Tasks from '@/components/Tasks/Index.vue'
 import Profiles from '@/components/Profiles/Index.vue'
@@ -140,10 +141,29 @@ export default {
     }
   },
   computed: {
-    ...mapState('core', ['tab'])
+    ...mapState('core', ['tab']),
+    ...mapState('account', { accounts: 'items' })
+  },
+  created () {
+    const vm = this
+    setInterval(() => {
+      vm.accounts.forEach(el => {
+        if (el.paypal.expires_in && moment().isSameOrAfter(moment(el.paypal.expires_in))) {
+          vm.updateAccount({
+            ...el,
+            paypal: {
+              ...el,
+              account: null,
+              expires_in: null
+            }
+          })
+        }
+      })
+    }, 1000)
   },
   methods: {
     ...mapActions('core', ['setCurrentTab']),
+    ...mapActions('account', { updateAccount: 'updateItem' }),
 
     onClose () {
       remote.getCurrentWindow().close()

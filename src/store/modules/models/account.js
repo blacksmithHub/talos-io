@@ -49,7 +49,8 @@ export default {
         loading: false,
         paypal: {
           ...item.paypal,
-          account: null
+          account: null,
+          expires_in: null
         }
       })
 
@@ -98,7 +99,6 @@ export default {
 
       accounts = accounts.map((val) => {
         val.loading = false
-        // TODO: check for pp expiration
         return val
       })
 

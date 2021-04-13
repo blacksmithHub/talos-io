@@ -223,7 +223,8 @@ export default {
         loading: false,
         paypal: {
           ...item.paypal,
-          account: JSON.parse(account)
+          account: JSON.parse(account),
+          expires_in: this.$moment().add(150, 'minutes').toISOString()
         }
       })
     },
