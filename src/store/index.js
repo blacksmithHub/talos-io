@@ -7,6 +7,8 @@ import dialog from './modules/dialog'
 
 import settings from './modules/models/settings'
 import proxy from './modules/models/proxy'
+import account from './modules/models/account'
+import billing from './modules/models/billing'
 
 Vue.use(Vuex)
 
@@ -17,6 +19,8 @@ export default new Vuex.Store({
     dialog,
 
     settings,
-    proxy
+    proxy,
+    account,
+    billing
   }
 })

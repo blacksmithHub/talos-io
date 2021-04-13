@@ -34,10 +34,12 @@ export default {
     if (!Object.keys(this.settings).length) this.initSettings()
 
     this.initProxy()
+    this.initAccount()
   },
   methods: {
     ...mapActions('settings', { initSettings: 'reset' }),
-    ...mapActions('proxy', { initProxy: 'init' })
+    ...mapActions('proxy', { initProxy: 'init' }),
+    ...mapActions('account', { initAccount: 'init' })
   }
 }
 </script>

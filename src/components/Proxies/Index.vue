@@ -5,7 +5,6 @@
       fluid
     >
       <v-data-table
-        v-model="selected"
         :height="windowSize.y - 50 - 10 - 45 - 22"
         style="width: 100%"
         class="elevation-2"
@@ -14,19 +13,13 @@
         :headers="headers"
         :items="proxies"
         item-key="id"
-        show-select
         hide-default-footer
         :items-per-page="proxies.length"
         fixed-header
         disable-pagination
       >
         <template v-slot:top>
-          <Header
-            :selected="(selected.length) ? selected : proxies"
-            @start="onStart"
-            @stop="onStop"
-            @delete="onDelete"
-          />
+          <Header />
           <v-divider style="border:1px solid #d85820" />
         </template>
 
@@ -100,7 +93,7 @@
               color="warning"
               depressed
               :disabled="item.status === status.RUNNING || item.loading"
-              @click="onEdit(item)"
+              @click="$refs.proxyDialog.onEdit(item.id)"
             >
               <v-icon
                 small
@@ -146,7 +139,6 @@ export default {
   },
   data () {
     return {
-      selected: [],
       headers: [
         {
           text: 'Name',
@@ -187,6 +179,8 @@ export default {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
     },
     async onStart (item) {
+      if (item.status === this.status.RUNNING) return false
+
       let configs = []
 
       this.updateProxy({
@@ -315,9 +309,6 @@ export default {
       const index = this.proxies.findIndex((el) => el.id === item.id)
       await this.onStop(item)
       this.deleteProxy(index)
-    },
-    onEdit (item) {
-      this.$refs.proxyDialog.onEdit(item.id)
     }
   }
 }

@@ -4,34 +4,35 @@
       align="center"
       class="pa-3"
     >
-      <v-col
-        cols="6"
-        align-self="center"
-      >
-        <v-btn
-          rounded
-          small
-          color="primary"
-          depressed
-          outlined
-          @click="$refs.proxyDialog.dialog = true"
-        >
-          <v-icon
-            left
-            v-text="'mdi-plus'"
-          />
-          <span v-text="'create proxy list'" />
-        </v-btn>
+      <v-col cols="1">
+        <h3 v-text="'Billing'" />
       </v-col>
 
       <v-col
-        cols="6"
+        cols="11"
         align-self="center"
         class="text-right"
       >
         <v-btn
           rounded
-          small
+          x-small
+          color="primary"
+          depressed
+          outlined
+          class="mr-3"
+          @click="$refs.billingDialog.dialog = true"
+        >
+          <v-icon
+            left
+            small
+            v-text="'mdi-plus'"
+          />
+          <span v-text="'create'" />
+        </v-btn>
+
+        <v-btn
+          rounded
+          x-small
           color="primary"
           depressed
           outlined
@@ -40,6 +41,7 @@
         >
           <v-icon
             left
+            small
             v-text="'mdi-download'"
           />
           <span v-text="'import'" />
@@ -47,14 +49,16 @@
 
         <v-btn
           rounded
-          small
+          x-small
           color="primary"
           depressed
           outlined
-          @click="exportJson(proxies, 'Export Proxies To JSON')"
+          class="mr-3"
+          @click="exportJson(billing, 'Export Billing To JSON')"
         >
           <v-icon
             left
+            small
             v-text="'mdi-upload'"
           />
           <span v-text="'export'" />
@@ -62,34 +66,30 @@
       </v-col>
     </v-row>
 
-    <ProxyDialog ref="proxyDialog" />
+    <BillingDialog ref="billingDialog" />
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'vuex'
 
-import ProxyDialog from '@/components/Proxies/ProxyDialog.vue'
-import Constant from '@/config/constant'
 import File from '@/mixins/file'
+import BillingDialog from '@/components/Profiles/BillingDialog.vue'
 
 export default {
   components: {
-    ProxyDialog
+    BillingDialog
   },
   mixins: [File],
   computed: {
-    ...mapState('proxy', { proxies: 'items' }),
-    status () {
-      return Constant.STATUS
-    }
+    ...mapState('billing', { billing: 'items' })
   },
   methods: {
-    ...mapActions('proxy', ['addItem']),
+    ...mapActions('billing', ['addItem']),
     ...mapActions('dialog', ['openDialog']),
 
     async importData () {
-      const data = await this.importJson('Import Proxies')
+      const data = await this.importJson('Import Billing')
 
       if (data && data.length) {
         data.forEach((el) => {

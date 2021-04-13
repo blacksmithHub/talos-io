@@ -128,7 +128,6 @@ export default {
   },
   methods: {
     ...mapActions('proxy', { addProxy: 'addItem', updateProxy: 'updateItem' }),
-    ...mapActions('dialog', ['openDialog']),
     ...mapActions('snackbar', ['showSnackbar']),
 
     /**
