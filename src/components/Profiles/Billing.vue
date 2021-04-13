@@ -26,7 +26,7 @@
         <template v-slot:[`item.name`]="{ item }">
           <div
             class="row cursor"
-            style="width: 150px"
+            style="width: 200px"
           >
             <div
               class="col-12 text-truncate"

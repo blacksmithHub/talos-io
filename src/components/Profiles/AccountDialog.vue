@@ -285,7 +285,8 @@ export default {
           paypal: {
             email: this.ppEmail,
             password: this.ppPassword
-          }
+          },
+          loading: false
         }
 
         if (this.id) {

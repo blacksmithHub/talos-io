@@ -49,7 +49,7 @@ export default {
         loading: false,
         paypal: {
           ...item.paypal,
-          billing: null
+          account: null
         }
       })
 
@@ -66,10 +66,7 @@ export default {
       let accounts = state.items.slice()
 
       accounts = accounts.map((val) => {
-        if (val.id === params.id) {
-          val = params
-          val.loading = false
-        }
+        if (val.id === params.id) val = params
 
         return val
       })

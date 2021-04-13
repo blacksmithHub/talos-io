@@ -35,9 +35,15 @@ export default {
   /**
    * Initialize bypassing
    */
-  async bypass (options, id) {
+  async bypass (options, id = null) {
     try {
-      const args = ['--no-sandbox', '--disable-setuid-sandbox', `--user-agent=${options.headers['User-Agent']}`, '--window-size=500,300']
+      const args = [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        `--user-agent=${options.headers['User-Agent']}`,
+        '--window-size=560,638'
+      ]
+
       let cookies = []
 
       if (options.proxy) {
@@ -49,7 +55,7 @@ export default {
 
       const browser = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'), headless: false })
 
-      if (!this.isProxyRunning(id)) {
+      if (id && !this.isProxyRunning(id)) {
         await browser.close()
         return []
       }
@@ -59,7 +65,7 @@ export default {
       await page.setRequestInterception(true)
 
       page.on('request', async (request) => {
-        if (!this.isProxyRunning(id)) {
+        if (id && !this.isProxyRunning(id)) {
           await browser.close()
           return []
         }
@@ -80,7 +86,7 @@ export default {
 
       const content = await page.content()
 
-      if (!this.isProxyRunning(id)) {
+      if (id && !this.isProxyRunning(id)) {
         await browser.close()
         return []
       }
@@ -96,7 +102,7 @@ export default {
         return []
       }
 
-      if (!this.isProxyRunning(id)) return []
+      if (id && !this.isProxyRunning(id)) return []
 
       return cookies
     } catch (error) {
@@ -107,17 +113,19 @@ export default {
   /**
    * Bypass cloudflare challenge
    */
-  async cfChallenge (page, id) {
+  async cfChallenge (page, id = null) {
     try {
       let response = []
       let content = await page.content()
 
       let counter = 0
 
-      while (content.includes('cf-browser-verification') && this.isProxyRunning(id)) {
+      while (content.includes('cf-browser-verification')) {
+        if (id && !this.isProxyRunning(id)) break
+
         counter++
 
-        if (counter >= 3) break
+        if (counter > 3) break
 
         await page.waitForNavigation({
           timeout: 45000,
@@ -144,12 +152,12 @@ export default {
   /**
    * Bypass cloudflare Hcaptcha
    */
-  async cfHcaptcha (options, args, id) {
+  async cfHcaptcha (options, args, id = null) {
     let response = []
 
     const browser = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'), headless: false })
 
-    if (!this.isProxyRunning(id)) {
+    if (id && !this.isProxyRunning(id)) {
       await browser.close()
       return []
     }
@@ -159,7 +167,7 @@ export default {
     await page.setRequestInterception(true)
 
     page.on('request', async (request) => {
-      if (!this.isProxyRunning(id)) await browser.close()
+      if (id && !this.isProxyRunning(id)) await browser.close()
 
       if (request.url().endsWith('.png') || request.url().endsWith('.jpg')) {
       // BLOCK IMAGES
@@ -177,7 +185,7 @@ export default {
 
     const vm = this
     setInterval(async () => {
-      if (!vm.isProxyRunning(id)) await browser.close()
+      if (id && !vm.isProxyRunning(id)) await browser.close()
     }, 1000)
 
     let content = await page.content()

@@ -114,9 +114,8 @@ export default {
       }
     },
     paypalLogin () {
-      // TODO: loop only to those pp are empty
       this.accounts.forEach((el) => {
-        this.$emit('paypalLogin', el)
+        if (!el.loading && !el.paypal.account) this.$emit('paypalLogin', el)
       })
     }
   }
