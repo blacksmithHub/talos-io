@@ -5,7 +5,7 @@
       class="pa-3"
     >
       <v-col cols="1">
-        <h3 v-text="'Billing'" />
+        <h3 v-text="'Billings'" />
       </v-col>
 
       <v-col
@@ -54,7 +54,7 @@
           depressed
           outlined
           class="mr-3"
-          @click="exportJson(billing, 'Export Billing To JSON')"
+          @click="exportJson(billings, 'Export Billings To JSON')"
         >
           <v-icon
             left
@@ -82,14 +82,14 @@ export default {
   },
   mixins: [File],
   computed: {
-    ...mapState('billing', { billing: 'items' })
+    ...mapState('billing', { billings: 'items' })
   },
   methods: {
     ...mapActions('billing', ['addItem']),
     ...mapActions('dialog', ['openDialog']),
 
     async importData () {
-      const data = await this.importJson('Import Billing')
+      const data = await this.importJson('Import Billings')
 
       if (data && data.length) {
         data.forEach((el) => {

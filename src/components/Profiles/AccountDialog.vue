@@ -231,7 +231,7 @@ export default {
     ...mapActions('snackbar', ['showSnackbar']),
 
     /**
-     * on edit event
+     * On edit event
      */
     onEdit (id) {
       const item = this.items.find((el) => el.id === id)
@@ -258,17 +258,17 @@ export default {
 
       this.id = null
 
-      this.dialog = false
-      this.t22ShowPassword = false
-      this.ppShowPassword = false
-      this.sameAs = false
-
       this.name = null
       this.t22Email = null
       this.t22Password = null
 
       this.ppEmail = null
       this.ppPassword = null
+
+      this.dialog = false
+      this.t22ShowPassword = false
+      this.ppShowPassword = false
+      this.sameAs = false
     },
     /**
      * On submit event.
@@ -298,7 +298,7 @@ export default {
 
           this.showSnackbar({ message: 'Updated successfully' })
         } else {
-          this.addAccount({ ...params })
+          this.addAccount(params)
           this.showSnackbar({ message: 'Created successfully' })
         }
 

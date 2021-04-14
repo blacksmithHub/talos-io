@@ -91,7 +91,7 @@ export default {
     },
 
     /**
-     * Initialize proxies
+     * Initialize items
      */
     init ({ state, commit }) {
       let proxies = state.items.slice()

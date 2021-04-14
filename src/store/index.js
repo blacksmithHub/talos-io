@@ -9,6 +9,7 @@ import settings from './modules/models/settings'
 import proxy from './modules/models/proxy'
 import account from './modules/models/account'
 import billing from './modules/models/billing'
+import task from './modules/models/task'
 
 Vue.use(Vuex)
 
@@ -21,6 +22,7 @@ export default new Vuex.Store({
     settings,
     proxy,
     account,
-    billing
+    billing,
+    task
   }
 })

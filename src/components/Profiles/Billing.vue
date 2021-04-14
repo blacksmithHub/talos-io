@@ -11,10 +11,10 @@
         no-data-text="Nothing to display"
         no-results-text="Nothing to display"
         :headers="headers"
-        :items="billing"
+        :items="billings"
         item-key="id"
         hide-default-footer
-        :items-per-page="billing.length"
+        :items-per-page="billings.length"
         fixed-header
         disable-pagination
       >
@@ -102,7 +102,7 @@ export default {
     }
   },
   computed: {
-    ...mapState('billing', { billing: 'items' })
+    ...mapState('billing', { billings: 'items' })
   },
   methods: {
     ...mapActions('billing', { updateBilling: 'updateItem', deleteBilling: 'deleteItem' }),
@@ -111,7 +111,7 @@ export default {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
     },
     onDelete (item) {
-      const index = this.billing.findIndex((el) => el.id === item.id)
+      const index = this.billings.findIndex((el) => el.id === item.id)
       this.deleteBilling(index)
     }
   }

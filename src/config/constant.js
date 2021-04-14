@@ -18,7 +18,7 @@ export default {
     },
     {
       id: 4,
-      label: 'Safe mode'
+      label: 'Auto'
     }
   ],
   CLIENT: [

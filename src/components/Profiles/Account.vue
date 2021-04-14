@@ -35,15 +35,25 @@
           </div>
         </template>
 
+        <template v-slot:[`item.paypal.account.PayerID`]="{ item }">
+          <div
+            class="row cursor"
+            style="width: 100px"
+          >
+            <div class="col-12 text-truncate">
+              {{ (item.paypal.account) ? item.paypal.account.PayerID : 'none' }}
+            </div>
+          </div>
+        </template>
+
         <template v-slot:[`item.paypal.account`]="{ item }">
           <div
             class="row cursor"
             style="width: 150px"
           >
-            <div
-              class="col-12 text-truncate"
-              v-text="(item.paypal.account) ? item.paypal.account.paypalAccounts[0].details.correlationId : 'none'"
-            />
+            <div class="col-12 text-truncate">
+              {{ (item.paypal.account) ? item.paypal.account.token : 'none' }}
+            </div>
           </div>
         </template>
 
@@ -123,6 +133,10 @@ export default {
         {
           text: 'Name',
           value: 'name'
+        },
+        {
+          text: 'PayPal Payer ID',
+          value: 'paypal.account.PayerID'
         },
         {
           text: 'PayPal Token',

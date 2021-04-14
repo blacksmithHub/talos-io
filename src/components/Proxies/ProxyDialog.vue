@@ -47,6 +47,7 @@
               auto-grow
               :error-messages="proxiesErrors"
               placeholder="ip:port:username:password OR ip:port"
+              hide-details="auto"
               @blur="$v.proxies.$touch()"
               @change="onChange"
             />
@@ -197,7 +198,7 @@ export default {
 
           this.showSnackbar({ message: 'Updated successfully' })
         } else {
-          this.addProxy({ ...params })
+          this.addProxy(params)
           this.showSnackbar({ message: 'Created successfully' })
         }
 
