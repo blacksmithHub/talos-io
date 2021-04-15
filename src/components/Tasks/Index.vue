@@ -91,7 +91,7 @@
         >
           <div
             class="col-12 text-truncate"
-            v-text="item.sizes.join(' | ')"
+            v-text="getSizes(item)"
           />
         </div>
       </template>
@@ -122,6 +122,7 @@ import Status from '@/components/Tasks/Status.vue'
 import Action from '@/components/Tasks/Action.vue'
 
 import Constant from '@/config/constant'
+import Titan22 from '@/services/Titan22/index'
 
 export default {
   components: {
@@ -181,38 +182,57 @@ export default {
     }
   },
   computed: {
-    // ...mapState('proxy', ['items'])
     ...mapState('task', { tasks: 'items' })
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem', deleteTask: 'deleteItem' }),
 
+    getSizes (item) {
+      const data = { ...item }
+      return data.sizes.map((el) => el.label).join(' | ')
+    },
     onResize () {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
     },
     onStart (item) {
-      this.updateTask({
-        ...item,
-        status: {
-          id: Constant.STATUS.RUNNING,
-          msg: 'running',
-          class: 'orange'
-        }
-      })
+      if (item.status.id === Constant.STATUS.STOPPED) {
+        this.updateTask({
+          ...item,
+          status: {
+            id: Constant.STATUS.RUNNING,
+            msg: 'running',
+            class: 'orange'
+          }
+        })
 
-      // TODO: start automation
+        Titan22.start(item.id)
+      }
     },
     onStop (item) {
-      this.updateTask({
+      const data = {
         ...item,
         status: {
           id: Constant.STATUS.STOPPED,
           msg: 'stopped',
           class: 'grey'
+        },
+        transactionData: {}
+      }
+
+      data.proxy.configs = data.proxy.configs.map(el => {
+        try {
+          if (el.request) {
+            el.request.cancel()
+            delete el.request
+          }
+        } catch (error) {
+          //
         }
+
+        return el
       })
 
-      // TODO: cancel request
+      this.updateTask(data)
     },
     async onDelete (item) {
       const index = this.tasks.findIndex((el) => el.id === item.id)
@@ -229,29 +249,8 @@ export default {
         }
       })
 
-      // TODO: start automation
+      Titan22.verify(item.id)
     }
-    // test () {
-    //   console.log(this.items[0].configs[0])
-
-    //   this.items[0].configs[0].rp({
-    //     ...this.items[0].configs[0].options,
-    //     url: 'https://cf-js-challenge.sayem.eu.org/',
-    //     method: 'get',
-    //     headers: {
-    //       ...this.items[0].configs[0].options.headers,
-    //       'Content-Type': 'application/json'
-    //     },
-    //     proxy: this.items[0].configs[0].options.proxy,
-    //     jar: this.items[0].configs[0].options.jar
-    //   })
-    //     .then((res) => {
-    //       console.log(res)
-    //     })
-    //     .catch((err) => {
-    //       console.log(err)
-    //     })
-    // }
   }
 }
 </script>

@@ -1,0 +1,476 @@
+<template>
+  <v-app>
+    <v-app-bar
+      app
+      dense
+      class="titleBar"
+    >
+      <v-row no-gutters>
+        <v-col
+          class="titleBar"
+          align-self="center"
+        >
+          <div class="d-flex align-center">
+            <v-img
+              class="shrink mr-2"
+              contain
+              :src="require('@/assets/talos.png')"
+              transition="scale-transition"
+              width="35"
+            />
+          </div>
+        </v-col>
+
+        <v-col>
+          <v-row
+            no-gutters
+            class="text-right mt-1"
+            justify="center"
+            align="center"
+          >
+            <v-col align-self="center">
+              <v-btn
+                icon
+                x-small
+                :ripple="false"
+                class="mr-1"
+                @click="onMaximize"
+              >
+                <v-icon
+                  small
+                  color="success"
+                  v-text="'mdi-checkbox-blank-circle'"
+                />
+              </v-btn>
+
+              <v-btn
+                icon
+                x-small
+                :ripple="false"
+                class="mr-1"
+                @click="onMinimize"
+              >
+                <v-icon
+                  small
+                  color="warning"
+                  v-text="'mdi-checkbox-blank-circle'"
+                />
+              </v-btn>
+
+              <v-btn
+                icon
+                x-small
+                :ripple="false"
+                @click="onClose"
+              >
+                <v-icon
+                  small
+                  color="error"
+                  v-text="'mdi-checkbox-blank-circle'"
+                />
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-col>
+      </v-row>
+    </v-app-bar>
+
+    <v-main>
+      <v-container fluid>
+        <v-layout
+          v-resize="onResize"
+          fluid
+        >
+          <v-data-table
+            :height="windowSize.y - 70 - 30 - 65 - 42"
+            style="width: 100%"
+            class="elevation-2"
+            no-data-text="Nothing to display"
+            no-results-text="Nothing to display"
+            :headers="headers"
+            :items="products"
+            item-key="id"
+            hide-default-footer
+            :items-per-page="products.length"
+            fixed-header
+            disable-sort
+            disable-pagination
+            mobile-breakpoint="100"
+            hide-default-header
+            :loading="loading"
+            :search="search"
+          >
+            <template v-slot:top>
+              <v-row
+                align="center"
+                justify="center"
+                class="pa-3"
+              >
+                <v-col align-self="center">
+                  <v-text-field
+                    v-model="search"
+                    append-icon="mdi-magnify"
+                    label="Search"
+                    hide-details
+                    outlined
+                    dense
+                  />
+                </v-col>
+              </v-row>
+
+              <v-divider />
+            </template>
+
+            <template v-slot:footer>
+              <v-divider style="border:1px solid #d85820" />
+              <v-row
+                align="center"
+                justify="center"
+                class="text-center pa-3"
+              >
+                <v-col>
+                  <v-select
+                    v-model="filter"
+                    :items="filterItems"
+                    outlined
+                    dense
+                    hide-details
+                    item-text="title"
+                    item-value="value"
+                    label="Filter By"
+                  />
+                </v-col>
+
+                <v-col cols="4">
+                  <v-text-field
+                    v-model="count"
+                    label="Items"
+                    hide-details
+                    outlined
+                    dense
+                  />
+                </v-col>
+
+                <v-col
+                  cols="3"
+                  class="text-center"
+                  align-self="center"
+                >
+                  <v-btn
+                    depressed
+                    small
+                    rounded
+                    outlined
+                    color="primary"
+                    :loading="loading"
+                    @click="applyFilter"
+                  >
+                    Apply
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </template>
+
+            <template v-slot:item.actions="{item}">
+              <div>
+                <v-btn
+                  v-clipboard:copy="item.sku"
+                  v-clipboard:success="() => {showSnackbar({ message: `You just copied: ${item.sku}`, color: 'teal' })}"
+                  icon
+                  color="primary"
+                  depressed
+                  small
+                >
+                  <v-icon
+                    small
+                    v-text="'mdi-content-copy'"
+                  />
+                </v-btn>
+              </div>
+            </template>
+
+            <template v-slot:item.img="{ value }">
+              <v-img
+                :src="value"
+                width="80"
+              />
+            </template>
+
+            <template v-slot:item.name="{ item }">
+              <div class="pa-1">
+                <p
+                  class="font-weight-bold caption blue--text caption pa-0 ma-0 text-decoration-underline cursor"
+                  @click="redirect(item.link)"
+                  v-text="item.name"
+                />
+                <v-row
+                  no-gutters
+                  justify="center"
+                >
+                  <v-col align-self="center">
+                    <p
+                      class="caption pa-0 ma-0 text"
+                      v-text="item.sku"
+                    />
+                    <p
+                      class="caption pa-0 ma-0 text"
+                      v-text="`Php ${item.price}`"
+                    />
+                  </v-col>
+
+                  <v-col align-self="center">
+                    <p
+                      class="caption pa-0 ma-0 text"
+                      v-text="item.date"
+                    />
+                  </v-col>
+                </v-row>
+              </div>
+            </template>
+
+            <template v-slot:item.status="{ value }">
+              <v-icon
+                small
+                :color="value ? 'red' : 'green'"
+                v-text="'mdi-checkbox-blank-circle'"
+              />
+            </template>
+          </v-data-table>
+        </v-layout>
+      </v-container>
+    </v-main>
+  </v-app>
+</template>
+
+<script>
+import { mapState, mapActions } from 'vuex'
+import { remote, ipcRenderer } from 'electron'
+import { Cookie } from 'tough-cookie'
+import UserAgent from 'user-agents'
+import rp from 'request-promise'
+
+import ProductApi from '@/api/magento/titan22/product'
+
+import CF from '@/services/cloudflare-bypass'
+import Config from '@/config/app'
+import placeholder from '@/assets/no_image.png'
+
+const userAgent = new UserAgent()
+const jar = rp.jar()
+
+export default {
+  data () {
+    return {
+      search: '',
+      loading: false,
+      count: 100,
+      filter: 'updated_at',
+      filterItems: [
+        { title: 'Last created', value: 'created_at' },
+        { title: 'Last update', value: 'updated_at' }
+      ],
+      headers: [
+        {
+          value: 'actions',
+          align: 'center',
+          filterable: false,
+          sortable: false
+        },
+        {
+          value: 'img'
+        },
+        {
+          value: 'name'
+        },
+        {
+          value: 'status'
+        }
+      ],
+      products: [],
+      windowSize: {
+        x: 0,
+        y: 0
+      },
+      loop: null,
+      params: {
+        payload: {
+          searchCriteria: {
+            sortOrders: [
+              {
+                field: this.filter,
+                direction: 'DESC'
+              }
+            ],
+            pageSize: this.count
+          }
+        },
+        token: Config.services.titan22.token,
+        config: {
+          rp: rp,
+          jar: jar,
+          userAgent: userAgent.toString()
+        }
+      }
+    }
+  },
+  computed: {
+    ...mapState('settings', { settings: 'items' })
+  },
+  watch: {
+    settings () {
+      this.$vuetify.theme.dark = this.settings.nightMode
+    }
+  },
+  async created () {
+    this.params.payload.searchCriteria.sortOrders[0].field = this.filter
+    this.params.payload.searchCriteria.pageSize = this.count
+
+    this.searchProduct()
+
+    ipcRenderer.on('updateSettings', (event, arg) => {
+      this.setSettings(arg)
+    })
+  },
+  methods: {
+    ...mapActions('settings', { setSettings: 'setItems' }),
+    ...mapActions('snackbar', ['showSnackbar']),
+
+    onResize () {
+      this.windowSize = { x: window.innerWidth, y: window.innerHeight }
+    },
+    onClose () {
+      remote.getCurrentWindow().close()
+    },
+    onMaximize () {
+      const win = remote.getCurrentWindow()
+
+      if (!win.isMaximized()) {
+        win.maximize()
+      } else {
+        win.unmaximize()
+      }
+    },
+    onMinimize () {
+      remote.getCurrentWindow().minimize()
+    },
+    async searchProduct () {
+      this.loading = true
+
+      const response = await this.fetchProduct()
+
+      if (response) {
+        this.products = JSON.parse(response).items.map(element => {
+          const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
+          const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
+
+          return {
+            img: (image) ? `${Config.services.titan22.url}/media/catalog/product${image.value}` : placeholder,
+            name: element.name,
+            sku: element.sku,
+            price: element.price.toLocaleString(),
+            link: (link) ? link.value : '',
+            status: element.extension_attributes.out_of_stock,
+            date: element.updated_at
+          }
+        })
+      }
+
+      this.loading = false
+
+      const vm = this
+      this.loop = setTimeout(vm.searchProduct, vm.settings.monitorInterval)
+    },
+    async fetchProduct () {
+      try {
+        let tries = 0
+        let data = null
+
+        while (!data) {
+          tries++
+
+          if (tries > 3) break
+
+          if (this.settings.monitorProxy && this.settings.monitorProxy.id) this.assignProxy()
+
+          const response = await ProductApi.search(this.params)
+
+          if (response.error && (response.error.statusCode === 503 || response.error.statusCode === 403)) {
+            this.showSnackbar({ message: 'Bypassing bot protection...', color: 'teal' })
+
+            const { options } = response.error
+            const { jar } = options
+
+            const cookies = await CF.bypass(options)
+
+            if (cookies.length) {
+              for (const cookie of cookies) {
+                const { name, value, expires, domain, path } = cookie
+
+                const expiresDate = new Date(expires * 1000)
+
+                const val = new Cookie({
+                  key: name,
+                  value,
+                  expires: expiresDate,
+                  domain: domain.startsWith('.') ? domain.substring(1) : domain,
+                  path
+                }).toString()
+
+                jar.setCookie(val, options.headers.referer)
+              }
+
+              this.params.config.options = options
+            }
+          } else if (response.error) {
+            data = null
+          } else {
+            data = response
+          }
+        }
+
+        return data
+      } catch (error) {
+        return null
+      }
+    },
+
+    /**
+     * Redirect to product link.
+     */
+    redirect (slug) {
+      const { shell } = require('electron')
+      shell.openExternal(`${Config.services.titan22.url}/${slug}.html`)
+    },
+
+    applyFilter () {
+      this.params.payload.searchCriteria.sortOrders[0].field = this.filter
+      this.params.payload.searchCriteria.pageSize = this.count
+      clearTimeout(this.loop)
+      this.searchProduct()
+    },
+
+    assignProxy () {
+      let index = 0
+
+      if (this.settings.monitorProxy.proxies.length > 1) index = Math.floor(Math.random() * this.settings.monitorProxy.proxies.length)
+
+      const selected = this.settings.monitorProxy.proxies[index]
+
+      if (selected.username && selected.password) {
+        this.params.config.proxy = `http://${selected.username}:${selected.password}@${selected.host}:${selected.port}`
+      } else {
+        this.params.config.proxy = `http://${selected.host}:${selected.port}`
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.cursor {
+  cursor: pointer;
+}
+.text {
+  cursor: default;
+}
+</style>

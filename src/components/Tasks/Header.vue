@@ -82,6 +82,7 @@
           color="primary"
           depressed
           outlined
+          @click="launchMonitor"
         >
           <v-icon
             left
@@ -98,6 +99,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
+import { ipcRenderer } from 'electron'
 
 import TaskDialog from '@/components/Tasks/TaskDialog.vue'
 
@@ -129,6 +131,10 @@ export default {
           this.addItem(el)
         })
       }
+    },
+
+    launchMonitor () {
+      ipcRenderer.send('launch-monitor')
     }
   }
 }

@@ -296,10 +296,10 @@ export default {
             name: (params.name) ? params.name.trim() : `Account ${this.id}`
           })
 
-          this.showSnackbar({ message: 'Updated successfully' })
+          this.showSnackbar({ message: 'Updated successfully', color: 'teal' })
         } else {
           this.addAccount(params)
-          this.showSnackbar({ message: 'Created successfully' })
+          this.showSnackbar({ message: 'Created successfully', color: 'teal' })
         }
 
         this.onCancel()

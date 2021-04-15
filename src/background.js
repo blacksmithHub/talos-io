@@ -1,9 +1,10 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
 import MainWindow from '@/windows/Main'
+import MonitorWindow from '@/windows/Monitor'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -43,6 +44,7 @@ app.on('ready', async () => {
       console.error('Vue Devtools failed to install:', e.toString())
     }
   }
+
   initializeWindows()
 })
 
@@ -60,3 +62,11 @@ if (isDevelopment) {
     })
   }
 }
+
+ipcMain.on('launch-monitor', (event, arg) => {
+  if (!MonitorWindow.getWindow()) MonitorWindow.createWindow()
+})
+
+ipcMain.on('update-settings', (event, arg) => {
+  if (MonitorWindow.getWindow()) MonitorWindow.getWindow().webContents.send('updateSettings', arg)
+})

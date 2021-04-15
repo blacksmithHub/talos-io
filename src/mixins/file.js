@@ -35,7 +35,7 @@ export default {
             fs.writeFile(file.filePath.toString(), encoded, (err) => {
               if (err) throw err
 
-              this.showSnackbar({ message: 'Export successfully' })
+              this.showSnackbar({ message: 'Exported successfully', color: 'teal' })
             })
           }
         })
@@ -62,7 +62,7 @@ export default {
 
           const data = await fs.readFileSync(result.filePaths[0].toString(), 'utf8')
 
-          this.showSnackbar({ message: 'Import successfully' })
+          this.showSnackbar({ message: 'Imported successfully', color: 'teal' })
 
           return JSON.parse(base64.decode(data))
         })

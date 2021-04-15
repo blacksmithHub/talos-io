@@ -176,7 +176,7 @@ export default {
         })
       })
 
-      this.showSnackbar({ message: 'Updated successfully' })
+      this.showSnackbar({ message: 'Updated successfully', color: 'teal' })
       this.onCancel()
     }
   }

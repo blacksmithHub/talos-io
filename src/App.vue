@@ -35,11 +35,13 @@ export default {
 
     this.initProxy()
     this.initAccount()
+    this.initTask()
   },
   methods: {
     ...mapActions('settings', { initSettings: 'reset' }),
     ...mapActions('proxy', { initProxy: 'init' }),
-    ...mapActions('account', { initAccount: 'init' })
+    ...mapActions('account', { initAccount: 'init' }),
+    ...mapActions('task', { initTask: 'init' })
   }
 }
 </script>

@@ -1,5 +1,6 @@
 import Store from '@/store/index'
 import Constant from '@/config/constant'
+import Task from '@/services/task'
 
 const Proxies = Store._modules.root._children.proxy.context
 
@@ -21,7 +22,7 @@ const blockedResources = ['queue-it']
  */
 export default {
   /**
-   *
+   * Identify if proxy is running
    */
   isProxyRunning (id) {
     let proxy = Proxies.state.items
@@ -35,7 +36,7 @@ export default {
   /**
    * Initialize bypassing
    */
-  async bypass (options, id = null) {
+  async bypass (options, id = null, service = null) {
     try {
       const args = [
         '--no-sandbox',
@@ -55,7 +56,7 @@ export default {
 
       const browser = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'), headless: false })
 
-      if (id && !this.isProxyRunning(id)) {
+      if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
         await browser.close()
         return []
       }
@@ -65,7 +66,7 @@ export default {
       await page.setRequestInterception(true)
 
       page.on('request', async (request) => {
-        if (id && !this.isProxyRunning(id)) {
+        if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
           await browser.close()
           return []
         }
@@ -86,23 +87,23 @@ export default {
 
       const content = await page.content()
 
-      if (id && !this.isProxyRunning(id)) {
+      if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
         await browser.close()
         return []
       }
 
       if (content.includes('cf-browser-verification')) {
-        cookies = await this.cfChallenge(page, id)
+        cookies = await this.cfChallenge(page, id, service)
         await browser.close()
       } else if (content.includes('cf_captcha_kind')) {
         await browser.close()
-        cookies = await this.cfHcaptcha(options, args, id)
+        cookies = await this.cfHcaptcha(options, args, id, service)
       } else {
         await browser.close()
         return []
       }
 
-      if (id && !this.isProxyRunning(id)) return []
+      if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) return []
 
       return cookies
     } catch (error) {
@@ -113,7 +114,7 @@ export default {
   /**
    * Bypass cloudflare challenge
    */
-  async cfChallenge (page, id = null) {
+  async cfChallenge (page, id = null, service) {
     try {
       let response = []
       let content = await page.content()
@@ -121,7 +122,7 @@ export default {
       let counter = 0
 
       while (content.includes('cf-browser-verification')) {
-        if (id && !this.isProxyRunning(id)) break
+        if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) break
 
         counter++
 
@@ -152,61 +153,74 @@ export default {
   /**
    * Bypass cloudflare Hcaptcha
    */
-  async cfHcaptcha (options, args, id = null) {
-    let response = []
+  async cfHcaptcha (options, args, id = null, service) {
+    try {
+      let response = []
 
-    const browser = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'), headless: false })
+      const browser = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'), headless: false })
 
-    if (id && !this.isProxyRunning(id)) {
-      await browser.close()
-      return []
-    }
-
-    const page = await browser.newPage()
-
-    await page.setRequestInterception(true)
-
-    page.on('request', async (request) => {
-      if (id && !this.isProxyRunning(id)) await browser.close()
-
-      if (request.url().endsWith('.png') || request.url().endsWith('.jpg')) {
-      // BLOCK IMAGES
-        request.abort()
-      } else if (blockedResources.some(resource => request.url().indexOf(resource) !== -1)) {
-      // BLOCK CERTAIN DOMAINS
-        request.abort()
-      } else {
-      // ALLOW OTHER REQUESTS
-        request.continue()
+      if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
+        await browser.close()
+        return []
       }
-    })
 
-    await page.goto(options.url)
+      const page = await browser.newPage()
 
-    const vm = this
-    setInterval(async () => {
-      if (id && !vm.isProxyRunning(id)) await browser.close()
-    }, 1000)
+      await page.setRequestInterception(true)
 
-    let content = await page.content()
+      page.on('request', async (request) => {
+        if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) await browser.close()
 
-    while (content.includes('cf_captcha_kind') && this.isProxyRunning(id)) {
-      await page.waitForNavigation({
-        timeout: 0,
-        waitUntil: 'domcontentloaded'
+        if (request.url().endsWith('.png') || request.url().endsWith('.jpg')) {
+          // BLOCK IMAGES
+          request.abort()
+        } else if (blockedResources.some(resource => request.url().indexOf(resource) !== -1)) {
+          // BLOCK CERTAIN DOMAINS
+          request.abort()
+        } else {
+          // ALLOW OTHER REQUESTS
+          request.continue()
+        }
       })
 
-      const cookies = await page.cookies()
+      await page.goto(options.url)
 
-      if (!cookies.find((el) => el.name === 'cf_clearance')) {
-        content = await page.content()
-        continue
+      if (id) {
+        const vm = this
+        const loop = setInterval(async () => {
+          if ((service === 'TASK' && !Task.isRunning(id)) || (!service && !vm.isProxyRunning(id))) {
+            await browser.close()
+            clearInterval(loop)
+          }
+        }, 1000)
       }
 
-      response = cookies
-      break
-    }
+      let content = await page.content()
 
-    return response
+      while (content.includes('cf_captcha_kind')) {
+        if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) break
+
+        await page.waitForNavigation({
+          timeout: 0,
+          waitUntil: 'domcontentloaded'
+        })
+
+        if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) break
+
+        const cookies = await page.cookies()
+
+        if (!cookies.find((el) => el.name === 'cf_clearance')) {
+          content = await page.content()
+          continue
+        }
+
+        response = cookies
+        break
+      }
+
+      return response
+    } catch (error) {
+      return []
+    }
   }
 }

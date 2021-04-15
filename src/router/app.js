@@ -1,4 +1,5 @@
 const Home = () => import('../pages/Home')
+const Monitor = () => import('../pages/Monitor')
 
 /**
  * =======================================================================
@@ -16,6 +17,11 @@ export default {
     {
       path: '',
       component: Home
+    },
+    {
+      path: '/monitor',
+      name: 'Monitor',
+      component: Monitor
     }
   ]
 }

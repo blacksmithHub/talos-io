@@ -1,4 +1,5 @@
 import Url from 'url-parse'
+import store from '@/store/index'
 
 export default {
   async http (params) {
@@ -64,6 +65,20 @@ export default {
     if (params.mode) options.headers.client = params.mode.name
 
     const request = rp(options)
+
+    if (params.taskId) {
+      const vuex = store._modules.root._children.task.context
+
+      const task = vuex.state.items.find((val) => val.id === params.taskId)
+
+      task.proxy.configs = task.proxy.configs.map((el) => {
+        if (el.proxy === options.proxy) el.request = request
+
+        return el
+      })
+
+      vuex.dispatch('updateItem', task)
+    }
 
     return request
   }

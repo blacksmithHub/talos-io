@@ -347,10 +347,10 @@ export default {
             name: (params.name) ? params.name.trim() : `Billing ${this.id}`
           })
 
-          this.showSnackbar({ message: 'Updated successfully' })
+          this.showSnackbar({ message: 'Updated successfully', color: 'teal' })
         } else {
           this.addBilling({ ...params })
-          this.showSnackbar({ message: 'Created successfully' })
+          this.showSnackbar({ message: 'Created successfully', color: 'teal' })
         }
 
         this.onCancel()

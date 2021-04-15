@@ -8,6 +8,7 @@
     :multi-line="multiLine"
     :vertical="vertical"
     :value="snackbar"
+    :color="color"
     @input="closeSnackbar"
   >
     {{ message }}
@@ -35,7 +36,8 @@ export default {
       'multiLine',
       'vertical',
       'snackbar',
-      'message'
+      'message',
+      'color'
     ])
   },
   methods: {

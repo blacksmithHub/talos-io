@@ -179,8 +179,6 @@ import { mapState } from 'vuex'
 import MassEditDialog from '@/components/Tasks/MassEditDialog.vue'
 import SelectDialog from '@/components/Tasks/SelectDialog.vue'
 
-// TODO: keyboard shortcuts
-
 export default {
   components: {
     MassEditDialog,

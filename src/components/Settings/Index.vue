@@ -111,8 +111,8 @@
                     <v-col>
                       <v-autocomplete
                         v-model="monitorProxy"
+                        :items="allProxies"
                         required
-                        clearable
                         outlined
                         dense
                         item-text="name"
@@ -215,6 +215,7 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import { required, url, minValue } from 'vuelidate/lib/validators'
+import { ipcRenderer } from 'electron'
 
 import Webhook from '@/services/webhook'
 import Constant from '@/config/constant'
@@ -225,7 +226,7 @@ export default {
       nightMode: false,
       withSound: false,
       monitorInterval: 10000,
-      monitorProxy: {},
+      monitorProxy: { id: null, name: 'Localhost' },
       webhookUrl: null,
       webhookTesting: false,
       saving: false
@@ -234,7 +235,18 @@ export default {
   computed: {
     ...mapState('core', ['tab', 'about']),
     ...mapState('settings', { settings: 'items' }),
+    ...mapState('proxy', { proxies: 'items' }),
 
+    /**
+     * Return all proxies
+     */
+    allProxies () {
+      const proxies = this.proxies.slice()
+
+      proxies.unshift({ id: null, name: 'Localhost' })
+
+      return proxies
+    },
     /**
      * Error messages for monitorInterval.
      */
@@ -248,7 +260,6 @@ export default {
 
       return errors
     },
-
     /**
      * Error messages for webhook.
      */
@@ -281,7 +292,7 @@ export default {
       this.nightMode = this.settings.nightMode
       this.withSound = this.settings.withSound
       this.monitorInterval = this.settings.monitorInterval
-      this.monitorProxy = this.settings.monitorProxy
+      this.monitorProxy = (this.settings.monitorProxy.id) ? this.settings.monitorProxy : { id: null, name: 'Localhost' }
       this.webhookUrl = this.settings.webhookUrl
       this.webhookTesting = false
       this.saving = false
@@ -302,7 +313,8 @@ export default {
           monitorProxy: this.monitorProxy
         })
 
-        this.showSnackbar({ message: 'Saved successfully' })
+        ipcRenderer.send('update-settings', this.settings)
+        this.showSnackbar({ message: 'Saved successfully', color: 'teal' })
       }
     },
 

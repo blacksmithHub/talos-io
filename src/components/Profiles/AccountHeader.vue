@@ -233,6 +233,8 @@ export default {
 
               params.config.options = options
             }
+          } else if (response.error) {
+            data = null
           } else {
             data = response
           }

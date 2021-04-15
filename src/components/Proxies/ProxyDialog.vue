@@ -187,19 +187,32 @@ export default {
         }
 
         if (this.id) {
-          this.updateProxy({
+          const data = {
             ...params,
             id: this.id,
             configs: [],
             status: Constant.STATUS.STOPPED,
             loading: false,
             name: (params.name) ? params.name.trim() : `Proxy List ${this.id}`
+          }
+
+          data.proxies.forEach(el => {
+            const rp = require('request-promise')
+            const jar = rp.jar()
+
+            data.configs.push({
+              rp: rp,
+              jar: jar,
+              proxy: el.proxy
+            })
           })
 
-          this.showSnackbar({ message: 'Updated successfully' })
+          this.updateProxy(data)
+
+          this.showSnackbar({ message: 'Updated successfully', color: 'teal' })
         } else {
           this.addProxy(params)
-          this.showSnackbar({ message: 'Created successfully' })
+          this.showSnackbar({ message: 'Created successfully', color: 'teal' })
         }
 
         this.onCancel()
@@ -218,19 +231,19 @@ export default {
         switch (proxy.length) {
           case 4:
             this.list.push({
-              host: proxy[0],
-              port: proxy[1],
-              username: proxy[2],
-              password: proxy[3],
-              proxy: `http://${proxy[2]}:${proxy[3]}@${proxy[0]}:${proxy[1]}`
+              host: proxy[0].trim(),
+              port: proxy[1].trim(),
+              username: proxy[2].trim(),
+              password: proxy[3].trim(),
+              proxy: `http://${proxy[2].trim()}:${proxy[3].trim()}@${proxy[0].trim()}:${proxy[1].trim()}`
             })
             break
 
           case 2:
             this.list.push({
-              host: proxy[0],
-              port: proxy[1],
-              proxy: `http://${proxy[0]}:${proxy[1]}`
+              host: proxy[0].trim(),
+              port: proxy[1].trim(),
+              proxy: `http://${proxy[0].trim()}:${proxy[1].trim()}`
             })
             break
 

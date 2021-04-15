@@ -462,6 +462,8 @@ export default {
     onEdit (id) {
       const item = this.tasks.find((el) => el.id === id)
 
+      const sizes = item.sizes.slice().map((val) => val.label)
+
       this.id = id
 
       this.dialog = true
@@ -474,7 +476,7 @@ export default {
       this.account = item.account
       this.billing = item.billing
       this.placeOrder = item.placeOrder
-      this.sizes = item.sizes
+      this.sizes = sizes
       this.delay = item.delay
       this.qty = item.qty
       this.mode = item.mode
@@ -530,6 +532,20 @@ export default {
       this.$v.$touch()
 
       if (!this.$v.$invalid) {
+        const sizes = []
+
+        this.sizes.forEach((element) => {
+          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
+
+          const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
+
+          sizes.push({
+            attribute_id: attr.attribute_id,
+            value: size.value,
+            label: size.label
+          })
+        })
+
         const params = {
           sku: this.sku,
           account: this.account,
@@ -537,7 +553,7 @@ export default {
           billing: this.billing,
           placeOrder: this.placeOrder,
 
-          sizes: this.sizes,
+          sizes: sizes,
           delay: this.delay,
           qty: this.qty,
           mode: this.mode,
@@ -553,10 +569,10 @@ export default {
             id: this.id
           })
 
-          this.showSnackbar({ message: 'Updated successfully' })
+          this.showSnackbar({ message: 'Updated successfully', color: 'teal' })
         } else {
           this.addTask(params)
-          this.showSnackbar({ message: 'Created successfully' })
+          this.showSnackbar({ message: 'Created successfully', color: 'teal' })
         }
 
         this.onCancel()

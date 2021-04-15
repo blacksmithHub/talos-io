@@ -130,6 +130,7 @@ import Header from '@/components/Proxies/Header.vue'
 import ProxyDialog from '@/components/Proxies/ProxyDialog.vue'
 
 import Constant from '@/config/constant'
+import Config from '@/config/app'
 import CF from '@/services/cloudflare-bypass'
 
 export default {
@@ -181,7 +182,10 @@ export default {
     async onStart (item) {
       if (item.status === this.status.RUNNING) return false
 
-      let configs = []
+      let configs = item.configs.map(el => {
+        delete el.options
+        return el
+      })
 
       this.updateProxy({
         ...item,
@@ -191,34 +195,31 @@ export default {
 
       for (let index = 0; index < item.proxies.length; index++) {
         const UserAgent = require('user-agents')
-        const userAgent = new UserAgent()
-        const rp = require('request-promise')
-        const jar = rp.jar()
+        let userAgent = new UserAgent()
+        userAgent = userAgent.toString()
+        const conf = item.configs.find((el) => el.proxy === item.proxies[index].proxy)
 
-        const site = 'https://www.titan22.com/new-arrivals.html' // 'https://cf-js-challenge.sayem.eu.org/'
+        const site = `${Config.services.titan22.url}/new-arrivals.html`
         const Url = require('url-parse')
         const url = new Url(site)
 
-        const data = {
-          proxy: item.proxies[index].proxy,
-          rp: rp,
-          jar: jar
-        }
-
-        const request = rp({
+        const request = conf.rp({
           url: site,
           method: 'get',
           headers: {
             'Content-Type': 'application/json',
-            'User-Agent': userAgent.toString(),
+            'User-Agent': userAgent,
             referer: `${url.protocol}//${url.host}/`
           },
           proxy: item.proxies[index].proxy,
-          jar: jar
+          jar: conf.jar
         })
 
-        data.request = request
-        configs.push(data)
+        configs = configs.map(el => {
+          if (el.proxy === item.proxies[index].proxy) el.request = request
+
+          return el
+        })
 
         const proxy = this.proxies.find((el) => el.id === item.id)
 
@@ -265,15 +266,13 @@ export default {
                   jar.setCookie(val, options.headers.referer)
                 }
 
-                data.options = options
+                configs = configs.map(el => {
+                  if (el.proxy === item.proxies[index].proxy) el.options = options
+
+                  return el
+                })
               }
             }
-
-            configs = configs.map((el) => {
-              if (el.proxy === item.proxies[index].proxy) el = data
-
-              return el
-            })
 
             const proxy = this.proxies.find((el) => el.id === item.id)
 

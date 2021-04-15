@@ -182,13 +182,14 @@ export default {
       })
 
       const UserAgent = require('user-agents')
-      const userAgent = new UserAgent()
+      let userAgent = new UserAgent()
+      userAgent = userAgent.toString()
       const rp = require('request-promise')
       const jar = rp.jar()
 
       const secret = await this.getSecret(rp, jar, userAgent)
 
-      if (!secret) {
+      if (!secret || secret.error) {
         this.updateAccount({
           ...item,
           loading: false
@@ -254,7 +255,7 @@ export default {
           config: {
             rp: rp,
             jar: jar,
-            userAgent: userAgent.toString()
+            userAgent: userAgent
           }
         }
 
@@ -290,6 +291,8 @@ export default {
 
               params.config.options = options
             }
+          } else if (response.error) {
+            data = null
           } else {
             data = response
           }
@@ -317,7 +320,7 @@ export default {
         config: {
           rp: rp,
           jar: jar,
-          userAgent: userAgent.toString()
+          userAgent: userAgent
         }
       }
 
@@ -392,7 +395,7 @@ export default {
         config: {
           rp: rp,
           jar: jar,
-          userAgent: userAgent.toString()
+          userAgent: userAgent
         }
       }
 

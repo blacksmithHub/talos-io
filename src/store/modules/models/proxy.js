@@ -44,14 +44,27 @@ export default {
       const proxies = state.items.slice()
       const id = (proxies.length) ? proxies.length + 1 : 1
 
-      proxies.push({
+      const data = {
         id: id,
         ...item,
         name: (item.name) ? item.name.trim() : `Proxy List ${id}`,
         configs: [],
         status: Constant.STATUS.STOPPED,
         loading: false
+      }
+
+      data.proxies.forEach((el) => {
+        const rp = require('request-promise')
+        const jar = rp.jar()
+
+        data.configs.push({
+          rp: rp,
+          jar: jar,
+          proxy: el.proxy
+        })
       })
+
+      proxies.push(data)
 
       commit('SET_ITEMS', proxies)
       localStorage.setItem('proxies', JSON.stringify(proxies))
@@ -99,6 +112,18 @@ export default {
       proxies = proxies.map((val) => {
         val.status = Constant.STATUS.STOPPED
         val.loading = false
+        val.configs = []
+
+        val.proxies.forEach((el) => {
+          const rp = require('request-promise')
+          const jar = rp.jar()
+
+          val.configs.push({
+            rp: rp,
+            jar: jar,
+            proxy: el.proxy
+          })
+        })
 
         return val
       })
