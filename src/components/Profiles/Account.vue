@@ -46,7 +46,7 @@
           </div>
         </template>
 
-        <template v-slot:[`item.paypal.account`]="{ item }">
+        <template v-slot:[`item.paypal.account.token`]="{ item }">
           <div
             class="row cursor"
             style="width: 150px"
@@ -140,7 +140,7 @@ export default {
         },
         {
           text: 'PayPal Token',
-          value: 'paypal.account'
+          value: 'paypal.account.token'
         },
         {
           text: 'Actions',

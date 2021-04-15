@@ -23,7 +23,10 @@ export default {
     }
   },
   computed: {
-    ...mapState('settings', { settings: 'items' })
+    ...mapState('settings', { settings: 'items' }),
+    ...mapState('task', { tasks: 'items' }),
+    ...mapState('account', { accounts: 'items' }),
+    ...mapState('proxy', { proxies: 'items' })
   },
   watch: {
     'settings.nightMode': function (nightMode) {
@@ -33,9 +36,11 @@ export default {
   created () {
     if (!Object.keys(this.settings).length) this.initSettings()
 
-    this.initProxy()
-    this.initAccount()
-    this.initTask()
+    if (this.proxies.length) this.initProxy()
+
+    if (this.accounts.length) this.initAccount()
+
+    if (this.tasks.length) this.initTask()
   },
   methods: {
     ...mapActions('settings', { initSettings: 'reset' }),
