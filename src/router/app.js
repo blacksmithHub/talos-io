@@ -3,6 +3,7 @@ import GuardService from '@/services/guard'
 const Home = () => import('../pages/Home')
 const Monitor = () => import('../pages/Monitor')
 const Login = () => import('../pages/Login')
+const CheckUpdate = () => import('../pages/CheckUpdate')
 
 /**
  * =======================================================================
@@ -20,6 +21,11 @@ export default {
     {
       path: '/login',
       component: Login
+    },
+    {
+      path: '/check-update',
+      name: 'CheckUpdate',
+      component: CheckUpdate
     },
     {
       path: '',

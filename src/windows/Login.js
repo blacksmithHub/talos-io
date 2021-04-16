@@ -19,6 +19,7 @@ export default {
       resizable: false,
       maximizable: false,
       fullscreenable: false,
+      center: true,
       show: false,
       frame: false,
       webPreferences: {

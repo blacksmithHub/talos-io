@@ -6,6 +6,7 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import MainWindow from '@/windows/Main'
 import MonitorWindow from '@/windows/Monitor'
 import LoginWindow from '@/windows/Login'
+import CheckUpdateWindow from '@/windows/CheckUpdate'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -15,7 +16,7 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 async function initializeWindows () {
-  MainWindow.createWindow()
+  CheckUpdateWindow.createWindow()
 }
 
 // Quit when all windows are closed.

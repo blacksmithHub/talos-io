@@ -18,6 +18,7 @@ export default {
       height: 780,
       minWidth: 553,
       minHeight: 650,
+      center: true,
       show: false,
       frame: false,
       webPreferences: {
