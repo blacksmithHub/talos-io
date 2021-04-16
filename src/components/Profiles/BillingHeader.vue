@@ -86,7 +86,6 @@ export default {
   },
   methods: {
     ...mapActions('billing', ['addItem']),
-    ...mapActions('dialog', ['openDialog']),
 
     async importData () {
       const data = await this.importJson('Import Billings')

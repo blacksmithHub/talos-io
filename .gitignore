@@ -13,6 +13,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 debug.log
+Task-*
 
 # Editor directories and files
 .idea

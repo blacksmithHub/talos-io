@@ -2,7 +2,7 @@
   <v-dialog
     v-model="dialog"
     persistent
-    max-width="700px"
+    max-width="500px"
   >
     <v-form @submit.prevent="submit">
       <v-card>
@@ -28,20 +28,6 @@
         <v-card-text>
           <v-container>
             <v-row>
-              <v-col>
-                <v-autocomplete
-                  v-model="account"
-                  clearable
-                  :items="accounts"
-                  outlined
-                  dense
-                  label="Account"
-                  item-text="name"
-                  hide-details
-                  return-object
-                />
-              </v-col>
-
               <v-col>
                 <v-autocomplete
                   v-model="billing"
@@ -240,7 +226,6 @@ export default {
       placeOrderMenu: false,
 
       sku: null,
-      account: null,
       billing: null,
       placeOrder: null,
       delay: null,
@@ -253,7 +238,6 @@ export default {
   },
   computed: {
     ...mapState('task', { tasks: 'items' }),
-    ...mapState('account', { accounts: 'items' }),
     ...mapState('billing', { billings: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
 
@@ -340,7 +324,6 @@ export default {
       this.placeOrderMenu = false
 
       this.sku = null
-      this.account = null
       this.billing = null
       this.placeOrder = null
       this.delay = null
@@ -361,9 +344,7 @@ export default {
 
         if (this.sku) params.sku = this.sku
 
-        if (this.account) params.account = this.account
-
-        if (this.proxy) params.proxy = (this.proxy.id) ? this.proxy : null
+        if (this.proxy) params.proxy = this.proxy
 
         if (this.billing) params.billing = this.billing
 

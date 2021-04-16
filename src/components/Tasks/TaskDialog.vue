@@ -549,8 +549,8 @@ export default {
         const params = {
           sku: this.sku,
           account: this.account,
-          proxy: (this.proxy.id) ? this.proxy : null,
           billing: this.billing,
+          proxy: this.proxy,
           placeOrder: this.placeOrder,
 
           sizes: sizes,

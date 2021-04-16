@@ -2,8 +2,8 @@ export default {
   namespaced: true,
   state () {
     return {
-      items: localStorage.getItem('billing')
-        ? JSON.parse(localStorage.getItem('billing'))
+      items: localStorage.getItem('billings')
+        ? JSON.parse(localStorage.getItem('billings'))
         : []
     }
   },
@@ -39,17 +39,17 @@ export default {
      * @param {*} item
      */
     addItem ({ state, commit }, item) {
-      const billing = state.items.slice()
-      const id = (billing.length) ? billing.length + 1 : 1
+      const billings = state.items.slice()
+      const id = (billings.length) ? billings.length + 1 : 1
 
-      billing.push({
+      billings.push({
         id: id,
         ...item,
         name: (item.name) ? item.name.trim() : `Billing ${id}`
       })
 
-      commit('SET_ITEMS', billing)
-      localStorage.setItem('billing', JSON.stringify(billing))
+      commit('SET_ITEMS', billings)
+      localStorage.setItem('billings', JSON.stringify(billings))
     },
 
     /**
@@ -58,16 +58,16 @@ export default {
      * @param {*} param
      */
     updateItem ({ state, commit }, params) {
-      let billing = state.items.slice()
+      let billings = state.items.slice()
 
-      billing = billing.map((val) => {
+      billings = billings.map((val) => {
         if (val.id === params.id) val = params
 
         return val
       })
 
-      commit('SET_ITEMS', billing)
-      localStorage.setItem('billing', JSON.stringify(billing))
+      commit('SET_ITEMS', billings)
+      localStorage.setItem('billings', JSON.stringify(billings))
     },
 
     /**
@@ -77,12 +77,12 @@ export default {
      * @param {*} key
      */
     deleteItem ({ state, commit }, key) {
-      const billing = state.items.slice()
+      const billings = state.items.slice()
 
-      billing.splice(key, 1)
+      billings.splice(key, 1)
 
-      commit('SET_ITEMS', billing)
-      localStorage.setItem('billing', JSON.stringify(billing))
+      commit('SET_ITEMS', billings)
+      localStorage.setItem('billings', JSON.stringify(billings))
     }
   }
 }

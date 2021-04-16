@@ -184,6 +184,20 @@
 
     <br>
 
+    <v-btn
+      x-small
+      class="ml-1"
+      depressed
+      @click="resetAll"
+    >
+      <v-icon
+        left
+        x-small
+        v-text="'mdi-rotate-left'"
+      />
+      reset all data
+    </v-btn>
+
     <v-row
       justify="center"
       align="center"
@@ -284,6 +298,7 @@ export default {
   methods: {
     ...mapActions('snackbar', ['showSnackbar']),
     ...mapActions('settings', { setSettings: 'setItems' }),
+    ...mapActions('dialog', ['openDialog']),
 
     /**
      * Clear changes
@@ -340,6 +355,25 @@ export default {
      */
     checkUpdate () {
       // TODO: check update
+    },
+
+    resetAll () {
+      this.openDialog({
+        title: 'Reset All Data',
+        body: 'Are you sure you want to continue?',
+        actionLabel: 'Yes',
+        cancelLabel: 'No',
+        action: () => {
+          localStorage.removeItem('settings')
+          localStorage.removeItem('proxies')
+          localStorage.removeItem('accounts')
+          localStorage.removeItem('billings')
+          localStorage.removeItem('tasks')
+
+          ipcRenderer.send('update-settings', this.settings)
+          this.showSnackbar({ message: 'All data has been reset sucessfully', color: 'teal' })
+        }
+      })
     }
   },
   validations: {

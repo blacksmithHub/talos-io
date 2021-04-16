@@ -114,7 +114,6 @@ export default {
   },
   methods: {
     ...mapActions('account', ['addItem', 'updateItem']),
-    ...mapActions('dialog', ['openDialog']),
 
     async importData () {
       const data = await this.importJson('Import Accounts')

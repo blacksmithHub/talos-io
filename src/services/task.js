@@ -1,5 +1,8 @@
-import Constant from '@/config/constant'
 import moment from 'moment-timezone'
+import fs from 'fs'
+import base64 from 'base-64'
+import utf8 from 'utf8'
+import Constant from '@/config/constant'
 import store from '@/store/index'
 
 const Tasks = store._modules.root._children.task.context
@@ -19,7 +22,7 @@ export default {
   isRunning (id) {
     const task = this.getCurrentTask(id)
 
-    return task && task.status.id === Constant.TASK.STATUS.RUNNING
+    return task && task.status.id === Constant.STATUS.RUNNING
   },
 
   /**
@@ -66,12 +69,20 @@ export default {
    * @param {*} msg
    */
   async updateCurrentTaskLog (id, msg) {
-    const task = await this.getCurrentTask(id)
+    let data = await fs.readFileSync(`Task-${id}.json`, 'utf8')
 
-    if (task) {
-      task.logs = `${task.logs || ''};[${moment().format('YYYY-MM-DD h:mm:ss a')}]: ${msg}`
+    data = JSON.parse(base64.decode(data))
 
-      Tasks.dispatch('updateItem', task)
-    }
+    let line = msg
+
+    if (msg !== '====================') line = `[${moment().format('YYYY-MM-DD h:mm:ss a')}]: ${msg}`
+
+    data.push(line)
+
+    const text = JSON.stringify(data)
+    const bytes = utf8.encode(text)
+    const encoded = base64.encode(bytes)
+
+    fs.writeFileSync(`Task-${id}.json`, encoded)
   }
 }

@@ -123,6 +123,7 @@ import Action from '@/components/Tasks/Action.vue'
 
 import Constant from '@/config/constant'
 import Titan22 from '@/services/Titan22/index'
+import Task from '@/services/task'
 
 export default {
   components: {
@@ -205,34 +206,40 @@ export default {
           }
         })
 
+        Task.updateCurrentTaskLog(item.id, 'Starting...')
         Titan22.start(item.id)
       }
     },
     onStop (item) {
-      const data = {
-        ...item,
-        status: {
-          id: Constant.STATUS.STOPPED,
-          msg: 'stopped',
-          class: 'grey'
-        },
-        transactionData: {}
-      }
+      if (item.status.id === Constant.STATUS.RUNNING) {
+        Task.updateCurrentTaskLog(item.id, 'Stopped!')
+        Task.updateCurrentTaskLog(item.id, '====================')
 
-      data.proxy.configs = data.proxy.configs.map(el => {
-        try {
-          if (el.request) {
-            el.request.cancel()
-            delete el.request
-          }
-        } catch (error) {
-          //
+        const data = {
+          ...item,
+          status: {
+            id: Constant.STATUS.STOPPED,
+            msg: 'stopped',
+            class: 'grey'
+          },
+          transactionData: {}
         }
 
-        return el
-      })
+        data.proxy.configs = data.proxy.configs.map(el => {
+          try {
+            if (el.request) {
+              el.request.cancel()
+              delete el.request
+            }
+          } catch (error) {
+          //
+          }
 
-      this.updateTask(data)
+          return el
+        })
+
+        this.updateTask(data)
+      }
     },
     async onDelete (item) {
       const index = this.tasks.findIndex((el) => el.id === item.id)
@@ -249,6 +256,7 @@ export default {
         }
       })
 
+      Task.updateCurrentTaskLog(item.id, 'Initializing...')
       Titan22.verify(item.id)
     }
   }

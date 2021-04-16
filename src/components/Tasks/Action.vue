@@ -87,16 +87,17 @@
           <v-list-item-title v-text="'Duplicate'" />
         </v-list-item>
 
-        <!-- TODO: logs -->
-        <!-- <v-list-item
+        <v-list-item
           link
+          @click="$refs.logsDialog.launch(item.id)"
         >
           <v-list-item-title v-text="'Logs'" />
-        </v-list-item> -->
+        </v-list-item>
       </v-list>
     </v-menu>
 
     <TaskDialog ref="taskDialog" />
+    <LogsDialog ref="logsDialog" />
   </div>
 </template>
 
@@ -104,12 +105,14 @@
 import { mapActions } from 'vuex'
 
 import TaskDialog from '@/components/Tasks/TaskDialog.vue'
+import LogsDialog from '@/components/Tasks/LogsDialog.vue'
 
 import Constant from '@/config/constant'
 
 export default {
   components: {
-    TaskDialog
+    TaskDialog,
+    LogsDialog
   },
   props: {
     item: {

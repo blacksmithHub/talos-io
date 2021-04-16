@@ -284,7 +284,6 @@ export default {
   },
   methods: {
     ...mapActions('billing', { addBilling: 'addItem', updateBilling: 'updateItem' }),
-    ...mapActions('dialog', ['openDialog']),
     ...mapActions('snackbar', ['showSnackbar']),
 
     /**
