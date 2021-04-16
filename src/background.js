@@ -70,3 +70,7 @@ ipcMain.on('launch-monitor', (event, arg) => {
 ipcMain.on('update-settings', (event, arg) => {
   if (MonitorWindow.getWindow()) MonitorWindow.getWindow().webContents.send('updateSettings', arg)
 })
+
+ipcMain.on('update-task', (event, arg) => {
+  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateTask', arg)
+})

@@ -24,6 +24,7 @@
     "discord.js": "^12.5.3",
     "electron-updater": "^4.3.8",
     "font-awesome": "^4.7.0",
+    "howler": "^2.2.1",
     "moment-timezone": "^0.5.33",
     "proxy-chain": "^1.0.1",
     "puppeteer": "^8.0.0",

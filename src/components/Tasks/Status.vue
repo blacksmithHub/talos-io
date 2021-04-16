@@ -16,11 +16,12 @@
     </p>
 
     <v-chip
-      v-if="(item.status.class === 'success' && item.transactionData.method !== 'PayPal')"
+      v-if="(item.status.class === 'success' && item.transactionData.method !== 'PayPal' && !item.autoPay)"
       outlined
       small
       color="success"
       class="text-capitalize pointer"
+      @click="proceedToCheckout"
       v-text="`Size: ${item.transactionData.product.size} - proceed to checkout!`"
     />
 
@@ -51,11 +52,18 @@
 </template>
 
 <script>
+import Titan22 from '@/services/Titan22/index'
+
 export default {
   props: {
     item: {
       type: Object,
       required: true
+    }
+  },
+  methods: {
+    proceedToCheckout () {
+      Titan22.redirectToCheckout(this.item.id)
     }
   }
 }
@@ -64,5 +72,8 @@ export default {
 <style scoped>
 .cursor {
   cursor: default
+}
+.pointer {
+  cursor: pointer
 }
 </style>

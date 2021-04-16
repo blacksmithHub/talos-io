@@ -43,6 +43,7 @@
         >
           <div
             class="col-12 text-truncate"
+            :class="{'success--text': item.paid}"
             v-text="item.account.name"
           />
         </div>
@@ -55,6 +56,7 @@
         >
           <div
             class="col-12 text-truncate"
+            :class="{'success--text': item.paid}"
             v-text="(item.billing) ? item.billing.name : 'none'"
           />
         </div>
@@ -67,6 +69,7 @@
         >
           <div
             class="col-12 text-truncate"
+            :class="{'success--text': item.paid}"
             v-text="(item.proxy) ? item.proxy.name : 'Localhost'"
           />
         </div>
@@ -79,6 +82,7 @@
         >
           <div
             class="col-12 text-truncate"
+            :class="{'success--text': item.paid}"
             v-text="item.sku"
           />
         </div>
@@ -91,6 +95,7 @@
         >
           <div
             class="col-12 text-truncate"
+            :class="{'success--text': item.paid}"
             v-text="getSizes(item)"
           />
         </div>
@@ -203,7 +208,8 @@ export default {
             id: Constant.STATUS.RUNNING,
             msg: 'running',
             class: 'orange'
-          }
+          },
+          paid: false
         })
 
         Task.updateCurrentTaskLog(item.id, 'Starting...')

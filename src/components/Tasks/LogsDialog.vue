@@ -47,17 +47,31 @@
       <v-divider />
 
       <v-card-actions>
-        <v-container class="text-right">
-          <v-btn
-            rounded
-            depressed
-            small
-            outlined
-            color="primary"
-            @click="exportLogs"
-            v-text="'Export'"
-          />
-        </v-container>
+        <v-row no-gutters>
+          <v-col>
+            <v-btn
+              rounded
+              depressed
+              small
+              outlined
+              color="primary"
+              @click="clearLogs"
+              v-text="'Clear'"
+            />
+          </v-col>
+
+          <v-col class="text-right">
+            <v-btn
+              rounded
+              depressed
+              small
+              outlined
+              color="primary"
+              @click="exportLogs"
+              v-text="'Export'"
+            />
+          </v-col>
+        </v-row>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -66,13 +80,15 @@
 <script>
 import fs from 'fs'
 import base64 from 'base-64'
+import utf8 from 'utf8'
 import electron from 'electron'
 
 export default {
   data () {
     return {
       dialog: false,
-      logs: []
+      logs: [],
+      id: null
     }
   },
   watch: {
@@ -86,6 +102,7 @@ export default {
   },
   methods: {
     async launch (id) {
+      this.id = id
       const data = await fs.readFileSync(`Task-${id}.json`, 'utf8')
       this.logs = JSON.parse(base64.decode(data))
       this.dialog = true
@@ -119,6 +136,13 @@ export default {
     onClose () {
       this.logs = []
       this.dialog = false
+    },
+    clearLogs () {
+      this.logs = []
+      const text = JSON.stringify([])
+      const bytes = utf8.encode(text)
+      const encoded = base64.encode(bytes)
+      fs.writeFileSync(`Task-${this.id}.json`, encoded)
     }
   }
 }

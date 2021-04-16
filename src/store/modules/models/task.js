@@ -187,6 +187,7 @@ export default {
       tasks = tasks.map((val) => {
         val.loading = false
         val.transactionData = {}
+        val.paid = false
         val.status = {
           id: Constant.STATUS.STOPPED,
           msg: 'idle',

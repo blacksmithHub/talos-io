@@ -120,7 +120,7 @@
 
 <script>
 import { mapActions, mapState } from 'vuex'
-import { remote } from 'electron'
+import { remote, ipcRenderer } from 'electron'
 import moment from 'moment-timezone'
 
 import Tasks from '@/components/Tasks/Index.vue'
@@ -142,9 +142,17 @@ export default {
   },
   computed: {
     ...mapState('core', ['tab']),
-    ...mapState('account', { accounts: 'items' })
+    ...mapState('account', { accounts: 'items' }),
+    ...mapState('task', { tasks: 'items' })
   },
   created () {
+    ipcRenderer.on('updateTask', (event, arg) => {
+      this.updateTask({
+        ...this.tasks.find((val) => val.id === arg),
+        paid: true
+      })
+    })
+
     const vm = this
     setInterval(() => {
       vm.accounts.forEach(el => {
@@ -164,6 +172,7 @@ export default {
   methods: {
     ...mapActions('core', ['setCurrentTab']),
     ...mapActions('account', { updateAccount: 'updateItem' }),
+    ...mapActions('task', { updateTask: 'updateItem' }),
 
     onClose () {
       remote.getCurrentWindow().close()

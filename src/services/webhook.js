@@ -24,7 +24,7 @@ export default {
       .setTitle('Copped!')
       .addField(options.productName, options.productSku)
       .setThumbnail(options.productImage || 'https://i.imgur.com/eVt99L8.png')
-      .setFooter(`${Core.state.package.productName} ${Core.state.package.version}`, Config.bot.avatar)
+      .setFooter(`${Core.state.about.productName} ${Core.state.about.version}`, Config.bot.avatar)
       .setTimestamp()
 
     if (options.orderNumber) embed.addField('Order Number', `||${options.orderNumber}||`, true)
@@ -46,7 +46,7 @@ export default {
     if (options.delay) embed.addField('Delay', `${options.delay}ms`, true)
 
     await webhookClient.send({
-      username: Core.state.package.productName,
+      username: Core.state.about.productName,
       avatarURL: Config.bot.avatar,
       embeds: [embed]
     })

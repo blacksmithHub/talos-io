@@ -10,6 +10,9 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 let win
 
 export default {
+  getWindow () {
+    return win
+  },
   async createWindow () {
     // Create the browser window.
     win = new BrowserWindow({
