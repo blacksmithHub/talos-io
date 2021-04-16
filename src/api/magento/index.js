@@ -11,7 +11,9 @@ export default {
       method: params.method,
       headers: {
         'User-Agent': params.config.userAgent,
-        referer: `${url.protocol}//${url.host}/`
+        referer: `${url.protocol}//${url.host}/`,
+        origin: `${url.protocol}//${url.host}/`,
+        'x-requested-with': 'XMLHttpRequest'
       },
       jar: params.config.jar
     }
@@ -25,7 +27,9 @@ export default {
         headers: {
           ...params.config.options.headers,
           'User-Agent': params.config.userAgent,
-          referer: `${url.protocol}//${url.host}/`
+          referer: `${url.protocol}//${url.host}/`,
+          origin: `${url.protocol}//${url.host}/`,
+          'x-requested-with': 'XMLHttpRequest'
         }
       }
     }

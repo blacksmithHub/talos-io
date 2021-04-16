@@ -945,9 +945,10 @@ export default {
               token: currentTask.transactionData.token.token,
               payload: {
                 cartItem: {
-                  sku: `${currentTask.sku}-SZ${currentTask.sizes[index].label.replace('.', 'P').toUpperCase()}`,
                   qty: currentTask.qty || 1,
                   quote_id: currentTask.transactionData.cart.id,
+                  sku: `${currentTask.sku}`,
+                  product_type: 'configurable',
                   product_option: {
                     extension_attributes: {
                       configurable_item_options: [
@@ -958,7 +959,7 @@ export default {
                       ]
                     }
                   },
-                  product_type: 'configurable'
+                  extension_attributes: {}
                 }
               },
               mode: currentTask.mode,
@@ -1102,8 +1103,8 @@ export default {
       addressInformation: {
         shipping_address: shippingAddress,
         billing_address: billingAddress,
-        shipping_carrier_code: params.carrier_code,
-        shipping_method_code: params.method_code
+        shipping_method_code: params.method_code,
+        shipping_carrier_code: params.carrier_code
       }
     }
 
@@ -1223,12 +1224,13 @@ export default {
       const payload = {
         payload: {
           billingAddress: this.setAddresses(defaultBillingAddress, currentTask.transactionData.account.email),
+          cardId: currentTask.transactionData.cart.id.toString(),
           paymentMethod: {
             method: '',
             po_number: null,
             additional_data: null
-          },
-          amcheckout: {}
+          }
+          // amcheckout: {}
         },
         token: currentTask.transactionData.token.token,
         mode: currentTask.mode,
