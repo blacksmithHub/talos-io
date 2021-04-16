@@ -12,7 +12,7 @@
         >
           <v-card-text class="pa-0">
             Version: {{ about.version }}
-            <v-btn
+            <!-- <v-btn
               x-small
               class="ml-1"
               depressed
@@ -24,7 +24,7 @@
                 v-text="'mdi-reload'"
               />
               check for updates
-            </v-btn>
+            </v-btn> -->
           </v-card-text>
         </v-card>
       </v-col>

@@ -2,7 +2,7 @@
   <v-dialog
     v-model="dialog"
     persistent
-    max-width="700px"
+    max-width="400px"
   >
     <v-form @submit.prevent="submit">
       <v-card>
@@ -36,11 +36,9 @@
               autocomplete="off"
             />
 
-            <br>
-
             <v-row>
-              <v-col cols="6">
-                <p v-text="'Titan 22 Login'" />
+              <v-col>
+                <!-- <p v-text="'Titan 22 Login'" /> -->
 
                 <v-text-field
                   v-model="t22Email"
@@ -62,13 +60,15 @@
                   dense
                   :error-messages="t22PasswordErrors"
                   autocomplete="off"
+                  hide-details="auto"
                   :append-icon="t22ShowPassword ? 'mdi-eye' : 'mdi-eye-off'"
                   @blur="$v.t22Password.$touch()"
                   @click:append="t22ShowPassword = !t22ShowPassword"
                 />
               </v-col>
 
-              <v-divider vertical />
+              <!-- TODO: paypal automation -->
+              <!-- <v-divider vertical />
 
               <v-col cols="6">
                 <p v-text="'PayPal Login'" />
@@ -108,7 +108,7 @@
                     <small v-text="'Same as Titan 22 Credentials'" />
                   </template>
                 </v-checkbox>
-              </v-col>
+              </v-col> -->
             </v-row>
           </v-container>
         </v-card-text>
