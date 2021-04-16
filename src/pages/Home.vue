@@ -128,6 +128,10 @@ import Profiles from '@/components/Profiles/Index.vue'
 import Proxies from '@/components/Proxies/Index.vue'
 import Settings from '@/components/Settings/Index.vue'
 
+import Auth from '@/services/auth'
+
+const isDevelopment = process.env.NODE_ENV !== 'production'
+
 export default {
   components: {
     Tasks,
@@ -153,6 +157,7 @@ export default {
       })
     })
 
+    // Check paypal expiration
     const vm = this
     setInterval(() => {
       vm.accounts.forEach(el => {
@@ -168,6 +173,19 @@ export default {
         }
       })
     }, 1000)
+
+    // Check authentication
+    if (!isDevelopment) {
+      const loop = setInterval(async () => {
+        const params = { key: Auth.getAuth().key }
+        const response = await Auth.verify(params).then(res => res).catch(err => err)
+
+        if (!response.data) {
+          clearInterval(loop)
+          ipcRenderer.send('logout')
+        }
+      }, 3600000)
+    }
   },
   methods: {
     ...mapActions('core', ['setCurrentTab']),

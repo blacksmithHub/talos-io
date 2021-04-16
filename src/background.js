@@ -5,6 +5,7 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
 import MainWindow from '@/windows/Main'
 import MonitorWindow from '@/windows/Monitor'
+import LoginWindow from '@/windows/Login'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -73,4 +74,18 @@ ipcMain.on('update-settings', (event, arg) => {
 
 ipcMain.on('update-task', (event, arg) => {
   if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateTask', arg)
+})
+
+ipcMain.on('logout', async (event, arg) => {
+  if (!LoginWindow.getWindow()) LoginWindow.createWindow()
+
+  if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
+
+  if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
+})
+
+ipcMain.on('login', (event, arg) => {
+  initializeWindows()
+
+  if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
 })

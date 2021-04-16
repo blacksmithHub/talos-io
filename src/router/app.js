@@ -1,5 +1,8 @@
+import GuardService from '@/services/guard'
+
 const Home = () => import('../pages/Home')
 const Monitor = () => import('../pages/Monitor')
+const Login = () => import('../pages/Login')
 
 /**
  * =======================================================================
@@ -15,13 +18,19 @@ const Monitor = () => import('../pages/Monitor')
 export default {
   routes: [
     {
+      path: '/login',
+      component: Login
+    },
+    {
       path: '',
-      component: Home
+      component: Home,
+      beforeEnter: (to, from, next) => GuardService.authorized(next)
     },
     {
       path: '/monitor',
       name: 'Monitor',
-      component: Monitor
+      component: Monitor,
+      beforeEnter: (to, from, next) => GuardService.authorized(next)
     }
   ]
 }
