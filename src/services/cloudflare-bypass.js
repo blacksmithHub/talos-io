@@ -54,7 +54,10 @@ export default {
         args.push(`--proxy-server=${newProxyUrl}`)
       }
 
-      const browser = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'), headless: false })
+      const browser = await puppeteer.launch({
+        args,
+        executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked')
+      })
 
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
         await browser.close()
@@ -157,7 +160,11 @@ export default {
     try {
       let response = []
 
-      const browser = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'), headless: false })
+      const browser = await puppeteer.launch({
+        args,
+        executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
+        headless: false
+      })
 
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
         await browser.close()
