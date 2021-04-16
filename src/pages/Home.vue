@@ -147,7 +147,70 @@ export default {
   computed: {
     ...mapState('core', ['tab']),
     ...mapState('account', { accounts: 'items' }),
-    ...mapState('task', { tasks: 'items' })
+    ...mapState('task', { tasks: 'items' }),
+    ...mapState('proxy', { proxies: 'items' }),
+    ...mapState('billing', { billings: 'items' })
+  },
+  watch: {
+    proxies () {
+      this.proxies.forEach(el => {
+        const task = this.tasks.find((val) => val.proxy.id === el.id)
+
+        if (task) {
+          const data = {
+            ...task,
+            proxy: el
+          }
+
+          const UserAgent = require('user-agents')
+          const opt = { deviceCategory: 'desktop' }
+
+          if (data.mode.id !== 1) opt.deviceCategory = 'mobile'
+
+          const userAgent = new UserAgent(opt)
+
+          data.proxy.configs = data.proxy.configs.map((val) => {
+            return {
+              ...val,
+              userAgent: userAgent.toString()
+            }
+          })
+
+          this.updateTask(data)
+        }
+      })
+    },
+    accounts () {
+      this.accounts.forEach(el => {
+        const task = this.tasks.find((val) => val.account.id === el.id)
+
+        if (task) {
+          const data = {
+            ...task,
+            account: {
+              ...task.account,
+              paypal: el.paypal
+            }
+          }
+
+          this.updateTask(data)
+        }
+      })
+    },
+    billings () {
+      this.billings.forEach(el => {
+        const task = this.tasks.find((val) => val.billing.id === el.id)
+
+        if (task) {
+          const data = {
+            ...task,
+            billing: el
+          }
+
+          this.updateTask(data)
+        }
+      })
+    }
   },
   created () {
     ipcRenderer.on('updateTask', (event, arg) => {

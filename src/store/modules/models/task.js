@@ -59,7 +59,8 @@ export default {
         transactionData: {}
       }
 
-      const opt = {}
+      const opt = { deviceCategory: 'desktop' }
+
       if (data.mode.id !== 1) opt.deviceCategory = 'mobile'
 
       const UserAgent = require('user-agents')
@@ -116,7 +117,7 @@ export default {
       tasks = tasks.map((val) => {
         if (val.id === params.id) {
           if (val.proxy.id !== params.proxy.id || val.mode.id !== params.mode.id) {
-            const opt = {}
+            const opt = { deviceCategory: 'desktop' }
 
             if (params.mode.id !== 1) opt.deviceCategory = 'mobile'
 
@@ -195,7 +196,7 @@ export default {
         }
 
         const UserAgent = require('user-agents')
-        const opt = {}
+        const opt = { deviceCategory: 'desktop' }
 
         if (val.mode !== 1) opt.deviceCategory = 'mobile'
 
