@@ -194,12 +194,16 @@ export default {
       })
 
       for (let index = 0; index < item.proxies.length; index++) {
+        let proxy = this.proxies.find((el) => el.id === item.id)
+
+        if (proxy.status === this.status.STOPPED) break
+
         const UserAgent = require('user-agents')
         let userAgent = new UserAgent()
         userAgent = userAgent.toString()
         const conf = item.configs.find((el) => el.proxy === item.proxies[index].proxy)
 
-        const site = `${Config.services.titan22.url}/new-arrivals.html`
+        const site = Config.services.titan22.url
         const Url = require('url-parse')
         const url = new Url(site)
 
@@ -221,7 +225,7 @@ export default {
           return el
         })
 
-        const proxy = this.proxies.find((el) => el.id === item.id)
+        proxy = this.proxies.find((el) => el.id === item.id)
 
         this.updateProxy({
           ...proxy,
@@ -231,7 +235,7 @@ export default {
         await request
           .then((res) => {
             if (index + 1 === item.proxies.length) {
-              const proxy = this.proxies.find((el) => el.id === item.id)
+              proxy = this.proxies.find((el) => el.id === item.id)
 
               this.updateProxy({
                 ...proxy,
@@ -274,7 +278,7 @@ export default {
               }
             }
 
-            const proxy = this.proxies.find((el) => el.id === item.id)
+            proxy = this.proxies.find((el) => el.id === item.id)
 
             const obj = {
               ...proxy,

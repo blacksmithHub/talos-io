@@ -56,7 +56,8 @@ export default {
 
       const browser = await puppeteer.launch({
         args,
-        executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked')
+        executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
+        headless: (process.env.NODE_ENV === 'production')
       })
 
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
@@ -86,7 +87,7 @@ export default {
         }
       })
 
-      await page.goto(options.url)
+      await page.goto(options.headers.referer)
 
       const content = await page.content()
 
@@ -190,7 +191,7 @@ export default {
         }
       })
 
-      await page.goto(options.url)
+      await page.goto(options.headers.referer)
 
       if (id) {
         const vm = this

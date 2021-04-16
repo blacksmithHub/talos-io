@@ -94,6 +94,8 @@ export default {
 
   /**
    * Assign config
+   *
+   * @param {*} proxy
    */
   getConfig (proxy) {
     let index = 0
@@ -228,7 +230,7 @@ export default {
      *
      * get account data
      */
-    const account = await this.getAccount(id, 'cyan')
+    const account = await this.prepareAccount(id, 'cyan')
 
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
@@ -323,7 +325,7 @@ export default {
     if (currentTask.transactionData.account && Object.keys(currentTask.transactionData.account).length) {
       account = currentTask.transactionData.account
     } else {
-      account = await this.getAccount(id)
+      account = await this.prepareAccount(id)
     }
 
     currentTask = await Bot.getCurrentTask(id)
@@ -532,6 +534,21 @@ export default {
   },
 
   /**
+   * Prepare user account
+   *
+   * @param {*} id
+   * @param {*} attr
+   * @returns
+   */
+  async prepareAccount (id, attr = 'orange') {
+    const account = await this.getAccount(id, attr)
+
+    await this.updateAccount(id, attr, account)
+
+    return account
+  },
+
+  /**
    * Fetch user account
    *
    * @param {*} id
@@ -576,7 +593,75 @@ export default {
 
         if (!Bot.isRunning(id)) break
 
-        const response = await customerApi.profile(params)
+        const response = await customerApi.getProfile(params)
+
+        if (!Bot.isRunning(id)) break
+
+        if (response && response.error) {
+          await this.handleError(id, counter, response.error, attr)
+          continue
+        } else if (response && !response.error && JSON.parse(response) && JSON.parse(response).addresses.length) {
+          data = JSON.parse(response)
+          break
+        }
+      } catch (error) {
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line494: ${error}`)
+        continue
+      }
+    }
+
+    return data
+  },
+
+  /**
+   * Update user account
+   *
+   * @param {*} id
+   * @param {*} attr
+   * @returns
+   */
+  async updateAccount (id, attr = 'orange', account) {
+    let data = null
+    let counter = 0
+
+    while (Bot.isRunning(id) && !data) {
+      counter++
+
+      try {
+        let currentTask = await Bot.getCurrentTask(id)
+        if (!Bot.isRunning(id) || !currentTask) break
+
+        if (counter > 1) {
+          let interval = null
+          let timeout = null
+          await new Promise((resolve) => {
+            interval = setInterval(() => {
+              timeout = setTimeout(() => {
+                clearInterval(interval)
+                resolve()
+              }, currentTask.delay)
+            }, 500)
+          })
+          clearInterval(interval)
+          clearTimeout(timeout)
+        }
+
+        currentTask = await Bot.getCurrentTask(id)
+        if (!Bot.isRunning(id) || !currentTask) break
+
+        await Bot.updateCurrentTaskLog(id, `#${counter}: Updating account...`)
+
+        const params = {
+          token: currentTask.transactionData.token.token,
+          mode: currentTask.mode,
+          config: this.getConfig(currentTask.proxy),
+          taskId: currentTask.id,
+          payload: { customer: account }
+        }
+
+        if (!Bot.isRunning(id)) break
+
+        const response = await customerApi.updateProfile(params)
 
         if (!Bot.isRunning(id)) break
 
@@ -1285,7 +1370,7 @@ export default {
           } else if (response && !response.error) {
             const params = {
               mode: currentTask.mode,
-              config: this.getConfig(currentTask.proxy),
+              config: payload.config,
               taskId: currentTask.id
             }
 
@@ -1404,7 +1489,7 @@ export default {
             const params = {
               token: currentTask.transactionData.token.token,
               mode: currentTask.mode,
-              config: this.getConfig(currentTask.proxy),
+              config: payload.config,
               taskId: currentTask.id
             }
 
@@ -1422,7 +1507,7 @@ export default {
             } else if (order && !order.error) {
               const params = {
                 mode: currentTask.mode,
-                config: this.getConfig(currentTask.proxy),
+                config: payload.config,
                 taskId: currentTask.id
               }
 

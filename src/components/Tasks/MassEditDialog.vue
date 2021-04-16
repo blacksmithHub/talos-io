@@ -350,7 +350,23 @@ export default {
 
         if (this.placeOrder) params.placeOrder = this.placeOrder
 
-        if (this.sizes.length) params.sizes = this.sizes
+        if (this.sizes.length) {
+          const sizes = []
+
+          this.sizes.forEach((element) => {
+            const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
+
+            const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
+
+            sizes.push({
+              attribute_id: attr.attribute_id,
+              value: size.value,
+              label: size.label
+            })
+          })
+
+          params.sizes = sizes
+        }
 
         if (this.delay) params.delay = this.delay
 
@@ -362,8 +378,35 @@ export default {
 
         const data = (this.selected.length) ? this.selected : this.tasks
         data.forEach(el => {
+          const opt = { deviceCategory: 'desktop' }
+
+          if (this.mode && this.mode.id !== el.mode.id && this.mode.id !== 1) opt.deviceCategory = 'mobile'
+
+          if (this.proxy && (this.proxy.id !== el.proxy.id || !this.proxy.id)) {
+            const UserAgent = require('user-agents')
+            let userAgent = new UserAgent(opt)
+            userAgent = userAgent.toString()
+
+            if (this.proxy.id) {
+              params.proxy.configs = params.proxy.configs.map(el => {
+                return {
+                  ...el,
+                  userAgent: userAgent
+                }
+              })
+            } else {
+              const rp = require('request-promise')
+              const jar = rp.jar()
+
+              params.proxy.configs = [{
+                rp: rp,
+                jar: jar,
+                userAgent: userAgent
+              }]
+            }
+          }
+
           this.updateTask({
-            id: el.id,
             ...el,
             ...params
           })

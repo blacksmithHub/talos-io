@@ -67,7 +67,7 @@ export default {
       let userAgent = new UserAgent(opt)
       userAgent = userAgent.toString()
 
-      if (!data.proxy) {
+      if (!data.proxy || !data.proxy.id) {
         const rp = require('request-promise')
         const jar = rp.jar()
 
@@ -116,34 +116,6 @@ export default {
 
       tasks = tasks.map((val) => {
         if (val.id === params.id) {
-          if (val.proxy.id !== params.proxy.id || val.mode.id !== params.mode.id) {
-            const opt = { deviceCategory: 'desktop' }
-
-            if (params.mode.id !== 1) opt.deviceCategory = 'mobile'
-
-            const UserAgent = require('user-agents')
-            let userAgent = new UserAgent(opt)
-            userAgent = userAgent.toString()
-
-            if (params.proxy.configs && params.proxy.configs.length) {
-              params.proxy.configs = params.proxy.configs.map(el => {
-                return {
-                  ...el,
-                  userAgent: userAgent
-                }
-              })
-            } else {
-              const rp = require('request-promise')
-              const jar = rp.jar()
-
-              params.proxy.configs = [{
-                rp: rp,
-                jar: jar,
-                userAgent: userAgent
-              }]
-            }
-          }
-
           val = {
             ...val,
             ...params

@@ -19,10 +19,31 @@ export default {
    * @param params
    * @return mixed
    */
-  profile (params) {
+  getProfile (params) {
     try {
       params.url = `${this.baseUrl}/${this.url}/me`
       params.method = 'GET'
+
+      return this.http(params)
+        .then((res) => res)
+        .catch((err) => {
+          return { error: err }
+        })
+    } catch (error) {
+      return { error: error }
+    }
+  },
+
+  /**
+   * Update user profile
+   *
+   * @param params
+   * @return mixed
+   */
+  updateProfile (params) {
+    try {
+      params.url = `${this.baseUrl}/${this.url}/me`
+      params.method = 'PUT'
 
       return this.http(params)
         .then((res) => res)

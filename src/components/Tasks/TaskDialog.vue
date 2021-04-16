@@ -564,6 +564,36 @@ export default {
         }
 
         if (this.id) {
+          const item = this.tasks.find((el) => el.id === this.id)
+
+          if (params.proxy.id !== item.proxy.id || params.mode.id !== item.mode.id) {
+            const opt = { deviceCategory: 'desktop' }
+
+            if (params.mode.id !== 1) opt.deviceCategory = 'mobile'
+
+            const UserAgent = require('user-agents')
+            let userAgent = new UserAgent(opt)
+            userAgent = userAgent.toString()
+
+            if (params.proxy.id) {
+              params.proxy.configs = params.proxy.configs.map(el => {
+                return {
+                  ...el,
+                  userAgent: userAgent
+                }
+              })
+            } else {
+              const rp = require('request-promise')
+              const jar = rp.jar()
+
+              params.proxy.configs = [{
+                rp: rp,
+                jar: jar,
+                userAgent: userAgent
+              }]
+            }
+          }
+
           this.updateTask({
             ...params,
             id: this.id
