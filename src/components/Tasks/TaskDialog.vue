@@ -460,7 +460,7 @@ export default {
      * On edit event
      */
     onEdit (id) {
-      const item = this.tasks.find((el) => el.id === id)
+      const item = { ...this.tasks.find((el) => el.id === id) }
 
       const sizes = item.sizes.slice().map((val) => val.label)
 
@@ -548,9 +548,9 @@ export default {
 
         const params = {
           sku: this.sku,
-          account: this.account,
-          billing: this.billing,
-          proxy: this.proxy,
+          account: { ...this.account },
+          billing: this.billing ? { ...this.billing } : null,
+          proxy: { ...this.proxy },
           placeOrder: this.placeOrder,
 
           sizes: sizes,

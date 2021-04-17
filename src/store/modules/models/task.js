@@ -135,14 +135,14 @@ export default {
      * @param {*} param
      * @param {*} key
      */
-    deleteItem ({ state, commit }, key) {
+    deleteItem ({ state, commit }, item) {
       const tasks = state.items.slice()
-      const id = tasks[key].id
+      const key = tasks.findIndex((el) => el.id === item.id)
 
       tasks.splice(key, 1)
 
       try {
-        fs.unlinkSync(`Task-${id}.json`)
+        fs.unlinkSync(`Task-${item.id}.json`)
       } catch (error) {
         //
       }

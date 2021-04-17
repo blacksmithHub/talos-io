@@ -73,15 +73,21 @@ export default {
     if (params.taskId) {
       const vuex = store._modules.root._children.task.context
 
-      const task = vuex.state.items.find((val) => val.id === params.taskId)
+      const items = vuex.state.items.slice()
 
-      task.proxy.configs = task.proxy.configs.map((el) => {
-        if (el.proxy === options.proxy) el.request = request
+      const task = items.find((val) => val.id === params.taskId)
 
-        return el
-      })
+      if (task) {
+        const confs = task.proxy.configs.slice()
 
-      vuex.dispatch('updateItem', task)
+        task.proxy.configs = confs.map((el) => {
+          if (el.proxy === options.proxy) el.request = request
+
+          return el
+        })
+
+        vuex.dispatch('updateItem', task)
+      }
     }
 
     return request

@@ -309,9 +309,8 @@ export default {
       })
     },
     async onDelete (item) {
-      const index = this.proxies.findIndex((el) => el.id === item.id)
       await this.onStop(item)
-      this.deleteProxy(index)
+      this.deleteProxy(item)
     }
   }
 }

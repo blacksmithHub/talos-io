@@ -87,7 +87,7 @@
               color="red"
               depressed
               :disabled="item.loading"
-              @click="onDelete(item)"
+              @click="deleteAccount(item)"
             >
               <v-icon
                 small
@@ -164,10 +164,6 @@ export default {
 
     onResize () {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
-    },
-    onDelete (item) {
-      const index = this.accounts.findIndex((el) => el.id === item.id)
-      this.deleteAccount(index)
     },
     async paypalLogin (item) {
       if (item.loading) return false

@@ -133,8 +133,23 @@ export default {
             {
               if (!Bot.isRunning(id)) break
 
+              let currentTask = await Bot.getCurrentTask(id)
+
+              let interval = null
+              let timeout = null
+              await new Promise((resolve) => {
+                interval = setInterval(() => {
+                  timeout = setTimeout(() => {
+                    clearInterval(interval)
+                    resolve()
+                  }, currentTask.delay)
+                }, 500)
+              })
+              clearInterval(interval)
+              clearTimeout(timeout)
+
               const token = await this.authenticate(id, attr)
-              const currentTask = await Bot.getCurrentTask(id)
+              currentTask = await Bot.getCurrentTask(id)
 
               if (Bot.isRunning(id) && token && Object.keys(token).length && currentTask) {
                 currentTask.transactionData.token = token

@@ -5,7 +5,7 @@
   >
     <v-data-table
       v-model="selected"
-      :height="windowSize.y - 67 - 27 - 62 - 39"
+      :height="windowSize.y - 73 - 33 - 69 - 45"
       style="width: 100%"
       class="elevation-2"
       no-data-text="Nothing to display"
@@ -188,7 +188,8 @@ export default {
     }
   },
   computed: {
-    ...mapState('task', { tasks: 'items' })
+    ...mapState('task', { tasks: 'items' }),
+    ...mapState('proxy', { proxies: 'items' })
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem', deleteTask: 'deleteItem' }),
@@ -248,22 +249,23 @@ export default {
       }
     },
     async onDelete (item) {
-      const index = this.tasks.findIndex((el) => el.id === item.id)
       await this.onStop(item)
-      this.deleteTask(index)
+      this.deleteTask(item)
     },
     onInit (item) {
-      this.updateTask({
-        ...item,
-        status: {
-          id: Constant.STATUS.RUNNING,
-          msg: 'running',
-          class: 'orange'
-        }
-      })
+      if (item.status.id === Constant.STATUS.STOPPED) {
+        this.updateTask({
+          ...item,
+          status: {
+            id: Constant.STATUS.RUNNING,
+            msg: 'running',
+            class: 'orange'
+          }
+        })
 
-      Task.updateCurrentTaskLog(item.id, 'Initializing...')
-      Titan22.verify(item.id)
+        Task.updateCurrentTaskLog(item.id, 'Initializing...')
+        Titan22.verify(item.id)
+      }
     }
   }
 }

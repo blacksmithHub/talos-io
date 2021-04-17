@@ -94,8 +94,9 @@ export default {
      * @param {*} param
      * @param {*} key
      */
-    deleteItem ({ state, commit }, key) {
+    deleteItem ({ state, commit }, item) {
       const proxies = state.items.slice()
+      const key = proxies.findIndex((el) => el.id === item.id)
 
       proxies.splice(key, 1)
 

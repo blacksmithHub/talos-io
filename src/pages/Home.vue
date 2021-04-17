@@ -1,98 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar
-      app
-      dense
-      class="titleBar"
-    >
-      <v-row no-gutters>
-        <v-col
-          cols="1"
-          class="titleBar"
-          align-self="center"
-        >
-          <div class="d-flex align-center">
-            <v-img
-              class="shrink mr-2"
-              contain
-              :src="require('@/assets/talos.png')"
-              transition="scale-transition"
-              width="35"
-            />
-          </div>
-        </v-col>
-
-        <v-col align-self="center">
-          <v-tabs
-            :value="tab"
-            background-color="transparent"
-            grow
-            slider-color="primary"
-            centered
-            @change="setCurrentTab"
-          >
-            <v-tab
-              v-for="item in items"
-              :key="item"
-            >
-              {{ item }}
-            </v-tab>
-          </v-tabs>
-        </v-col>
-
-        <v-col cols="1">
-          <v-row
-            no-gutters
-            class="text-right mt-1"
-            justify="center"
-            align="center"
-          >
-            <v-col align-self="center">
-              <v-btn
-                icon
-                x-small
-                :ripple="false"
-                class="mr-1"
-                @click="onMaximize"
-              >
-                <v-icon
-                  small
-                  color="success"
-                  v-text="'mdi-checkbox-blank-circle'"
-                />
-              </v-btn>
-
-              <v-btn
-                icon
-                x-small
-                :ripple="false"
-                class="mr-1"
-                @click="onMinimize"
-              >
-                <v-icon
-                  small
-                  color="warning"
-                  v-text="'mdi-checkbox-blank-circle'"
-                />
-              </v-btn>
-
-              <v-btn
-                icon
-                x-small
-                :ripple="false"
-                @click="onClose"
-              >
-                <v-icon
-                  small
-                  color="error"
-                  v-text="'mdi-checkbox-blank-circle'"
-                />
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-col>
-      </v-row>
-    </v-app-bar>
+    <Header :items.sync="items" />
 
     <v-main>
       <v-tabs-items
@@ -115,18 +23,22 @@
         </v-tab-item>
       </v-tabs-items>
     </v-main>
+
+    <Footer v-if="tab === 0" />
   </v-app>
 </template>
 
 <script>
 import { mapActions, mapState } from 'vuex'
-import { remote, ipcRenderer } from 'electron'
+import { ipcRenderer } from 'electron'
 import moment from 'moment-timezone'
 
 import Tasks from '@/components/Tasks/Index.vue'
 import Profiles from '@/components/Profiles/Index.vue'
 import Proxies from '@/components/Proxies/Index.vue'
 import Settings from '@/components/Settings/Index.vue'
+import Header from '@/components/App/Header'
+import Footer from '@/components/App/Footer'
 
 import Auth from '@/services/auth'
 
@@ -137,7 +49,9 @@ export default {
     Tasks,
     Profiles,
     Proxies,
-    Settings
+    Settings,
+    Header,
+    Footer
   },
   data () {
     return {
@@ -251,25 +165,8 @@ export default {
     }
   },
   methods: {
-    ...mapActions('core', ['setCurrentTab']),
     ...mapActions('account', { updateAccount: 'updateItem' }),
-    ...mapActions('task', { updateTask: 'updateItem' }),
-
-    onClose () {
-      remote.getCurrentWindow().close()
-    },
-    onMaximize () {
-      const win = remote.getCurrentWindow()
-
-      if (!win.isMaximized()) {
-        win.maximize()
-      } else {
-        win.unmaximize()
-      }
-    },
-    onMinimize () {
-      remote.getCurrentWindow().minimize()
-    }
+    ...mapActions('task', { updateTask: 'updateItem' })
   }
 }
 </script>
