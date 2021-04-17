@@ -1406,13 +1406,13 @@ export default {
       currentTask.transactionData.product.image = img
       currentTask.transactionData.checkoutLink = data
       currentTask.transactionData.method = 'PayMaya'
-      currentTask.logs = `${currentTask.logs || ''};${msg}`
       currentTask.status = {
         id: Constant.STATUS.RUNNING,
         msg: msg,
         class: 'success'
       }
 
+      await Bot.updateCurrentTaskLog(id, msg)
       await Tasks.dispatch('updateItem', currentTask)
     }
 
@@ -1575,13 +1575,13 @@ export default {
       currentTask.transactionData.cookie = data.cookie
       currentTask.transactionData.method = '2c2p'
       currentTask.transactionData.order = data.data
-      currentTask.logs = `${currentTask.logs || ''};${msg}`
       currentTask.status = {
         id: Constant.STATUS.RUNNING,
         msg: msg,
         class: 'success'
       }
 
+      await Bot.updateCurrentTaskLog(id, msg)
       await Tasks.dispatch('updateItem', currentTask)
     }
 
@@ -1682,13 +1682,13 @@ export default {
 
       currentTask.transactionData.product.image = img
       currentTask.transactionData.method = 'PayPal'
-      currentTask.logs = `${currentTask.logs || ''};${msg}`
       currentTask.status = {
         id: Constant.STATUS.RUNNING,
         msg: msg,
         class: 'success'
       }
 
+      await Bot.updateCurrentTaskLog(id, msg)
       await Tasks.dispatch('updateItem', currentTask)
     }
 

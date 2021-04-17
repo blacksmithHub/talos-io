@@ -2,19 +2,6 @@ import Store from '@/store/index'
 import Constant from '@/config/constant'
 import Task from '@/services/task'
 
-const Proxies = Store._modules.root._children.proxy.context
-
-const vanillaPuppeteer = require('puppeteer')
-const { addExtra } = require('puppeteer-extra')
-const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-const ProxyChain = require('proxy-chain')
-
-const puppeteer = addExtra(vanillaPuppeteer)
-const stealth = StealthPlugin()
-puppeteer.use(stealth)
-
-const blockedResources = ['queue-it']
-
 /**
  * ===============================================
  * Cloudflare Bypass service
@@ -25,6 +12,8 @@ export default {
    * Identify if proxy is running
    */
   isProxyRunning (id) {
+    const Proxies = Store._modules.root._children.proxy.context
+
     let proxy = Proxies.state.items
 
     proxy = proxy.find((el) => el.id === id)
@@ -37,29 +26,40 @@ export default {
    * Initialize bypassing
    */
   async bypass (options, id = null, service = null) {
+    const vanillaPuppeteer = require('puppeteer')
+    const { addExtra } = require('puppeteer-extra')
+    const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+    const ProxyChain = require('proxy-chain')
+
+    const puppeteer = addExtra(vanillaPuppeteer)
+    const stealth = StealthPlugin()
+    puppeteer.use(stealth)
+
+    const blockedResources = ['queue-it']
+
+    const args = [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      `--user-agent=${options.headers['User-Agent']}`,
+      '--window-size=560,638'
+    ]
+
+    let cookies = []
+
+    if (options.proxy) {
+      const oldProxyUrl = options.proxy
+      const newProxyUrl = await ProxyChain.anonymizeProxy(oldProxyUrl)
+
+      args.push(`--proxy-server=${newProxyUrl}`)
+    }
+
+    const browser = await puppeteer.launch({
+      args,
+      executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
+      headless: false
+    })
+
     try {
-      const args = [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        `--user-agent=${options.headers['User-Agent']}`,
-        '--window-size=560,638'
-      ]
-
-      let cookies = []
-
-      if (options.proxy) {
-        const oldProxyUrl = options.proxy
-        const newProxyUrl = await ProxyChain.anonymizeProxy(oldProxyUrl)
-
-        args.push(`--proxy-server=${newProxyUrl}`)
-      }
-
-      const browser = await puppeteer.launch({
-        args,
-        executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
-        headless: (process.env.NODE_ENV === 'production')
-      })
-
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
         await browser.close()
         return []
@@ -111,6 +111,12 @@ export default {
 
       return cookies
     } catch (error) {
+      try {
+        await browser.close()
+      } catch (error) {
+        //
+      }
+
       return []
     }
   },
@@ -158,15 +164,25 @@ export default {
    * Bypass cloudflare Hcaptcha
    */
   async cfHcaptcha (options, args, id = null, service) {
+    const vanillaPuppeteer = require('puppeteer')
+    const { addExtra } = require('puppeteer-extra')
+    const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+
+    const puppeteer = addExtra(vanillaPuppeteer)
+    const stealth = StealthPlugin()
+    puppeteer.use(stealth)
+
+    const blockedResources = ['queue-it']
+
+    let response = []
+
+    const browser = await puppeteer.launch({
+      args,
+      executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
+      headless: false
+    })
+
     try {
-      let response = []
-
-      const browser = await puppeteer.launch({
-        args,
-        executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
-        headless: false
-      })
-
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
         await browser.close()
         return []
@@ -226,8 +242,16 @@ export default {
         break
       }
 
+      await browser.close()
+
       return response
     } catch (error) {
+      try {
+        await browser.close()
+      } catch (error) {
+        //
+      }
+
       return []
     }
   }
