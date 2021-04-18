@@ -26,7 +26,9 @@ export default {
     ...mapState('settings', { settings: 'items' }),
     ...mapState('task', { tasks: 'items' }),
     ...mapState('account', { accounts: 'items' }),
-    ...mapState('proxy', { proxies: 'items' })
+    ...mapState('proxy', { proxies: 'items' }),
+    ...mapState('cloudflare', { cloudflare: 'items' }),
+    ...mapState('monitor', { monitor: 'items' })
   },
   watch: {
     'settings.nightMode': function (nightMode) {
@@ -41,12 +43,20 @@ export default {
     if (this.accounts.length) this.initAccount()
 
     if (this.tasks.length) this.initTask()
+
+    if (!Object.keys(this.cloudflare).length) this.resetCf()
+
+    this.initCf()
+
+    if (!Object.keys(this.monitor).length) this.initMonitor()
   },
   methods: {
     ...mapActions('settings', { initSettings: 'reset' }),
     ...mapActions('proxy', { initProxy: 'init' }),
     ...mapActions('account', { initAccount: 'init' }),
-    ...mapActions('task', { initTask: 'init' })
+    ...mapActions('task', { initTask: 'init' }),
+    ...mapActions('cloudflare', { resetCf: 'reset', initCf: 'init' }),
+    ...mapActions('monitor', { initMonitor: 'reset' })
   }
 }
 </script>

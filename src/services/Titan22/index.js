@@ -117,12 +117,12 @@ export default {
     try {
       try {
         if (response.statusCode && (response.statusCode === 503 || response.statusCode === 403)) {
-          await Bot.updateCurrentTaskLog(id, `#${counter} at Line87: Bypassing bot protection...`)
+          await Bot.updateCurrentTaskLog(id, `#${counter}: Bypassing bot protection...`)
         } else {
-          await Bot.updateCurrentTaskLog(id, `#${counter} at Line87: ${response.message}`)
+          await Bot.updateCurrentTaskLog(id, `#${counter} at Line 122: ${response.message}`)
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 94: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 125: ${error}`)
       }
 
       if (response.statusCode) {
@@ -187,14 +187,30 @@ export default {
                   jar.setCookie(val, options.headers.referer)
                 }
 
-                currentTask.configs = await currentTask.proxy.configs.map((el) => {
+                let configs = currentTask.proxy.configs.slice()
+
+                configs = await configs.map((el) => {
                   if (el.proxy === options.proxy) el.options = options
 
                   return el
                 })
+
+                currentTask.proxy.configs = configs
+
+                Tasks.state.items.forEach((el) => {
+                  if (el.id !== id && el.proxy.id === currentTask.proxy.id) {
+                    Tasks.dispatch('updateItem', {
+                      ...el,
+                      proxy: {
+                        ...el.proxy,
+                        configs: configs
+                      }
+                    })
+                  }
+                })
               }
 
-              Tasks.dispatch('updateItem', currentTask)
+              Tasks.dispatch('updateItem', { ...currentTask })
             }
             break
         }
@@ -202,7 +218,7 @@ export default {
         await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'error', attr: 'red' })
       }
     } catch (error) {
-      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 119: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 221: ${error}`)
     }
   },
 
@@ -540,7 +556,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line429: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 559: ${error}`)
         continue
       }
     }
@@ -620,7 +636,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line494: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 639: ${error}`)
         continue
       }
     }
@@ -688,7 +704,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line494: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 707: ${error}`)
         continue
       }
     }
@@ -769,7 +785,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line575: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 788: ${error}`)
         continue
       }
     }
@@ -836,7 +852,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line642: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 855: ${error}`)
         continue
       }
     }
@@ -903,7 +919,7 @@ export default {
               continue
             }
           } catch (error) {
-            await Bot.updateCurrentTaskLog(id, `#${counter} at Line706: ${error}`)
+            await Bot.updateCurrentTaskLog(id, `#${counter} at Line 922: ${error}`)
             continue
           }
         }
@@ -1005,12 +1021,12 @@ export default {
               continue
             }
           } catch (error) {
-            await Bot.updateCurrentTaskLog(id, `#${counter} at Line807: ${error}`)
+            await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1024: ${error}`)
             continue
           }
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line812: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1029: ${error}`)
         continue
       }
     }
@@ -1097,7 +1113,7 @@ export default {
             break
           }
         } catch (error) {
-          await Bot.updateCurrentTaskLog(id, `#${counter} at Line891: ${error}`)
+          await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1116: ${error}`)
           continue
         }
       }
@@ -1184,7 +1200,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line970: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1203: ${error}`)
         continue
       }
     }
@@ -1310,7 +1326,7 @@ export default {
           break
       }
     } catch (error) {
-      await Bot.updateCurrentTaskLog(id, `Line1110: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `Line 1329: ${error}`)
     }
 
     return data
@@ -1402,7 +1418,7 @@ export default {
 
         if (data) break
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `Line1192: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line 1421: ${error}`)
         continue
       }
     }
@@ -1570,7 +1586,7 @@ export default {
 
         if (data) break
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `Line1300: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line 1589: ${error}`)
         continue
       }
     }
@@ -1679,7 +1695,7 @@ export default {
 
         if (data) break
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `Line1409: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line 1698: ${error}`)
         continue
       }
     }

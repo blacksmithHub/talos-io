@@ -189,10 +189,17 @@ export default {
   },
   computed: {
     ...mapState('task', { tasks: 'items' }),
-    ...mapState('proxy', { proxies: 'items' })
+    ...mapState('proxy', { proxies: 'items' }),
+    ...mapState('cloudflare', { cloudflare: 'items' })
+  },
+  watch: {
+    tasks () {
+      if (!this.tasks.filter((el) => el.status.id === Constant.STATUS.RUNNING).length) this.initCf()
+    }
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem', deleteTask: 'deleteItem' }),
+    ...mapActions('cloudflare', { initCf: 'init', removeToQueue: 'removeToQueue', setDoors: 'setDoors' }),
 
     getSizes (item) {
       const data = { ...item }
@@ -219,6 +226,13 @@ export default {
     },
     onStop (item) {
       if (item.status.id === Constant.STATUS.RUNNING) {
+        this.removeToQueue(this.cloudflare.queue.findIndex((el) => el.id === item.id))
+
+        const doors = this.cloudflare.doors.slice()
+        const key = doors.findIndex((el) => !el)
+        doors[key] = true
+        this.setDoors(doors)
+
         Task.updateCurrentTaskLog(item.id, 'Stopped!')
         Task.updateCurrentTaskLog(item.id, '====================')
 
@@ -253,6 +267,8 @@ export default {
       this.deleteTask(item)
     },
     onInit (item) {
+      this.removeToQueue(this.cloudflare.queue.findIndex((el) => el.id === item.id))
+
       if (item.status.id === Constant.STATUS.STOPPED) {
         this.updateTask({
           ...item,

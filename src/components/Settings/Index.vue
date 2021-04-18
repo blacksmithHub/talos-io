@@ -35,8 +35,14 @@
     <v-card>
       <v-card-text>
         <v-row>
-          <v-col cols="6">
-            <v-list dense>
+          <v-col
+            cols="6"
+            class="pt-0 pl-0 pb-0"
+          >
+            <v-list
+              dense
+              class="pa-0"
+            >
               <v-subheader v-text="'Preferences'" />
               <v-list-item class="pa-0">
                 <v-list-item-content class="pa-2">
@@ -73,8 +79,14 @@
             class="my-4"
           />
 
-          <v-col cols="6">
-            <v-list dense>
+          <v-col
+            cols="6"
+            class="pt-0 pr-0 pb-0"
+          >
+            <v-list
+              dense
+              class="pa-0"
+            >
               <v-subheader v-text="'Monitor'" />
               <v-list-item class="pa-0">
                 <v-list-item-content class="pa-2">
@@ -126,6 +138,56 @@
               </v-list-item>
             </v-list>
           </v-col>
+
+          <v-col
+            cols="6"
+            class="pt-0 pl-0 pb-0"
+          >
+            <v-list
+              dense
+              class="pa-0"
+            >
+              <v-subheader v-text="'Cloudflare Bypasser'" />
+              <v-list-item class="pa-0">
+                <v-list-item-content class="pa-2">
+                  <v-row>
+                    <v-col>
+                      <v-list-item-title>
+                        <span v-text="'Total Challenge Window'" />
+
+                        <v-tooltip top>
+                          <template v-slot:activator="{ on, attrs }">
+                            <v-icon
+                              v-bind="attrs"
+                              small
+                              class="mb-1 ml-2"
+                              v-on="on"
+                              v-text="'mdi-information'"
+                            />
+                          </template>
+                          <span v-text="'Only applies to tasks'" />
+                        </v-tooltip>
+                      </v-list-item-title>
+                      <v-list-item-subtitle v-text="'Set total count of challenge windows at a time'" />
+                    </v-col>
+
+                    <v-col>
+                      <v-text-field
+                        v-model="doors"
+                        dense
+                        outlined
+                        type="number"
+                        hide-details="auto"
+                        hint="Zero means infinite"
+                        :error-messages="doorsErrors"
+                        @blur="$v.doors.$touch()"
+                      />
+                    </v-col>
+                  </v-row>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list>
+          </v-col>
         </v-row>
       </v-card-text>
     </v-card>
@@ -154,6 +216,8 @@
                         outlined
                         clearable
                         placeholder="webhook url"
+                        :error-messages="webhookUrlErrors"
+                        @blur="$v.webhookUrl.$touch()"
                       />
                     </v-col>
 
@@ -243,13 +307,15 @@ export default {
       monitorProxy: { id: null, name: 'Localhost' },
       webhookUrl: null,
       webhookTesting: false,
-      saving: false
+      saving: false,
+      doors: 1
     }
   },
   computed: {
     ...mapState('core', ['tab', 'about']),
     ...mapState('settings', { settings: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
+    ...mapState('cloudflare', { cloudflare: 'items' }),
 
     /**
      * Return all proxies
@@ -277,12 +343,25 @@ export default {
     /**
      * Error messages for webhook.
      */
-    webhookErrors () {
+    webhookUrlErrors () {
       const errors = []
 
       if (!this.$v.webhookUrl.$dirty) return errors
 
       this.$v.webhookUrl.url || errors.push('Accepts only URL')
+
+      return errors
+    },
+    /**
+     * Error messages for doors.
+     */
+    doorsErrors () {
+      const errors = []
+
+      if (!this.$v.doors.$dirty) return errors
+
+      this.$v.doors.minValue || errors.push('Invalid input, 0 min')
+      this.$v.doors.required || errors.push('Required')
 
       return errors
     }
@@ -299,6 +378,7 @@ export default {
     ...mapActions('snackbar', ['showSnackbar']),
     ...mapActions('settings', { setSettings: 'setItems' }),
     ...mapActions('dialog', ['openDialog']),
+    ...mapActions('cloudflare', ['addDoors', 'removeDoors']),
 
     /**
      * Clear changes
@@ -311,6 +391,7 @@ export default {
       this.webhookUrl = this.settings.webhookUrl
       this.webhookTesting = false
       this.saving = false
+      this.doors = this.cloudflare.doors.length
     },
 
     /**
@@ -327,6 +408,18 @@ export default {
           withSound: this.withSound,
           monitorProxy: this.monitorProxy
         })
+
+        if (this.doors > this.cloudflare.doors.length) {
+          const count = (this.doors - this.cloudflare.doors.length)
+          for (let index = 0; index < count; index++) {
+            this.addDoors(true)
+          }
+        } else if (this.doors < this.cloudflare.doors.length) {
+          const count = (this.cloudflare.doors.length - this.doors)
+          for (let index = 0; index < count; index++) {
+            this.removeDoors()
+          }
+        }
 
         ipcRenderer.send('update-settings', this.settings)
         this.showSnackbar({ message: 'Saved successfully', color: 'teal' })
@@ -378,7 +471,8 @@ export default {
   },
   validations: {
     webhookUrl: { url },
-    monitorInterval: { minValue: minValue(1000), required }
+    monitorInterval: { minValue: minValue(1000), required },
+    doors: { minValue: minValue(0), required }
   }
 }
 </script>

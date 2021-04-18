@@ -172,21 +172,19 @@
             </template>
 
             <template v-slot:item.actions="{item}">
-              <div>
-                <v-btn
-                  v-clipboard:copy="item.sku"
-                  v-clipboard:success="() => {showSnackbar({ message: `You just copied: ${item.sku}`, color: 'teal' })}"
-                  icon
-                  color="primary"
-                  depressed
+              <v-btn
+                v-clipboard:copy="item.sku"
+                v-clipboard:success="() => {showSnackbar({ message: `You just copied: ${item.sku}`, color: 'teal' })}"
+                icon
+                color="primary"
+                depressed
+                small
+              >
+                <v-icon
                   small
-                >
-                  <v-icon
-                    small
-                    v-text="'mdi-content-copy'"
-                  />
-                </v-btn>
-              </div>
+                  v-text="'mdi-content-copy'"
+                />
+              </v-btn>
             </template>
 
             <template v-slot:item.img="{ value }">
@@ -263,7 +261,7 @@ export default {
     return {
       search: '',
       loading: false,
-      count: 100,
+      count: 500,
       filter: 'updated_at',
       filterItems: [
         { title: 'Last created', value: 'created_at' },
@@ -314,7 +312,8 @@ export default {
     }
   },
   computed: {
-    ...mapState('settings', { settings: 'items' })
+    ...mapState('settings', { settings: 'items' }),
+    ...mapState('monitor', { monitor: 'items' })
   },
   watch: {
     settings () {
@@ -322,6 +321,9 @@ export default {
     }
   },
   async created () {
+    this.count = this.monitor.total
+    this.filter = this.monitor.filter
+
     this.params.payload.searchCriteria.sortOrders[0].field = this.filter
     this.params.payload.searchCriteria.pageSize = this.count
 
@@ -334,6 +336,7 @@ export default {
   methods: {
     ...mapActions('settings', { setSettings: 'setItems' }),
     ...mapActions('snackbar', ['showSnackbar']),
+    ...mapActions('monitor', { updateMonitor: 'setItems' }),
 
     onResize () {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
@@ -359,7 +362,7 @@ export default {
       const response = await this.fetchProduct()
 
       if (response) {
-        this.products = JSON.parse(response).items.map(element => {
+        const allProducts = JSON.parse(response).items.map(element => {
           const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
           const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
 
@@ -373,6 +376,8 @@ export default {
             date: element.updated_at
           }
         })
+
+        this.products = allProducts
       }
 
       this.loading = false
@@ -443,6 +448,11 @@ export default {
     },
 
     applyFilter () {
+      this.updateMonitor({
+        filter: this.filter,
+        total: this.count
+      })
+
       this.params.payload.searchCriteria.sortOrders[0].field = this.filter
       this.params.payload.searchCriteria.pageSize = this.count
       clearTimeout(this.loop)
