@@ -265,6 +265,8 @@ export default {
     async onDelete (item) {
       await this.onStop(item)
       this.deleteTask(item)
+      const key = this.selected.findIndex((el) => el.id === item.id)
+      this.selected.splice(key, 1)
     },
     onInit (item) {
       this.removeToQueue(this.cloudflare.queue.findIndex((el) => el.id === item.id))

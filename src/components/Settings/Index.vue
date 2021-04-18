@@ -453,7 +453,7 @@ export default {
     resetAll () {
       this.openDialog({
         title: 'Reset All Data',
-        body: 'Are you sure you want to continue?',
+        body: 'TALOS will restart automatically\nAre you sure you want to continue?',
         actionLabel: 'Yes',
         cancelLabel: 'No',
         action: () => {
@@ -463,8 +463,7 @@ export default {
           localStorage.removeItem('billings')
           localStorage.removeItem('tasks')
 
-          ipcRenderer.send('update-settings', this.settings)
-          this.showSnackbar({ message: 'All data has been reset sucessfully', color: 'teal' })
+          setTimeout(ipcRenderer.send('relaunch'), 3000)
         }
       })
     }

@@ -44,6 +44,17 @@ export default {
 
     win.once('ready-to-show', () => {
       win.show()
+
+      try {
+        const client = require('discord-rich-presence')(process.env.VUE_APP_DISCORD_CLIENT_ID)
+
+        client.updatePresence({
+          startTimestamp: Date.now(),
+          instance: true
+        })
+      } catch (error) {
+        //
+      }
     })
 
     win.on('closed', () => {

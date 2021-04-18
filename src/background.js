@@ -90,3 +90,8 @@ ipcMain.on('login', (event, arg) => {
 
   if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
 })
+
+ipcMain.on('relaunch', (event, arg) => {
+  app.relaunch()
+  app.exit()
+})
