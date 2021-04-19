@@ -127,6 +127,7 @@ export default {
     }
   },
   created () {
+    // update specific task
     ipcRenderer.on('updateTask', (event, arg) => {
       this.updateTask({
         ...this.tasks.find((val) => val.id === arg),

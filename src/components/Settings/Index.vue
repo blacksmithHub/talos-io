@@ -12,10 +12,11 @@
         >
           <v-card-text class="pa-0">
             Version: {{ about.version }}
-            <!-- <v-btn
+            <v-btn
               x-small
               class="ml-1"
               depressed
+              :loading="loading"
               @click="checkUpdate"
             >
               <v-icon
@@ -24,7 +25,7 @@
                 v-text="'mdi-reload'"
               />
               check for updates
-            </v-btn> -->
+            </v-btn>
           </v-card-text>
         </v-card>
       </v-col>
@@ -298,6 +299,8 @@ import { ipcRenderer } from 'electron'
 import Webhook from '@/services/webhook'
 import Constant from '@/config/constant'
 
+const isDevelopment = process.env.NODE_ENV !== 'production'
+
 export default {
   data () {
     return {
@@ -308,7 +311,8 @@ export default {
       webhookUrl: null,
       webhookTesting: false,
       saving: false,
-      doors: 1
+      doors: 1,
+      loading: false
     }
   },
   computed: {
@@ -373,6 +377,21 @@ export default {
   },
   created () {
     this.reset()
+
+    // no app update
+    ipcRenderer.on('noUpdate', (event, arg) => {
+      this.loading = false
+    })
+
+    // error app update
+    ipcRenderer.on('errorUpdate', (event, arg) => {
+      this.loading = false
+    })
+
+    // done app update
+    ipcRenderer.on('doneUpdate', (event, arg) => {
+      this.loading = false
+    })
   },
   methods: {
     ...mapActions('snackbar', ['showSnackbar']),
@@ -443,11 +462,11 @@ export default {
       }
     },
 
-    /**
-     *
-     */
     checkUpdate () {
-      // TODO: check update
+      if (!isDevelopment) {
+        this.loading = true
+        ipcRenderer.send('check-update')
+      }
     },
 
     resetAll () {

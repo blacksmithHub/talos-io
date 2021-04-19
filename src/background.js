@@ -8,6 +8,8 @@ import MonitorWindow from '@/windows/Monitor'
 import LoginWindow from '@/windows/Login'
 import CheckUpdateWindow from '@/windows/CheckUpdate'
 
+import CheckUpdate from '@/services/check-update'
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -94,4 +96,8 @@ ipcMain.on('login', (event, arg) => {
 ipcMain.on('relaunch', (event, arg) => {
   app.relaunch()
   app.exit()
+})
+
+ipcMain.on('check-update', (event, arg) => {
+  CheckUpdate.start()
 })
