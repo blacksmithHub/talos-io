@@ -24,6 +24,7 @@ import PayMayaCheckout from '@/services/Titan22/PayMayaCheckout'
 
 const Tasks = store._modules.root._children.task.context
 const Settings = store._modules.root._children.settings.context
+const Accounts = store._modules.root._children.account.context
 
 /**
  * ===============================================
@@ -1719,6 +1720,14 @@ export default {
         class: 'success'
       }
 
+      await Accounts.dispatch('updateItem', {
+        ...currentTask.account,
+        paypal: {
+          ...currentTask.account.paypal,
+          account: null,
+          expires_in: null
+        }
+      })
       await Bot.updateCurrentTaskLog(id, msg)
       await Tasks.dispatch('updateItem', currentTask)
     }
