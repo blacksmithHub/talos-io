@@ -25,10 +25,10 @@
             :rotate="-90"
             :size="40"
             :width="3"
-            :value="0"
+            :value="progress"
             color="primary"
           >
-            <span class="caption">{{ 0 }}%</span>
+            <span class="caption">{{ progress }}%</span>
           </v-progress-circular>
         </div>
       </v-col>

@@ -102,12 +102,15 @@ export default {
       win.show()
 
       setTimeout(() => {
-        if (!isDevelopment) {
-          autoUpdater.checkForUpdatesAndNotify()
-        } else if (!MainWindow.getWindow()) {
-          MainWindow.createWindow()
-          if (win) win.destroy()
-        }
+        // if (!isDevelopment) {
+        //   autoUpdater.checkForUpdatesAndNotify()
+        // } else if (!MainWindow.getWindow()) {
+        //   MainWindow.createWindow()
+        //   if (win) win.destroy()
+        // }
+
+        MainWindow.createWindow()
+        if (win) win.destroy()
       }, 5000)
     })
 
