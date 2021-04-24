@@ -185,7 +185,7 @@ export default {
                     path
                   }).toString()
 
-                  jar.setCookie(val, options.headers.referer)
+                  jar.setCookie(val, Config.services.titan22.url)
                 }
 
                 let configs = currentTask.proxy.configs.slice()

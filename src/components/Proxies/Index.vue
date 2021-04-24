@@ -42,7 +42,7 @@
           >
             <div
               class="col-12 text-truncate"
-              v-text="item.proxies.length"
+              v-text="item.proxies ? item.proxies.length : 'n/a'"
             />
           </div>
         </template>
@@ -89,6 +89,7 @@
             </v-btn>
 
             <v-btn
+              v-if="item.id"
               icon
               color="warning"
               depressed
@@ -102,6 +103,7 @@
             </v-btn>
 
             <v-btn
+              v-if="item.id"
               icon
               color="red"
               depressed
@@ -132,6 +134,7 @@ import ProxyDialog from '@/components/Proxies/ProxyDialog.vue'
 import Constant from '@/config/constant'
 import Config from '@/config/app'
 import CF from '@/services/cloudflare-bypass'
+import PageApi from '@/api/magento/titan22/page'
 
 export default {
   components: {
@@ -193,118 +196,148 @@ export default {
         configs: configs
       })
 
-      for (let index = 0; index < item.proxies.length; index++) {
+      if (item.proxies && item.proxies.length) {
+        for (let index = 0; index < item.proxies.length; index++) {
+          let proxy = this.proxies.find((el) => el.id === item.id)
+
+          if (proxy.status === this.status.STOPPED) break
+
+          const UserAgent = require('user-agents')
+          const userAgent = new UserAgent()
+
+          const conf = item.configs.find((el) => el.proxy === item.proxies[index].proxy)
+
+          const params = {
+            config: {
+              rp: conf.rp,
+              jar: conf.jar,
+              proxy: item.proxies[index].proxy,
+              userAgent: userAgent.toString()
+            },
+            proxyId: item.id
+          }
+
+          const request = await PageApi.get(params)
+
+          if (request && request.error && request.error.statusCode && (request.error.statusCode === 503 || request.error.statusCode === 403)) {
+            const { options } = request.error
+            const { jar } = options
+
+            const cookies = await CF.bypass(options, item.id)
+
+            if (cookies.length) {
+              for (const cookie of cookies) {
+                const { name, value, expires, domain, path } = cookie
+
+                const expiresDate = new Date(expires * 1000)
+
+                const val = new Cookie({
+                  key: name,
+                  value,
+                  expires: expiresDate,
+                  domain: domain.startsWith('.') ? domain.substring(1) : domain,
+                  path
+                }).toString()
+
+                jar.setCookie(val, Config.services.titan22.url)
+              }
+
+              configs = configs.map(el => {
+                if (el.proxy === item.proxies[index].proxy) el.options = options
+
+                return el
+              })
+            }
+          }
+
+          proxy = this.proxies.find((el) => el.id === item.id)
+
+          const obj = {
+            ...proxy,
+            configs: configs
+          }
+
+          if (index + 1 === item.proxies.length) obj.status = this.status.STOPPED
+
+          this.updateProxy(obj)
+        }
+      } else {
         let proxy = this.proxies.find((el) => el.id === item.id)
 
-        if (proxy.status === this.status.STOPPED) break
+        if (proxy.status === this.status.STOPPED) return false
 
         const UserAgent = require('user-agents')
-        let userAgent = new UserAgent()
-        userAgent = userAgent.toString()
-        const conf = item.configs.find((el) => el.proxy === item.proxies[index].proxy)
+        const userAgent = new UserAgent()
 
-        const site = Config.services.titan22.url
-        const Url = require('url-parse')
-        const url = new Url(site)
+        const conf = item.configs[0]
 
-        const request = conf.rp({
-          url: site,
-          method: 'get',
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': userAgent,
-            referer: `${url.protocol}//${url.host}/`
+        const params = {
+          config: {
+            rp: conf.rp,
+            jar: conf.jar,
+            userAgent: userAgent.toString()
           },
-          proxy: item.proxies[index].proxy,
-          jar: conf.jar
-        })
+          proxyId: item.id
+        }
 
-        configs = configs.map(el => {
-          if (el.proxy === item.proxies[index].proxy) el.request = request
+        const request = await PageApi.get(params)
 
-          return el
-        })
+        if (request && request.error && request.error.statusCode && (request.error.statusCode === 503 || request.error.statusCode === 403)) {
+          const { options } = request.error
+          const { jar } = options
+
+          const cookies = await CF.bypass(options, item.id)
+
+          if (cookies.length) {
+            for (const cookie of cookies) {
+              const { name, value, expires, domain, path } = cookie
+
+              const expiresDate = new Date(expires * 1000)
+
+              const val = new Cookie({
+                key: name,
+                value,
+                expires: expiresDate,
+                domain: domain.startsWith('.') ? domain.substring(1) : domain,
+                path
+              }).toString()
+
+              jar.setCookie(val, Config.services.titan22.url)
+            }
+
+            configs = configs.map(el => {
+              el.options = options
+
+              return el
+            })
+          }
+        }
 
         proxy = this.proxies.find((el) => el.id === item.id)
 
-        this.updateProxy({
+        const obj = {
           ...proxy,
-          configs: configs
-        })
+          configs: configs,
+          status: this.status.STOPPED
+        }
 
-        await request
-          .then((res) => {
-            if (index + 1 === item.proxies.length) {
-              proxy = this.proxies.find((el) => el.id === item.id)
-
-              this.updateProxy({
-                ...proxy,
-                configs: configs,
-                status: this.status.STOPPED
-              })
-            }
-
-            return res
-          })
-          .catch(async (err) => {
-            if (err.statusCode === 503 || err.statusCode === 403) {
-              const { options } = err
-              const { jar } = options
-
-              const cookies = await CF.bypass(options, item.id)
-
-              if (cookies.length) {
-                for (const cookie of cookies) {
-                  const { name, value, expires, domain, path } = cookie
-
-                  const expiresDate = new Date(expires * 1000)
-
-                  const val = new Cookie({
-                    key: name,
-                    value,
-                    expires: expiresDate,
-                    domain: domain.startsWith('.') ? domain.substring(1) : domain,
-                    path
-                  }).toString()
-
-                  jar.setCookie(val, options.headers.referer)
-                }
-
-                configs = configs.map(el => {
-                  if (el.proxy === item.proxies[index].proxy) el.options = options
-
-                  return el
-                })
-              }
-            }
-
-            proxy = this.proxies.find((el) => el.id === item.id)
-
-            const obj = {
-              ...proxy,
-              configs: configs
-            }
-
-            if (index + 1 === item.proxies.length) obj.status = this.status.STOPPED
-
-            this.updateProxy(obj)
-
-            return err
-          })
+        this.updateProxy(obj)
       }
     },
     onStop (item) {
-      for (let index = 0; index < item.configs.length; index++) {
+      const data = this.proxies.find((el) => el.id === item.id)
+
+      for (let index = 0; index < data.configs.length; index++) {
         try {
-          const conf = item.configs[index]
+          const conf = data.configs[index]
           if (conf.request) conf.request.cancel()
         } catch (error) {
-          //
+          console.log(error)
         }
       }
 
       this.updateProxy({
-        ...item,
+        ...data,
         status: this.status.STOPPED
       })
     },

@@ -253,7 +253,7 @@ export default {
               delete el.request
             }
           } catch (error) {
-          //
+            console.log(error)
           }
 
           return el

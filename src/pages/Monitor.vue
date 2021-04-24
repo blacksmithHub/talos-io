@@ -421,7 +421,7 @@ export default {
                   path
                 }).toString()
 
-                jar.setCookie(val, options.headers.referer)
+                jar.setCookie(val, Config.services.titan22.url)
               }
 
               this.params.config.options = options
@@ -435,6 +435,7 @@ export default {
 
         return data
       } catch (error) {
+        console.log(error)
         return null
       }
     },

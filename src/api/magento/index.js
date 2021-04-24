@@ -1,20 +1,33 @@
-import Url from 'url-parse'
 import store from '@/store/index'
+import Config from '@/config/app'
 
 export default {
   async http (params) {
     const rp = params.config.rp
-    const url = new Url(params.url)
+    let headers = { Accept: 'application/json' }
+
+    // Set access token
+    if (params.token) {
+      headers.Authorization = `Bearer ${params.token}`
+    }
+
+    // Set device mode
+    if (params.mode) headers.Client = params.mode.name
+
+    headers = {
+      ...headers,
+      'Content-Type': params.accept ? params.accept : 'application/json',
+      Host: 'www.titan22.com',
+      Origin: Config.services.titan22.url,
+      Referer: Config.services.titan22.url,
+      'User-Agent': params.config.userAgent
+    }
 
     let options = {
       url: params.url,
       method: params.method,
-      headers: {
-        'User-Agent': params.config.userAgent,
-        referer: `${url.protocol}//${url.host}/`,
-        origin: `${url.protocol}//${url.host}/`,
-        'x-requested-with': 'XMLHttpRequest'
-      },
+      secureProtocol: 'TLSv1_2_method',
+      headers,
       jar: params.config.jar
     }
 
@@ -23,15 +36,18 @@ export default {
       options = {
         ...params.config.options,
         ...options,
-        jar: params.config.options.jar,
         headers: {
           ...params.config.options.headers,
-          'User-Agent': params.config.userAgent,
-          referer: `${url.protocol}//${url.host}/`,
-          origin: `${url.protocol}//${url.host}/`,
-          'x-requested-with': 'XMLHttpRequest'
-        }
+          ...headers,
+          'User-Agent': params.config.userAgent
+        },
+        jar: params.config.options.jar
       }
+    }
+
+    // Remove access token if not needed
+    if (!params.token) {
+      delete options.headers.Authorization
     }
 
     // Set proxy
@@ -50,23 +66,6 @@ export default {
     } else {
       delete options.form
     }
-
-    // Set access token
-    if (params.token) {
-      options.headers.Authorization = `Bearer ${params.token}`
-    } else {
-      delete options.headers.Authorization
-    }
-
-    // Set content type
-    if (params.accept) {
-      options.headers['Content-Type'] = params.accept
-    } else {
-      options.headers['Content-Type'] = 'application/json'
-    }
-
-    // Set device mode
-    if (params.mode) options.headers.client = params.mode.name
 
     const request = rp(options)
 
@@ -87,6 +86,24 @@ export default {
         })
 
         vuex.dispatch('updateItem', task)
+      }
+    } else if (params.proxyId) {
+      const vuex = store._modules.root._children.proxy.context
+
+      const items = vuex.state.items.slice()
+
+      const proxy = items.find((val) => val.id === params.proxyId)
+
+      if (proxy) {
+        const conf = proxy.configs.slice()
+
+        proxy.configs = conf.map((el) => {
+          if (el.proxy === params.config.proxy) el.request = request
+
+          return el
+        })
+
+        vuex.dispatch('updateItem', proxy)
       }
     }
 

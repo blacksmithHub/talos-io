@@ -38,7 +38,7 @@ export default {
   created () {
     if (!Object.keys(this.settings).length) this.initSettings()
 
-    if (this.proxies.length) this.initProxy()
+    this.initProxy()
 
     if (this.accounts.length) this.initAccount()
 

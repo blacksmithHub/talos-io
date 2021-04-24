@@ -92,7 +92,7 @@ export default {
       try {
         fs.unlinkSync(`Task-${data.id}.json`)
       } catch (error) {
-        //
+        console.log(error)
       }
 
       const text = JSON.stringify([])
@@ -144,7 +144,7 @@ export default {
       try {
         fs.unlinkSync(`Task-${item.id}.json`)
       } catch (error) {
-        //
+        console.log(error)
       }
 
       commit('SET_ITEMS', tasks)

@@ -378,6 +378,11 @@ export default {
   created () {
     this.reset()
 
+    // progress app update
+    ipcRenderer.on('newUpdate', (event, arg) => {
+      this.loading = true
+    })
+
     // no app update
     ipcRenderer.on('noUpdate', (event, arg) => {
       this.loading = false
@@ -464,7 +469,6 @@ export default {
 
     checkUpdate () {
       if (!isDevelopment) {
-        this.loading = true
         ipcRenderer.send('check-update')
       }
     },

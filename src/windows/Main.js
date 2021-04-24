@@ -53,7 +53,7 @@ export default {
           instance: true
         })
       } catch (error) {
-        //
+        console.log(error)
       }
     })
 

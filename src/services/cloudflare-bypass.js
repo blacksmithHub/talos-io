@@ -1,6 +1,7 @@
 import Store from '@/store/index'
 import Constant from '@/config/constant'
 import Task from '@/services/task'
+import Config from '@/config/app'
 
 /**
  * ===============================================
@@ -85,12 +86,13 @@ export default {
         }
       }
     } catch (error) {
+      console.log(error)
       return []
     }
 
     // Start bypassing
 
-    if (!Task.isRunning(id)) return []
+    if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) return []
 
     const vanillaPuppeteer = require('puppeteer')
     const { addExtra } = require('puppeteer-extra')
@@ -153,13 +155,14 @@ export default {
         }
       })
 
-      await page.goto(options.headers.referer)
+      await page.goto(`${Config.services.titan22.url}/brands/jordan.html/`)
 
       const content = await page.content()
 
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
+        const cookies = await page.cookies()
         await browser.close()
-        return []
+        return cookies
       }
 
       if (content.includes('cf-browser-verification')) {
@@ -167,10 +170,11 @@ export default {
         await browser.close()
       } else if (content.includes('cf_captcha_kind')) {
         await browser.close()
-        cookies = await this.cfHcaptcha(options, args, id, service)
+        cookies = await this.cfHcaptcha(args, id, service)
       } else {
+        const cookies = await page.cookies()
         await browser.close()
-        return []
+        return cookies
       }
 
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) return []
@@ -195,15 +199,18 @@ export default {
           cfStorage.dispatch('setDoors', doors)
         }
       } catch (error) {
+        console.log(error)
         return []
       }
 
       return cookies
     } catch (error) {
+      console.log(error)
+
       try {
         await browser.close()
       } catch (error) {
-        //
+        console.log(error)
       }
 
       return []
@@ -245,6 +252,7 @@ export default {
 
       return response
     } catch (error) {
+      console.log(error)
       return []
     }
   },
@@ -252,7 +260,7 @@ export default {
   /**
    * Bypass cloudflare Hcaptcha
    */
-  async cfHcaptcha (options, args, id = null, service) {
+  async cfHcaptcha (args, id = null, service) {
     const vanillaPuppeteer = require('puppeteer')
     const { addExtra } = require('puppeteer-extra')
     const StealthPlugin = require('puppeteer-extra-plugin-stealth')
@@ -296,7 +304,7 @@ export default {
         }
       })
 
-      await page.goto(options.headers.referer)
+      await page.goto(`${Config.services.titan22.url}/brands/jordan.html/`)
 
       if (id) {
         const vm = this
@@ -335,10 +343,12 @@ export default {
 
       return response
     } catch (error) {
+      console.log(error)
+
       try {
         await browser.close()
       } catch (error) {
-        //
+        console.log(error)
       }
 
       return []

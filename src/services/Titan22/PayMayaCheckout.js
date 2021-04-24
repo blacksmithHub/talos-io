@@ -50,13 +50,14 @@ export default {
           }
         }
       } catch (error) {
-      //
+        console.log(error)
       }
 
       page.on('close', () => {
         ipcRenderer.send('update-task', id)
       })
     } catch (error) {
+      console.log(error)
       ipcRenderer.send('update-task', id)
     }
   }
