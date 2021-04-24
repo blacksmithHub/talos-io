@@ -1,6 +1,6 @@
 'use strict'
 
-import { BrowserWindow, globalShortcut } from 'electron'
+import { app, BrowserWindow, globalShortcut } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
 import MonitorWindow from '@/windows/Monitor'
@@ -42,14 +42,17 @@ export default {
       win.loadURL('app://./index.html')
     }
 
-    win.once('ready-to-show', () => {
+    win.once('ready-to-show', async () => {
       win.show()
 
       try {
+        const version = await app.getVersion()
         const client = require('discord-rich-presence')(process.env.VUE_APP_DISCORD_CLIENT_ID)
 
         client.updatePresence({
-          startTimestamp: Date.now(),
+          startTimestamp: Math.floor(Date.now() / 1000),
+          details: `v${version}`,
+          largeImageKey: '1024x1024',
           instance: true
         })
       } catch (error) {

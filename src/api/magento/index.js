@@ -4,7 +4,7 @@ import Config from '@/config/app'
 export default {
   async http (params) {
     const rp = params.config.rp
-    let headers = { Accept: 'application/json' }
+    let headers = { Accept: params.accept ? params.accept : 'application/json' }
 
     // Set access token
     if (params.token) {
@@ -43,6 +43,16 @@ export default {
         },
         jar: params.config.options.jar
       }
+    }
+
+    const url = new URL(params.url)
+
+    // Remove unnecessary options
+    if (url.origin === Config.services.titan22.checkout || url.origin === Config.services.braintree.url) {
+      delete options.secureProtocol
+      delete options.headers.Host
+      delete options.headers.Origin
+      delete options.headers.Referer
     }
 
     // Remove access token if not needed

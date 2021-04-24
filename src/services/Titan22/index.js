@@ -1019,7 +1019,7 @@ export default {
             currentTask = await Bot.getCurrentTask(id)
             if (!Bot.isRunning(id) || !currentTask) break
 
-            const msg = `Size: ${currentTask.sizes[index].label.toUpperCase()} - trying`
+            const msg = `Size ${currentTask.sizes[index].label.toUpperCase()} - trying`
             await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
             await Bot.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
@@ -1063,7 +1063,7 @@ export default {
               data = JSON.parse(response)
               data.size = currentTask.sizes[index].label.toUpperCase()
 
-              const msg = `Size: ${currentTask.sizes[index].label.toUpperCase()} - carted`
+              const msg = `Size ${currentTask.sizes[index].label.toUpperCase()} - carted`
               await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
               await Bot.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
@@ -1130,7 +1130,7 @@ export default {
           currentTask = await Bot.getCurrentTask(id)
           if (!Bot.isRunning(id) || !currentTask) break
 
-          const waitingMsg = `Size: ${currentTask.transactionData.product.size} - estimating shipping`
+          const waitingMsg = `Size ${currentTask.transactionData.product.size} - estimating shipping`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
           await Bot.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
 
@@ -1217,7 +1217,7 @@ export default {
         currentTask = await Bot.getCurrentTask(id)
         if (!Bot.isRunning(id) || !currentTask) break
 
-        const waitingMsg = `Size: ${currentTask.transactionData.product.size} - setting shipping details`
+        const waitingMsg = `Size ${currentTask.transactionData.product.size} - setting shipping details`
         await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
         await Bot.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
 
@@ -1271,7 +1271,7 @@ export default {
       let currentTask = await Bot.getCurrentTask(id)
       if (!Bot.isRunning(id) || !currentTask) return data
 
-      const waitingMsg = `Size: ${currentTask.transactionData.product.size} - waiting to place order`
+      const waitingMsg = `Size ${currentTask.transactionData.product.size} - waiting to place order`
       await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
       await Bot.updateCurrentTaskLog(id, waitingMsg)
 
@@ -1297,7 +1297,7 @@ export default {
       currentTask = await Bot.getCurrentTask(id)
       if (!Bot.isRunning(id) || !currentTask) return data
 
-      const placingMsg = `Size: ${currentTask.transactionData.product.size} - placing order`
+      const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order`
       await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
       await Bot.updateCurrentTaskLog(id, placingMsg)
 
@@ -1312,7 +1312,6 @@ export default {
             po_number: null,
             additional_data: null
           }
-          // amcheckout: {}
         },
         token: currentTask.transactionData.token.token,
         mode: currentTask.mode,
@@ -1400,7 +1399,7 @@ export default {
         if (!Bot.isRunning(id) || !currentTask) break
 
         if (index > 1) {
-          const waitingMsg = `Size: ${currentTask.transactionData.product.size} - retrying`
+          const waitingMsg = `Size ${currentTask.transactionData.product.size} - retrying`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
           await Bot.updateCurrentTaskLog(id, waitingMsg)
         }
@@ -1478,11 +1477,11 @@ export default {
     if (!Bot.isRunning(id) || !currentTask) return null
 
     if (!data) {
-      const msg = `Size: ${currentTask.transactionData.product.size} - out of luck`
+      const msg = `Size ${currentTask.transactionData.product.size} - out of luck`
       await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
       await Bot.updateCurrentTaskLog(id, msg)
     } else {
-      const msg = `Size: ${currentTask.transactionData.product.size} - copped!`
+      const msg = `Size ${currentTask.transactionData.product.size} - copped!`
       const img = await this.searchProduct(id)
 
       currentTask.transactionData.product.image = img
@@ -1518,7 +1517,7 @@ export default {
         if (!Bot.isRunning(id) || !currentTask) break
 
         if (index > 1) {
-          const waitingMsg = `Size: ${currentTask.transactionData.product.size} - retrying`
+          const waitingMsg = `Size ${currentTask.transactionData.product.size} - retrying`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
           await Bot.updateCurrentTaskLog(id, waitingMsg)
         }
@@ -1620,17 +1619,19 @@ export default {
                 cookie = cookieArray.find((val) => val.key === 'ASP.NET_SessionId')
               })
 
-              data = {
-                cookie: {
-                  name: 'ASP.NET_SessionId',
-                  value: cookie.value,
-                  domain: '.2c2p.com',
-                  expiry: cookie.expiry
-                },
-                data: orderNumber
-              }
+              if (cookie) {
+                data = {
+                  cookie: {
+                    name: 'ASP.NET_SessionId',
+                    value: cookie.value,
+                    domain: '.2c2p.com',
+                    expiry: cookie.expiry
+                  },
+                  data: orderNumber
+                }
 
-              break
+                break
+              }
             }
           }
         }
@@ -1646,11 +1647,11 @@ export default {
     if (!Bot.isRunning(id) || !currentTask) return null
 
     if (!data) {
-      const msg = `Size: ${currentTask.transactionData.product.size} - out of luck`
+      const msg = `Size ${currentTask.transactionData.product.size} - out of luck`
       await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
       await Bot.updateCurrentTaskLog(id, msg)
     } else {
-      const msg = `Size: ${currentTask.transactionData.product.size} - copped!`
+      const msg = `Size ${currentTask.transactionData.product.size} - copped!`
       const img = await this.searchProduct(id)
 
       currentTask.transactionData.product.image = img
@@ -1687,7 +1688,7 @@ export default {
         if (!Bot.isRunning(id) || !currentTask) break
 
         if (index > 1) {
-          const waitingMsg = `Size: ${currentTask.transactionData.product.size} - retrying`
+          const waitingMsg = `Size ${currentTask.transactionData.product.size} - retrying`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
           await Bot.updateCurrentTaskLog(id, waitingMsg)
         }
@@ -1755,11 +1756,11 @@ export default {
     if (!Bot.isRunning(id) || !currentTask) return null
 
     if (!data) {
-      const msg = `Size: ${currentTask.transactionData.product.size} - out of luck`
+      const msg = `Size ${currentTask.transactionData.product.size} - out of luck`
       await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
       await Bot.updateCurrentTaskLog(id, msg)
     } else {
-      const msg = `Size: ${currentTask.transactionData.product.size} - copped!`
+      const msg = `Size ${currentTask.transactionData.product.size} - copped!`
       const img = await this.searchProduct(id)
 
       currentTask.transactionData.product.image = img
