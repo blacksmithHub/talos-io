@@ -29,7 +29,7 @@ export default {
   async bypass (options, id = null, service = null) {
     // Start queue
     try {
-      if (service && service === 'TASK') {
+      if (id && service && service === 'TASK') {
         let isPassed = false
 
         let cfStorage = Store._modules.root._children.cloudflare.context
@@ -166,9 +166,17 @@ export default {
       }
 
       if (content.includes('cf-browser-verification')) {
+        if (id && service && service === 'TASK') {
+          await Task.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Waiting for clearance' })
+        }
+
         cookies = await this.cfChallenge(page, id, service)
         await browser.close()
       } else if (content.includes('cf_captcha_kind')) {
+        if (id && service && service === 'TASK') {
+          await Task.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Waiting to solve captcha' })
+        }
+
         await browser.close()
         cookies = await this.cfHcaptcha(args, id, service)
       } else {
@@ -180,7 +188,7 @@ export default {
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) return []
 
       try {
-        if (service && service === 'TASK') {
+        if (id && service && service === 'TASK') {
           const cfStorage = Store._modules.root._children.cloudflare.context
           const taskStorage = Store._modules.root._children.task.context
 

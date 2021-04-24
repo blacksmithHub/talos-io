@@ -6,14 +6,12 @@
   >
     <v-row no-gutters>
       <v-col class="caption">
-        <span>
+        <span class="cursor">
           Tasks: {{ tasks.length }} | Checkouts: <span class="success--text">{{ tasks.filter((el) => el.status.class === 'success').length }}</span>
         </span>
       </v-col>
 
-      <v-col
-        class="text-right caption"
-      >
+      <v-col class="text-right caption cursor">
         <digital-clock
           :display-seconds="true"
           :twelve-hour="true"
@@ -37,3 +35,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.cursor {
+  cursor: default
+}
+</style>

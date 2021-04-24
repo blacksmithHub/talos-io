@@ -11,10 +11,11 @@
           flat
         >
           <v-card-text class="pa-0">
-            Version: {{ about.version }}
+            <span class="cursor">Version: {{ about.version }}</span>
+
             <v-btn
               x-small
-              class="ml-1"
+              class="ml-3"
               depressed
               :loading="loading"
               @click="checkUpdate"
@@ -42,7 +43,7 @@
           >
             <v-list
               dense
-              class="pa-0"
+              class="pa-0 cursor"
             >
               <v-subheader v-text="'Preferences'" />
               <v-list-item class="pa-0">
@@ -86,7 +87,7 @@
           >
             <v-list
               dense
-              class="pa-0"
+              class="pa-0 cursor"
             >
               <v-subheader v-text="'Monitor'" />
               <v-list-item class="pa-0">
@@ -146,7 +147,7 @@
           >
             <v-list
               dense
-              class="pa-0"
+              class="pa-0 cursor"
             >
               <v-subheader v-text="'Cloudflare Bypasser'" />
               <v-list-item class="pa-0">
@@ -199,7 +200,10 @@
       <v-card-text>
         <v-row>
           <v-col cols="12">
-            <v-list dense>
+            <v-list
+              dense
+              class="cursor"
+            >
               <v-subheader v-text="'Webhook'" />
               <v-list-item class="pa-0">
                 <v-list-item-content class="pa-2">
@@ -498,3 +502,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.cursor {
+  cursor: default
+}
+</style>

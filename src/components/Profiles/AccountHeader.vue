@@ -5,7 +5,10 @@
       class="pa-3"
     >
       <v-col cols="1">
-        <h3 v-text="'Accounts'" />
+        <h3
+          class="cursor"
+          v-text="'Accounts'"
+        />
       </v-col>
 
       <v-col
@@ -338,3 +341,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.cursor {
+  cursor: default
+}
+</style>

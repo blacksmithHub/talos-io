@@ -117,21 +117,73 @@ export default {
   async handleError (id, counter, response, attr = 'orange') {
     try {
       try {
-        if (response.statusCode && (response.statusCode === 503 || response.statusCode === 403)) {
-          await Bot.updateCurrentTaskLog(id, `#${counter}: Bypassing bot protection...`)
+        if (response.message) {
+          await Bot.updateCurrentTaskLog(id, `#${counter} at Line 121: ${response.message}`)
         } else {
-          await Bot.updateCurrentTaskLog(id, `#${counter} at Line 122: ${response.message}`)
+          await Bot.updateCurrentTaskLog(id, `#${counter} at Line 123: ${response}`)
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 125: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 126: ${error}`)
       }
 
       if (response.statusCode) {
-        await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: response.statusCode, attr: 'red' })
-
+        // CF status codes
+        // https://support.cloudflare.com/hc/en-us/articles/115003011431/
+        // https://support.cloudflare.com/hc/en-us/articles/115003014512-4xx-Client-Error
         switch (response.statusCode) {
+          case 400:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Request Not Available', attr: 'red' })
+            break
+
+          case 404:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Request Not Found', attr: 'red' })
+            break
+
+          case 429:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Too many requests', attr: 'red' })
+            break
+
+          case 500:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Internal server error', attr: 'red' })
+            break
+
+          case 502:
+          case 504:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Bad Gateway', attr: 'red' })
+            break
+
+          case 520:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'unknown error', attr: 'red' })
+            break
+
+          case 521:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'web server is down', attr: 'red' })
+            break
+
+          case 522:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'connection timed out', attr: 'red' })
+            break
+
+          case 523:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'origin is unreachable', attr: 'red' })
+            break
+
+          case 524:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'timeout occurred', attr: 'red' })
+            break
+
+          case 525:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'SSL handshake failed', attr: 'red' })
+            break
+
+          case 526:
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'invalid SSL certificate', attr: 'red' })
+            break
+
           case 401:
             {
+              await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Unauthorized', attr: 'red' })
+
               if (!Bot.isRunning(id)) break
 
               let currentTask = await Bot.getCurrentTask(id)
@@ -162,8 +214,6 @@ export default {
           case 403:
           case 503:
             {
-              await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Bypassing', attr })
-
               const { options } = response
               const { jar } = options
 
@@ -219,7 +269,7 @@ export default {
         await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'error', attr: 'red' })
       }
     } catch (error) {
-      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 221: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 223: ${error}`)
     }
   },
 
@@ -557,7 +607,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 559: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 561: ${error}`)
         continue
       }
     }
@@ -637,7 +687,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 639: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 641: ${error}`)
         continue
       }
     }
@@ -705,7 +755,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 707: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 709: ${error}`)
         continue
       }
     }
@@ -786,7 +836,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 788: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 790: ${error}`)
         continue
       }
     }
@@ -853,7 +903,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 855: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 857: ${error}`)
         continue
       }
     }
@@ -920,7 +970,7 @@ export default {
               continue
             }
           } catch (error) {
-            await Bot.updateCurrentTaskLog(id, `#${counter} at Line 922: ${error}`)
+            await Bot.updateCurrentTaskLog(id, `#${counter} at Line 924: ${error}`)
             continue
           }
         }
@@ -1022,12 +1072,12 @@ export default {
               continue
             }
           } catch (error) {
-            await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1024: ${error}`)
+            await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1026: ${error}`)
             continue
           }
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1029: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1031: ${error}`)
         continue
       }
     }
@@ -1114,7 +1164,7 @@ export default {
             break
           }
         } catch (error) {
-          await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1116: ${error}`)
+          await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1118: ${error}`)
           continue
         }
       }
@@ -1201,7 +1251,7 @@ export default {
           break
         }
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1203: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1205: ${error}`)
         continue
       }
     }
@@ -1327,7 +1377,7 @@ export default {
           break
       }
     } catch (error) {
-      await Bot.updateCurrentTaskLog(id, `Line 1329: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `Line 1331: ${error}`)
     }
 
     return data
@@ -1419,7 +1469,7 @@ export default {
 
         if (data) break
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `Line 1421: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line 1423: ${error}`)
         continue
       }
     }
@@ -1587,7 +1637,7 @@ export default {
 
         if (data) break
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `Line 1589: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line 1591: ${error}`)
         continue
       }
     }
@@ -1696,7 +1746,7 @@ export default {
 
         if (data) break
       } catch (error) {
-        await Bot.updateCurrentTaskLog(id, `Line 1698: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line 1700: ${error}`)
         continue
       }
     }
