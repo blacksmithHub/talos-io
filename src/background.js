@@ -4,8 +4,6 @@ import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
-import log from 'electron-log'
-
 import MainWindow from '@/windows/Main'
 import MonitorWindow from '@/windows/Monitor'
 import LoginWindow from '@/windows/Login'
@@ -121,8 +119,6 @@ autoUpdater.on('download-progress', (progressObj) => {
 })
 
 autoUpdater.on('update-downloaded', (info) => {
-  log.info(info)
-
   // Download completed
   if (CheckUpdateWindow.getWindow()) {
     this.sendStatusToWindow('versionUpdate', 'relaunching')

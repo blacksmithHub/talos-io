@@ -160,7 +160,7 @@ export default {
       this.progress = 0
 
       this.openDialog({
-        title: arg,
+        title: `Version ${arg}`,
         body: 'A new version has been downloaded.\nRestart the application to apply the updates.',
         actionLabel: 'Restart',
         cancelLabel: 'Later',

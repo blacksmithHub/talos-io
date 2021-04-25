@@ -472,7 +472,7 @@ export default {
         title: 'Reset All Data',
         body: 'Restart the application to apply the changes.',
         actionLabel: 'Restart',
-        cancelLabel: 'Label',
+        cancelLabel: 'Later',
         action: () => {
           localStorage.removeItem('settings')
           localStorage.removeItem('proxies')
