@@ -40,7 +40,6 @@ export default {
       createProtocol('app')
       // Load the index.html when not in development
       win.loadURL('app://./index.html')
-      win.webContents.openDevTools()
     }
 
     win.once('ready-to-show', async () => {

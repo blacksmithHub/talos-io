@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, BrowserWindow, globalShortcut } from 'electron'
+import { BrowserWindow, globalShortcut } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import { autoUpdater } from 'electron-updater'
 
@@ -14,59 +14,10 @@ export default {
   sendStatusToWindow (status, params) {
     win.webContents.send(status, params)
   },
-  monitorUpdate () {
-    autoUpdater.on('update-available', () => {
-      // version can be updated
-      this.sendStatusToWindow('versionUpdate', 'preparing to download')
-    })
-
-    autoUpdater.on('update-not-available', () => {
-      // no update available
-      this.sendStatusToWindow('versionUpdate', 'up to date')
-
-      if (!MainWindow.getWindow()) {
-        MainWindow.createWindow()
-        if (win) win.destroy()
-      }
-    })
-
-    autoUpdater.on('error', () => {
-      // Update Error
-      this.sendStatusToWindow('versionUpdate', 'oops! something went wrong')
-
-      setTimeout(() => {
-        if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
-
-        if (win) win.destroy()
-
-        app.exit()
-      }, 5000)
-    })
-
-    autoUpdater.on('download-progress', (progressObj) => {
-      // download progress being downloaded
-      this.sendStatusToWindow('versionUpdate', `downloading... ${progressObj.percent.toFixed()}%`)
-    })
-
-    autoUpdater.on('update-downloaded', () => {
-      // Download completed
-      this.sendStatusToWindow('versionUpdate', 're-launch the app')
-
-      setTimeout(() => {
-        if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
-
-        if (win) win.destroy()
-
-        app.exit()
-      }, 3000)
-    })
-  },
   getWindow () {
     return win
   },
   async createWindow () {
-    this.monitorUpdate()
-
     // Create the browser window.
     win = new BrowserWindow({
       width: 250,

@@ -379,7 +379,6 @@ export default {
 
     // no app update
     ipcRenderer.on('noUpdate', (event, arg) => {
-      console.log('settings')
       this.loading = false
     })
 

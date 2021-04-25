@@ -1,6 +1,7 @@
 'use strict'
 
 import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import log from 'electron-log'
 
@@ -8,8 +9,6 @@ import MainWindow from '@/windows/Main'
 import MonitorWindow from '@/windows/Monitor'
 import LoginWindow from '@/windows/Login'
 import CheckUpdateWindow from '@/windows/CheckUpdate'
-
-import CheckUpdate from '@/services/check-update'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -68,6 +67,82 @@ if (isDevelopment) {
   }
 }
 
+/**
+ * --------------------------------------------------------
+ * Auto Updater Events
+ * --------------------------------------------------------
+ */
+
+autoUpdater.on('checking-for-update', () => {
+  log.info('checking-for-update')
+})
+
+autoUpdater.on('update-available', () => {
+  // version can be updated
+  if (CheckUpdateWindow.getWindow()) {
+    CheckUpdateWindow.sendStatusToWindow('versionUpdate', 'preparing to download')
+  } else if (MainWindow.getWindow()) {
+    MainWindow.getWindow().webContents.send('newUpdate')
+  }
+})
+
+autoUpdater.on('update-not-available', () => {
+  // no update available
+  if (CheckUpdateWindow.getWindow()) {
+    CheckUpdateWindow.sendStatusToWindow('versionUpdate', 'up to date')
+
+    setTimeout(() => {
+      MainWindow.createWindow()
+      CheckUpdateWindow.getWindow().destroy()
+    }, 3000)
+  } else if (MainWindow.getWindow()) {
+    MainWindow.getWindow().webContents.send('noUpdate')
+  }
+})
+
+autoUpdater.on('error', () => {
+  // Update Error
+  if (CheckUpdateWindow.getWindow()) {
+    CheckUpdateWindow.sendStatusToWindow('versionUpdate', 'oops! something went wrong')
+
+    setTimeout(() => {
+      CheckUpdateWindow.getWindow().destroy()
+      app.exit()
+    }, 5000)
+  } else if (MainWindow.getWindow()) {
+    MainWindow.getWindow().webContents.send('errorUpdate')
+  }
+})
+
+autoUpdater.on('download-progress', (progressObj) => {
+  // download progress being downloaded
+  if (CheckUpdateWindow.getWindow()) {
+    CheckUpdateWindow.sendStatusToWindow('versionUpdate', `downloading... ${progressObj.percent.toFixed()}%`)
+  } else if (MainWindow.getWindow()) {
+    MainWindow.getWindow().webContents.send('progressUpdate', progressObj.percent.toFixed())
+  }
+})
+
+autoUpdater.on('update-downloaded', () => {
+  // Download completed
+  if (CheckUpdateWindow.getWindow()) {
+    this.sendStatusToWindow('versionUpdate', 'relaunching')
+
+    setTimeout(() => {
+      app.relaunch()
+      app.exit()
+    }, 3000)
+  } else if (MainWindow.getWindow()) {
+    MainWindow.getWindow().webContents.send('doneUpdate')
+  }
+})
+
+/**
+ * --------------------------------------------------------
+ * Electron Main Remove Events
+ * --------------------------------------------------------
+ */
+
 ipcMain.on('launch-monitor', (event, arg) => {
   if (!MonitorWindow.getWindow()) MonitorWindow.createWindow()
 })
@@ -100,11 +175,5 @@ ipcMain.on('relaunch', (event, arg) => {
 })
 
 ipcMain.on('check-update', (event, arg) => {
-  log.info('background')
-
-  try {
-    CheckUpdate.start()
-  } catch (error) {
-    log.error(error)
-  }
+  autoUpdater.checkForUpdatesAndNotify()
 })
