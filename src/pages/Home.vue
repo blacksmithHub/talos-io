@@ -127,6 +127,10 @@ export default {
     }
   },
   created () {
+    ipcRenderer.on('newUpdate', (event, arg) => {
+      console.log('home')
+    })
+
     // update specific task
     ipcRenderer.on('updateTask', (event, arg) => {
       this.updateTask({

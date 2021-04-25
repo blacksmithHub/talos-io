@@ -125,7 +125,7 @@
                     <v-col>
                       <v-autocomplete
                         v-model="monitorProxy"
-                        :items="allProxies"
+                        :items="proxies"
                         required
                         outlined
                         dense
@@ -325,16 +325,6 @@ export default {
     ...mapState('proxy', { proxies: 'items' }),
     ...mapState('cloudflare', { cloudflare: 'items' }),
 
-    /**
-     * Return all proxies
-     */
-    allProxies () {
-      const proxies = this.proxies.slice()
-
-      proxies.unshift({ id: null, name: 'Localhost' })
-
-      return proxies
-    },
     /**
      * Error messages for monitorInterval.
      */

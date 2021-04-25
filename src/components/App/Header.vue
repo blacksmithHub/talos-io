@@ -129,6 +129,7 @@ export default {
   created () {
     // progress app update
     ipcRenderer.on('newUpdate', (event, arg) => {
+      console.log('header')
       this.updating = true
       this.progress = 0
     })
