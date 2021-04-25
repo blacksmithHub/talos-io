@@ -77,7 +77,7 @@ export default {
 
               if (task.autoPay) await page.click('.ap-button')
             } catch (error) {
-            //
+              console.log(error)
             }
 
             break
@@ -109,7 +109,7 @@ export default {
                 await page.click('#btnCCSubmit')
               }
             } catch (error) {
-            //
+              console.log(error)
             }
             break
         }
@@ -119,6 +119,7 @@ export default {
         ipcRenderer.send('update-task', id)
       })
     } catch (error) {
+      console.log(error)
       ipcRenderer.send('update-task', id)
     }
   }

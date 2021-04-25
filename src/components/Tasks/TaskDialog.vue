@@ -66,7 +66,7 @@
                     <v-autocomplete
                       v-model="proxy"
                       required
-                      :items="allProxies"
+                      :items="proxies"
                       outlined
                       dense
                       label="Proxy List"
@@ -313,7 +313,7 @@ export default {
       qty: 1,
       mode: Constant.CLIENT[0],
       checkoutMethod: Constant.METHODS[3],
-      proxy: { id: null, name: 'Localhost' }
+      proxy: {}
     }
   },
   computed: {
@@ -327,12 +327,6 @@ export default {
      */
     modes () {
       return Constant.CLIENT
-    },
-    /**
-     * Return all attributes
-     */
-    attributes () {
-      return Constant.TITAN_ATTRIBUTES
     },
     /**
      * Is task running
@@ -352,16 +346,6 @@ export default {
      */
     checkoutMethods () {
       return Constant.METHODS
-    },
-    /**
-     * Return all proxies
-     */
-    allProxies () {
-      const proxies = this.proxies.slice()
-
-      proxies.unshift({ id: null, name: 'Localhost' })
-
-      return proxies
     },
     /**
      * Set modal header.
@@ -450,6 +434,11 @@ export default {
     },
     autoFill () {
       if (this.autoFill) this.autoPay = false
+    },
+    dialog () {
+      if (this.dialog) {
+        this.proxy = { ...this.proxies[0] }
+      }
     }
   },
   methods: {
@@ -460,7 +449,7 @@ export default {
      * On edit event
      */
     onEdit (id) {
-      const item = this.tasks.find((el) => el.id === id)
+      const item = { ...this.tasks.find((el) => el.id === id) }
 
       const sizes = item.sizes.slice().map((val) => val.label)
 
@@ -481,7 +470,7 @@ export default {
       this.qty = item.qty
       this.mode = item.mode
       this.checkoutMethod = item.checkoutMethod
-      this.proxy = item.proxy || { id: null, name: 'Localhost' }
+      this.proxy = item.proxy || this.proxies[0]
     },
     /**
      * Filter input sizes.
@@ -491,7 +480,7 @@ export default {
         const sizes = []
 
         this.sizes.forEach(element => {
-          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
+          const attr = Constant.TITAN_ATTRIBUTES.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
           if (attr && !sizes.find((val) => val.toLowerCase() === element.toLowerCase())) sizes.push(element)
         })
@@ -523,7 +512,7 @@ export default {
       this.qty = 1
       this.mode = Constant.CLIENT[0]
       this.checkoutMethod = Constant.METHODS[3]
-      this.proxy = { id: null, name: 'Localhost' }
+      this.proxy = this.proxies[0]
     },
     /**
      * On submit event.
@@ -535,7 +524,7 @@ export default {
         const sizes = []
 
         this.sizes.forEach((element) => {
-          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
+          const attr = Constant.TITAN_ATTRIBUTES.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
           const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
 
@@ -548,9 +537,9 @@ export default {
 
         const params = {
           sku: this.sku,
-          account: this.account,
-          billing: this.billing,
-          proxy: this.proxy,
+          account: { ...this.account },
+          billing: this.billing ? { ...this.billing } : null,
+          proxy: { ...this.proxy },
           placeOrder: this.placeOrder,
 
           sizes: sizes,

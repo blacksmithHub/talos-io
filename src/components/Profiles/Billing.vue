@@ -53,7 +53,7 @@
               icon
               color="red"
               depressed
-              @click="onDelete(item)"
+              @click="deleteBilling(item)"
             >
               <v-icon
                 small
@@ -109,10 +109,6 @@ export default {
 
     onResize () {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
-    },
-    onDelete (item) {
-      const index = this.billings.findIndex((el) => el.id === item.id)
-      this.deleteBilling(index)
     }
   }
 }

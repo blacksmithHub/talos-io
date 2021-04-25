@@ -44,7 +44,7 @@
           small
           outlined
           @click="closeAndDisagree()"
-          v-text="'Cancel'"
+          v-text="cancelLabel"
         />
 
         <v-btn
@@ -54,7 +54,7 @@
           small
           outlined
           @click="closeAndAgree()"
-          v-text="'Ok'"
+          v-text="actionLabel"
         />
       </v-card-actions>
     </v-card>
@@ -72,7 +72,9 @@ export default {
       'body',
       'action',
       'cancel',
-      'alert'
+      'alert',
+      'cancelLabel',
+      'actionLabel'
     ]),
     /**
      * Body content splitted by new line (\n)

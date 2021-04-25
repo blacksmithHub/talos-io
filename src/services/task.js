@@ -32,11 +32,12 @@ export default {
    * @return {*} task
    */
   getCurrentTask (id) {
-    const tasks = Tasks.state.items
+    const tasks = Tasks.state.items.slice()
     let task = null
 
     if (tasks.length) {
       task = tasks.find((data) => data.id === id)
+      task = (task) ? { ...task } : null
     }
 
     return task

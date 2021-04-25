@@ -82,8 +82,9 @@ export default {
      * @param {*} param
      * @param {*} key
      */
-    deleteItem ({ state, commit }, key) {
+    deleteItem ({ state, commit }, item) {
       const accounts = state.items.slice()
+      const key = accounts.findIndex((el) => el.id === item.id)
 
       accounts.splice(key, 1)
 

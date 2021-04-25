@@ -87,7 +87,7 @@
               color="red"
               depressed
               :disabled="item.loading"
-              @click="onDelete(item)"
+              @click="deleteAccount(item)"
             >
               <v-icon
                 small
@@ -164,10 +164,6 @@ export default {
 
     onResize () {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
-    },
-    onDelete (item) {
-      const index = this.accounts.findIndex((el) => el.id === item.id)
-      this.deleteAccount(index)
     },
     async paypalLogin (item) {
       if (item.loading) return false
@@ -286,7 +282,7 @@ export default {
                   path
                 }).toString()
 
-                jar.setCookie(val, options.headers.referer)
+                jar.setCookie(val, Config.services.titan22.url)
               }
 
               params.config.options = options
@@ -300,6 +296,7 @@ export default {
 
         return data
       } catch (error) {
+        console.log(error)
         return null
       }
     },
@@ -373,6 +370,7 @@ export default {
 
         return data
       } catch (error) {
+        console.log(error)
         return null
       }
     },

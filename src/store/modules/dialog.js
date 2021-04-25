@@ -17,7 +17,9 @@ export default {
       body: '',
       action: null,
       cancel: null,
-      alert: false
+      alert: false,
+      cancelLabel: 'cancel',
+      actionLabel: 'ok'
     }
   },
   mutations: {
@@ -27,13 +29,15 @@ export default {
      * @param state
      * @param param1
      */
-    OPEN_DIALOG (state, { title, body, action, cancel, alert }) {
+    OPEN_DIALOG (state, { title, body, action, cancel, alert, cancelLabel, actionLabel }) {
       state.title = title
       state.body = body
       state.action = action
       state.cancel = cancel
       state.dialog = true
       state.alert = alert || false
+      state.cancelLabel = cancelLabel || 'cancel'
+      state.actionLabel = actionLabel || 'ok'
     },
 
     /**

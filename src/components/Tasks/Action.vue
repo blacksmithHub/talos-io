@@ -17,7 +17,7 @@
     <v-btn
       v-else
       icon
-      color="warning"
+      color="error"
       depressed
       @click="$emit('click:stop', item)"
     >
