@@ -470,15 +470,16 @@ export default {
     resetAll () {
       this.openDialog({
         title: 'Reset All Data',
-        body: 'TALOS will restart automatically\nAre you sure you want to continue?',
-        actionLabel: 'Yes',
-        cancelLabel: 'No',
+        body: 'Restart the application to apply the changes.',
+        actionLabel: 'Restart',
+        cancelLabel: 'Label',
         action: () => {
           localStorage.removeItem('settings')
           localStorage.removeItem('proxies')
           localStorage.removeItem('accounts')
           localStorage.removeItem('billings')
           localStorage.removeItem('tasks')
+          localStorage.removeItem('cloudflare')
 
           setTimeout(ipcRenderer.send('relaunch'), 3000)
         }

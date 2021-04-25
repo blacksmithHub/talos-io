@@ -3,6 +3,7 @@
 import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
+
 import log from 'electron-log'
 
 import MainWindow from '@/windows/Main'
@@ -73,10 +74,6 @@ if (isDevelopment) {
  * --------------------------------------------------------
  */
 
-autoUpdater.on('checking-for-update', () => {
-  log.info('checking-for-update')
-})
-
 autoUpdater.on('update-available', () => {
   // version can be updated
   if (CheckUpdateWindow.getWindow()) {
@@ -123,7 +120,9 @@ autoUpdater.on('download-progress', (progressObj) => {
   }
 })
 
-autoUpdater.on('update-downloaded', () => {
+autoUpdater.on('update-downloaded', (info) => {
+  log.info(info)
+
   // Download completed
   if (CheckUpdateWindow.getWindow()) {
     this.sendStatusToWindow('versionUpdate', 'relaunching')
@@ -133,7 +132,7 @@ autoUpdater.on('update-downloaded', () => {
       app.exit()
     }, 3000)
   } else if (MainWindow.getWindow()) {
-    MainWindow.getWindow().webContents.send('doneUpdate')
+    MainWindow.getWindow().webContents.send('doneUpdate', info.version)
   }
 })
 

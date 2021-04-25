@@ -131,6 +131,7 @@ export default {
     ipcRenderer.on('newUpdate', (event, arg) => {
       this.updating = true
       this.progress = 0
+      this.showSnackbar({ message: 'New update found!', color: 'warning' })
     })
 
     // no app update
@@ -159,13 +160,11 @@ export default {
       this.progress = 0
 
       this.openDialog({
-        title: 'New Update has been downloaded!',
-        body: 'TALOS will restart automatically\nAre you sure you want to continue?',
-        actionLabel: 'Yes',
-        cancelLabel: 'No',
-        action: () => {
-          setTimeout(ipcRenderer.send('relaunch'), 3000)
-        }
+        title: arg,
+        body: 'A new version has been downloaded.\nRestart the application to apply the updates.',
+        actionLabel: 'Restart',
+        cancelLabel: 'Later',
+        action: () => { setTimeout(ipcRenderer.send('relaunch'), 3000) }
       })
     })
   },
