@@ -127,7 +127,7 @@ export default {
     }
   },
   created () {
-    ipcRenderer.on('newUpdate', (event, arg) => {
+    ipcRenderer.on('noUpdate', (event, arg) => {
       console.log('home')
     })
 

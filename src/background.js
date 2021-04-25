@@ -2,6 +2,7 @@
 
 import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
+import log from 'electron-log'
 
 import MainWindow from '@/windows/Main'
 import MonitorWindow from '@/windows/Monitor'
@@ -99,5 +100,11 @@ ipcMain.on('relaunch', (event, arg) => {
 })
 
 ipcMain.on('check-update', (event, arg) => {
-  CheckUpdate.start()
+  log.info('background')
+
+  try {
+    CheckUpdate.start()
+  } catch (error) {
+    log.error(error)
+  }
 })

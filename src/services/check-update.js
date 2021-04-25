@@ -1,9 +1,20 @@
 import { autoUpdater } from 'electron-updater'
 import MainWindow from '@/windows/Main'
+import log from 'electron-log'
 
 export default {
   async start () {
-    autoUpdater.checkForUpdatesAndNotify()
+    log.info('check update')
+
+    try {
+      autoUpdater.checkForUpdatesAndNotify()
+    } catch (error) {
+      log.error(error)
+    }
+
+    autoUpdater.on('checking-for-update', () => {
+      log.info('checking-for-update')
+    })
 
     autoUpdater.on('update-available', () => {
       // version can be updated
@@ -11,6 +22,7 @@ export default {
     })
 
     autoUpdater.on('update-not-available', () => {
+      log.info('up to date')
       // no update available
       if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('noUpdate')
     })

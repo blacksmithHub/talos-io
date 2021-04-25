@@ -158,6 +158,15 @@ export default {
       let tasks = state.items.slice()
 
       tasks = tasks.map((val) => {
+        try {
+          fs.readFileSync(`Task-${val.id}.json`)
+        } catch (error) {
+          const text = JSON.stringify([])
+          const bytes = utf8.encode(text)
+          const encoded = base64.encode(bytes)
+          fs.writeFileSync(`Task-${val.id}.json`, encoded)
+        }
+
         val.loading = false
         val.transactionData = {}
         val.paid = false

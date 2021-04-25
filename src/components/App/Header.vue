@@ -129,13 +129,13 @@ export default {
   created () {
     // progress app update
     ipcRenderer.on('newUpdate', (event, arg) => {
-      console.log('header')
       this.updating = true
       this.progress = 0
     })
 
     // no app update
     ipcRenderer.on('noUpdate', (event, arg) => {
+      console.log('header')
       this.updating = false
       this.progress = 0
       this.showSnackbar({ message: 'You are up to date!', color: 'teal' })
