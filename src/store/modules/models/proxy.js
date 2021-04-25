@@ -94,8 +94,9 @@ export default {
      * @param {*} param
      * @param {*} key
      */
-    deleteItem ({ state, commit }, key) {
+    deleteItem ({ state, commit }, item) {
       const proxies = state.items.slice()
+      const key = proxies.findIndex((el) => el.id === item.id)
 
       proxies.splice(key, 1)
 
@@ -114,18 +115,37 @@ export default {
         val.loading = false
         val.configs = []
 
-        val.proxies.forEach((el) => {
-          const rp = require('request-promise')
-          const jar = rp.jar()
+        if (val.proxies && val.proxies.length) {
+          val.proxies.forEach((el) => {
+            const rp = require('request-promise')
+            const jar = rp.jar()
 
-          val.configs.push({
-            rp: rp,
-            jar: jar,
-            proxy: el.proxy
+            val.configs.push({
+              rp: rp,
+              jar: jar,
+              proxy: el.proxy
+            })
           })
-        })
+        }
 
         return val
+      })
+
+      const key = proxies.findIndex((el) => !el.id)
+      proxies.splice(key, 1)
+
+      const rp = require('request-promise')
+      const jar = rp.jar()
+
+      proxies.unshift({
+        id: null,
+        name: 'Localhost',
+        status: Constant.STATUS.STOPPED,
+        loading: false,
+        configs: [{
+          rp: rp,
+          jar: jar
+        }]
       })
 
       commit('SET_ITEMS', proxies)

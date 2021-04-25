@@ -1,6 +1,7 @@
 import Store from '@/store/index'
 import Constant from '@/config/constant'
 import Task from '@/services/task'
+import Config from '@/config/app'
 
 /**
  * ===============================================
@@ -26,6 +27,73 @@ export default {
    * Initialize bypassing
    */
   async bypass (options, id = null, service = null) {
+    // Start queue
+    try {
+      if (id && service && service === 'TASK') {
+        let isPassed = false
+
+        let cfStorage = Store._modules.root._children.cloudflare.context
+
+        cfStorage.dispatch('addToQueue', {
+          id: id,
+          cookies: []
+        })
+
+        let interval = null
+        await new Promise((resolve) => {
+          interval = setInterval(() => {
+            if (!Task.isRunning(id)) {
+              clearInterval(interval)
+              resolve()
+            }
+
+            cfStorage = Store._modules.root._children.cloudflare.context
+            const item = cfStorage.state.items.queue.find((el) => el.id === id)
+
+            if (item) {
+              if (item.cookies.length) {
+                isPassed = true
+                clearInterval(interval)
+                resolve()
+              } else {
+                for (let index = 0; index < cfStorage.state.items.doors.length; index++) {
+                  if (cfStorage.state.items.queue.length && cfStorage.state.items.queue[0].id === id && cfStorage.state.items.doors[index]) {
+                    cfStorage.dispatch('removeToQueue')
+
+                    const doors = cfStorage.state.items.doors.slice()
+                    doors[index] = false
+                    cfStorage.dispatch('setDoors', doors)
+
+                    clearInterval(interval)
+                    resolve()
+                  }
+                }
+              }
+            } else {
+              clearInterval(interval)
+              resolve()
+            }
+          }, 500)
+        })
+        clearInterval(interval)
+
+        if (isPassed) {
+          cfStorage = Store._modules.root._children.cloudflare.context
+          const index = cfStorage.state.items.queue.findIndex((el) => el.id === id)
+          cfStorage.dispatch('removeToQueue', index)
+
+          return []
+        }
+      }
+    } catch (error) {
+      console.log(error)
+      return []
+    }
+
+    // Start bypassing
+
+    if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) return []
+
     const vanillaPuppeteer = require('puppeteer')
     const { addExtra } = require('puppeteer-extra')
     const StealthPlugin = require('puppeteer-extra-plugin-stealth')
@@ -87,34 +155,70 @@ export default {
         }
       })
 
-      await page.goto(options.headers.referer)
+      await page.goto(`${Config.services.titan22.url}/brands/jordan.html/`)
 
       const content = await page.content()
 
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
+        const cookies = await page.cookies()
         await browser.close()
-        return []
+        return cookies
       }
 
       if (content.includes('cf-browser-verification')) {
+        if (id && service && service === 'TASK') {
+          await Task.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Waiting for clearance' })
+        }
+
         cookies = await this.cfChallenge(page, id, service)
         await browser.close()
       } else if (content.includes('cf_captcha_kind')) {
+        if (id && service && service === 'TASK') {
+          await Task.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Waiting to solve captcha' })
+        }
+
         await browser.close()
-        cookies = await this.cfHcaptcha(options, args, id, service)
+        cookies = await this.cfHcaptcha(args, id, service)
       } else {
+        const cookies = await page.cookies()
         await browser.close()
-        return []
+        return cookies
       }
 
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) return []
 
+      try {
+        if (id && service && service === 'TASK') {
+          const cfStorage = Store._modules.root._children.cloudflare.context
+          const taskStorage = Store._modules.root._children.task.context
+
+          let ids = taskStorage.state.items.filter((el) => el.proxy.id === Task.getCurrentTask(id).proxy.id)
+          ids = ids.filter((el) => el.proxy.configs.find((val) => val.proxy === options.proxy))
+          ids = ids.map((el) => el.id)
+
+          cfStorage.state.items.queue.filter((el) => ids.includes(el.id)).forEach((val) => {
+            val.cookies = cookies
+            cfStorage.dispatch('updateToQueue', val)
+          })
+
+          const doors = cfStorage.state.items.doors.slice()
+          const key = doors.findIndex((el) => !el)
+          doors[key] = true
+          cfStorage.dispatch('setDoors', doors)
+        }
+      } catch (error) {
+        console.log(error)
+        return []
+      }
+
       return cookies
     } catch (error) {
+      console.log(error)
+
       try {
         await browser.close()
       } catch (error) {
-        //
+        console.log(error)
       }
 
       return []
@@ -156,6 +260,7 @@ export default {
 
       return response
     } catch (error) {
+      console.log(error)
       return []
     }
   },
@@ -163,7 +268,7 @@ export default {
   /**
    * Bypass cloudflare Hcaptcha
    */
-  async cfHcaptcha (options, args, id = null, service) {
+  async cfHcaptcha (args, id = null, service) {
     const vanillaPuppeteer = require('puppeteer')
     const { addExtra } = require('puppeteer-extra')
     const StealthPlugin = require('puppeteer-extra-plugin-stealth')
@@ -207,7 +312,7 @@ export default {
         }
       })
 
-      await page.goto(options.headers.referer)
+      await page.goto(`${Config.services.titan22.url}/brands/jordan.html/`)
 
       if (id) {
         const vm = this
@@ -246,10 +351,12 @@ export default {
 
       return response
     } catch (error) {
+      console.log(error)
+
       try {
         await browser.close()
       } catch (error) {
-        //
+        console.log(error)
       }
 
       return []

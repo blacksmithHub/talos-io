@@ -5,7 +5,10 @@
       class="pa-3"
     >
       <v-col cols="1">
-        <h3 v-text="'Accounts'" />
+        <h3
+          class="cursor"
+          v-text="'Accounts'"
+        />
       </v-col>
 
       <v-col
@@ -227,7 +230,7 @@ export default {
                   path
                 }).toString()
 
-                jar.setCookie(val, options.headers.referer)
+                jar.setCookie(val, Config.services.titan22.url)
               }
 
               params.config.options = options
@@ -244,6 +247,7 @@ export default {
           params: params
         }
       } catch (error) {
+        console.log(error)
         return null
       }
     },
@@ -330,9 +334,16 @@ export default {
 
         return data
       } catch (error) {
+        console.log(error)
         return []
       }
     }
   }
 }
 </script>
+
+<style scoped>
+.cursor {
+  cursor: default
+}
+</style>

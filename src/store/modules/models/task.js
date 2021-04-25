@@ -92,7 +92,7 @@ export default {
       try {
         fs.unlinkSync(`Task-${data.id}.json`)
       } catch (error) {
-        //
+        console.log(error)
       }
 
       const text = JSON.stringify([])
@@ -135,16 +135,16 @@ export default {
      * @param {*} param
      * @param {*} key
      */
-    deleteItem ({ state, commit }, key) {
+    deleteItem ({ state, commit }, item) {
       const tasks = state.items.slice()
-      const id = tasks[key].id
+      const key = tasks.findIndex((el) => el.id === item.id)
 
       tasks.splice(key, 1)
 
       try {
-        fs.unlinkSync(`Task-${id}.json`)
+        fs.unlinkSync(`Task-${item.id}.json`)
       } catch (error) {
-        //
+        console.log(error)
       }
 
       commit('SET_ITEMS', tasks)
@@ -158,6 +158,15 @@ export default {
       let tasks = state.items.slice()
 
       tasks = tasks.map((val) => {
+        try {
+          fs.readFileSync(`Task-${val.id}.json`)
+        } catch (error) {
+          const text = JSON.stringify([])
+          const bytes = utf8.encode(text)
+          const encoded = base64.encode(bytes)
+          fs.writeFileSync(`Task-${val.id}.json`, encoded)
+        }
+
         val.loading = false
         val.transactionData = {}
         val.paid = false

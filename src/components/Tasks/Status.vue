@@ -21,8 +21,9 @@
       small
       color="success"
       class="text-capitalize pointer"
+      ripple
       @click="proceedToCheckout"
-      v-text="`Size: ${item.transactionData.product.size} - proceed to checkout!`"
+      v-text="`Size ${item.transactionData.product.size} - proceed to checkout!`"
     />
 
     <v-chip

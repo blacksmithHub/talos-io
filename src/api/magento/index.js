@@ -1,20 +1,34 @@
-import Url from 'url-parse'
 import store from '@/store/index'
+import Config from '@/config/app'
 
 export default {
   async http (params) {
     const rp = params.config.rp
-    const url = new Url(params.url)
+    let headers = { Accept: params.accept ? params.accept : 'application/json' }
+
+    // Set access token
+    if (params.token) {
+      headers.Authorization = `Bearer ${params.token}`
+    }
+
+    // Set device mode
+    if (params.mode) headers.Client = params.mode.name
+
+    const url = new URL(params.url)
+
+    headers = {
+      ...headers,
+      'Content-Type': params.accept ? params.accept : 'application/json',
+      Host: url.host,
+      Origin: url.origin,
+      Referer: url.origin,
+      'User-Agent': params.config.userAgent
+    }
 
     let options = {
       url: params.url,
       method: params.method,
-      headers: {
-        'User-Agent': params.config.userAgent,
-        referer: `${url.protocol}//${url.host}/`,
-        origin: `${url.protocol}//${url.host}/`,
-        'x-requested-with': 'XMLHttpRequest'
-      },
+      headers,
       jar: params.config.jar
     }
 
@@ -23,15 +37,25 @@ export default {
       options = {
         ...params.config.options,
         ...options,
-        jar: params.config.options.jar,
         headers: {
           ...params.config.options.headers,
-          'User-Agent': params.config.userAgent,
-          referer: `${url.protocol}//${url.host}/`,
-          origin: `${url.protocol}//${url.host}/`,
-          'x-requested-with': 'XMLHttpRequest'
-        }
+          ...headers,
+          'User-Agent': params.config.userAgent
+        },
+        jar: params.config.options.jar
       }
+    }
+
+    // Set TLS version
+    if (url.origin === Config.services.titan22.url) {
+      options.secureProtocol = 'TLSv1_2_method'
+    } else {
+      delete options.secureProtocol
+    }
+
+    // Remove access token if not needed
+    if (!params.token) {
+      delete options.headers.Authorization
     }
 
     // Set proxy
@@ -51,37 +75,44 @@ export default {
       delete options.form
     }
 
-    // Set access token
-    if (params.token) {
-      options.headers.Authorization = `Bearer ${params.token}`
-    } else {
-      delete options.headers.Authorization
-    }
-
-    // Set content type
-    if (params.accept) {
-      options.headers['Content-Type'] = params.accept
-    } else {
-      options.headers['Content-Type'] = 'application/json'
-    }
-
-    // Set device mode
-    if (params.mode) options.headers.client = params.mode.name
-
     const request = rp(options)
 
     if (params.taskId) {
       const vuex = store._modules.root._children.task.context
 
-      const task = vuex.state.items.find((val) => val.id === params.taskId)
+      const items = vuex.state.items.slice()
 
-      task.proxy.configs = task.proxy.configs.map((el) => {
-        if (el.proxy === options.proxy) el.request = request
+      const task = items.find((val) => val.id === params.taskId)
 
-        return el
-      })
+      if (task) {
+        const confs = task.proxy.configs.slice()
 
-      vuex.dispatch('updateItem', task)
+        task.proxy.configs = confs.map((el) => {
+          if (el.proxy === options.proxy) el.request = request
+
+          return el
+        })
+
+        vuex.dispatch('updateItem', task)
+      }
+    } else if (params.proxyId) {
+      const vuex = store._modules.root._children.proxy.context
+
+      const items = vuex.state.items.slice()
+
+      const proxy = items.find((val) => val.id === params.proxyId)
+
+      if (proxy) {
+        const conf = proxy.configs.slice()
+
+        proxy.configs = conf.map((el) => {
+          if (el.proxy === params.config.proxy) el.request = request
+
+          return el
+        })
+
+        vuex.dispatch('updateItem', proxy)
+      }
     }
 
     return request

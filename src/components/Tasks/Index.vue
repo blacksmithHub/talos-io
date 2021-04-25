@@ -5,7 +5,7 @@
   >
     <v-data-table
       v-model="selected"
-      :height="windowSize.y - 67 - 27 - 62 - 39"
+      :height="windowSize.y - 73 - 33 - 69 - 45"
       style="width: 100%"
       class="elevation-2"
       no-data-text="Nothing to display"
@@ -188,10 +188,18 @@ export default {
     }
   },
   computed: {
-    ...mapState('task', { tasks: 'items' })
+    ...mapState('task', { tasks: 'items' }),
+    ...mapState('proxy', { proxies: 'items' }),
+    ...mapState('cloudflare', { cloudflare: 'items' })
+  },
+  watch: {
+    tasks () {
+      if (!this.tasks.filter((el) => el.status.id === Constant.STATUS.RUNNING).length) this.initCf()
+    }
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem', deleteTask: 'deleteItem' }),
+    ...mapActions('cloudflare', { initCf: 'init', removeToQueue: 'removeToQueue', setDoors: 'setDoors' }),
 
     getSizes (item) {
       const data = { ...item }
@@ -218,6 +226,13 @@ export default {
     },
     onStop (item) {
       if (item.status.id === Constant.STATUS.RUNNING) {
+        this.removeToQueue(this.cloudflare.queue.findIndex((el) => el.id === item.id))
+
+        const doors = this.cloudflare.doors.slice()
+        const key = doors.findIndex((el) => !el)
+        doors[key] = true
+        this.setDoors(doors)
+
         Task.updateCurrentTaskLog(item.id, 'Stopped!')
         Task.updateCurrentTaskLog(item.id, '====================')
 
@@ -238,7 +253,7 @@ export default {
               delete el.request
             }
           } catch (error) {
-          //
+            console.log(error)
           }
 
           return el
@@ -248,22 +263,27 @@ export default {
       }
     },
     async onDelete (item) {
-      const index = this.tasks.findIndex((el) => el.id === item.id)
       await this.onStop(item)
-      this.deleteTask(index)
+      this.deleteTask(item)
+      const key = this.selected.findIndex((el) => el.id === item.id)
+      this.selected.splice(key, 1)
     },
     onInit (item) {
-      this.updateTask({
-        ...item,
-        status: {
-          id: Constant.STATUS.RUNNING,
-          msg: 'running',
-          class: 'orange'
-        }
-      })
+      this.removeToQueue(this.cloudflare.queue.findIndex((el) => el.id === item.id))
 
-      Task.updateCurrentTaskLog(item.id, 'Initializing...')
-      Titan22.verify(item.id)
+      if (item.status.id === Constant.STATUS.STOPPED) {
+        this.updateTask({
+          ...item,
+          status: {
+            id: Constant.STATUS.RUNNING,
+            msg: 'running',
+            class: 'orange'
+          }
+        })
+
+        Task.updateCurrentTaskLog(item.id, 'Initializing...')
+        Titan22.verify(item.id)
+      }
     }
   }
 }
