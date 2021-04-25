@@ -14,19 +14,20 @@ export default {
     // Set device mode
     if (params.mode) headers.Client = params.mode.name
 
+    const url = new URL(params.url)
+
     headers = {
       ...headers,
       'Content-Type': params.accept ? params.accept : 'application/json',
-      Host: 'www.titan22.com',
-      Origin: Config.services.titan22.url,
-      Referer: Config.services.titan22.url,
+      Host: url.host,
+      Origin: url.origin,
+      Referer: url.origin,
       'User-Agent': params.config.userAgent
     }
 
     let options = {
       url: params.url,
       method: params.method,
-      secureProtocol: 'TLSv1_2_method',
       headers,
       jar: params.config.jar
     }
@@ -45,14 +46,11 @@ export default {
       }
     }
 
-    const url = new URL(params.url)
-
-    // Remove unnecessary options
-    if (url.origin === Config.services.titan22.checkout || url.origin === Config.services.braintree.url) {
+    // Set TLS version
+    if (url.origin === Config.services.titan22.url) {
+      options.secureProtocol = 'TLSv1_2_method'
+    } else {
       delete options.secureProtocol
-      delete options.headers.Host
-      delete options.headers.Origin
-      delete options.headers.Referer
     }
 
     // Remove access token if not needed
