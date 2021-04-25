@@ -7,6 +7,7 @@
     >
       <v-row no-gutters>
         <v-col
+          cols="1"
           class="titleBar"
           align-self="center"
         >
@@ -19,6 +20,13 @@
               width="35"
             />
           </div>
+        </v-col>
+
+        <v-col align-self="center">
+          <h4
+            class="mt-1 ml-3"
+            v-text="'Monitor'"
+          />
         </v-col>
 
         <v-col>
@@ -330,7 +338,7 @@ export default {
     this.searchProduct()
 
     ipcRenderer.on('updateSettings', (event, arg) => {
-      this.setSettings(arg)
+      this.setSettings(JSON.parse(arg))
     })
   },
   methods: {
