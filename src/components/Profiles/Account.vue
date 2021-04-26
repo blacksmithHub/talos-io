@@ -161,6 +161,7 @@ export default {
   },
   methods: {
     ...mapActions('account', { updateAccount: 'updateItem', deleteAccount: 'deleteItem' }),
+    ...mapActions('snackbar', ['showSnackbar']),
 
     onResize () {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
@@ -263,6 +264,8 @@ export default {
           const response = await BraintreeApi.getSecret(params)
 
           if (response.error && (response.error.statusCode === 503 || response.error.statusCode === 403)) {
+            this.showSnackbar({ message: 'Please wait...' })
+
             const { options } = response.error
             const { jar } = options
 

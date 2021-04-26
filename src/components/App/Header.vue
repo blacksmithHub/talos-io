@@ -110,6 +110,8 @@
 import { mapState, mapActions } from 'vuex'
 import { remote, ipcRenderer } from 'electron'
 
+const isDevelopment = process.env.NODE_ENV !== 'production'
+
 export default {
   props: {
     items: {
@@ -120,7 +122,8 @@ export default {
   data () {
     return {
       updating: false,
-      progress: 0
+      progress: 0,
+      updateCheck: null
     }
   },
   computed: {
@@ -131,6 +134,7 @@ export default {
     ipcRenderer.on('newUpdate', (event, arg) => {
       this.updating = true
       this.progress = 0
+      clearInterval(this.updateCheck)
       this.showSnackbar({ message: 'New update found!', color: 'warning' })
     })
 
@@ -138,14 +142,12 @@ export default {
     ipcRenderer.on('noUpdate', (event, arg) => {
       this.updating = false
       this.progress = 0
-      this.showSnackbar({ message: 'You are up to date!', color: 'teal' })
     })
 
     // error app update
     ipcRenderer.on('errorUpdate', (event, arg) => {
       this.updating = false
       this.progress = 0
-      this.showSnackbar({ message: 'Failed to check for updates', color: 'error' })
     })
 
     // progress app update
@@ -164,9 +166,16 @@ export default {
         body: 'A new version has been downloaded.\nRestart the application to apply the updates.',
         actionLabel: 'Restart',
         cancelLabel: 'Later',
-        action: () => { setTimeout(ipcRenderer.send('relaunch'), 3000) }
+        action: () => { ipcRenderer.send('quit-install') }
       })
     })
+
+    // Check update every minute
+    if (!isDevelopment) {
+      this.updateCheck = setInterval(async () => {
+        ipcRenderer.send('check-update')
+      }, 60000)
+    }
   },
   methods: {
     ...mapActions('core', ['setCurrentTab']),

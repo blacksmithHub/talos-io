@@ -234,7 +234,6 @@ export default {
         this.setDoors(doors)
 
         Task.updateCurrentTaskLog(item.id, 'Stopped!')
-        Task.updateCurrentTaskLog(item.id, '====================')
 
         const data = {
           ...item,

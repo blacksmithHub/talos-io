@@ -106,7 +106,7 @@ import { mapActions } from 'vuex'
 
 import TaskDialog from '@/components/Tasks/TaskDialog.vue'
 import LogsDialog from '@/components/Tasks/LogsDialog.vue'
-
+import Task from '@/services/task'
 import Constant from '@/config/constant'
 
 export default {
@@ -129,7 +129,8 @@ export default {
     'item.status.id': async function (status) {
       if (status === Constant.STATUS.STOPPED) {
         this.loading = true
-        await new Promise(resolve => setTimeout(resolve, 1500))
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        Task.updateCurrentTaskLog(this.item.id, '====================')
         this.loading = false
       }
     }
