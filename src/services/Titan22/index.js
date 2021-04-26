@@ -214,6 +214,16 @@ export default {
           case 403:
           case 503:
             {
+              switch (response.statusCode) {
+                case 403:
+                  await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Forbidden', attr: 'red' })
+                  break
+
+                case 503:
+                  await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'service temporarily unavailable', attr: 'red' })
+                  break
+              }
+
               const { options } = response
               const { jar } = options
 
@@ -1297,10 +1307,6 @@ export default {
       currentTask = await Bot.getCurrentTask(id)
       if (!Bot.isRunning(id) || !currentTask) return data
 
-      const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order`
-      await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
-      await Bot.updateCurrentTaskLog(id, placingMsg)
-
       const defaultBillingAddress = currentTask.transactionData.account.addresses.find((val) => val.default_billing)
 
       const payload = {
@@ -1319,18 +1325,38 @@ export default {
         taskId: currentTask.id
       }
 
-      switch (currentTask.checkoutMethod) {
+      switch (currentTask.checkoutMethod.id) {
+        // PayMaya
         case 1:
+        {
+          const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
+          await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+          await Bot.updateCurrentTaskLog(id, placingMsg)
+
           payload.payload.paymentMethod.method = 'paymaya_checkout'
           data = await this.paymayaCheckout(id, payload)
           break
+        }
 
+        // 2c2p
         case 2:
+        {
+          const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
+          await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+          await Bot.updateCurrentTaskLog(id, placingMsg)
+
           payload.payload.paymentMethod.method = 'ccpp'
           data = await this.creditCardCheckout(id, payload)
           break
+        }
 
+        // PayPal
         case 3:
+        {
+          const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
+          await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+          await Bot.updateCurrentTaskLog(id, placingMsg)
+
           payload.payload.paymentMethod.method = 'braintree_paypal'
 
           if (currentTask.account.paypal && currentTask.account.paypal.account) {
@@ -1344,35 +1370,108 @@ export default {
 
           data = await this.paypalCheckout(id, payload)
           break
+        }
 
+        // Auto
         default:
-          switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
-            case 'paymaya_checkout':
-              payload.payload.paymentMethod.method = 'paymaya_checkout'
-              data = await this.paymayaCheckout(id, payload)
-              break
+          if (currentTask.account.paypal && currentTask.account.paypal.account) {
+            switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
+              // PayPal
+              case 'braintree_paypal':
+              {
+                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
+                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                await Bot.updateCurrentTaskLog(id, placingMsg)
 
-            case 'ccpp':
-              payload.payload.paymentMethod.method = 'ccpp'
-              data = await this.creditCardCheckout(id, payload)
-              break
+                payload.payload.paymentMethod.method = 'braintree_paypal'
 
-            case 'braintree_paypal':
-              payload.payload.paymentMethod.method = 'braintree_paypal'
-
-              if (currentTask.account.paypal && currentTask.account.paypal.account) {
                 payload.payload.paymentMethod.additional_data = {
                   paypal_express_checkout_token: currentTask.account.paypal.token,
                   paypal_express_checkout_redirect_required: false,
                   paypal_express_checkout_payer_id: currentTask.account.paypal.PayerID,
                   payment_method_nonce: currentTask.account.paypal.account.paypalAccounts[0].nonce
                 }
+
+                data = await this.paypalCheckout(id, payload)
+
+                break
               }
 
-              data = await this.paypalCheckout(id, payload)
+              // PayMaya
+              case 'paymaya_checkout':
+              {
+                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
+                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                await Bot.updateCurrentTaskLog(id, placingMsg)
 
-              break
+                payload.payload.paymentMethod.method = 'paymaya_checkout'
+                data = await this.paymayaCheckout(id, payload)
+                break
+              }
+
+              // 2c2p
+              case 'ccpp':
+              {
+                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
+                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                await Bot.updateCurrentTaskLog(id, placingMsg)
+
+                payload.payload.paymentMethod.method = 'ccpp'
+                data = await this.creditCardCheckout(id, payload)
+                break
+              }
+            }
+          } else {
+            switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
+              // PayMaya
+              case 'paymaya_checkout':
+              {
+                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
+                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                await Bot.updateCurrentTaskLog(id, placingMsg)
+
+                payload.payload.paymentMethod.method = 'paymaya_checkout'
+                data = await this.paymayaCheckout(id, payload)
+                break
+              }
+
+              // 2c2p
+              case 'ccpp':
+              {
+                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
+                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                await Bot.updateCurrentTaskLog(id, placingMsg)
+
+                payload.payload.paymentMethod.method = 'ccpp'
+                data = await this.creditCardCheckout(id, payload)
+                break
+              }
+
+              // PayPal
+              case 'braintree_paypal':
+              {
+                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
+                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                await Bot.updateCurrentTaskLog(id, placingMsg)
+
+                payload.payload.paymentMethod.method = 'braintree_paypal'
+
+                if (currentTask.account.paypal && currentTask.account.paypal.account) {
+                  payload.payload.paymentMethod.additional_data = {
+                    paypal_express_checkout_token: currentTask.account.paypal.token,
+                    paypal_express_checkout_redirect_required: false,
+                    paypal_express_checkout_payer_id: currentTask.account.paypal.PayerID,
+                    payment_method_nonce: currentTask.account.paypal.account.paypalAccounts[0].nonce
+                  }
+                }
+
+                data = await this.paypalCheckout(id, payload)
+
+                break
+              }
+            }
           }
+
           break
       }
     } catch (error) {

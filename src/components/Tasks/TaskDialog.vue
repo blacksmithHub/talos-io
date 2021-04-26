@@ -436,7 +436,7 @@ export default {
       if (this.autoFill) this.autoPay = false
     },
     dialog () {
-      if (this.dialog) {
+      if (this.dialog && !this.id) {
         this.proxy = { ...this.proxies[0] }
       }
     }
@@ -470,7 +470,7 @@ export default {
       this.qty = item.qty
       this.mode = item.mode
       this.checkoutMethod = item.checkoutMethod
-      this.proxy = item.proxy || this.proxies[0]
+      this.proxy = item.proxy || { ...this.proxies[0] }
     },
     /**
      * Filter input sizes.
@@ -512,7 +512,7 @@ export default {
       this.qty = 1
       this.mode = Constant.CLIENT[0]
       this.checkoutMethod = Constant.METHODS[3]
-      this.proxy = this.proxies[0]
+      this.proxy = { ...this.proxies[0] }
     },
     /**
      * On submit event.

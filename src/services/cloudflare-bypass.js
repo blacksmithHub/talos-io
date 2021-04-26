@@ -160,9 +160,8 @@ export default {
       const content = await page.content()
 
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
-        const cookies = await page.cookies()
         await browser.close()
-        return cookies
+        return []
       }
 
       if (content.includes('cf-browser-verification')) {
@@ -180,9 +179,8 @@ export default {
         await browser.close()
         cookies = await this.cfHcaptcha(args, id, service)
       } else {
-        const cookies = await page.cookies()
         await browser.close()
-        return cookies
+        return []
       }
 
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) return []

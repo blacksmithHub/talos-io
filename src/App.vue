@@ -102,4 +102,8 @@ button {
 ::-webkit-scrollbar-thumb:window-inactive {
   background: grey;
 }
+
+.toastify {
+  font-family: Arial, Helvetica, sans-serif;
+}
 </style>
