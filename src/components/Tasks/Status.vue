@@ -23,7 +23,7 @@
       class="text-capitalize pointer"
       ripple
       @click="proceedToCheckout"
-      v-text="`Size ${item.transactionData.product.size} - proceed to checkout!`"
+      v-text="`Size ${item.transactionData.product.size} - checkout! (${item.transactionData.method})`"
     />
 
     <v-chip
