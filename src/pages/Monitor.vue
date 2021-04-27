@@ -188,19 +188,26 @@
             </template>
 
             <template v-slot:item.actions="{item}">
-              <v-btn
-                v-clipboard:copy="item.sku"
-                v-clipboard:success="() => {showSnackbar({ message: `You just copied: ${item.sku}`, color: 'teal' })}"
-                icon
-                color="primary"
-                depressed
-                small
-              >
-                <v-icon
-                  small
-                  v-text="'mdi-content-copy'"
-                />
-              </v-btn>
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    v-clipboard:copy="item.sku"
+                    v-clipboard:success="() => {showSnackbar({ message: `You just copied: ${item.sku}`, color: 'teal' })}"
+                    icon
+                    color="primary"
+                    depressed
+                    small
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    <v-icon
+                      small
+                      v-text="'mdi-content-copy'"
+                    />
+                  </v-btn>
+                </template>
+                <span v-text="'Copy SKU'" />
+              </v-tooltip>
             </template>
 
             <template v-slot:item.img="{ value }">
