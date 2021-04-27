@@ -1093,9 +1093,9 @@ export default {
               continue
             } else if (response && !response.error) {
               data = JSON.parse(response)
-              data.size = currentTask.sizes[index].label.toUpperCase()
+              data.size = label.toUpperCase()
 
-              const msg = `Size ${currentTask.sizes[index].label.toUpperCase()} - carted`
+              const msg = `Size ${label.toUpperCase()} - carted`
               await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
               await Bot.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
