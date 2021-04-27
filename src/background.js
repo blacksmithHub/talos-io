@@ -124,8 +124,7 @@ autoUpdater.on('update-downloaded', (info) => {
     this.sendStatusToWindow('versionUpdate', 'relaunching')
 
     setTimeout(() => {
-      app.relaunch()
-      app.exit()
+      autoUpdater.quitAndInstall()
     }, 3000)
   } else if (MainWindow.getWindow()) {
     MainWindow.getWindow().webContents.send('doneUpdate', info.version)
