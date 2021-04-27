@@ -44,6 +44,10 @@ export default {
     PROXIES: 3,
     SETTINGS: 4
   },
+  TITAN_ATTRIBUTE_PRODUCTS: {
+    APPAREL: 9,
+    FOOTWEAR: 10
+  },
   TITAN_ATTRIBUTES: [
     {
       attribute_id: 139,

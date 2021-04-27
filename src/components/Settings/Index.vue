@@ -446,19 +446,20 @@ export default {
   created () {
     this.reset()
 
-    // progress app update
-    ipcRenderer.on('newUpdate', (event, arg) => {
-      this.loading = true
-    })
-
     // no app update
     ipcRenderer.on('noUpdate', (event, arg) => {
-      this.loading = false
+      if (this.loading) {
+        this.loading = false
+        this.showSnackbar({ message: 'You are up to date!', color: 'teal' })
+      }
     })
 
     // error app update
     ipcRenderer.on('errorUpdate', (event, arg) => {
-      this.loading = false
+      if (this.loading) {
+        this.loading = false
+        this.showSnackbar({ message: 'Failed to check for updates', color: 'error' })
+      }
     })
 
     // done app update
@@ -545,6 +546,7 @@ export default {
 
     checkUpdate () {
       if (!isDevelopment) {
+        this.loading = true
         ipcRenderer.send('check-update')
       }
     },

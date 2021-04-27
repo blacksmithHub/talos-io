@@ -18,6 +18,7 @@ export default {
 
     headers = {
       ...headers,
+      Connection: 'keep-alive',
       'Content-Type': params.accept ? params.accept : 'application/json',
       Host: url.host,
       Origin: url.origin,

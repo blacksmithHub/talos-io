@@ -90,7 +90,7 @@
           fluid
         >
           <v-data-table
-            :height="windowSize.y - 70 - 30 - 65 - 42"
+            :height="windowSize.y - 86 - 46 - 81 - 58"
             style="width: 100%"
             class="elevation-2"
             no-data-text="Nothing to display"
@@ -99,14 +99,15 @@
             :items="products"
             item-key="id"
             hide-default-footer
-            :items-per-page="products.length"
             fixed-header
             disable-sort
-            disable-pagination
             mobile-breakpoint="100"
             hide-default-header
             :loading="loading"
             :search="search"
+            :items-per-page="100"
+            :page.sync="page"
+            @page-count="pageCount = $event"
           >
             <template v-slot:top>
               <v-row
@@ -131,6 +132,13 @@
 
             <template v-slot:footer>
               <v-divider style="border:1px solid #d85820" />
+              <v-pagination
+                v-model="page"
+                class="my-3"
+                :length="pageCount"
+                :total-visible="8"
+                circle
+              />
               <v-row
                 align="center"
                 justify="center"
@@ -180,23 +188,31 @@
             </template>
 
             <template v-slot:item.actions="{item}">
-              <v-btn
-                v-clipboard:copy="item.sku"
-                v-clipboard:success="() => {showSnackbar({ message: `You just copied: ${item.sku}`, color: 'teal' })}"
-                icon
-                color="primary"
-                depressed
-                small
-              >
-                <v-icon
-                  small
-                  v-text="'mdi-content-copy'"
-                />
-              </v-btn>
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    v-clipboard:copy="item.sku"
+                    v-clipboard:success="() => {showSnackbar({ message: `You just copied: ${item.sku}`, color: 'teal' })}"
+                    icon
+                    color="primary"
+                    depressed
+                    small
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    <v-icon
+                      small
+                      v-text="'mdi-content-copy'"
+                    />
+                  </v-btn>
+                </template>
+                <span v-text="'Copy SKU'" />
+              </v-tooltip>
             </template>
 
             <template v-slot:item.img="{ value }">
               <v-img
+                :lazy-src="lazyImg"
                 :src="value"
                 width="80"
               />
@@ -234,6 +250,8 @@
               </div>
             </template>
 
+            <template v-slot:item.sku="{}" />
+
             <template v-slot:item.status="{ value }">
               <v-icon
                 small
@@ -267,6 +285,8 @@ const jar = rp.jar()
 export default {
   data () {
     return {
+      page: 1,
+      pageCount: 0,
       search: '',
       loading: false,
       count: 500,
@@ -287,6 +307,9 @@ export default {
         },
         {
           value: 'name'
+        },
+        {
+          value: 'sku'
         },
         {
           value: 'status'
@@ -321,7 +344,10 @@ export default {
   },
   computed: {
     ...mapState('settings', { settings: 'items' }),
-    ...mapState('monitor', { monitor: 'items' })
+    ...mapState('monitor', { monitor: 'items' }),
+    lazyImg () {
+      return placeholder
+    }
   },
   watch: {
     settings () {
@@ -370,7 +396,11 @@ export default {
       const response = await this.fetchProduct()
 
       if (response) {
-        const allProducts = JSON.parse(response).items.map(element => {
+        this.products = []
+
+        const data = JSON.parse(response)
+
+        const allProducts = data.items.map(element => {
           const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
           const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
 
@@ -408,7 +438,7 @@ export default {
           const response = await ProductApi.search(this.params)
 
           if (response.error && (response.error.statusCode === 503 || response.error.statusCode === 403)) {
-            this.showSnackbar({ message: 'Bypassing bot protection...', color: 'teal' })
+            this.showSnackbar({ message: 'Please wait...' })
 
             const { options } = response.error
             const { jar } = options

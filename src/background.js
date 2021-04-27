@@ -172,3 +172,7 @@ ipcMain.on('relaunch', (event, arg) => {
 ipcMain.on('check-update', (event, arg) => {
   autoUpdater.checkForUpdatesAndNotify()
 })
+
+ipcMain.on('quit-install', (event, arg) => {
+  autoUpdater.quitAndInstall()
+})

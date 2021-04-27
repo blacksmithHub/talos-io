@@ -1029,7 +1029,34 @@ export default {
             currentTask = await Bot.getCurrentTask(id)
             if (!Bot.isRunning(id) || !currentTask) break
 
-            const msg = `Size ${currentTask.sizes[index].label.toUpperCase()} - trying`
+            const ext = []
+            let label = currentTask.sizes[index].label
+
+            if (!currentTask.sizes[index].value) {
+              const product = await this.getProduct(id)
+
+              if (product && product.items.length) {
+                const attr = (product.items[0].attribute_set_id === Constant.TITAN_ATTRIBUTE_PRODUCTS.FOOTWEAR) ? 0 : 1
+                const cnt = Math.floor(Math.random() * Constant.TITAN_ATTRIBUTES[attr].sizes.length)
+                const selected = Constant.TITAN_ATTRIBUTES[attr].sizes[cnt]
+                label = selected.label
+
+                ext.push({
+                  option_id: Constant.TITAN_ATTRIBUTES[attr].attribute_id.toString(),
+                  option_value: parseInt(selected.value)
+                })
+              }
+            } else {
+              ext.push({
+                option_id: currentTask.sizes[index].attribute_id.toString(),
+                option_value: parseInt(currentTask.sizes[index].value)
+              })
+            }
+
+            currentTask = await Bot.getCurrentTask(id)
+            if (!Bot.isRunning(id) || !currentTask) break
+
+            const msg = `Size ${label.toUpperCase()} - trying`
             await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
             await Bot.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
@@ -1043,12 +1070,7 @@ export default {
                   product_type: 'configurable',
                   product_option: {
                     extension_attributes: {
-                      configurable_item_options: [
-                        {
-                          option_id: currentTask.sizes[index].attribute_id.toString(),
-                          option_value: parseInt(currentTask.sizes[index].value)
-                        }
-                      ]
+                      configurable_item_options: ext
                     }
                   },
                   extension_attributes: {}
@@ -1071,9 +1093,9 @@ export default {
               continue
             } else if (response && !response.error) {
               data = JSON.parse(response)
-              data.size = currentTask.sizes[index].label.toUpperCase()
+              data.size = label.toUpperCase()
 
-              const msg = `Size ${currentTask.sizes[index].label.toUpperCase()} - carted`
+              const msg = `Size ${label.toUpperCase()} - carted`
               await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
               await Bot.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
@@ -1088,6 +1110,84 @@ export default {
         }
       } catch (error) {
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1031: ${error}`)
+        continue
+      }
+    }
+
+    return data
+  },
+
+  /**
+   * Get product details
+   *
+   * @param {*} id
+   * @returns
+   */
+  async getProduct (id) {
+    let data = null
+    let counter = 0
+
+    while (Bot.isRunning(id) && !data) {
+      counter++
+
+      try {
+        let currentTask = await Bot.getCurrentTask(id)
+        if (!Bot.isRunning(id) || !currentTask) break
+
+        if (counter > 1) {
+          let interval = null
+          let timeout = null
+          await new Promise((resolve) => {
+            interval = setInterval(() => {
+              timeout = setTimeout(() => {
+                clearInterval(interval)
+                resolve()
+              }, currentTask.delay)
+            }, 500)
+          })
+          clearInterval(interval)
+          clearTimeout(timeout)
+        }
+
+        currentTask = await Bot.getCurrentTask(id)
+        if (!Bot.isRunning(id) || !currentTask) break
+
+        const params = {
+          token: Config.services.titan22.token,
+          mode: currentTask.mode,
+          config: this.getConfig(currentTask.proxy),
+          taskId: currentTask.id,
+          payload: {
+            searchCriteria: {
+              filterGroups: [
+                {
+                  filters: [
+                    {
+                      field: 'sku',
+                      value: currentTask.sku.toUpperCase()
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+
+        if (!Bot.isRunning(id)) break
+
+        const response = await productApi.search(params)
+
+        if (!Bot.isRunning(id)) break
+
+        if (response && response.error) {
+          await this.handleError(id, counter, response.error)
+          continue
+        } else if (response && !response.error) {
+          data = JSON.parse(response)
+          break
+        }
+      } catch (error) {
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1172: ${error}`)
         continue
       }
     }

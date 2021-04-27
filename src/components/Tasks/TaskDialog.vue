@@ -482,7 +482,7 @@ export default {
         this.sizes.forEach(element => {
           const attr = Constant.TITAN_ATTRIBUTES.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
-          if (attr && !sizes.find((val) => val.toLowerCase() === element.toLowerCase())) sizes.push(element)
+          if ((attr && !sizes.find((val) => val.toLowerCase() === element.toLowerCase())) || element.toLowerCase() === 'ra') sizes.push(element)
         })
 
         this.sizes = sizes
@@ -526,13 +526,21 @@ export default {
         this.sizes.forEach((element) => {
           const attr = Constant.TITAN_ATTRIBUTES.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
-          const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
+          if (attr) {
+            const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
 
-          sizes.push({
-            attribute_id: attr.attribute_id,
-            value: size.value,
-            label: size.label
-          })
+            sizes.push({
+              attribute_id: attr.attribute_id,
+              value: size.value,
+              label: size.label
+            })
+          } else {
+            sizes.push({
+              attribute_id: null,
+              value: null,
+              label: 'RA'
+            })
+          }
         })
 
         const params = {
