@@ -483,7 +483,7 @@ export default {
       this.nightMode = this.settings.nightMode
       this.withSound = this.settings.withSound
       this.monitorInterval = this.settings.monitorInterval
-      this.monitorProxy = (this.settings.monitorProxy.id) ? this.settings.monitorProxy : { ...this.proxies[0] }
+      this.monitorProxy = this.settings.monitorProxy
       this.webhookUrl = this.settings.webhookUrl
       this.webhookTesting = false
       this.saving = false

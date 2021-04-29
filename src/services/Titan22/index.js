@@ -1408,10 +1408,12 @@ export default {
       if (!Bot.isRunning(id) || !currentTask) return data
 
       const defaultBillingAddress = currentTask.transactionData.account.addresses.find((val) => val.default_billing)
+      const address = await this.setAddresses(defaultBillingAddress, currentTask.transactionData.account.email)
+      const confs = await this.getConfig(currentTask.proxy)
 
       const payload = {
         payload: {
-          billingAddress: this.setAddresses(defaultBillingAddress, currentTask.transactionData.account.email),
+          billingAddress: address,
           cardId: currentTask.transactionData.cart.id.toString(),
           paymentMethod: {
             method: '',
@@ -1421,56 +1423,56 @@ export default {
         },
         token: currentTask.transactionData.token.token,
         mode: currentTask.mode,
-        config: this.getConfig(currentTask.proxy),
+        config: confs,
         taskId: currentTask.id
       }
 
       switch (currentTask.checkoutMethod.id) {
         // PayMaya
         case 1:
-        {
-          const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
-          await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
-          await Bot.updateCurrentTaskLog(id, placingMsg)
+          {
+            const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+            await Bot.updateCurrentTaskLog(id, placingMsg)
 
-          payload.payload.paymentMethod.method = 'paymaya_checkout'
-          data = await this.paymayaCheckout(id, payload)
+            payload.payload.paymentMethod.method = 'paymaya_checkout'
+            data = await this.paymayaCheckout(id, payload)
+          }
           break
-        }
 
         // 2c2p
         case 2:
-        {
-          const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
-          await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
-          await Bot.updateCurrentTaskLog(id, placingMsg)
+          {
+            const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+            await Bot.updateCurrentTaskLog(id, placingMsg)
 
-          payload.payload.paymentMethod.method = 'ccpp'
-          data = await this.creditCardCheckout(id, payload)
+            payload.payload.paymentMethod.method = 'ccpp'
+            data = await this.creditCardCheckout(id, payload)
+          }
           break
-        }
 
         // PayPal
         case 3:
-        {
-          const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
-          await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
-          await Bot.updateCurrentTaskLog(id, placingMsg)
+          {
+            const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
+            await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+            await Bot.updateCurrentTaskLog(id, placingMsg)
 
-          payload.payload.paymentMethod.method = 'braintree_paypal'
+            payload.payload.paymentMethod.method = 'braintree_paypal'
 
-          if (currentTask.account.paypal && currentTask.account.paypal.account) {
-            payload.payload.paymentMethod.additional_data = {
-              paypal_express_checkout_token: currentTask.account.paypal.token,
-              paypal_express_checkout_redirect_required: false,
-              paypal_express_checkout_payer_id: currentTask.account.paypal.PayerID,
-              payment_method_nonce: currentTask.account.paypal.account.paypalAccounts[0].nonce
+            if (currentTask.account.paypal && currentTask.account.paypal.account) {
+              payload.payload.paymentMethod.additional_data = {
+                paypal_express_checkout_token: currentTask.account.paypal.token,
+                paypal_express_checkout_redirect_required: false,
+                paypal_express_checkout_payer_id: currentTask.account.paypal.PayerID,
+                payment_method_nonce: currentTask.account.paypal.account.paypalAccounts[0].nonce
+              }
             }
-          }
 
-          data = await this.paypalCheckout(id, payload)
+            data = await this.paypalCheckout(id, payload)
+          }
           break
-        }
 
         // Auto
         default:
@@ -1478,97 +1480,95 @@ export default {
             switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
               // PayPal
               case 'braintree_paypal':
-              {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
-                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
-                await Bot.updateCurrentTaskLog(id, placingMsg)
+                {
+                  const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
+                  await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                  await Bot.updateCurrentTaskLog(id, placingMsg)
 
-                payload.payload.paymentMethod.method = 'braintree_paypal'
+                  payload.payload.paymentMethod.method = 'braintree_paypal'
 
-                payload.payload.paymentMethod.additional_data = {
-                  paypal_express_checkout_token: currentTask.account.paypal.token,
-                  paypal_express_checkout_redirect_required: false,
-                  paypal_express_checkout_payer_id: currentTask.account.paypal.PayerID,
-                  payment_method_nonce: currentTask.account.paypal.account.paypalAccounts[0].nonce
-                }
-
-                data = await this.paypalCheckout(id, payload)
-
-                break
-              }
-
-              // PayMaya
-              case 'paymaya_checkout':
-              {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
-                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
-                await Bot.updateCurrentTaskLog(id, placingMsg)
-
-                payload.payload.paymentMethod.method = 'paymaya_checkout'
-                data = await this.paymayaCheckout(id, payload)
-                break
-              }
-
-              // 2c2p
-              case 'ccpp':
-              {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
-                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
-                await Bot.updateCurrentTaskLog(id, placingMsg)
-
-                payload.payload.paymentMethod.method = 'ccpp'
-                data = await this.creditCardCheckout(id, payload)
-                break
-              }
-            }
-          } else {
-            switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
-              // PayMaya
-              case 'paymaya_checkout':
-              {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
-                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
-                await Bot.updateCurrentTaskLog(id, placingMsg)
-
-                payload.payload.paymentMethod.method = 'paymaya_checkout'
-                data = await this.paymayaCheckout(id, payload)
-                break
-              }
-
-              // 2c2p
-              case 'ccpp':
-              {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
-                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
-                await Bot.updateCurrentTaskLog(id, placingMsg)
-
-                payload.payload.paymentMethod.method = 'ccpp'
-                data = await this.creditCardCheckout(id, payload)
-                break
-              }
-
-              // PayPal
-              case 'braintree_paypal':
-              {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
-                await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
-                await Bot.updateCurrentTaskLog(id, placingMsg)
-
-                payload.payload.paymentMethod.method = 'braintree_paypal'
-
-                if (currentTask.account.paypal && currentTask.account.paypal.account) {
                   payload.payload.paymentMethod.additional_data = {
                     paypal_express_checkout_token: currentTask.account.paypal.token,
                     paypal_express_checkout_redirect_required: false,
                     paypal_express_checkout_payer_id: currentTask.account.paypal.PayerID,
                     payment_method_nonce: currentTask.account.paypal.account.paypalAccounts[0].nonce
                   }
+
+                  data = await this.paypalCheckout(id, payload)
                 }
-
-                data = await this.paypalCheckout(id, payload)
-
                 break
-              }
+
+              // PayMaya
+              case 'paymaya_checkout':
+                {
+                  const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
+                  await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                  await Bot.updateCurrentTaskLog(id, placingMsg)
+
+                  payload.payload.paymentMethod.method = 'paymaya_checkout'
+                  data = await this.paymayaCheckout(id, payload)
+                }
+                break
+
+              // 2c2p
+              case 'ccpp':
+                {
+                  const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
+                  await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                  await Bot.updateCurrentTaskLog(id, placingMsg)
+
+                  payload.payload.paymentMethod.method = 'ccpp'
+                  data = await this.creditCardCheckout(id, payload)
+                }
+                break
+            }
+          } else {
+            switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
+              // PayMaya
+              case 'paymaya_checkout':
+                {
+                  const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
+                  await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                  await Bot.updateCurrentTaskLog(id, placingMsg)
+
+                  payload.payload.paymentMethod.method = 'paymaya_checkout'
+                  data = await this.paymayaCheckout(id, payload)
+                }
+                break
+
+              // 2c2p
+              case 'ccpp':
+                {
+                  const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
+                  await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                  await Bot.updateCurrentTaskLog(id, placingMsg)
+
+                  payload.payload.paymentMethod.method = 'ccpp'
+                  data = await this.creditCardCheckout(id, payload)
+                }
+                break
+
+              // PayPal
+              case 'braintree_paypal':
+                {
+                  const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
+                  await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                  await Bot.updateCurrentTaskLog(id, placingMsg)
+
+                  payload.payload.paymentMethod.method = 'braintree_paypal'
+
+                  if (currentTask.account.paypal && currentTask.account.paypal.account) {
+                    payload.payload.paymentMethod.additional_data = {
+                      paypal_express_checkout_token: currentTask.account.paypal.token,
+                      paypal_express_checkout_redirect_required: false,
+                      paypal_express_checkout_payer_id: currentTask.account.paypal.PayerID,
+                      payment_method_nonce: currentTask.account.paypal.account.paypalAccounts[0].nonce
+                    }
+                  }
+
+                  data = await this.paypalCheckout(id, payload)
+                }
+                break
             }
           }
 

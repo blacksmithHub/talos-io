@@ -67,27 +67,12 @@ export default {
       let userAgent = new UserAgent(opt)
       userAgent = userAgent.toString()
 
-      if (!data.proxy || !data.proxy.id) {
-        const rp = require('request-promise')
-        const jar = rp.jar()
-
-        data.proxy = {
-          id: null,
-          name: 'Localhost',
-          configs: [{
-            rp: rp,
-            jar: jar,
-            userAgent: userAgent
-          }]
+      data.proxy.configs = data.proxy.configs.map(el => {
+        return {
+          ...el,
+          userAgent: userAgent
         }
-      } else {
-        data.proxy.configs = data.proxy.configs.map(el => {
-          return {
-            ...el,
-            userAgent: userAgent
-          }
-        })
-      }
+      })
 
       try {
         fs.unlinkSync(`Task-${data.id}.json`)
@@ -187,25 +172,14 @@ export default {
         const rp = require('request-promise')
         const jar = rp.jar()
 
-        if (!val.proxy || !val.proxy.id) {
-          val.proxy = {
-            id: null,
-            name: 'Localhost',
-            configs: [{
-              rp: rp,
-              jar: jar,
-              userAgent: userAgent
-            }]
+        val.proxy.configs = val.proxy.configs.map(el => {
+          return {
+            rp: rp,
+            jar: jar,
+            userAgent: userAgent,
+            proxy: el.proxy
           }
-        } else {
-          val.proxy.configs = val.proxy.configs.map(el => {
-            return {
-              rp: rp,
-              jar: jar,
-              userAgent: userAgent
-            }
-          })
-        }
+        })
 
         return val
       })

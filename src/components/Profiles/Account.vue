@@ -35,24 +35,24 @@
           </div>
         </template>
 
-        <template v-slot:[`item.paypal.account.PayerID`]="{ item }">
+        <template v-slot:[`item.email`]="{ item }">
           <div
             class="row cursor"
             style="width: 100px"
           >
             <div class="col-12 text-truncate">
-              {{ (item.paypal.account) ? item.paypal.account.PayerID : 'none' }}
+              {{ (item.paypal.account) ? item.paypal.account.paypalAccounts[0].details.payerInfo.payerId : 'none' }}
             </div>
           </div>
         </template>
 
-        <template v-slot:[`item.paypal.account.token`]="{ item }">
+        <template v-slot:[`item.password`]="{ item }">
           <div
             class="row cursor"
             style="width: 150px"
           >
             <div class="col-12 text-truncate">
-              {{ (item.paypal.account) ? item.paypal.account.token : 'none' }}
+              {{ (item.paypal.account) ? item.paypal.account.paypalAccounts[0].details.correlationId : 'none' }}
             </div>
           </div>
         </template>
@@ -114,14 +114,6 @@ import BraintreeApi from '@/api/magento/titan22/braintree'
 import CF from '@/services/cloudflare-bypass'
 import Config from '@/config/app'
 
-const vanillaPuppeteer = require('puppeteer')
-const { addExtra } = require('puppeteer-extra')
-const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-
-const puppeteer = addExtra(vanillaPuppeteer)
-const stealth = StealthPlugin()
-puppeteer.use(stealth)
-
 export default {
   components: {
     AccountHeader,
@@ -136,11 +128,11 @@ export default {
         },
         {
           text: 'PayPal Payer ID',
-          value: 'paypal.account.PayerID'
+          value: 'email'
         },
         {
           text: 'PayPal Token',
-          value: 'paypal.account.token'
+          value: 'password'
         },
         {
           text: 'Actions',
@@ -169,8 +161,10 @@ export default {
     async paypalLogin (item) {
       if (item.loading) return false
 
+      let data = this.accounts.find((el) => el.id === item.id)
+
       this.updateAccount({
-        ...item,
+        ...data,
         loading: true,
         paypal: {
           ...item.paypal,
@@ -187,8 +181,10 @@ export default {
       const secret = await this.getSecret(rp, jar, userAgent)
 
       if (!secret || secret.error) {
+        data = this.accounts.find((el) => el.id === item.id)
+
         this.updateAccount({
-          ...item,
+          ...data,
           loading: false
         })
 
@@ -200,8 +196,10 @@ export default {
       const resource = await this.getResource(rp, jar, userAgent, fingerprint)
 
       if (!resource) {
+        data = this.accounts.find((el) => el.id === item.id)
+
         this.updateAccount({
-          ...item,
+          ...data,
           loading: false
         })
 
@@ -211,8 +209,10 @@ export default {
       const auth = await this.authenticatePaypal(JSON.parse(resource).paymentResource.redirectUrl)
 
       if (!auth) {
+        data = this.accounts.find((el) => el.id === item.id)
+
         this.updateAccount({
-          ...item,
+          ...data,
           loading: false
         })
 
@@ -221,9 +221,11 @@ export default {
 
       const account = await this.getAccount(rp, jar, userAgent, auth, fingerprint)
 
+      data = this.accounts.find((el) => el.id === item.id)
+
       if (!account) {
         this.updateAccount({
-          ...item,
+          ...data,
           loading: false
         })
 
@@ -231,10 +233,10 @@ export default {
       }
 
       this.updateAccount({
-        ...item,
+        ...data,
         loading: false,
         paypal: {
-          ...item.paypal,
+          ...data.paypal,
           account: JSON.parse(account),
           expires_in: this.$moment().add(150, 'minutes').toISOString()
         }
@@ -334,15 +336,23 @@ export default {
      * Authenticate user
      */
     async authenticatePaypal (redirectUrl) {
+      let data = null
+
+      const vanillaPuppeteer = require('puppeteer')
+      const { addExtra } = require('puppeteer-extra')
+      const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+
+      const puppeteer = addExtra(vanillaPuppeteer)
+      const stealth = StealthPlugin()
+      puppeteer.use(stealth)
+
+      const browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=560,638'],
+        executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
+        headless: false
+      })
+
       try {
-        let data = null
-
-        const browser = await puppeteer.launch({
-          args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=560,638'],
-          executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
-          headless: false
-        })
-
         const page = await browser.newPage()
 
         await page.goto(redirectUrl)
@@ -350,7 +360,10 @@ export default {
         let url = await page.url()
 
         while (!url.includes(Config.services.auth.domain)) {
-          await page.waitForNavigation({ timeout: 0 })
+          await page.waitForNavigation({
+            timeout: 0,
+            waitUntil: 'domcontentloaded'
+          })
 
           url = await page.url()
 
@@ -374,6 +387,9 @@ export default {
         return data
       } catch (error) {
         console.log(error)
+
+        browser.close()
+
         return null
       }
     },

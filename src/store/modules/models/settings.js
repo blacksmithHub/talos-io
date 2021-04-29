@@ -20,7 +20,7 @@ export default {
         webhookUrl: null,
         nightMode: true,
         withSound: true,
-        monitorProxy: { id: null, name: 'Localhost' }
+        monitorProxy: null
       }
     },
 

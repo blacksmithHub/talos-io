@@ -63,7 +63,8 @@ export default {
     ...mapState('account', { accounts: 'items' }),
     ...mapState('task', { tasks: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
-    ...mapState('billing', { billings: 'items' })
+    ...mapState('billing', { billings: 'items' }),
+    ...mapState('settings', { settings: 'items' })
   },
   watch: {
     proxies () {
@@ -91,6 +92,13 @@ export default {
           })
 
           this.updateTask(data)
+        }
+
+        if (this.settings.monitorProxy.id === el.id) {
+          this.setSettings({
+            ...this.settings,
+            monitorProxy: el
+          })
         }
       })
     },
@@ -167,7 +175,8 @@ export default {
   },
   methods: {
     ...mapActions('account', { updateAccount: 'updateItem' }),
-    ...mapActions('task', { updateTask: 'updateItem' })
+    ...mapActions('task', { updateTask: 'updateItem' }),
+    ...mapActions('settings', { setSettings: 'setItems' })
   }
 }
 </script>

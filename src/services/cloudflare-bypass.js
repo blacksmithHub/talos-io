@@ -1,6 +1,6 @@
 import Store from '@/store/index'
-import Constant from '@/config/constant'
 import Task from '@/services/task'
+import Constant from '@/config/constant'
 import Config from '@/config/app'
 
 /**
