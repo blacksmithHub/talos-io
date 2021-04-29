@@ -89,7 +89,7 @@
             </v-btn>
 
             <v-btn
-              v-if="item.id"
+              v-if="item.id !== 1"
               icon
               color="warning"
               depressed
@@ -103,7 +103,7 @@
             </v-btn>
 
             <v-btn
-              v-if="item.id"
+              v-if="item.id !== 1"
               icon
               color="red"
               depressed

@@ -35,24 +35,24 @@
           </div>
         </template>
 
-        <template v-slot:[`item.paypal.account.PayerID`]="{ item }">
+        <template v-slot:[`item.email`]="{ item }">
           <div
             class="row cursor"
             style="width: 100px"
           >
             <div class="col-12 text-truncate">
-              {{ (item.paypal.account) ? item.paypal.account.PayerID : 'none' }}
+              {{ (item.paypal.account) ? item.paypal.account.paypalAccounts[0].details.payerInfo.payerId : 'none' }}
             </div>
           </div>
         </template>
 
-        <template v-slot:[`item.paypal.account.token`]="{ item }">
+        <template v-slot:[`item.password`]="{ item }">
           <div
             class="row cursor"
             style="width: 150px"
           >
             <div class="col-12 text-truncate">
-              {{ (item.paypal.account) ? item.paypal.account.token : 'none' }}
+              {{ (item.paypal.account) ? item.paypal.account.paypalAccounts[0].details.correlationId : 'none' }}
             </div>
           </div>
         </template>
@@ -136,11 +136,11 @@ export default {
         },
         {
           text: 'PayPal Payer ID',
-          value: 'paypal.account.PayerID'
+          value: 'email'
         },
         {
           text: 'PayPal Token',
-          value: 'paypal.account.token'
+          value: 'password'
         },
         {
           text: 'Actions',
@@ -169,8 +169,10 @@ export default {
     async paypalLogin (item) {
       if (item.loading) return false
 
+      let data = this.accounts.find((el) => el.id === item.id)
+
       this.updateAccount({
-        ...item,
+        ...data,
         loading: true,
         paypal: {
           ...item.paypal,
@@ -187,8 +189,10 @@ export default {
       const secret = await this.getSecret(rp, jar, userAgent)
 
       if (!secret || secret.error) {
+        data = this.accounts.find((el) => el.id === item.id)
+
         this.updateAccount({
-          ...item,
+          ...data,
           loading: false
         })
 
@@ -200,8 +204,10 @@ export default {
       const resource = await this.getResource(rp, jar, userAgent, fingerprint)
 
       if (!resource) {
+        data = this.accounts.find((el) => el.id === item.id)
+
         this.updateAccount({
-          ...item,
+          ...data,
           loading: false
         })
 
@@ -211,8 +217,10 @@ export default {
       const auth = await this.authenticatePaypal(JSON.parse(resource).paymentResource.redirectUrl)
 
       if (!auth) {
+        data = this.accounts.find((el) => el.id === item.id)
+
         this.updateAccount({
-          ...item,
+          ...data,
           loading: false
         })
 
@@ -221,9 +229,11 @@ export default {
 
       const account = await this.getAccount(rp, jar, userAgent, auth, fingerprint)
 
+      data = this.accounts.find((el) => el.id === item.id)
+
       if (!account) {
         this.updateAccount({
-          ...item,
+          ...data,
           loading: false
         })
 
@@ -231,10 +241,10 @@ export default {
       }
 
       this.updateAccount({
-        ...item,
+        ...data,
         loading: false,
         paypal: {
-          ...item.paypal,
+          ...data.paypal,
           account: JSON.parse(account),
           expires_in: this.$moment().add(150, 'minutes').toISOString()
         }

@@ -4,7 +4,9 @@ import Config from '@/config/app'
 export default {
   async http (params) {
     const rp = params.config.rp
-    let headers = { Accept: params.accept ? params.accept : 'application/json' }
+    let headers = {
+      Accept: params.accept ? params.accept : 'application/json'
+    }
 
     // Set access token
     if (params.token) {
@@ -23,6 +25,7 @@ export default {
       Host: url.host,
       Origin: url.origin,
       Referer: url.origin,
+      'Upgrade-Insecure-Requests': 1,
       'User-Agent': params.config.userAgent
     }
 
