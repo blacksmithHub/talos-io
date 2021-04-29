@@ -82,7 +82,7 @@
 
         <v-list-item
           link
-          @click="duplicate"
+          @click="duplicate(item)"
         >
           <v-list-item-title v-text="'Duplicate'" />
         </v-list-item>
@@ -138,8 +138,8 @@ export default {
   methods: {
     ...mapActions('task', ['addItem']),
 
-    duplicate () {
-      const data = { ...this.item }
+    duplicate (item) {
+      const data = { ...item }
 
       delete data.id
 

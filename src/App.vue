@@ -35,23 +35,36 @@ export default {
       this.$vuetify.theme.dark = nightMode
     }
   },
-  created () {
-    if (!Object.keys(this.settings).length) this.initSettings()
+  async created () {
+    await this.initProxy()
 
-    this.initProxy()
+    if (this.accounts.length) await this.initAccount()
 
-    if (this.accounts.length) this.initAccount()
+    if (this.tasks.length) await this.initTask()
 
-    if (this.tasks.length) this.initTask()
+    if (!Object.keys(this.cloudflare).length) await this.resetCf()
 
-    if (!Object.keys(this.cloudflare).length) this.resetCf()
+    await this.initCf()
 
-    this.initCf()
+    if (!Object.keys(this.settings).length) {
+      await this.initSettings()
+      await this.setSettings({
+        ...this.settings,
+        monitorProxy: { ...this.proxies[0] }
+      })
+    }
+
+    if (!this.settings.monitorProxy.id) {
+      await this.setSettings({
+        ...this.settings,
+        monitorProxy: { ...this.proxies[0] }
+      })
+    }
 
     if (!Object.keys(this.monitor).length) this.initMonitor()
   },
   methods: {
-    ...mapActions('settings', { initSettings: 'reset' }),
+    ...mapActions('settings', { initSettings: 'reset', setSettings: 'setItems' }),
     ...mapActions('proxy', { initProxy: 'init' }),
     ...mapActions('account', { initAccount: 'init' }),
     ...mapActions('task', { initTask: 'init' }),

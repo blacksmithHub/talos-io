@@ -110,28 +110,7 @@ export default {
     init ({ state, commit }) {
       let proxies = state.items.slice()
 
-      proxies = proxies.map((val) => {
-        val.status = Constant.STATUS.STOPPED
-        val.loading = false
-        val.configs = []
-
-        if (val.proxies && val.proxies.length) {
-          val.proxies.forEach((el) => {
-            const rp = require('request-promise')
-            const jar = rp.jar()
-
-            val.configs.push({
-              rp: rp,
-              jar: jar,
-              proxy: el.proxy
-            })
-          })
-        }
-
-        return val
-      })
-
-      const key = proxies.findIndex((el) => !el.id)
+      const key = proxies.findIndex((el) => !el.id || el.id === 1)
       proxies.splice(key, 1)
 
       const rp = require('request-promise')
@@ -146,6 +125,29 @@ export default {
           rp: rp,
           jar: jar
         }]
+      })
+
+      proxies = proxies.map((val, index) => {
+        val.id = index + 1
+        val.status = Constant.STATUS.STOPPED
+        val.loading = false
+
+        if (val.id !== 1 && val.proxies && val.proxies.length) {
+          val.configs = []
+
+          val.proxies.forEach((el) => {
+            const rp = require('request-promise')
+            const jar = rp.jar()
+
+            val.configs.push({
+              rp: rp,
+              jar: jar,
+              proxy: el.proxy
+            })
+          })
+        }
+
+        return val
       })
 
       commit('SET_ITEMS', proxies)

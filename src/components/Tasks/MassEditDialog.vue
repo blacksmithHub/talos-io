@@ -45,7 +45,7 @@
               <v-col>
                 <v-autocomplete
                   v-model="proxy"
-                  :items="allProxies"
+                  :items="proxies"
                   outlined
                   dense
                   label="Proxy List"
@@ -258,16 +258,6 @@ export default {
      */
     checkoutMethods () {
       return Constant.METHODS
-    },
-    /**
-     * Return all proxies
-     */
-    allProxies () {
-      const proxies = this.proxies.slice()
-
-      proxies.unshift({ id: null, name: 'Localhost' })
-
-      return proxies
     },
     /**
      * Error messages for delay.
