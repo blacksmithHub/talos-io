@@ -501,15 +501,11 @@ export default {
     assignProxy () {
       let index = 0
 
-      if (this.settings.monitorProxy.proxies.length > 1) index = Math.floor(Math.random() * this.settings.monitorProxy.proxies.length)
+      if (this.settings.monitorProxy.configs.length > 1) index = Math.floor(Math.random() * this.settings.monitorProxy.configs.length)
 
-      const selected = this.settings.monitorProxy.proxies[index]
+      const selected = this.settings.monitorProxy.configs[index]
 
-      if (selected.username && selected.password) {
-        this.params.config.proxy = `http://${selected.username}:${selected.password}@${selected.host}:${selected.port}`
-      } else {
-        this.params.config.proxy = `http://${selected.host}:${selected.port}`
-      }
+      if (selected.proxy) this.params.config.proxy = selected.proxy
     }
   }
 }
