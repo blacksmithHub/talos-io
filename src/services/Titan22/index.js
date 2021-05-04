@@ -1521,6 +1521,15 @@ export default {
                   data = await this.creditCardCheckout(id, payload)
                 }
                 break
+
+              // no available
+              default:
+                {
+                  const placingMsg = 'Payment method not available'
+                  await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                  await Bot.updateCurrentTaskLog(id, placingMsg)
+                }
+                break
             }
           } else {
             switch (currentTask.transactionData.shipping.payment_methods.slice().find((val) => val.code).code) {
@@ -1567,6 +1576,15 @@ export default {
                   }
 
                   data = await this.paypalCheckout(id, payload)
+                }
+                break
+
+              // no available
+              default:
+                {
+                  const placingMsg = 'Payment method not available'
+                  await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
+                  await Bot.updateCurrentTaskLog(id, placingMsg)
                 }
                 break
             }
