@@ -388,7 +388,11 @@ export default {
       } catch (error) {
         console.log(error)
 
-        browser.close()
+        try {
+          browser.close()
+        } catch (error) {
+          console.log(error)
+        }
 
         return null
       }

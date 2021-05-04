@@ -1,9 +1,13 @@
+import URL from 'url-parse'
 import store from '@/store/index'
 import Config from '@/config/app'
 
 export default {
   async http (params) {
     const rp = params.config.rp
+
+    if (!rp || !params.config.jar) throw rp
+
     let headers = {
       Accept: params.accept ? params.accept : 'application/json'
     }

@@ -99,19 +99,16 @@ import BraintreeApi from '@/api/magento/titan22/braintree'
 import CF from '@/services/cloudflare-bypass'
 import Config from '@/config/app'
 
-const vanillaPuppeteer = require('puppeteer')
-const { addExtra } = require('puppeteer-extra')
-const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-
-const puppeteer = addExtra(vanillaPuppeteer)
-const stealth = StealthPlugin()
-puppeteer.use(stealth)
-
 export default {
   components: {
     AccountDialog
   },
   mixins: [File],
+  data () {
+    return {
+      loading: false
+    }
+  },
   computed: {
     ...mapState('account', { accounts: 'items' })
   },
@@ -129,69 +126,71 @@ export default {
       }
     },
     async paypalLogin () {
+      if (this.loading) return false
+
       const accounts = this.accounts.filter((el) => !el.loading)
 
-      if (accounts.length) {
-        const collection = []
+      if (!accounts.length) return false
 
-        const UserAgent = require('user-agents')
-        const userAgent = new UserAgent()
-        const rp = require('request-promise')
-        const jar = rp.jar()
+      const collection = []
 
-        let params = {
-          config: {
-            rp: rp,
-            jar: jar,
-            userAgent: userAgent.toString()
-          }
+      const UserAgent = require('user-agents')
+      const userAgent = new UserAgent()
+      const rp = require('request-promise')
+      const jar = rp.jar()
+
+      let params = {
+        config: {
+          rp: rp,
+          jar: jar,
+          userAgent: userAgent.toString()
         }
+      }
 
-        accounts.forEach(el => {
-          this.updateItem({
-            ...el,
-            loading: true,
-            paypal: {
-              ...el.paypal,
-              account: null
-            }
-          })
+      accounts.forEach(el => {
+        this.updateItem({
+          ...el,
+          loading: true,
+          paypal: {
+            ...el.paypal,
+            account: null
+          }
         })
+      })
 
-        for (let index = 0; index < accounts.length; index++) {
-          const secret = await this.getSecret(params)
+      for (let index = 0; index < accounts.length; index++) {
+        const secret = await this.getSecret(params)
 
-          if (!secret.data) continue
+        if (!secret || !secret.data) continue
 
-          params = secret.params
+        params = secret.params
 
-          const fingerprint = JSON.parse(atob(JSON.parse(secret.data))).authorizationFingerprint
+        const fingerprint = JSON.parse(atob(JSON.parse(secret.data))).authorizationFingerprint
 
-          const resource = await this.getResource(params, fingerprint)
+        const resource = await this.getResource(params, fingerprint)
 
-          if (!resource) continue
+        if (!resource) continue
 
-          collection.push({
-            fingerprint: fingerprint,
-            redirectUrl: JSON.parse(resource).paymentResource.redirectUrl
-          })
+        collection.push({
+          fingerprint: fingerprint,
+          redirectUrl: JSON.parse(resource).paymentResource.redirectUrl
+        })
+      }
+
+      const auth = await this.authenticatePaypal(params, collection)
+
+      for (let index = 0; index < accounts.length; index++) {
+        const item = {
+          ...accounts[index],
+          loading: false
         }
 
-        const auth = await this.authenticatePaypal(params, collection)
-
-        for (let index = 0; index < accounts.length; index++) {
-          const item = {
-            ...accounts[index],
-            loading: false
-          }
-
-          if (auth[index]) {
-            item.paypal.account = auth[index]
-            item.paypal.expires_in = this.$moment().add(150, 'minutes').toISOString()
-          }
-
-          this.updateItem(item)
+        if (auth[index]) {
+          item.paypal.account = auth[index]
+          item.paypal.expires_in = this.$moment().add(150, 'minutes').toISOString()
         }
+
+        this.updateItem(item)
       }
     },
 
@@ -275,15 +274,23 @@ export default {
      * Authenticate user
      */
     async authenticatePaypal (params, collection) {
+      const vanillaPuppeteer = require('puppeteer')
+      const { addExtra } = require('puppeteer-extra')
+      const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+
+      const puppeteer = addExtra(vanillaPuppeteer)
+      const stealth = StealthPlugin()
+      puppeteer.use(stealth)
+
+      const data = []
+
+      const browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=560,638'],
+        executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
+        headless: false
+      })
+
       try {
-        const data = []
-
-        const browser = await puppeteer.launch({
-          args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=560,638'],
-          executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
-          headless: false
-        })
-
         for (let index = 0; index < collection.length; index++) {
           const page = await browser.newPage()
 
@@ -327,7 +334,7 @@ export default {
 
           const response = await BraintreeApi.getPaypalAccount(params)
 
-          if (response && !response.error) data[index].account = JSON.parse(response)
+          if (response && !response.error) data[index] = JSON.parse(response)
         }
 
         browser.close()
@@ -335,6 +342,13 @@ export default {
         return data
       } catch (error) {
         console.log(error)
+
+        try {
+          browser.close()
+        } catch (error) {
+          console.log(error)
+        }
+
         return []
       }
     }
