@@ -208,9 +208,11 @@ export default {
     onResize () {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
     },
-    onStart (item) {
-      if (item.status.id === Constant.STATUS.STOPPED) {
-        this.updateTask({
+    async onStart (item) {
+      const currentTask = this.tasks.find((el) => el.id === item.id)
+
+      if (currentTask.status.id === Constant.STATUS.STOPPED) {
+        await this.updateTask({
           ...item,
           status: {
             id: Constant.STATUS.RUNNING,
@@ -220,30 +222,35 @@ export default {
           paid: false
         })
 
-        Task.updateCurrentTaskLog(item.id, 'Starting...')
+        await Task.updateCurrentTaskLog(item.id, 'Starting...')
         Titan22.start(item.id)
       }
     },
-    onStop (item) {
-      if (item.status.id === Constant.STATUS.RUNNING) {
-        this.removeToQueue(this.cloudflare.queue.findIndex((el) => el.id === item.id))
+    async onStop (item) {
+      const currentTask = this.tasks.find((el) => el.id === item.id)
 
-        const doors = this.cloudflare.doors.slice()
-        const key = doors.findIndex((el) => !el)
-        doors[key] = true
-        this.setDoors(doors)
-
-        Task.updateCurrentTaskLog(item.id, 'Stopped!')
-
+      if (currentTask.status.id === Constant.STATUS.RUNNING) {
         const data = {
-          ...item,
+          ...currentTask,
           status: {
             id: Constant.STATUS.STOPPED,
             msg: 'stopped',
             class: 'grey'
           },
-          transactionData: {}
+          transactionData: {},
+          loading: true
         }
+
+        await this.updateTask(data)
+
+        await this.removeToQueue(this.cloudflare.queue.findIndex((el) => el.id === item.id))
+
+        const doors = this.cloudflare.doors.slice()
+        const key = doors.findIndex((el) => !el)
+        doors[key] = true
+        await this.setDoors(doors)
+
+        await Task.updateCurrentTaskLog(item.id, 'Stopped!')
 
         data.proxy.configs = data.proxy.configs.map(el => {
           try {
@@ -258,7 +265,14 @@ export default {
           return el
         })
 
-        this.updateTask(data)
+        const vm = this
+        setTimeout(async () => {
+          data.loading = false
+
+          await vm.updateTask(data)
+
+          await Task.updateCurrentTaskLog(item.id, '====================')
+        }, 2000)
       }
     },
     async onDelete (item) {
@@ -267,11 +281,13 @@ export default {
       const key = this.selected.findIndex((el) => el.id === item.id)
       this.selected.splice(key, 1)
     },
-    onInit (item) {
+    async onInit (item) {
       this.removeToQueue(this.cloudflare.queue.findIndex((el) => el.id === item.id))
 
-      if (item.status.id === Constant.STATUS.STOPPED) {
-        this.updateTask({
+      const currentTask = this.tasks.find((el) => el.id === item.id)
+
+      if (currentTask.status.id === Constant.STATUS.STOPPED) {
+        await this.updateTask({
           ...item,
           status: {
             id: Constant.STATUS.RUNNING,
@@ -280,7 +296,7 @@ export default {
           }
         })
 
-        Task.updateCurrentTaskLog(item.id, 'Initializing...')
+        await Task.updateCurrentTaskLog(item.id, 'Initializing...')
         Titan22.verify(item.id)
       }
     }

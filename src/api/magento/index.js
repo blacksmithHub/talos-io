@@ -9,7 +9,8 @@ export default {
     if (!rp || !params.config.jar) throw rp
 
     let headers = {
-      Accept: params.accept ? params.accept : 'application/json'
+      Accept: params.accept ? params.accept : 'application/json',
+      'Accept-Language': 'en-US,en;q=0.5'
     }
 
     // Set access token
@@ -20,12 +21,32 @@ export default {
     // Set device mode
     if (params.mode) headers.Client = params.mode.name
 
+    headers.Connection = 'keep-alive'
+    headers['Content-Type'] = params.accept ? params.accept : 'application/json'
+
+    let cookies = []
+    let cookieJar = null
+
+    if (params.config.options) {
+      cookieJar = params.config.options.jar
+    } else {
+      cookieJar = params.config.jar
+    }
+
+    await cookieJar._jar.store.getAllCookies((err, cookieArray) => {
+      if (err) cookies = []
+
+      cookies = cookieArray.slice().map((el) => {
+        return `${el.key}=${el.value}`
+      })
+    })
+
+    headers.Cookie = cookies.join(';')
+
     const url = new URL(params.url)
 
     headers = {
       ...headers,
-      Connection: 'keep-alive',
-      'Content-Type': params.accept ? params.accept : 'application/json',
       Host: url.host,
       Origin: url.origin,
       Referer: url.origin,

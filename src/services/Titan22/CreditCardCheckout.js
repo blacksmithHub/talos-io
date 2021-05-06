@@ -55,6 +55,7 @@ export default {
       if (task.billing && task.billing.id) {
         switch (task.billing.bank.toLowerCase()) {
           case 'gcash':
+          {
             try {
               if (task.autoFill || task.autoPay) {
                 await page.waitForSelector('#btnGCashSubmit')
@@ -81,8 +82,10 @@ export default {
             }
 
             break
+          }
 
           default:
+          {
             try {
               if (task.autoFill || task.autoPay) {
                 await page.waitForSelector('#credit_card_number')
@@ -111,7 +114,9 @@ export default {
             } catch (error) {
               console.log(error)
             }
+
             break
+          }
         }
       }
 
