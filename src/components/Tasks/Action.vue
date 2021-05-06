@@ -5,7 +5,7 @@
       icon
       color="success"
       depressed
-      :loading="loading"
+      :loading="item.loading"
       @click="$emit('click:start', item)"
     >
       <v-icon
@@ -28,7 +28,7 @@
       icon
       color="warning"
       depressed
-      :disabled="loading"
+      :disabled="item.loading"
       @click="$refs.taskDialog.onEdit(item.id)"
     >
       <v-icon
@@ -41,7 +41,7 @@
       icon
       color="red"
       depressed
-      :disabled="loading"
+      :disabled="item.loading"
       @click="$emit('click:delete', item)"
     >
       <v-icon
@@ -57,7 +57,7 @@
           v-bind="attrs"
           icon
           depressed
-          :disabled="loading"
+          :disabled="item.loading"
           v-on="on"
         >
           <v-icon
@@ -106,8 +106,6 @@ import { mapActions } from 'vuex'
 
 import TaskDialog from '@/components/Tasks/TaskDialog.vue'
 import LogsDialog from '@/components/Tasks/LogsDialog.vue'
-import Task from '@/services/task'
-import Constant from '@/config/constant'
 
 export default {
   components: {
@@ -122,17 +120,7 @@ export default {
   },
   data () {
     return {
-      loading: false
-    }
-  },
-  watch: {
-    'item.status.id': async function (status) {
-      if (status === Constant.STATUS.STOPPED) {
-        this.loading = true
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        Task.updateCurrentTaskLog(this.item.id, '====================')
-        this.loading = false
-      }
+      //
     }
   },
   methods: {
