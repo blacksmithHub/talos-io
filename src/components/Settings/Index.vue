@@ -522,7 +522,6 @@ export default {
           this.showSnackbar({ message: 'Saved successfully', color: 'teal' })
         }
       } catch (error) {
-        console.log(this.monitorProxy)
         console.log(error)
       }
     },

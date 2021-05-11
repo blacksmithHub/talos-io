@@ -34,7 +34,8 @@ export default {
     titan22: {
       url: process.env.VUE_APP_TITAN_URL,
       token: process.env.VUE_APP_TITAN_ADMIN_TOKEN,
-      checkout: process.env.VUE_APP_2C2P_URL
+      checkout: process.env.VUE_APP_2C2P_URL,
+      track: process.env.VUE_APP_TRACKING_URL
     },
     /**
      * ===========================================
