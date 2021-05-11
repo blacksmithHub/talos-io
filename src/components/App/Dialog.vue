@@ -85,6 +85,7 @@ export default {
       try {
         return this.body ? this.body.split('\n') : []
       } catch (error) {
+        console.log(error)
         return ['Error encountered!']
       }
     }

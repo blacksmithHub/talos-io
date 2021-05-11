@@ -166,6 +166,7 @@ export default {
           }
         }
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 169: ${error}`)
       }
 
@@ -279,15 +280,7 @@ export default {
         case 403:
         case 503:
         {
-          switch (response.statusCode) {
-            case 403:
-              await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Forbidden', attr: 'red' })
-              break
-
-            case 503:
-              await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'service temporarily unavailable', attr: 'red' })
-              break
-          }
+          await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'getting cookies', attr })
 
           const { options } = response
           const { jar } = options
@@ -346,6 +339,7 @@ export default {
           break
       }
     } catch (error) {
+      console.log(error)
       await Bot.updateCurrentTaskLog(id, `#${counter} at Line 348: ${error}`)
     }
   },
@@ -608,17 +602,36 @@ export default {
     currentTask = await Bot.getCurrentTask(id)
     if (!Bot.isRunning(id) || !currentTask) return false
 
-    if (order) {
-      await this.onSuccess(id)
-      return false
-    } else {
+    if (!order) {
       delete currentTask.transactionData.cart
 
       await Tasks.dispatch('updateItem', currentTask)
 
       await new Promise(resolve => setTimeout(resolve, 1000))
       this.start(id)
+
+      return false
     }
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
+    await this.checkTokenExpiration(id)
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
+    /**
+     * Step 7: get order details
+     *
+     * get order details
+     */
+    await this.getOrderDetails(id)
+
+    currentTask = await Bot.getCurrentTask(id)
+    if (!Bot.isRunning(id) || !currentTask) return false
+
+    await this.onSuccess(id)
 
     return false
   },
@@ -687,6 +700,7 @@ export default {
           break
         }
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 686: ${error}`)
       }
     }
@@ -765,6 +779,7 @@ export default {
           break
         }
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 764: ${error}`)
       }
     }
@@ -831,6 +846,7 @@ export default {
           break
         }
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 830: ${error}`)
       }
     }
@@ -910,6 +926,7 @@ export default {
           break
         }
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 909: ${error}`)
       }
     }
@@ -975,6 +992,7 @@ export default {
           break
         }
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 974: ${error}`)
       }
     }
@@ -1057,6 +1075,7 @@ export default {
           break
         }
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1056: ${error}`)
       }
     }
@@ -1088,6 +1107,7 @@ export default {
         data = response
         break
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1087: ${error}`)
       }
     }
@@ -1156,7 +1176,7 @@ export default {
         currentTask = await Bot.getCurrentTask(id)
         if (!Bot.isRunning(id) || !currentTask) break
 
-        const msg = `Size ${label.toUpperCase()} - trying`
+        const msg = `Size ${label.toUpperCase()}: trying`
         await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
         await Bot.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
@@ -1194,13 +1214,14 @@ export default {
           data = JSON.parse(response)
           data.size = label.toUpperCase()
 
-          const msg = `Size ${label.toUpperCase()} - carted`
+          const msg = `Size ${label.toUpperCase()}: carted`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
           await Bot.updateCurrentTaskLog(id, `#${counter}: ${msg}`)
 
           break
         }
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1200: ${error}`)
       }
     }
@@ -1277,6 +1298,7 @@ export default {
           break
         }
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1276: ${error}`)
       }
     }
@@ -1329,7 +1351,7 @@ export default {
           currentTask = await Bot.getCurrentTask(id)
           if (!Bot.isRunning(id) || !currentTask) break
 
-          const waitingMsg = `Size ${currentTask.transactionData.product.size} - estimating shipping`
+          const waitingMsg = `Size ${currentTask.transactionData.product.size}: estimating shipping`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
           await Bot.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
 
@@ -1354,6 +1376,7 @@ export default {
             break
           }
         } catch (error) {
+          console.log(error)
           await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1353: ${error}`)
         }
       }
@@ -1406,7 +1429,7 @@ export default {
         currentTask = await Bot.getCurrentTask(id)
         if (!Bot.isRunning(id) || !currentTask) break
 
-        const waitingMsg = `Size ${currentTask.transactionData.product.size} - setting shipping details`
+        const waitingMsg = `Size ${currentTask.transactionData.product.size}: setting shipping details`
         await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
         await Bot.updateCurrentTaskLog(id, `#${counter}: ${waitingMsg}`)
 
@@ -1431,6 +1454,7 @@ export default {
           break
         }
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1430: ${error}`)
       }
     }
@@ -1450,7 +1474,7 @@ export default {
       let currentTask = await Bot.getCurrentTask(id)
       if (!Bot.isRunning(id) || !currentTask) return data
 
-      const waitingMsg = `Size ${currentTask.transactionData.product.size} - waiting to place order`
+      const waitingMsg = `Size ${currentTask.transactionData.product.size}: waiting to place order`
       await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
       await Bot.updateCurrentTaskLog(id, waitingMsg)
 
@@ -1500,7 +1524,7 @@ export default {
         // PayMaya
         case 1:
         {
-          const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
+          const placingMsg = `Size ${currentTask.transactionData.product.size}: placing order(PayMaya)`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
           await Bot.updateCurrentTaskLog(id, placingMsg)
 
@@ -1513,7 +1537,7 @@ export default {
         // 2c2p
         case 2:
         {
-          const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
+          const placingMsg = `Size ${currentTask.transactionData.product.size}: placing order(2c2p)`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
           await Bot.updateCurrentTaskLog(id, placingMsg)
 
@@ -1526,7 +1550,7 @@ export default {
         // PayPal
         case 3:
         {
-          const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
+          const placingMsg = `Size ${currentTask.transactionData.product.size}: placing order(PayPal)`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
           await Bot.updateCurrentTaskLog(id, placingMsg)
 
@@ -1554,7 +1578,7 @@ export default {
               // PayPal
               case 'braintree_paypal':
               {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
+                const placingMsg = `Size ${currentTask.transactionData.product.size}: placing order(PayPal)`
                 await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
                 await Bot.updateCurrentTaskLog(id, placingMsg)
 
@@ -1575,7 +1599,7 @@ export default {
               // PayMaya
               case 'paymaya_checkout':
               {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
+                const placingMsg = `Size ${currentTask.transactionData.product.size}: placing order(PayMaya)`
                 await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
                 await Bot.updateCurrentTaskLog(id, placingMsg)
 
@@ -1588,7 +1612,7 @@ export default {
               // 2c2p
               case 'ccpp':
               {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
+                const placingMsg = `Size ${currentTask.transactionData.product.size}: placing order(2c2p)`
                 await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
                 await Bot.updateCurrentTaskLog(id, placingMsg)
 
@@ -1613,7 +1637,7 @@ export default {
               // PayMaya
               case 'paymaya_checkout':
               {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayMaya)`
+                const placingMsg = `Size ${currentTask.transactionData.product.size}: placing order(PayMaya)`
                 await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
                 await Bot.updateCurrentTaskLog(id, placingMsg)
 
@@ -1626,7 +1650,7 @@ export default {
               // 2c2p
               case 'ccpp':
               {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(2c2p)`
+                const placingMsg = `Size ${currentTask.transactionData.product.size}: placing order(2c2p)`
                 await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
                 await Bot.updateCurrentTaskLog(id, placingMsg)
 
@@ -1639,7 +1663,7 @@ export default {
               // PayPal
               case 'braintree_paypal':
               {
-                const placingMsg = `Size ${currentTask.transactionData.product.size} - placing order(PayPal)`
+                const placingMsg = `Size ${currentTask.transactionData.product.size}: placing order(PayPal)`
                 await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: placingMsg })
                 await Bot.updateCurrentTaskLog(id, placingMsg)
 
@@ -1675,6 +1699,7 @@ export default {
         }
       }
     } catch (error) {
+      console.log(error)
       await Bot.updateCurrentTaskLog(id, `Line 1674: ${error}`)
     }
 
@@ -1698,7 +1723,7 @@ export default {
         if (!Bot.isRunning(id) || !currentTask) break
 
         if (index > 1) {
-          const waitingMsg = `Size ${currentTask.transactionData.product.size} - retrying`
+          const waitingMsg = `Size ${currentTask.transactionData.product.size}: retrying`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
           await Bot.updateCurrentTaskLog(id, waitingMsg)
         }
@@ -1725,6 +1750,7 @@ export default {
         data = order.request.uri.href
         break
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `Line 1724: ${error}`)
       }
     }
@@ -1738,7 +1764,7 @@ export default {
       currentTask = await Bot.getCurrentTask(id)
       if (!Bot.isRunning(id) || !currentTask) return null
 
-      const msg = `Size ${currentTask.transactionData.product.size} - copped!`
+      const msg = `Size ${currentTask.transactionData.product.size}: copped!`
 
       currentTask.transactionData.product.image = img
       currentTask.transactionData.checkoutLink = data
@@ -1755,7 +1781,7 @@ export default {
       return data
     }
 
-    const msg = `Size ${currentTask.transactionData.product.size} - out of luck`
+    const msg = `Size ${currentTask.transactionData.product.size}: out of luck`
     await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
     await Bot.updateCurrentTaskLog(id, msg)
 
@@ -1779,7 +1805,7 @@ export default {
         if (!Bot.isRunning(id) || !currentTask) break
 
         if (index > 1) {
-          const waitingMsg = `Size ${currentTask.transactionData.product.size} - retrying`
+          const waitingMsg = `Size ${currentTask.transactionData.product.size}: retrying`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
           await Bot.updateCurrentTaskLog(id, waitingMsg)
         }
@@ -1809,6 +1835,7 @@ export default {
 
         if (data) break
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `Line 1808: ${error}`)
       }
     }
@@ -1822,12 +1849,11 @@ export default {
       currentTask = await Bot.getCurrentTask(id)
       if (!Bot.isRunning(id) || !currentTask) return null
 
-      const msg = `Size ${currentTask.transactionData.product.size} - copped!`
+      const msg = `Size ${currentTask.transactionData.product.size}: copped!`
 
       currentTask.transactionData.product.image = img
       currentTask.transactionData.cookie = data.cookie
       currentTask.transactionData.method = '2c2p'
-      currentTask.transactionData.order = data.data
       currentTask.status = {
         id: Constant.STATUS.RUNNING,
         msg: msg,
@@ -1840,7 +1866,7 @@ export default {
       return data
     }
 
-    const msg = `Size ${currentTask.transactionData.product.size} - out of luck`
+    const msg = `Size ${currentTask.transactionData.product.size}: out of luck`
     await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
     await Bot.updateCurrentTaskLog(id, msg)
 
@@ -1864,7 +1890,7 @@ export default {
         if (!Bot.isRunning(id) || !currentTask) break
 
         if (index > 1) {
-          const waitingMsg = `Size ${currentTask.transactionData.product.size} - retrying`
+          const waitingMsg = `Size ${currentTask.transactionData.product.size}: retrying`
           await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: waitingMsg })
           await Bot.updateCurrentTaskLog(id, waitingMsg)
         }
@@ -1879,6 +1905,7 @@ export default {
           break
         }
       } catch (error) {
+        console.log(error)
         await Bot.updateCurrentTaskLog(id, `Line 1878: ${error}`)
       }
     }
@@ -1892,7 +1919,7 @@ export default {
       currentTask = await Bot.getCurrentTask(id)
       if (!Bot.isRunning(id) || !currentTask) return null
 
-      const msg = `Size ${currentTask.transactionData.product.size} - copped!`
+      const msg = `Size ${currentTask.transactionData.product.size}: copped!`
 
       currentTask.transactionData.product.image = img
       currentTask.transactionData.method = 'PayPal'
@@ -1916,7 +1943,7 @@ export default {
       return data
     }
 
-    const msg = `Size ${currentTask.transactionData.product.size} - out of luck`
+    const msg = `Size ${currentTask.transactionData.product.size}: out of luck`
     await Bot.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: msg })
     await Bot.updateCurrentTaskLog(id, msg)
 
@@ -1970,19 +1997,22 @@ export default {
         currentTask = await Bot.getCurrentTask(id)
         if (!Bot.isRunning(id) || !currentTask) break
 
-        currentTask.transactionData.timer = speed
-
-        await Tasks.dispatch('updateItem', currentTask)
-
         if (response && response.error) {
           await this.handleError(id, counter, response.error)
         } else if (response && !response.error) {
-          data = response
+          data = JSON.parse(response)
+
+          currentTask.transactionData.timer = speed
+          currentTask.transactionData.order = { id: parseInt(data), number: null }
+
+          await Tasks.dispatch('updateItem', currentTask)
+
           break
         }
       }
     } catch (error) {
-      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1981: ${error}`)
+      console.log(error)
+      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 2016: ${error}`)
     }
 
     return data
@@ -2044,6 +2074,7 @@ export default {
         }
       }
     } catch (error) {
+      console.log(error)
       await Bot.updateCurrentTaskLog(id, `#${counter} at Line 2043: ${error}`)
     }
 
@@ -2093,14 +2124,12 @@ export default {
           taskId: currentTask.id
         }
 
-        let orderNumber = null
         const parameters = {}
         const fieldRecords = JSON.parse(transactionData).fields
         const valueRecords = JSON.parse(transactionData).values
 
         for (let index = 0; index < fieldRecords.length; index++) {
           parameters[fieldRecords[index]] = valueRecords[index]
-          if (fieldRecords[index] === 'order_id') orderNumber = valueRecords[index]
         }
 
         params.form = parameters
@@ -2126,8 +2155,7 @@ export default {
                 value: cookie.value,
                 domain: '.2c2p.com',
                 expiry: cookie.expiry
-              },
-              data: orderNumber
+              }
             }
 
             break
@@ -2135,6 +2163,7 @@ export default {
         }
       }
     } catch (error) {
+      console.log(error)
       await Bot.updateCurrentTaskLog(id, `#${counter} at Line 2134: ${error}`)
     }
 
@@ -2182,6 +2211,50 @@ export default {
       } catch (error) {
         data = ''
       }
+    }
+
+    return data
+  },
+
+  /**
+   * Get order details
+   *
+   * @param {*} id
+   */
+  async getOrderDetails (id) {
+    let data = null
+
+    try {
+      let currentTask = await Bot.getCurrentTask(id)
+      if (!Bot.isRunning(id) || !currentTask) return null
+
+      const params = {
+        token: currentTask.transactionData.token.token,
+        mode: currentTask.mode,
+        config: this.getConfig(currentTask.proxy),
+        taskId: currentTask.id,
+        payload: { order_id: currentTask.transactionData.order.id }
+      }
+
+      if (!Bot.isRunning(id)) return null
+
+      const response = await orderApi.get(params)
+
+      currentTask = await Bot.getCurrentTask(id)
+      if (!Bot.isRunning(id) || !currentTask) return null
+
+      if (response && !response.error) {
+        data = JSON.parse(response)
+
+        currentTask.transactionData.order.number = data.increment_id
+        await Tasks.dispatch('updateItem', currentTask)
+      }
+    } catch (error) {
+      console.log(error)
+
+      await Bot.updateCurrentTaskLog(id, `#${1} at Line 2253: ${error}`)
+
+      return null
     }
 
     return data
@@ -2248,7 +2321,7 @@ export default {
         checkoutLink: (currentTask.transactionData.method === 'PayMaya') ? currentTask.transactionData.checkoutLink : '',
         checkoutCookie: (currentTask.transactionData.cookie) ? currentTask.transactionData.cookie.value : '',
         proxyList: currentTask.proxy.name,
-        orderNumber: currentTask.transactionData.order,
+        orderNumber: (currentTask.transactionData.order && currentTask.transactionData.order.number) ? currentTask.transactionData.order.number : null,
         mode: currentTask.mode.label
       }
       Webhook.sendWebhook(personalWebhook)
