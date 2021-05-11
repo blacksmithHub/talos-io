@@ -27,7 +27,7 @@ export default {
       .setFooter(`${Core.state.about.productName} ${Core.state.about.version}`, Config.bot.avatar)
       .setTimestamp()
 
-    if (options.orderNumber) embed.addField('Order Number', `||${options.orderNumber}||`, true)
+    if (options.orderNumber) embed.addField('Order Number', `||[${options.orderNumber}](${Config.services.titan22.track}?id=${options.orderNumber})||`, true)
 
     if (options.checkoutCookie) embed.addField('Cookie', `||${options.checkoutCookie}||`, true)
 

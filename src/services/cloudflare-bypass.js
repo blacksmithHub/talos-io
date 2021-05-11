@@ -155,32 +155,48 @@ export default {
         }
       })
 
-      await page.goto(`${Config.services.titan22.url}/brands/jordan.html/`)
-
-      const content = await page.content()
-
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
         await browser.close()
         return []
       }
 
-      if (content.includes('cf-browser-verification')) {
-        if (id && service && service === 'TASK') {
-          await Task.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Waiting for clearance' })
-        }
+      await page.goto(`${Config.services.titan22.url}/new-arrivals.html`)
 
-        cookies = await this.cfChallenge(page, id, service)
-        await browser.close()
-      } else if (content.includes('cf_captcha_kind')) {
-        if (id && service && service === 'TASK') {
-          await Task.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Waiting to solve captcha' })
-        }
+      while (!cookies.length) {
+        try {
+          if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
+            await browser.close()
+            break
+          }
 
-        await browser.close()
-        cookies = await this.cfHcaptcha(args, id, service)
-      } else {
-        await browser.close()
-        return []
+          const content = await page.content()
+
+          if (content && content.includes('cf-browser-verification')) {
+            cookies = await this.cfChallenge(page, id, service)
+            await browser.close()
+            break
+          } else if (content && content.includes('cf_captcha_kind')) {
+            if (id && service && service === 'TASK') {
+              await Task.setCurrentTaskStatus(id, { status: Constant.STATUS.RUNNING, msg: 'Waiting to solve captcha' })
+            }
+
+            await browser.close()
+            cookies = await this.cfHcaptcha(args, id, service)
+            break
+          }
+
+          await page.reload()
+        } catch (error) {
+          console.log(error)
+
+          try {
+            await browser.close()
+          } catch (error) {
+            console.log(error)
+          }
+
+          break
+        }
       }
 
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) return []
@@ -310,7 +326,7 @@ export default {
         }
       })
 
-      await page.goto(`${Config.services.titan22.url}/brands/jordan.html/`)
+      await page.goto(`${Config.services.titan22.url}/new-arrivals.html`)
 
       if (id) {
         const vm = this

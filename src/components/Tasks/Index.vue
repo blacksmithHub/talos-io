@@ -252,7 +252,7 @@ export default {
 
         await Task.updateCurrentTaskLog(item.id, 'Stopped!')
 
-        data.proxy.configs = data.proxy.configs.map(el => {
+        data.proxy.configs = data.proxy.configs.map((el) => {
           try {
             if (el.request) {
               el.request.cancel()
