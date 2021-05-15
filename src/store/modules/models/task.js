@@ -169,10 +169,10 @@ export default {
         let userAgent = new UserAgent(opt)
         userAgent = userAgent.toString()
 
-        const rp = require('request-promise')
-        const jar = rp.jar()
-
         val.proxy.configs = val.proxy.configs.map(el => {
+          const rp = require('request-promise')
+          const jar = rp.jar()
+
           return {
             rp: rp,
             jar: jar,
