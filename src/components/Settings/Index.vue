@@ -108,7 +108,23 @@
                   dense
                   class="pa-0 cursor"
                 >
-                  <v-subheader v-text="'Monitor'" />
+                  <v-subheader>
+                    <span v-text="'Monitor'" />
+
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon
+                          v-bind="attrs"
+                          small
+                          class="mb-1 ml-2"
+                          v-on="on"
+                          v-text="'mdi-information'"
+                        />
+                      </template>
+                      <span v-text="'Re-launch Monitor window to take effect'" />
+                    </v-tooltip>
+                  </v-subheader>
+
                   <v-list-item class="pa-0">
                     <v-list-item-content class="pa-2">
                       <v-row>
