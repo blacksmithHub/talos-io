@@ -20,7 +20,8 @@ export default {
         webhookUrl: null,
         nightMode: true,
         withSound: true,
-        monitorProxy: null
+        monitorProxy: null,
+        isHeadless: false
       }
     },
 

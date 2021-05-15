@@ -10,6 +10,14 @@ import Config from '@/config/app'
  */
 export default {
   /**
+   * Is browser headless
+   */
+  isHeadless () {
+    const settings = Store._modules.root._children.settings.context.state.items
+
+    return settings.isHeadless
+  },
+  /**
    * Identify if proxy is running
    */
   isProxyRunning (id) {
@@ -124,7 +132,7 @@ export default {
     const browser = await puppeteer.launch({
       args,
       executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
-      headless: false
+      headless: this.isHeadless()
     })
 
     try {
