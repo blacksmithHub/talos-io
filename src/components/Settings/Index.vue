@@ -327,7 +327,7 @@
               >
                 <v-list
                   dense
-                  class="cursor"
+                  class="cursor pa-0"
                 >
                   <v-subheader v-text="'Webhook'" />
                   <v-list-item class="pa-0">
@@ -377,7 +377,7 @@
         </v-card>
       </v-card-text>
 
-      <v-card-actions class="justify-center mt-2">
+      <v-card-actions class="justify-center mt-4">
         <v-btn
           rounded
           depressed
@@ -589,8 +589,8 @@ export default {
       this.openDialog({
         title: 'Reset All Data',
         body: 'Restart the application to apply the changes.',
-        actionLabel: 'Restart',
-        cancelLabel: 'Later',
+        actionLabel: 'Ok and Restart',
+        cancelLabel: 'Cancel',
         action: () => {
           localStorage.removeItem('settings')
           localStorage.removeItem('proxies')
