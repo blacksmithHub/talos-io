@@ -2,9 +2,13 @@
   <div>
     <v-row
       align="center"
-      class="pa-3"
+      class="py-2 px-3"
+      no-gutters
     >
-      <v-col cols="1">
+      <v-col
+        cols="2"
+        align-self="center"
+      >
         <h3
           class="cursor"
           v-text="'Accounts'"
@@ -12,7 +16,7 @@
       </v-col>
 
       <v-col
-        cols="11"
+        cols="10"
         align-self="center"
         class="text-right"
       >
@@ -285,7 +289,17 @@ export default {
       const data = []
 
       const browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=560,638'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu',
+          `--user-agent=${params.config.userAgent}`,
+          '--window-size=560,638'
+        ],
         executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
         headless: false
       })

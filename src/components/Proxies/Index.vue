@@ -134,7 +134,7 @@ import ProxyDialog from '@/components/Proxies/ProxyDialog.vue'
 import Constant from '@/config/constant'
 import Config from '@/config/app'
 import CF from '@/services/cloudflare-bypass'
-import PageApi from '@/api/magento/titan22/page'
+import BraintreeApi from '@/api/magento/titan22/braintree'
 
 export default {
   components: {
@@ -217,7 +217,7 @@ export default {
             proxyId: item.id
           }
 
-          const request = await PageApi.get(params)
+          const request = await BraintreeApi.getSecret(params)
 
           if (request && request.error && request.error.statusCode && (request.error.statusCode === 503 || request.error.statusCode === 403)) {
             const { options } = request.error
@@ -280,7 +280,7 @@ export default {
           proxyId: item.id
         }
 
-        const request = await PageApi.get(params)
+        const request = await BraintreeApi.getSecret(params)
 
         if (request && request.error && request.error.statusCode && (request.error.statusCode === 503 || request.error.statusCode === 403)) {
           const { options } = request.error

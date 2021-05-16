@@ -271,16 +271,12 @@ import { mapState, mapActions } from 'vuex'
 import { remote, ipcRenderer } from 'electron'
 import { Cookie } from 'tough-cookie'
 import UserAgent from 'user-agents'
-import rp from 'request-promise'
 
 import ProductApi from '@/api/magento/titan22/product'
 
 import CF from '@/services/cloudflare-bypass'
 import Config from '@/config/app'
 import placeholder from '@/assets/no_image.png'
-
-const userAgent = new UserAgent()
-const jar = rp.jar()
 
 export default {
   data () {
@@ -326,19 +322,15 @@ export default {
           searchCriteria: {
             sortOrders: [
               {
-                field: this.filter,
+                field: null,
                 direction: 'DESC'
               }
             ],
-            pageSize: this.count
+            pageSize: null
           }
         },
-        token: Config.services.titan22.token,
-        config: {
-          rp: rp,
-          jar: jar,
-          userAgent: userAgent.toString()
-        }
+        token: null,
+        config: null
       }
     }
   },
@@ -355,11 +347,7 @@ export default {
     }
   },
   async created () {
-    this.count = this.monitor.total
-    this.filter = this.monitor.filter
-
-    this.params.payload.searchCriteria.sortOrders[0].field = this.filter
-    this.params.payload.searchCriteria.pageSize = this.count
+    await this.prepareData()
 
     this.searchProduct()
 
@@ -372,6 +360,43 @@ export default {
     ...mapActions('snackbar', ['showSnackbar']),
     ...mapActions('monitor', { updateMonitor: 'setItems' }),
 
+    prepareData () {
+      this.count = this.monitor.total
+      this.filter = this.monitor.filter
+
+      this.params.payload.searchCriteria.sortOrders[0].field = this.filter
+      this.params.payload.searchCriteria.pageSize = this.count
+      this.params.token = Config.services.titan22.token
+
+      this.proxyList = { ...this.settings.monitorProxy }
+
+      this.proxyList.configs = []
+
+      const userAgent = new UserAgent({ deviceCategory: 'desktop' })
+
+      if (this.proxyList.proxies && this.proxyList.proxies.length) {
+        this.proxyList.proxies.forEach((el) => {
+          const rp = require('request-promise')
+          const jar = rp.jar()
+
+          this.proxyList.configs.push({
+            rp: rp,
+            jar: jar,
+            proxy: el.proxy,
+            userAgent: userAgent
+          })
+        })
+      } else {
+        const rp = require('request-promise')
+        const jar = rp.jar()
+
+        this.proxyList.configs.push({
+          rp: rp,
+          jar: jar,
+          userAgent: userAgent
+        })
+      }
+    },
     onResize () {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
     },
@@ -433,7 +458,7 @@ export default {
 
           if (tries > 3) break
 
-          if (this.settings.monitorProxy && this.settings.monitorProxy.id) this.assignProxy()
+          if (this.settings.monitorProxy && Object.keys(this.settings.monitorProxy).length) await this.assignProxy()
 
           const response = await ProductApi.search(this.params)
 
@@ -462,7 +487,11 @@ export default {
                 jar.setCookie(val, Config.services.titan22.url)
               }
 
-              this.params.config.options = options
+              this.proxyList.configs = this.proxyList.configs.map((el) => {
+                if (el.proxy === options.proxy) el.options = options
+
+                return el
+              })
             }
           } else if (response.error) {
             data = null
@@ -501,11 +530,11 @@ export default {
     assignProxy () {
       let index = 0
 
-      if (this.settings.monitorProxy.configs.length > 1) index = Math.floor(Math.random() * this.settings.monitorProxy.configs.length)
+      if (this.proxyList.configs.length > 1) index = Math.floor(Math.random() * this.proxyList.configs.length)
 
-      const selected = this.settings.monitorProxy.configs[index]
+      const selected = this.proxyList.configs[index]
 
-      if (selected.proxy) this.params.config.proxy = selected.proxy
+      this.params.config = selected
     }
   }
 }

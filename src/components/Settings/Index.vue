@@ -108,7 +108,23 @@
                   dense
                   class="pa-0 cursor"
                 >
-                  <v-subheader v-text="'Monitor'" />
+                  <v-subheader>
+                    <span v-text="'Monitor'" />
+
+                    <v-tooltip top>
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-icon
+                          v-bind="attrs"
+                          small
+                          class="mb-1 ml-2"
+                          v-on="on"
+                          v-text="'mdi-information'"
+                        />
+                      </template>
+                      <span v-text="'Re-launch Monitor window to take effect'" />
+                    </v-tooltip>
+                  </v-subheader>
+
                   <v-list-item class="pa-0">
                     <v-list-item-content class="pa-2">
                       <v-row>
@@ -207,6 +223,35 @@
                       </v-row>
                     </v-list-item-content>
                   </v-list-item>
+
+                  <v-list-item class="pa-0">
+                    <v-list-item-content class="pa-2">
+                      <v-list-item-title>
+                        <span v-text="'Headless'" />
+
+                        <v-tooltip top>
+                          <template v-slot:activator="{ on, attrs }">
+                            <v-icon
+                              v-bind="attrs"
+                              small
+                              class="mb-1 ml-2"
+                              v-on="on"
+                              v-text="'mdi-information'"
+                            />
+                          </template>
+                          <span v-text="'This is only applies when getting cookies'" />
+                        </v-tooltip>
+                      </v-list-item-title>
+                      <v-list-item-subtitle v-text="'Browser automated solver'" />
+                    </v-list-item-content>
+
+                    <v-list-item-action>
+                      <v-switch
+                        v-model="isHeadless"
+                        inset
+                      />
+                    </v-list-item-action>
+                  </v-list-item>
                 </v-list>
               </v-col>
 
@@ -290,12 +335,15 @@
         <br>
 
         <v-card>
-          <v-card-text>
+          <v-card-text class="pt-0">
             <v-row>
-              <v-col cols="12">
+              <v-col
+                cols="12"
+                class="pt-0 pl-0 pb-0"
+              >
                 <v-list
                   dense
-                  class="cursor"
+                  class="cursor pa-0"
                 >
                   <v-subheader v-text="'Webhook'" />
                   <v-list-item class="pa-0">
@@ -345,7 +393,7 @@
         </v-card>
       </v-card-text>
 
-      <v-card-actions class="justify-center mt-3">
+      <v-card-actions class="justify-center mt-4">
         <v-btn
           rounded
           depressed
@@ -388,7 +436,8 @@ export default {
       webhookTesting: false,
       saving: false,
       doors: 1,
-      loading: false
+      loading: false,
+      isHeadless: false
     }
   },
   computed: {
@@ -488,6 +537,7 @@ export default {
       this.webhookTesting = false
       this.saving = false
       this.doors = this.cloudflare.doors.length
+      this.isHeadless = this.settings.isHeadless
     },
 
     /**
@@ -503,7 +553,8 @@ export default {
             webhookUrl: this.webhookUrl,
             nightMode: this.nightMode,
             withSound: this.withSound,
-            monitorProxy: { ...this.monitorProxy }
+            monitorProxy: { ...this.monitorProxy },
+            isHeadless: this.isHeadless
           })
 
           if (this.doors > this.cloudflare.doors.length) {
@@ -554,8 +605,8 @@ export default {
       this.openDialog({
         title: 'Reset All Data',
         body: 'Restart the application to apply the changes.',
-        actionLabel: 'Restart',
-        cancelLabel: 'Later',
+        actionLabel: 'Ok and Restart',
+        cancelLabel: 'Cancel',
         action: () => {
           localStorage.removeItem('settings')
           localStorage.removeItem('proxies')

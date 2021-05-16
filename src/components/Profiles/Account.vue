@@ -5,7 +5,7 @@
       fluid
     >
       <v-data-table
-        :height="windowSize.y - 50 - 10 - 45 - 22"
+        :height="windowSize.y - 48 - 8 - 43 - 20"
         style="width: 100%"
         class="elevation-2"
         no-data-text="Nothing to display"
@@ -206,7 +206,7 @@ export default {
         return false
       }
 
-      const auth = await this.authenticatePaypal(JSON.parse(resource).paymentResource.redirectUrl)
+      const auth = await this.authenticatePaypal(JSON.parse(resource).paymentResource.redirectUrl, userAgent)
 
       if (!auth) {
         data = this.accounts.find((el) => el.id === item.id)
@@ -335,7 +335,7 @@ export default {
     /**
      * Authenticate user
      */
-    async authenticatePaypal (redirectUrl) {
+    async authenticatePaypal (redirectUrl, userAgent) {
       let data = null
 
       const vanillaPuppeteer = require('puppeteer')
@@ -347,7 +347,17 @@ export default {
       puppeteer.use(stealth)
 
       const browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--window-size=560,638'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu',
+          '--window-size=560,638',
+          `--user-agent=${userAgent}`
+        ],
         executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
         headless: false
       })

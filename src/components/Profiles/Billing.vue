@@ -5,7 +5,7 @@
       fluid
     >
       <v-data-table
-        :height="windowSize.y - 50 - 10 - 45 - 22"
+        :height="windowSize.y - 48 - 8 - 43 - 20"
         style="width: 100%"
         class="elevation-2"
         no-data-text="Nothing to display"

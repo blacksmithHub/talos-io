@@ -1999,6 +1999,8 @@ export default {
 
         if (response && response.error) {
           await this.handleError(id, counter, response.error)
+
+          if (response.error.statusCode && (response.error.statusCode === 400 || response.error.statusCode === 404)) break
         } else if (response && !response.error) {
           data = JSON.parse(response)
 
@@ -2026,56 +2028,32 @@ export default {
    */
   async getTransactionData (id, payload) {
     let data = null
-    let counter = 0
     let currentTask = await Bot.getCurrentTask(id)
 
     try {
-      while (Bot.isRunning(id) && currentTask && !data) {
-        counter++
+      currentTask = await Bot.getCurrentTask(id)
+      if (!Bot.isRunning(id) || !currentTask) return null
 
-        currentTask = await Bot.getCurrentTask(id)
-        if (!Bot.isRunning(id) || !currentTask) break
+      const params = {
+        token: currentTask.transactionData.token.token,
+        mode: currentTask.mode,
+        config: payload.config,
+        taskId: currentTask.id
+      }
 
-        if (counter > 1) {
-          let interval = null
-          let timeout = null
-          await new Promise((resolve) => {
-            interval = setInterval(() => {
-              timeout = setTimeout(() => {
-                clearInterval(interval)
-                resolve()
-              }, currentTask.delay)
-            }, 500)
-          })
-          clearInterval(interval)
-          clearTimeout(timeout)
-        }
+      const response = await orderApi.getTransactionData(params)
 
-        currentTask = await Bot.getCurrentTask(id)
-        if (!Bot.isRunning(id) || !currentTask) break
+      currentTask = await Bot.getCurrentTask(id)
+      if (!Bot.isRunning(id) || !currentTask) return null
 
-        const params = {
-          token: currentTask.transactionData.token.token,
-          mode: currentTask.mode,
-          config: payload.config,
-          taskId: currentTask.id
-        }
-
-        const response = await orderApi.getTransactionData(params)
-
-        currentTask = await Bot.getCurrentTask(id)
-        if (!Bot.isRunning(id) || !currentTask) break
-
-        if (response && response.error) {
-          await this.handleError(id, counter, response.error)
-        } else if (response && !response.error) {
-          data = response
-          break
-        }
+      if (response && response.error) {
+        await this.handleError(id, 0, response.error)
+      } else if (response && !response.error) {
+        data = response
       }
     } catch (error) {
       console.log(error)
-      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 2043: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `Line 2056: ${error}`)
     }
 
     return data
@@ -2090,81 +2068,56 @@ export default {
    */
   async get2c2pCookie (id, payload, transactionData) {
     let data = null
-    let counter = 0
     let currentTask = await Bot.getCurrentTask(id)
 
     try {
-      while (Bot.isRunning(id) && currentTask && !data) {
-        counter++
+      currentTask = await Bot.getCurrentTask(id)
+      if (!Bot.isRunning(id) || !currentTask) return null
 
-        currentTask = await Bot.getCurrentTask(id)
-        if (!Bot.isRunning(id) || !currentTask) break
+      const params = {
+        mode: currentTask.mode,
+        config: payload.config,
+        taskId: currentTask.id
+      }
 
-        if (counter > 1) {
-          let interval = null
-          let timeout = null
-          await new Promise((resolve) => {
-            interval = setInterval(() => {
-              timeout = setTimeout(() => {
-                clearInterval(interval)
-                resolve()
-              }, currentTask.delay)
-            }, 500)
-          })
-          clearInterval(interval)
-          clearTimeout(timeout)
-        }
+      const parameters = {}
+      const fieldRecords = JSON.parse(transactionData).fields
+      const valueRecords = JSON.parse(transactionData).values
 
-        currentTask = await Bot.getCurrentTask(id)
-        if (!Bot.isRunning(id) || !currentTask) break
+      for (let index = 0; index < fieldRecords.length; index++) {
+        parameters[fieldRecords[index]] = valueRecords[index]
+      }
 
-        const params = {
-          mode: currentTask.mode,
-          config: payload.config,
-          taskId: currentTask.id
-        }
+      params.form = parameters
 
-        const parameters = {}
-        const fieldRecords = JSON.parse(transactionData).fields
-        const valueRecords = JSON.parse(transactionData).values
+      const response = await orderApi.place2c2pOrder(params)
 
-        for (let index = 0; index < fieldRecords.length; index++) {
-          parameters[fieldRecords[index]] = valueRecords[index]
-        }
+      currentTask = await Bot.getCurrentTask(id)
+      if (!Bot.isRunning(id) || !currentTask) return null
 
-        params.form = parameters
+      if (response.error && response.error.options) {
+        let cookie = null
 
-        const response = await orderApi.place2c2pOrder(params)
+        await response.error.options.jar._jar.store.getAllCookies((err, cookieArray) => {
+          if (err) cookie = null
 
-        currentTask = await Bot.getCurrentTask(id)
-        if (!Bot.isRunning(id) || !currentTask) break
+          cookie = cookieArray.find((val) => val.key === 'ASP.NET_SessionId')
+        })
 
-        if (response.error && response.error.options) {
-          let cookie = null
-
-          await response.error.options.jar._jar.store.getAllCookies((err, cookieArray) => {
-            if (err) cookie = null
-
-            cookie = cookieArray.find((val) => val.key === 'ASP.NET_SessionId')
-          })
-
-          if (cookie) {
-            data = {
-              cookie: {
-                name: 'ASP.NET_SessionId',
-                value: cookie.value,
-                domain: '.2c2p.com',
-                expiry: cookie.expiry
-              }
+        if (cookie) {
+          data = {
+            cookie: {
+              name: 'ASP.NET_SessionId',
+              value: cookie.value,
+              domain: '.2c2p.com',
+              expiry: cookie.expiry
             }
-
-            break
           }
         }
       }
     } catch (error) {
       console.log(error)
-      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 2134: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `Line 2120: ${error}`)
     }
 
     return data

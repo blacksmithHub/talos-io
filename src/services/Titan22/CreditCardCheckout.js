@@ -19,7 +19,16 @@ export default {
 
       const browser = await puppeteer.launch({
         headless: false,
-        args: ['--window-size=560,638'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu',
+          '--window-size=560,638'
+        ],
         defaultViewport: null,
         executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked')
       })

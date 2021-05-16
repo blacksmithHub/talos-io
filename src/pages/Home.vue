@@ -23,8 +23,6 @@
         </v-tab-item>
       </v-tabs-items>
     </v-main>
-
-    <Footer v-if="tab === 0" />
   </v-app>
 </template>
 
@@ -32,13 +30,13 @@
 import { mapActions, mapState } from 'vuex'
 import { ipcRenderer } from 'electron'
 import moment from 'moment-timezone'
+import DA from 'distribute-array'
 
 import Tasks from '@/components/Tasks/Index.vue'
 import Profiles from '@/components/Profiles/Index.vue'
 import Proxies from '@/components/Proxies/Index.vue'
 import Settings from '@/components/Settings/Index.vue'
 import Header from '@/components/App/Header'
-import Footer from '@/components/App/Footer'
 
 import Auth from '@/services/auth'
 
@@ -50,8 +48,7 @@ export default {
     Profiles,
     Proxies,
     Settings,
-    Header,
-    Footer
+    Header
   },
   data () {
     return {
@@ -68,39 +65,85 @@ export default {
   },
   watch: {
     proxies () {
-      this.proxies.forEach(el => {
-        const task = this.tasks.find((val) => val.proxy.id === el.id)
+      try {
+        this.proxies.forEach(el => {
+          const tasks = this.tasks.slice().filter((val) => val.proxy.id === el.id)
 
-        if (task) {
-          const data = {
-            ...task,
-            proxy: el
+          if (tasks.length) {
+            if (el.distribute) {
+              const distributedProxy = DA(el.proxies, tasks.length)
+              const distributedConfigs = DA(el.configs, tasks.length)
+
+              for (let index = 0; index < distributedProxy.length; index++) {
+                const task = tasks[index]
+
+                const data = {
+                  ...task
+                }
+
+                if (distributedProxy[index].length) {
+                  data.proxy = {
+                    ...el,
+                    proxies: distributedProxy[index],
+                    configs: distributedConfigs[index]
+                  }
+                } else {
+                  const local = this.proxies.slice().find((val) => val.id === 1)
+                  data.proxy = local
+                }
+
+                const UserAgent = require('user-agents')
+                const opt = { deviceCategory: 'desktop' }
+
+                if (data.mode.id !== 1) opt.deviceCategory = 'mobile'
+
+                const userAgent = new UserAgent(opt)
+
+                data.proxy.configs = data.proxy.configs.map((val) => {
+                  return {
+                    ...val,
+                    userAgent: userAgent.toString()
+                  }
+                })
+
+                this.updateTask(data)
+              }
+            } else {
+              tasks.forEach(task => {
+                const data = {
+                  ...task,
+                  proxy: el
+                }
+
+                const UserAgent = require('user-agents')
+                const opt = { deviceCategory: 'desktop' }
+
+                if (data.mode.id !== 1) opt.deviceCategory = 'mobile'
+
+                const userAgent = new UserAgent(opt)
+
+                data.proxy.configs = data.proxy.configs.map((val) => {
+                  return {
+                    ...val,
+                    userAgent: userAgent.toString()
+                  }
+                })
+
+                this.updateTask(data)
+              })
+            }
           }
 
-          const UserAgent = require('user-agents')
-          const opt = { deviceCategory: 'desktop' }
-
-          if (data.mode.id !== 1) opt.deviceCategory = 'mobile'
-
-          const userAgent = new UserAgent(opt)
-
-          data.proxy.configs = data.proxy.configs.map((val) => {
-            return {
-              ...val,
-              userAgent: userAgent.toString()
-            }
-          })
-
-          this.updateTask(data)
-        }
-
-        if (this.settings.monitorProxy.id === el.id) {
-          this.setSettings({
-            ...this.settings,
-            monitorProxy: el
-          })
-        }
-      })
+          if (this.settings.monitorProxy.id === el.id) {
+            this.setSettings({
+              ...this.settings,
+              monitorProxy: el
+            })
+          }
+        })
+      } catch (error) {
+        console.log(error)
+      }
     },
     accounts () {
       this.accounts.forEach(el => {
