@@ -10,6 +10,14 @@ import Config from '@/config/app'
  */
 export default {
   /**
+   * Is browser headless
+   */
+  isHeadless () {
+    const settings = Store._modules.root._children.settings.context.state.items
+
+    return settings.isHeadless
+  },
+  /**
    * Identify if proxy is running
    */
   isProxyRunning (id) {
@@ -98,6 +106,7 @@ export default {
     const { addExtra } = require('puppeteer-extra')
     const StealthPlugin = require('puppeteer-extra-plugin-stealth')
     const ProxyChain = require('proxy-chain')
+    let newProxyUrl = null
 
     const puppeteer = addExtra(vanillaPuppeteer)
     const stealth = StealthPlugin()
@@ -108,6 +117,11 @@ export default {
     const args = [
       '--no-sandbox',
       '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--disable-gpu',
       `--user-agent=${options.headers['User-Agent']}`,
       '--window-size=560,638'
     ]
@@ -116,7 +130,8 @@ export default {
 
     if (options.proxy) {
       const oldProxyUrl = options.proxy
-      const newProxyUrl = await ProxyChain.anonymizeProxy(oldProxyUrl)
+
+      newProxyUrl = await ProxyChain.anonymizeProxy(oldProxyUrl)
 
       args.push(`--proxy-server=${newProxyUrl}`)
     }
@@ -124,12 +139,15 @@ export default {
     const browser = await puppeteer.launch({
       args,
       executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
-      headless: false
+      headless: this.isHeadless()
     })
 
     try {
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
         await browser.close()
+
+        if (newProxyUrl) await ProxyChain.closeAnonymizedProxy(newProxyUrl, true)
+
         return []
       }
 
@@ -140,14 +158,20 @@ export default {
       page.on('request', async (request) => {
         if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
           await browser.close()
+
+          if (newProxyUrl) await ProxyChain.closeAnonymizedProxy(newProxyUrl, true)
+
           return []
         }
 
-        if (request.url().endsWith('.png') || request.url().endsWith('.jpg')) {
+        if (request.url().endsWith('.png') || request.url().endsWith('.jpg') || request.resourceType() === 'image') {
         // BLOCK IMAGES
           request.abort()
         } else if (blockedResources.some(resource => request.url().indexOf(resource) !== -1)) {
         // BLOCK CERTAIN DOMAINS
+          request.abort()
+        } else if (request.resourceType() === 'stylesheet' || request.resourceType() === 'font') {
+          // BLOCK STYLES
           request.abort()
         } else {
         // ALLOW OTHER REQUESTS
@@ -157,6 +181,9 @@ export default {
 
       if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
         await browser.close()
+
+        if (newProxyUrl) await ProxyChain.closeAnonymizedProxy(newProxyUrl, true)
+
         return []
       }
 
@@ -166,6 +193,9 @@ export default {
         try {
           if (id && ((service === 'TASK' && !Task.isRunning(id)) || (!service && !this.isProxyRunning(id)))) {
             await browser.close()
+
+            if (newProxyUrl) await ProxyChain.closeAnonymizedProxy(newProxyUrl, true)
+
             break
           }
 
@@ -174,6 +204,9 @@ export default {
           if (content && content.includes('cf-browser-verification')) {
             cookies = await this.cfChallenge(page, id, service)
             await browser.close()
+
+            if (newProxyUrl) await ProxyChain.closeAnonymizedProxy(newProxyUrl, true)
+
             break
           } else if (content && content.includes('cf_captcha_kind')) {
             if (id && service && service === 'TASK') {
@@ -182,6 +215,9 @@ export default {
 
             await browser.close()
             cookies = await this.cfHcaptcha(args, id, service)
+
+            if (newProxyUrl) await ProxyChain.closeAnonymizedProxy(newProxyUrl, true)
+
             break
           }
 
@@ -191,6 +227,8 @@ export default {
 
           try {
             await browser.close()
+
+            if (newProxyUrl) await ProxyChain.closeAnonymizedProxy(newProxyUrl, true)
           } catch (error) {
             console.log(error)
           }
@@ -231,6 +269,8 @@ export default {
 
       try {
         await browser.close()
+
+        if (newProxyUrl) await ProxyChain.closeAnonymizedProxy(newProxyUrl, true)
       } catch (error) {
         console.log(error)
       }

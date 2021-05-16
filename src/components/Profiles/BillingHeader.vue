@@ -2,9 +2,13 @@
   <div>
     <v-row
       align="center"
-      class="pa-3"
+      no-gutters
+      class="py-2 px-3"
     >
-      <v-col cols="1">
+      <v-col
+        cols="2"
+        align-self="center"
+      >
         <h3
           class="cursor"
           v-text="'Billings'"
@@ -12,7 +16,7 @@
       </v-col>
 
       <v-col
-        cols="11"
+        cols="10"
         align-self="center"
         class="text-right"
       >
@@ -56,7 +60,6 @@
           color="primary"
           depressed
           outlined
-          class="mr-3"
           @click="exportJson(billings, 'Export Billings To JSON')"
         >
           <v-icon

@@ -170,6 +170,8 @@
       ref="selectDialog"
       :selected="selected"
     />
+
+    <Statistics />
   </div>
 </template>
 
@@ -178,11 +180,13 @@ import { mapState } from 'vuex'
 
 import MassEditDialog from '@/components/Tasks/MassEditDialog.vue'
 import SelectDialog from '@/components/Tasks/SelectDialog.vue'
+import Statistics from '@/components/Tasks/Statistics.vue'
 
 export default {
   components: {
     MassEditDialog,
-    SelectDialog
+    SelectDialog,
+    Statistics
   },
   props: {
     selected: {

@@ -51,6 +51,25 @@
               @blur="$v.proxies.$touch()"
               @change="onChange"
             />
+
+            <v-list
+              dense
+              class="cursor"
+            >
+              <v-list-item class="pa-0">
+                <v-list-item-content class="pa-2">
+                  <v-list-item-title v-text="'Distribute to Tasks'" />
+                  <v-list-item-subtitle v-text="'Proxies will be distributed to assigned tasks equally'" />
+                </v-list-item-content>
+
+                <v-list-item-action>
+                  <v-switch
+                    v-model="distribute"
+                    inset
+                  />
+                </v-list-item-action>
+              </v-list-item>
+            </v-list>
           </v-container>
         </v-card-text>
 
@@ -97,7 +116,8 @@ export default {
       name: null,
       proxies: null,
       list: [],
-      id: null
+      id: null,
+      distribute: false
     }
   },
   computed: {
@@ -141,6 +161,7 @@ export default {
       this.name = item.name
       this.list = item.proxies
       this.id = id
+      this.distribute = item.distribute
 
       this.setProxies()
     },
@@ -173,6 +194,7 @@ export default {
       this.proxies = null
       this.pool = []
       this.id = null
+      this.distribute = false
     },
     /**
      * On submit event.
@@ -183,7 +205,8 @@ export default {
       if (!this.$v.$invalid) {
         const params = {
           name: this.name,
-          proxies: this.list
+          proxies: this.list,
+          distribute: this.distribute
         }
 
         if (this.id) {
@@ -266,3 +289,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.cursor {
+  cursor: default
+}
+</style>

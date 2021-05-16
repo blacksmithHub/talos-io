@@ -24,6 +24,9 @@ export default {
     headers.Connection = 'keep-alive'
     headers['Content-Type'] = params.accept ? params.accept : 'application/json'
 
+    // TODO: test
+    // headers.Country = 'PH'
+
     let cookies = []
     let cookieJar = null
 
@@ -48,6 +51,7 @@ export default {
     headers = {
       ...headers,
       Host: url.host,
+      Lang: 'EN',
       Origin: url.origin,
       Referer: url.origin,
       'Upgrade-Insecure-Requests': 1,
@@ -74,6 +78,9 @@ export default {
         jar: params.config.options.jar
       }
     }
+
+    options.headers.Ver = '4.0.330'
+    options.headers['X-Requested-With'] = 'XMLHttpRequest'
 
     // Set TLS version
     if (url.origin === Config.services.titan22.url) {

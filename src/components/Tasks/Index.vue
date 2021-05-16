@@ -37,55 +37,71 @@
       </template>
 
       <template v-slot:[`item.account.name`]="{ item }">
-        <div
-          class="row cursor"
-          style="width: 120px"
-        >
+        <span>
           <div
-            class="col-12 text-truncate"
-            :class="{'success--text': item.paid}"
-            v-text="item.account.name"
-          />
-        </div>
+            class="row cursor"
+            style="width: 120px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="item.account.name"
+            />
+          </div>
+
+          <small v-text="`Mode: ${item.mode.label}`" />
+        </span>
       </template>
 
       <template v-slot:[`item.billing.name`]="{ item }">
-        <div
-          class="row cursor"
-          style="width: 120px"
-        >
+        <span>
           <div
-            class="col-12 text-truncate"
-            :class="{'success--text': item.paid}"
-            v-text="(item.billing) ? item.billing.name : 'none'"
-          />
-        </div>
+            class="row cursor"
+            style="width: 120px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="(item.billing) ? item.billing.name : 'none'"
+            />
+          </div>
+
+          <small v-text="`Method: ${item.checkoutMethod.label}`" />
+        </span>
       </template>
 
       <template v-slot:[`item.proxy.name`]="{ item }">
-        <div
-          class="row cursor"
-          style="width: 120px"
-        >
+        <span>
           <div
-            class="col-12 text-truncate"
-            :class="{'success--text': item.paid}"
-            v-text="(item.proxy) ? item.proxy.name : 'Localhost'"
-          />
-        </div>
+            class="row cursor"
+            style="width: 120px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="(item.proxy) ? item.proxy.name : 'Localhost'"
+            />
+          </div>
+
+          <small v-text="`Count: ${(item.proxy) ? item.proxy.configs.length : 1} IP${(item.proxy && item.proxy.configs.length > 1) ? 's' : ''}`" />
+        </span>
       </template>
 
       <template v-slot:item.sku="{ item }">
-        <div
-          class="row cursor"
-          style="width: 115px"
-        >
+        <span>
           <div
-            class="col-12 text-truncate"
-            :class="{'success--text': item.paid}"
-            v-text="item.sku"
-          />
-        </div>
+            class="row cursor"
+            style="width: 115px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="item.sku"
+            />
+          </div>
+
+          <small v-text="`Quantity: ${item.qty}`" />
+        </span>
       </template>
 
       <template v-slot:item.sizes="{ item }">
