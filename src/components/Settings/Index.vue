@@ -239,7 +239,7 @@
                               v-text="'mdi-information'"
                             />
                           </template>
-                          <span v-text="'Captcha solver is always headful'" />
+                          <span v-text="'This is only applies when getting cookies'" />
                         </v-tooltip>
                       </v-list-item-title>
                       <v-list-item-subtitle v-text="'Browser automated solver'" />

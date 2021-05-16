@@ -23,8 +23,6 @@
         </v-tab-item>
       </v-tabs-items>
     </v-main>
-
-    <Footer v-if="tab === 0" />
   </v-app>
 </template>
 
@@ -39,7 +37,6 @@ import Profiles from '@/components/Profiles/Index.vue'
 import Proxies from '@/components/Proxies/Index.vue'
 import Settings from '@/components/Settings/Index.vue'
 import Header from '@/components/App/Header'
-import Footer from '@/components/App/Footer'
 
 import Auth from '@/services/auth'
 
@@ -51,8 +48,7 @@ export default {
     Profiles,
     Proxies,
     Settings,
-    Header,
-    Footer
+    Header
   },
   data () {
     return {

@@ -1,121 +1,123 @@
 <template>
-  <v-layout
-    v-resize="onResize"
-    fluid
-  >
-    <v-data-table
-      v-model="selected"
-      :height="windowSize.y - 73 - 33 - 69 - 45"
-      style="width: 100%"
-      class="elevation-2"
-      no-data-text="Nothing to display"
-      no-results-text="Nothing to display"
-      :headers="headers"
-      :items="tasks"
-      item-key="id"
-      show-select
-      hide-default-footer
-      :items-per-page="tasks.length"
-      fixed-header
-      disable-pagination
-      :search="search"
+  <div>
+    <v-layout
+      v-resize="onResize"
+      fluid
     >
-      <template v-slot:top>
-        <Header :search="search" />
-        <v-divider style="border:1px solid #d85820" />
-      </template>
+      <v-data-table
+        v-model="selected"
+        :height="windowSize.y - 73 - 33 - 69 - 45"
+        style="width: 100%"
+        class="elevation-2"
+        no-data-text="Nothing to display"
+        no-results-text="Nothing to display"
+        :headers="headers"
+        :items="tasks"
+        item-key="id"
+        show-select
+        hide-default-footer
+        :items-per-page="tasks.length"
+        fixed-header
+        disable-pagination
+        :search="search"
+      >
+        <template v-slot:top>
+          <Header :search="search" />
+          <v-divider style="border:1px solid #d85820" />
+        </template>
 
-      <template v-slot:footer>
-        <v-divider style="border:1px solid #d85820" />
-        <Footer
-          :selected="selected"
-          @click:start="onStart"
-          @click:stop="onStop"
-          @click:delete="onDelete"
-          @click:init="onInit"
-        />
-      </template>
-
-      <template v-slot:[`item.account.name`]="{ item }">
-        <div
-          class="row cursor"
-          style="width: 120px"
-        >
-          <div
-            class="col-12 text-truncate"
-            :class="{'success--text': item.paid}"
-            v-text="item.account.name"
+        <template v-slot:footer>
+          <v-divider style="border:1px solid #d85820" />
+          <Footer
+            :selected="selected"
+            @click:start="onStart"
+            @click:stop="onStop"
+            @click:delete="onDelete"
+            @click:init="onInit"
           />
-        </div>
-      </template>
+        </template>
 
-      <template v-slot:[`item.billing.name`]="{ item }">
-        <div
-          class="row cursor"
-          style="width: 120px"
-        >
+        <template v-slot:[`item.account.name`]="{ item }">
           <div
-            class="col-12 text-truncate"
-            :class="{'success--text': item.paid}"
-            v-text="(item.billing) ? item.billing.name : 'none'"
-          />
-        </div>
-      </template>
+            class="row cursor"
+            style="width: 120px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="item.account.name"
+            />
+          </div>
+        </template>
 
-      <template v-slot:[`item.proxy.name`]="{ item }">
-        <div
-          class="row cursor"
-          style="width: 120px"
-        >
+        <template v-slot:[`item.billing.name`]="{ item }">
           <div
-            class="col-12 text-truncate"
-            :class="{'success--text': item.paid}"
-            v-text="(item.proxy) ? item.proxy.name : 'Localhost'"
-          />
-        </div>
-      </template>
+            class="row cursor"
+            style="width: 120px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="(item.billing) ? item.billing.name : 'none'"
+            />
+          </div>
+        </template>
 
-      <template v-slot:item.sku="{ item }">
-        <div
-          class="row cursor"
-          style="width: 115px"
-        >
+        <template v-slot:[`item.proxy.name`]="{ item }">
           <div
-            class="col-12 text-truncate"
-            :class="{'success--text': item.paid}"
-            v-text="item.sku"
-          />
-        </div>
-      </template>
+            class="row cursor"
+            style="width: 120px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="(item.proxy) ? item.proxy.name : 'Localhost'"
+            />
+          </div>
+        </template>
 
-      <template v-slot:item.sizes="{ item }">
-        <div
-          class="row cursor"
-          style="width: 90px"
-        >
+        <template v-slot:item.sku="{ item }">
           <div
-            class="col-12 text-truncate"
-            :class="{'success--text': item.paid}"
-            v-text="getSizes(item)"
+            class="row cursor"
+            style="width: 115px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="item.sku"
+            />
+          </div>
+        </template>
+
+        <template v-slot:item.sizes="{ item }">
+          <div
+            class="row cursor"
+            style="width: 90px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="getSizes(item)"
+            />
+          </div>
+        </template>
+
+        <template v-slot:item.status="{ item }">
+          <Status :item="item" />
+        </template>
+
+        <template v-slot:item.actions="{item}">
+          <Action
+            :item="item"
+            @click:start="onStart"
+            @click:stop="onStop"
+            @click:delete="onDelete"
+            @click:init="onInit"
           />
-        </div>
-      </template>
-
-      <template v-slot:item.status="{ item }">
-        <Status :item="item" />
-      </template>
-
-      <template v-slot:item.actions="{item}">
-        <Action
-          :item="item"
-          @click:start="onStart"
-          @click:stop="onStop"
-          @click:delete="onDelete"
-          @click:init="onInit"
-        />
-      </template>
-    </v-data-table>
-  </v-layout>
+        </template>
+      </v-data-table>
+    </v-layout>
+  </div>
 </template>
 
 <script>

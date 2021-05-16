@@ -117,6 +117,11 @@ export default {
     const args = [
       '--no-sandbox',
       '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--disable-gpu',
       `--user-agent=${options.headers['User-Agent']}`,
       '--window-size=560,638'
     ]
@@ -159,11 +164,14 @@ export default {
           return []
         }
 
-        if (request.url().endsWith('.png') || request.url().endsWith('.jpg')) {
+        if (request.url().endsWith('.png') || request.url().endsWith('.jpg') || request.resourceType() === 'image') {
         // BLOCK IMAGES
           request.abort()
         } else if (blockedResources.some(resource => request.url().indexOf(resource) !== -1)) {
         // BLOCK CERTAIN DOMAINS
+          request.abort()
+        } else if (request.resourceType() === 'stylesheet' || request.resourceType() === 'font') {
+          // BLOCK STYLES
           request.abort()
         } else {
         // ALLOW OTHER REQUESTS
