@@ -1,139 +1,137 @@
 <template>
-  <div>
-    <v-layout
-      v-resize="onResize"
-      fluid
+  <v-layout
+    v-resize="onResize"
+    fluid
+  >
+    <v-data-table
+      v-model="selected"
+      :height="windowSize.y - 73 - 33 - 69 - 45"
+      style="width: 100%"
+      class="elevation-2"
+      no-data-text="Nothing to display"
+      no-results-text="Nothing to display"
+      :headers="headers"
+      :items="tasks"
+      item-key="id"
+      show-select
+      hide-default-footer
+      :items-per-page="tasks.length"
+      fixed-header
+      disable-pagination
+      :search="search"
     >
-      <v-data-table
-        v-model="selected"
-        :height="windowSize.y - 73 - 33 - 69 - 45"
-        style="width: 100%"
-        class="elevation-2"
-        no-data-text="Nothing to display"
-        no-results-text="Nothing to display"
-        :headers="headers"
-        :items="tasks"
-        item-key="id"
-        show-select
-        hide-default-footer
-        :items-per-page="tasks.length"
-        fixed-header
-        disable-pagination
-        :search="search"
-      >
-        <template v-slot:top>
-          <Header :search="search" />
-          <v-divider style="border:1px solid #d85820" />
-        </template>
+      <template v-slot:top>
+        <Header :search="search" />
+        <v-divider style="border:1px solid #d85820" />
+      </template>
 
-        <template v-slot:footer>
-          <v-divider style="border:1px solid #d85820" />
-          <Footer
-            :selected="selected"
-            @click:start="onStart"
-            @click:stop="onStop"
-            @click:delete="onDelete"
-            @click:init="onInit"
-          />
-        </template>
+      <template v-slot:footer>
+        <v-divider style="border:1px solid #d85820" />
+        <Footer
+          :selected="selected"
+          @click:start="onStart"
+          @click:stop="onStop"
+          @click:delete="onDelete"
+          @click:init="onInit"
+        />
+      </template>
 
-        <template v-slot:[`item.account.name`]="{ item }">
-          <span>
-            <div
-              class="row cursor"
-              style="width: 120px"
-            >
-              <div
-                class="col-12 text-truncate"
-                :class="{'success--text': item.paid}"
-                v-text="item.account.name"
-              />
-            </div>
-
-            <small v-text="`Mode: ${item.mode.label}`" />
-          </span>
-        </template>
-
-        <template v-slot:[`item.billing.name`]="{ item }">
-          <span>
-            <div
-              class="row cursor"
-              style="width: 120px"
-            >
-              <div
-                class="col-12 text-truncate"
-                :class="{'success--text': item.paid}"
-                v-text="(item.billing) ? item.billing.name : 'none'"
-              />
-            </div>
-
-            <small v-text="`Method: ${item.checkoutMethod.label}`" />
-          </span>
-        </template>
-
-        <template v-slot:[`item.proxy.name`]="{ item }">
-          <span>
-            <div
-              class="row cursor"
-              style="width: 120px"
-            >
-              <div
-                class="col-12 text-truncate"
-                :class="{'success--text': item.paid}"
-                v-text="(item.proxy) ? item.proxy.name : 'Localhost'"
-              />
-            </div>
-
-            <small v-text="`Count: ${(item.proxy) ? item.proxy.configs.length : 1} IP${(item.proxy && item.proxy.configs.length > 1) ? 's' : ''}`" />
-          </span>
-        </template>
-
-        <template v-slot:item.sku="{ item }">
-          <span>
-            <div
-              class="row cursor"
-              style="width: 115px"
-            >
-              <div
-                class="col-12 text-truncate"
-                :class="{'success--text': item.paid}"
-                v-text="item.sku"
-              />
-            </div>
-
-            <small v-text="`Quantity: ${item.qty}`" />
-          </span>
-        </template>
-
-        <template v-slot:item.sizes="{ item }">
+      <template v-slot:[`item.account.name`]="{ item }">
+        <span>
           <div
             class="row cursor"
-            style="width: 90px"
+            style="width: 120px"
           >
             <div
               class="col-12 text-truncate"
               :class="{'success--text': item.paid}"
-              v-text="getSizes(item)"
+              v-text="item.account.name"
             />
           </div>
-        </template>
 
-        <template v-slot:item.status="{ item }">
-          <Status :item="item" />
-        </template>
+          <small v-text="`Mode: ${item.mode.label}`" />
+        </span>
+      </template>
 
-        <template v-slot:item.actions="{item}">
-          <Action
-            :item="item"
-            @click:start="onStart"
-            @click:stop="onStop"
-            @click:delete="onDelete"
-            @click:init="onInit"
+      <template v-slot:[`item.billing.name`]="{ item }">
+        <span>
+          <div
+            class="row cursor"
+            style="width: 120px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="(item.billing) ? item.billing.name : 'none'"
+            />
+          </div>
+
+          <small v-text="`Method: ${item.checkoutMethod.label}`" />
+        </span>
+      </template>
+
+      <template v-slot:[`item.proxy.name`]="{ item }">
+        <span>
+          <div
+            class="row cursor"
+            style="width: 120px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="(item.proxy) ? item.proxy.name : 'Localhost'"
+            />
+          </div>
+
+          <small v-text="`Count: ${(item.proxy) ? item.proxy.configs.length : 1} IP${(item.proxy && item.proxy.configs.length > 1) ? 's' : ''}`" />
+        </span>
+      </template>
+
+      <template v-slot:item.sku="{ item }">
+        <span>
+          <div
+            class="row cursor"
+            style="width: 115px"
+          >
+            <div
+              class="col-12 text-truncate"
+              :class="{'success--text': item.paid}"
+              v-text="item.sku"
+            />
+          </div>
+
+          <small v-text="`Quantity: ${item.qty}`" />
+        </span>
+      </template>
+
+      <template v-slot:item.sizes="{ item }">
+        <div
+          class="row cursor"
+          style="width: 90px"
+        >
+          <div
+            class="col-12 text-truncate"
+            :class="{'success--text': item.paid}"
+            v-text="getSizes(item)"
           />
-        </template>
-      </v-data-table>
-    </v-layout>
-  </div>
+        </div>
+      </template>
+
+      <template v-slot:item.status="{ item }">
+        <Status :item="item" />
+      </template>
+
+      <template v-slot:item.actions="{item}">
+        <Action
+          :item="item"
+          @click:start="onStart"
+          @click:stop="onStop"
+          @click:delete="onDelete"
+          @click:init="onInit"
+        />
+      </template>
+    </v-data-table>
+  </v-layout>
 </template>
 
 <script>
