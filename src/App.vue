@@ -11,12 +11,15 @@ import { mapState, mapActions } from 'vuex'
 
 import SnackBar from '@/components/App/SnackBar.vue'
 import Dialog from '@/components/App/Dialog.vue'
+import ProxyDistribution from '@/mixins/proxy-distribution'
+import DA from 'distribute-array'
 
 export default {
   components: {
     SnackBar,
     Dialog
   },
+  mixins: [ProxyDistribution],
   data () {
     return {
       //
@@ -36,15 +39,11 @@ export default {
     }
   },
   async created () {
-    await this.initProxy()
-
-    if (this.accounts.length) await this.initAccount()
-
-    if (this.tasks.length) await this.initTask()
-
     if (!Object.keys(this.cloudflare).length) await this.resetCf()
 
     await this.initCf()
+
+    await this.initProxy()
 
     if (!Object.keys(this.settings).length) {
       await this.initSettings()
@@ -62,12 +61,87 @@ export default {
     }
 
     if (!Object.keys(this.monitor).length) this.initMonitor()
+
+    if (this.accounts.length) await this.initAccount()
+
+    if (this.tasks.length) await this.initTask()
+
+    if (this.tasks.length && this.proxies.length) {
+      try {
+        for (let one = 0; one < this.proxies.length; one++) {
+          const tasks = this.tasks.slice().filter((val) => val.proxy.id === this.proxies[one].id)
+
+          if (tasks.length) {
+            if (this.proxies[one].distribute) {
+              const distributedProxy = DA(this.proxies[one].proxies, tasks.length)
+              const distributedConfigs = DA(this.proxies[one].configs, tasks.length)
+
+              for (let two = 0; two < distributedProxy.length; two++) {
+                const data = { ...tasks[two] }
+
+                if (distributedProxy[two].length && distributedConfigs[two].length) {
+                  data.proxy = {
+                    ...this.proxies[one],
+                    proxies: distributedProxy[two],
+                    configs: distributedConfigs[two]
+                  }
+                } else {
+                  const local = this.proxies.slice().find((val) => val.id === 1)
+                  data.proxy = local
+                }
+
+                const UserAgent = require('user-agents')
+                const opt = { deviceCategory: 'desktop' }
+
+                if (data.mode.id !== 1) opt.deviceCategory = 'mobile'
+
+                const userAgent = new UserAgent(opt)
+
+                data.proxy.configs = data.proxy.configs.map((val) => {
+                  return {
+                    ...val,
+                    userAgent: userAgent.toString()
+                  }
+                })
+
+                this.updateTask(data)
+              }
+            } else {
+              for (let three = 0; three < tasks.length; three++) {
+                const data = {
+                  ...tasks[three],
+                  proxy: this.proxies[one]
+                }
+
+                const UserAgent = require('user-agents')
+                const opt = { deviceCategory: 'desktop' }
+
+                if (data.mode.id !== 1) opt.deviceCategory = 'mobile'
+
+                const userAgent = new UserAgent(opt)
+
+                data.proxy.configs = data.proxy.configs.map((val) => {
+                  return {
+                    ...val,
+                    userAgent: userAgent.toString()
+                  }
+                })
+
+                await this.updateTask(data)
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
   },
   methods: {
     ...mapActions('settings', { initSettings: 'reset', setSettings: 'setItems' }),
     ...mapActions('proxy', { initProxy: 'init' }),
     ...mapActions('account', { initAccount: 'init' }),
-    ...mapActions('task', { initTask: 'init' }),
+    ...mapActions('task', { initTask: 'init', updateTask: 'updateItem' }),
     ...mapActions('cloudflare', { resetCf: 'reset', initCf: 'init' }),
     ...mapActions('monitor', { initMonitor: 'reset' })
   }

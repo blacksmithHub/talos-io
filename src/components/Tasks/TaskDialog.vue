@@ -291,8 +291,10 @@ import { mapState, mapActions } from 'vuex'
 import { required, minValue } from 'vuelidate/lib/validators'
 
 import Constant from '@/config/constant'
+import ProxyDistribution from '@/mixins/proxy-distribution'
 
 export default {
+  mixins: [ProxyDistribution],
   data () {
     return {
       id: null,
@@ -442,7 +444,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions('task', { addTask: 'addItem', updateTask: 'updateItem' }),
+    ...mapActions('task', { addTask: 'addItem', updateTask: 'updateItem', setAllTasks: 'setItems' }),
     ...mapActions('snackbar', ['showSnackbar']),
 
     /**
@@ -517,7 +519,7 @@ export default {
     /**
      * On submit event.
      */
-    submit () {
+    async submit () {
       this.$v.$touch()
 
       if (!this.$v.$invalid) {
@@ -560,8 +562,10 @@ export default {
           autoFill: this.autoFill
         }
 
+        const localhost = this.proxies.find((el) => el.id === 1)
+
         if (this.id) {
-          const item = this.tasks.find((el) => el.id === this.id)
+          const item = this.tasks.slice().find((el) => el.id === this.id)
 
           if (params.proxy.id !== item.proxy.id || params.mode.id !== item.mode.id) {
             const opt = { deviceCategory: 'desktop' }
@@ -591,14 +595,29 @@ export default {
             }
           }
 
-          this.updateTask({
+          const updatedTask = await this.updateTask({
             ...params,
             id: this.id
           })
 
+          const modifiedTasks = await this.setProxyConfigs(this.tasks, updatedTask, localhost)
+          await this.setAllTasks(modifiedTasks)
+
+          const proxy = this.proxies.find((val) => val.id === item.proxy.id)
+          const oldProxyTasks = this.tasks.filter((val) => val.proxy.id === proxy.id)
+
+          if (proxy && proxy.distribute && proxy.proxies && proxy.proxies.length && proxy.configs && proxy.configs.length && oldProxyTasks.length) {
+            const modifiedOldTasks = await this.setOldProxyConfigs(this.tasks, oldProxyTasks, proxy, localhost)
+            await this.setAllTasks(modifiedOldTasks)
+          }
+
           this.showSnackbar({ message: 'Updated successfully', color: 'teal' })
         } else {
-          this.addTask(params)
+          const newTask = await this.addTask(params)
+
+          const modifiedTasks = await this.setProxyConfigs(this.tasks, newTask, localhost)
+          this.setAllTasks(modifiedTasks)
+
           this.showSnackbar({ message: 'Created successfully', color: 'teal' })
         }
 

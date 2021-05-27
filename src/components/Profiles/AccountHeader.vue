@@ -123,10 +123,10 @@ export default {
       const data = await this.importJson('Import Accounts')
 
       if (data && data.length) {
-        data.forEach((el) => {
-          delete el.id
-          this.addItem(el)
-        })
+        for (let index = 0; index < data.length; index++) {
+          delete data[index].id
+          await this.addItem(data[index])
+        }
       }
     },
     async paypalLogin () {
@@ -151,16 +151,16 @@ export default {
         }
       }
 
-      accounts.forEach(el => {
-        this.updateItem({
-          ...el,
+      for (let index = 0; index < accounts.length; index++) {
+        await this.updateItem({
+          ...accounts[index],
           loading: true,
           paypal: {
-            ...el.paypal,
+            ...accounts[index].paypal,
             account: null
           }
         })
-      })
+      }
 
       for (let index = 0; index < accounts.length; index++) {
         const secret = await this.getSecret(params)

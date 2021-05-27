@@ -66,6 +66,9 @@ export default {
 
           return JSON.parse(base64.decode(data))
         })
+        .catch(() => {
+          return null
+        })
     }
   }
 }

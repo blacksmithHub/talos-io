@@ -64,28 +64,24 @@ export default {
     ...mapState('settings', { settings: 'items' })
   },
   watch: {
-    proxies () {
+    async proxies () {
       try {
-        this.proxies.forEach(el => {
-          const tasks = this.tasks.slice().filter((val) => val.proxy.id === el.id)
+        for (let one = 0; one < this.proxies.length; one++) {
+          const tasks = this.tasks.slice().filter((val) => val.proxy.id === this.proxies[one].id)
 
           if (tasks.length) {
-            if (el.distribute) {
-              const distributedProxy = DA(el.proxies, tasks.length)
-              const distributedConfigs = DA(el.configs, tasks.length)
+            if (this.proxies[one].distribute) {
+              const distributedProxy = DA(this.proxies[one].proxies, tasks.length)
+              const distributedConfigs = DA(this.proxies[one].configs, tasks.length)
 
-              for (let index = 0; index < distributedProxy.length; index++) {
-                const task = tasks[index]
+              for (let two = 0; two < distributedProxy.length; two++) {
+                const data = { ...tasks[two] }
 
-                const data = {
-                  ...task
-                }
-
-                if (distributedProxy[index].length) {
+                if (distributedProxy[two].length && distributedConfigs[two].length) {
                   data.proxy = {
-                    ...el,
-                    proxies: distributedProxy[index],
-                    configs: distributedConfigs[index]
+                    ...this.proxies[one],
+                    proxies: distributedProxy[two],
+                    configs: distributedConfigs[two]
                   }
                 } else {
                   const local = this.proxies.slice().find((val) => val.id === 1)
@@ -109,10 +105,10 @@ export default {
                 this.updateTask(data)
               }
             } else {
-              tasks.forEach(task => {
+              for (let three = 0; three < tasks.length; three++) {
                 const data = {
-                  ...task,
-                  proxy: el
+                  ...tasks[three],
+                  proxy: this.proxies[one]
                 }
 
                 const UserAgent = require('user-agents')
@@ -129,52 +125,52 @@ export default {
                   }
                 })
 
-                this.updateTask(data)
-              })
+                await this.updateTask(data)
+              }
             }
           }
 
-          if (this.settings.monitorProxy.id === el.id) {
+          if (this.settings.monitorProxy.id === this.proxies[one].id) {
             this.setSettings({
               ...this.settings,
-              monitorProxy: el
+              monitorProxy: this.proxies[one]
             })
           }
-        })
+        }
       } catch (error) {
         console.log(error)
       }
     },
     accounts () {
-      this.accounts.forEach(el => {
-        const task = this.tasks.find((val) => val.account.id === el.id)
+      for (let index = 0; index < this.accounts.length; index++) {
+        const task = this.tasks.find((val) => val.account.id === this.accounts[index].id)
 
         if (task) {
           const data = {
             ...task,
             account: {
               ...task.account,
-              paypal: el.paypal
+              paypal: this.accounts[index].paypal
             }
           }
 
           this.updateTask(data)
         }
-      })
+      }
     },
     billings () {
-      this.billings.forEach(el => {
-        const task = this.tasks.find((val) => val.billing.id === el.id)
+      for (let index = 0; index < this.billings.length; index++) {
+        const task = this.tasks.find((val) => val.billing.id === this.billings[index].id)
 
         if (task) {
           const data = {
             ...task,
-            billing: el
+            billing: this.billings[index]
           }
 
           this.updateTask(data)
         }
-      })
+      }
     }
   },
   created () {
@@ -189,18 +185,18 @@ export default {
     // Check paypal expiration
     const vm = this
     setInterval(() => {
-      vm.accounts.forEach(el => {
-        if (el.paypal.expires_in && moment().isSameOrAfter(moment(el.paypal.expires_in))) {
+      for (let index = 0; index < vm.accounts.length; index++) {
+        if (vm.accounts[index].paypal.expires_in && moment().isSameOrAfter(moment(vm.accounts[index].paypal.expires_in))) {
           vm.updateAccount({
-            ...el,
+            ...vm.accounts[index],
             paypal: {
-              ...el,
+              ...vm.accounts[index].paypal,
               account: null,
               expires_in: null
             }
           })
         }
-      })
+      }
     }, 1000)
 
     // Check authentication

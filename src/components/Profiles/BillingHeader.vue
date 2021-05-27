@@ -97,10 +97,10 @@ export default {
       const data = await this.importJson('Import Billings')
 
       if (data && data.length) {
-        data.forEach((el) => {
-          delete el.id
-          this.addItem(el)
-        })
+        for (let index = 0; index < data.length; index++) {
+          await delete data[index].id
+          await this.addItem(data[index])
+        }
       }
     }
   }

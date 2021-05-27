@@ -104,12 +104,13 @@ import { ipcRenderer } from 'electron'
 import TaskDialog from '@/components/Tasks/TaskDialog.vue'
 
 import File from '@/mixins/file'
+import ProxyDistribution from '@/mixins/proxy-distribution'
 
 export default {
   components: {
     TaskDialog
   },
-  mixins: [File],
+  mixins: [File, ProxyDistribution],
   props: {
     search: {
       type: String,
@@ -117,19 +118,26 @@ export default {
     }
   },
   computed: {
-    ...mapState('task', { tasks: 'items' })
+    ...mapState('task', { tasks: 'items' }),
+    ...mapState('proxy', { proxies: 'items' })
   },
   methods: {
-    ...mapActions('task', ['addItem']),
+    ...mapActions('task', ['addItem', 'setItems']),
 
     async importData () {
       const data = await this.importJson('Import Tasks')
 
       if (data && data.length) {
-        data.forEach((el) => {
-          delete el.id
-          this.addItem(el)
-        })
+        const localhost = this.proxies.find((el) => el.id === 1)
+
+        for (let index = 0; index < data.length; index++) {
+          await delete data[index].id
+
+          const newTask = await this.addItem(data[index])
+
+          const modifiedTasks = await this.setProxyConfigs(this.tasks, newTask, localhost)
+          await this.setItems(modifiedTasks)
+        }
       }
     },
 
