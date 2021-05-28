@@ -189,7 +189,9 @@ export default {
     }
   },
   created () {
-    this.proxyList = { ...this.proxies.slice().find((val) => val.id === 1) }
+    this.proxyList = (this.settings.accountProxyList && Object.keys(this.settings.accountProxyList).length)
+      ? { ...this.settings.accountProxyList }
+      : { ...this.proxies.slice().find((val) => val.id === 1) }
   },
   methods: {
     ...mapActions('account', { updateAccount: 'updateItem', deleteAccount: 'deleteItem' }),
