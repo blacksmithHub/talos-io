@@ -5,7 +5,7 @@
       fluid
     >
       <v-data-table
-        :height="windowSize.y - 48 - 8 - 43 - 20"
+        :height="windowSize.y - 65 - 25 - 60 - 37"
         style="width: 100%"
         class="elevation-2"
         no-data-text="Nothing to display"
@@ -21,6 +21,32 @@
         <template v-slot:top>
           <AccountHeader @paypalLogin="paypalLogin" />
           <v-divider style="border:1px solid #d85820" />
+        </template>
+
+        <template v-slot:footer>
+          <v-divider style="border:1px solid #d85820" />
+          <v-row
+            align="center"
+            class="py-3 px-3"
+            no-gutters
+            justify="center"
+          >
+            <v-col
+              align-self="center"
+              cols="6"
+            >
+              <v-autocomplete
+                v-model="proxyList"
+                :items="proxies"
+                outlined
+                dense
+                label="Proxy List"
+                item-text="name"
+                return-object
+                hide-details
+              />
+            </v-col>
+          </v-row>
         </template>
 
         <template v-slot:[`item.name`]="{ item }">
@@ -145,15 +171,30 @@ export default {
       windowSize: {
         x: 0,
         y: 0
-      }
+      },
+      proxyList: {}
     }
   },
   computed: {
-    ...mapState('account', { accounts: 'items' })
+    ...mapState('account', { accounts: 'items' }),
+    ...mapState('proxy', { proxies: 'items' }),
+    ...mapState('settings', { settings: 'items' })
+  },
+  watch: {
+    proxyList () {
+      this.setSettings({
+        ...this.settings,
+        accountProxyList: { ...this.proxyList }
+      })
+    }
+  },
+  created () {
+    this.proxyList = { ...this.proxies.slice().find((val) => val.id === 1) }
   },
   methods: {
     ...mapActions('account', { updateAccount: 'updateItem', deleteAccount: 'deleteItem' }),
     ...mapActions('snackbar', ['showSnackbar']),
+    ...mapActions('settings', { setSettings: 'setItems' }),
 
     onResize () {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }
@@ -172,11 +213,15 @@ export default {
         }
       })
 
+      let index = 0
+
+      if (this.proxyList.configs.length > 1) index = Math.floor(Math.random() * this.proxyList.configs.length)
+
       const UserAgent = require('user-agents')
       let userAgent = new UserAgent()
       userAgent = userAgent.toString()
-      const rp = require('request-promise')
-      const jar = rp.jar()
+      const rp = this.proxyList.configs[index].rp
+      const jar = this.proxyList.configs[index].jar
 
       const secret = await this.getSecret(rp, jar, userAgent)
 

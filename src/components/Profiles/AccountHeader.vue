@@ -114,11 +114,15 @@ export default {
     }
   },
   computed: {
-    ...mapState('account', { accounts: 'items' })
+    ...mapState('account', { accounts: 'items' }),
+    ...mapState('settings', { settings: 'items' })
   },
   methods: {
     ...mapActions('account', ['addItem', 'updateItem']),
 
+    /**
+     * Import all accounts
+     */
     async importData () {
       const data = await this.importJson('Import Accounts')
 
@@ -129,27 +133,15 @@ export default {
         }
       }
     },
+    /**
+     * Mass loging to PayPal
+     */
     async paypalLogin () {
       if (this.loading) return false
 
       const accounts = this.accounts.filter((el) => !el.loading)
 
       if (!accounts.length) return false
-
-      const collection = []
-
-      const UserAgent = require('user-agents')
-      const userAgent = new UserAgent()
-      const rp = require('request-promise')
-      const jar = rp.jar()
-
-      let params = {
-        config: {
-          rp: rp,
-          jar: jar,
-          userAgent: userAgent.toString()
-        }
-      }
 
       for (let index = 0; index < accounts.length; index++) {
         await this.updateItem({
@@ -160,6 +152,25 @@ export default {
             account: null
           }
         })
+      }
+
+      const collection = []
+
+      let index = 0
+
+      if (this.settings.accountProxyList.configs.length > 1) index = Math.floor(Math.random() * this.settings.accountProxyList.configs.length)
+
+      const UserAgent = require('user-agents')
+      const userAgent = new UserAgent()
+      const rp = this.settings.accountProxyList.configs[index].rp
+      const jar = this.settings.accountProxyList.configs[index].jar
+
+      let params = {
+        config: {
+          rp: rp,
+          jar: jar,
+          userAgent: userAgent.toString()
+        }
       }
 
       for (let index = 0; index < accounts.length; index++) {
