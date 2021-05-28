@@ -136,10 +136,12 @@ export default {
       args.push(`--proxy-server=${newProxyUrl}`)
     }
 
+    const isHeadless = await this.isHeadless()
+
     const browser = await puppeteer.launch({
       args,
       executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked'),
-      headless: this.isHeadless()
+      headless: isHeadless
     })
 
     try {
@@ -248,10 +250,14 @@ export default {
           ids = ids.filter((el) => el.proxy.configs.find((val) => val.proxy === options.proxy))
           ids = ids.map((el) => el.id)
 
-          cfStorage.state.items.queue.filter((el) => ids.includes(el.id)).forEach((val) => {
-            val.cookies = cookies
-            cfStorage.dispatch('updateToQueue', val)
-          })
+          const cfInQueue = cfStorage.state.items.queue.filter((el) => ids.includes(el.id))
+
+          if (cfInQueue.length) {
+            cfInQueue.forEach((val) => {
+              val.cookies = cookies
+              cfStorage.dispatch('updateToQueue', val)
+            })
+          }
 
           const doors = cfStorage.state.items.doors.slice()
           const key = doors.findIndex((el) => !el)

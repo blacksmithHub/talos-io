@@ -146,6 +146,8 @@ import Constant from '@/config/constant'
 import Titan22 from '@/services/Titan22/index'
 import Task from '@/services/task'
 
+import ProxyDistribution from '@/mixins/proxy-distribution'
+
 export default {
   components: {
     Header,
@@ -153,6 +155,7 @@ export default {
     Status,
     Action
   },
+  mixins: [ProxyDistribution],
   data () {
     return {
       search: '',
@@ -214,7 +217,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions('task', { updateTask: 'updateItem', deleteTask: 'deleteItem' }),
+    ...mapActions('task', { updateTask: 'updateItem', deleteTask: 'deleteItem', setAllTasks: 'setItems' }),
     ...mapActions('cloudflare', { initCf: 'init', removeToQueue: 'removeToQueue', setDoors: 'setDoors' }),
 
     getSizes (item) {
@@ -293,9 +296,18 @@ export default {
     },
     async onDelete (item) {
       await this.onStop(item)
-      this.deleteTask(item)
+      await this.deleteTask(item)
       const key = this.selected.findIndex((el) => el.id === item.id)
       this.selected.splice(key, 1)
+
+      const localhost = this.proxies.find((val) => val.id === 1)
+      const proxy = this.proxies.find((val) => val.id === item.proxy.id)
+      const oldProxyTasks = this.tasks.filter((val) => val.proxy.id === proxy.id)
+
+      if (proxy && proxy.distribute && proxy.proxies && proxy.proxies.length && proxy.configs && proxy.configs.length && oldProxyTasks.length) {
+        const modifiedOldTasks = await this.setOldProxyConfigs(this.tasks, oldProxyTasks, proxy, localhost)
+        await this.setAllTasks(modifiedOldTasks)
+      }
     },
     async onInit (item) {
       this.removeToQueue(this.cloudflare.queue.findIndex((el) => el.id === item.id))

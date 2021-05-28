@@ -21,9 +21,7 @@ export default {
      *
      */
     discord: {
-      auth: process.env.VUE_APP_DISCORD_AUTH,
-      clientId: process.env.VUE_APP_DISCORD_CLIENT_ID,
-      clientSecret: process.env.VUE_APP_DISCORD_CLIENT_SECRET
+      clientId: process.env.VUE_APP_DISCORD_CLIENT_ID
     },
     /**
      * ===========================================

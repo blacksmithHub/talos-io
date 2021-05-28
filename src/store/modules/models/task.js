@@ -1,7 +1,8 @@
-import Constant from '@/config/constant'
 import fs from 'fs'
 import base64 from 'base-64'
 import utf8 from 'utf8'
+
+import Constant from '@/config/constant'
 
 export default {
   namespaced: true,
@@ -45,34 +46,18 @@ export default {
      */
     async addItem ({ state, commit }, item) {
       const tasks = state.items.slice()
-      const id = (tasks.length) ? tasks.length + 1 : 1
 
       const data = {
-        id: id,
         ...item,
+        id: (tasks.length) ? tasks.length + 1 : 1,
+        transactionData: {},
         loading: false,
         status: {
           id: Constant.STATUS.STOPPED,
           msg: 'idle',
           class: 'grey'
-        },
-        transactionData: {}
-      }
-
-      const opt = { deviceCategory: 'desktop' }
-
-      if (data.mode.id !== 1) opt.deviceCategory = 'mobile'
-
-      const UserAgent = require('user-agents')
-      let userAgent = new UserAgent(opt)
-      userAgent = userAgent.toString()
-
-      data.proxy.configs = data.proxy.configs.map(el => {
-        return {
-          ...el,
-          userAgent: userAgent
         }
-      })
+      }
 
       try {
         fs.unlinkSync(`Task-${data.id}.json`)
@@ -89,6 +74,8 @@ export default {
 
       commit('SET_ITEMS', tasks)
       localStorage.setItem('tasks', JSON.stringify(tasks))
+
+      return data
     },
 
     /**
@@ -98,6 +85,7 @@ export default {
      */
     updateItem ({ state, commit }, params) {
       let tasks = state.items.slice()
+      let updatedTask = {}
 
       tasks = tasks.map((val) => {
         if (val.id === params.id) {
@@ -105,6 +93,8 @@ export default {
             ...val,
             ...params
           }
+
+          updatedTask = val
         }
 
         return val
@@ -112,6 +102,8 @@ export default {
 
       commit('SET_ITEMS', tasks)
       localStorage.setItem('tasks', JSON.stringify(tasks))
+
+      return updatedTask
     },
 
     /**
