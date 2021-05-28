@@ -144,7 +144,7 @@ export default {
     /**
      * On submit event.
      */
-    submit () {
+    async submit () {
       const params = {}
 
       if (this.editAutoPay) {
@@ -168,13 +168,14 @@ export default {
       }
 
       const data = (this.selected.length) ? this.selected : this.tasks
-      data.forEach(el => {
-        this.updateTask({
-          id: el.id,
-          ...el,
+
+      for (let index = 0; index < data.length; index++) {
+        await this.updateTask({
+          id: data[index].id,
+          ...data[index],
           ...params
         })
-      })
+      }
 
       this.showSnackbar({ message: 'Updated successfully', color: 'teal' })
       this.onCancel()

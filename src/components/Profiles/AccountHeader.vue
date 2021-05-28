@@ -114,21 +114,28 @@ export default {
     }
   },
   computed: {
-    ...mapState('account', { accounts: 'items' })
+    ...mapState('account', { accounts: 'items' }),
+    ...mapState('settings', { settings: 'items' })
   },
   methods: {
     ...mapActions('account', ['addItem', 'updateItem']),
 
+    /**
+     * Import all accounts
+     */
     async importData () {
       const data = await this.importJson('Import Accounts')
 
       if (data && data.length) {
-        data.forEach((el) => {
-          delete el.id
-          this.addItem(el)
-        })
+        for (let index = 0; index < data.length; index++) {
+          delete data[index].id
+          await this.addItem(data[index])
+        }
       }
     },
+    /**
+     * Mass loging to PayPal
+     */
     async paypalLogin () {
       if (this.loading) return false
 
@@ -136,12 +143,27 @@ export default {
 
       if (!accounts.length) return false
 
+      for (let index = 0; index < accounts.length; index++) {
+        await this.updateItem({
+          ...accounts[index],
+          loading: true,
+          paypal: {
+            ...accounts[index].paypal,
+            account: null
+          }
+        })
+      }
+
       const collection = []
+
+      let index = 0
+
+      if (this.settings.accountProxyList.configs.length > 1) index = Math.floor(Math.random() * this.settings.accountProxyList.configs.length)
 
       const UserAgent = require('user-agents')
       const userAgent = new UserAgent()
-      const rp = require('request-promise')
-      const jar = rp.jar()
+      const rp = this.settings.accountProxyList.configs[index].rp
+      const jar = this.settings.accountProxyList.configs[index].jar
 
       let params = {
         config: {
@@ -150,17 +172,6 @@ export default {
           userAgent: userAgent.toString()
         }
       }
-
-      accounts.forEach(el => {
-        this.updateItem({
-          ...el,
-          loading: true,
-          paypal: {
-            ...el.paypal,
-            account: null
-          }
-        })
-      })
 
       for (let index = 0; index < accounts.length; index++) {
         const secret = await this.getSecret(params)

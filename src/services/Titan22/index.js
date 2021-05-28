@@ -120,6 +120,8 @@ export default {
   async handleError (id, counter, response, attr = 'orange') {
     try {
       try {
+        const { options } = response
+
         /**
          * send logs
          */
@@ -130,15 +132,15 @@ export default {
             if (response.message) {
               if (response.message.includes('cf-browser-verification')) {
                 // 5 seconds challege
-                await Bot.updateCurrentTaskLog(id, `#${counter} at Line 133: cf-browser-verification`)
+                await Bot.updateCurrentTaskLog(id, `#${counter} at Line 135: {${options.proxy}} cf-browser-verification`)
               } else if (response.message.includes('cf_captcha_kind')) {
                 // captcha challenge
-                await Bot.updateCurrentTaskLog(id, `#${counter} at Line 136: cf_captcha_kind`)
+                await Bot.updateCurrentTaskLog(id, `#${counter} at Line 138: {${options.proxy}} cf_captcha_kind`)
               } else {
-                await Bot.updateCurrentTaskLog(id, `#${counter} at Line 138: ${response.message}`)
+                await Bot.updateCurrentTaskLog(id, `#${counter} at Line 140: {${options.proxy}} ${response.message}`)
               }
             } else {
-              await Bot.updateCurrentTaskLog(id, `#${counter} at Line 141: ${response}`)
+              await Bot.updateCurrentTaskLog(id, `#${counter} at Line 143: {${options.proxy}} ${response}`)
             }
             break
           }
@@ -146,10 +148,9 @@ export default {
           case 502:
           case 504:
           {
-            if (response.message) {
-              if (response.message.includes('502 Bad Gateway')) {
-                await Bot.updateCurrentTaskLog(id, `#${counter} at Line 151: 502 - Bad Gateway`)
-              }
+            if (response.message && response.message.includes('502 Bad Gateway')) {
+              const { options } = response
+              await Bot.updateCurrentTaskLog(id, `#${counter} at Line 153: {${options.proxy}} 502 - Bad Gateway`)
             }
             break
           }
@@ -157,9 +158,9 @@ export default {
           default:
           {
             if (response.message) {
-              await Bot.updateCurrentTaskLog(id, `#${counter} at Line 160: ${response.message}`)
+              await Bot.updateCurrentTaskLog(id, `#${counter} at Line 161: {${options.proxy}} ${response.message}`)
             } else {
-              await Bot.updateCurrentTaskLog(id, `#${counter} at Line 162: ${response}`)
+              await Bot.updateCurrentTaskLog(id, `#${counter} at Line 163: {${options.proxy}} ${response}`)
             }
 
             break
@@ -167,7 +168,7 @@ export default {
         }
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 169: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 171: ${error}`)
       }
 
       /**
@@ -340,7 +341,7 @@ export default {
       }
     } catch (error) {
       console.log(error)
-      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 348: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 344: ${error}`)
     }
   },
 
@@ -701,7 +702,7 @@ export default {
         }
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 686: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 705: ${error}`)
       }
     }
 
@@ -847,7 +848,7 @@ export default {
         }
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 830: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 851: ${error}`)
       }
     }
 
@@ -927,7 +928,7 @@ export default {
         }
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 909: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 931: ${error}`)
       }
     }
 
@@ -993,7 +994,7 @@ export default {
         }
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 974: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 997: ${error}`)
       }
     }
 
@@ -1076,7 +1077,7 @@ export default {
         }
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1056: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1080: ${error}`)
       }
     }
 
@@ -1108,7 +1109,7 @@ export default {
         break
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1087: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1112: ${error}`)
       }
     }
 
@@ -1222,7 +1223,7 @@ export default {
         }
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1200: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1226: ${error}`)
       }
     }
 
@@ -1299,7 +1300,7 @@ export default {
         }
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1276: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1303: ${error}`)
       }
     }
 
@@ -1377,7 +1378,7 @@ export default {
           }
         } catch (error) {
           console.log(error)
-          await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1353: ${error}`)
+          await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1381: ${error}`)
         }
       }
     } else {
@@ -1455,7 +1456,7 @@ export default {
         }
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1430: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `#${counter} at Line 1459: ${error}`)
       }
     }
 
@@ -1700,7 +1701,7 @@ export default {
       }
     } catch (error) {
       console.log(error)
-      await Bot.updateCurrentTaskLog(id, `Line 1674: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `Line 1704: ${error}`)
     }
 
     return data
@@ -1751,7 +1752,7 @@ export default {
         break
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `Line 1724: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line 1755: ${error}`)
       }
     }
 
@@ -1836,7 +1837,7 @@ export default {
         if (data) break
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `Line 1808: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line 1840: ${error}`)
       }
     }
 
@@ -1906,7 +1907,7 @@ export default {
         }
       } catch (error) {
         console.log(error)
-        await Bot.updateCurrentTaskLog(id, `Line 1878: ${error}`)
+        await Bot.updateCurrentTaskLog(id, `Line 1910: ${error}`)
       }
     }
 
@@ -2014,7 +2015,7 @@ export default {
       }
     } catch (error) {
       console.log(error)
-      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 2016: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `#${counter} at Line 2018: ${error}`)
     }
 
     return data
@@ -2053,7 +2054,7 @@ export default {
       }
     } catch (error) {
       console.log(error)
-      await Bot.updateCurrentTaskLog(id, `Line 2056: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `Line 2057: ${error}`)
     }
 
     return data
@@ -2117,7 +2118,7 @@ export default {
       }
     } catch (error) {
       console.log(error)
-      await Bot.updateCurrentTaskLog(id, `Line 2120: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `Line 2121: ${error}`)
     }
 
     return data
@@ -2205,7 +2206,7 @@ export default {
     } catch (error) {
       console.log(error)
 
-      await Bot.updateCurrentTaskLog(id, `#${1} at Line 2253: ${error}`)
+      await Bot.updateCurrentTaskLog(id, `#${1} at Line 2209: ${error}`)
 
       return null
     }
