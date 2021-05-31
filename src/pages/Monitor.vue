@@ -221,6 +221,7 @@
             <template v-slot:item.name="{ item }">
               <div class="pa-1">
                 <p
+                  v-if="item.name && item.link"
                   class="font-weight-bold caption blue--text caption pa-0 ma-0 text-decoration-underline cursor"
                   @click="redirect(item.link)"
                   v-text="item.name"
@@ -231,16 +232,21 @@
                 >
                   <v-col align-self="center">
                     <p
+                      v-if="item.sku"
                       class="caption pa-0 ma-0 text"
                       v-text="item.sku"
                     />
                     <p
+                      v-if="item.price"
                       class="caption pa-0 ma-0 text"
                       v-text="`Php ${item.price}`"
                     />
                   </v-col>
 
-                  <v-col align-self="center">
+                  <v-col
+                    v-if="item.date"
+                    align-self="center"
+                  >
                     <p
                       class="caption pa-0 ma-0 text"
                       v-text="item.date"
@@ -327,7 +333,9 @@ export default {
               }
             ],
             pageSize: null
-          }
+          },
+          currencyCode: 'php',
+          storeId: 1
         },
         token: null,
         config: null
@@ -426,17 +434,12 @@ export default {
         const data = JSON.parse(response)
 
         const allProducts = data.items.map(element => {
-          const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
-          const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
-
           return {
-            img: (image) ? `${Config.services.titan22.url}/media/catalog/product${image.value}` : placeholder,
+            img: element.images[0].url || placeholder,
             name: element.name,
-            sku: element.sku,
-            price: element.price.toLocaleString(),
-            link: (link) ? link.value : '',
-            status: element.extension_attributes.out_of_stock,
-            date: element.updated_at
+            price: element.price_info.max_price.toLocaleString(),
+            link: element.url,
+            status: !parseInt(element.is_salable)
           }
         })
 
@@ -512,7 +515,7 @@ export default {
      */
     redirect (slug) {
       const { shell } = require('electron')
-      shell.openExternal(`${Config.services.titan22.url}/${slug}.html`)
+      shell.openExternal(slug)
     },
 
     applyFilter () {
