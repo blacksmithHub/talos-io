@@ -439,11 +439,7 @@ export default {
             name: element.name,
             price: element.price_info.max_price.toLocaleString(),
             link: element.url,
-<<<<<<< HEAD
             status: parseInt(element.is_salable)
-=======
-            status: !parseInt(element.is_salable)
->>>>>>> 6ca91d99d4b3fc8a82eb2a02a1bf334174ca4cc5
           }
         })
 
