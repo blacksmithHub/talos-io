@@ -55,7 +55,7 @@ export default {
       setTimeout(() => {
         if (!isDevelopment) {
           autoUpdater.checkForUpdatesAndNotify()
-        } else if (!MainWindow.getWindow()) {
+        } else {
           MainWindow.createWindow()
           if (win) win.destroy()
         }

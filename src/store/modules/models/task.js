@@ -59,6 +59,13 @@ export default {
         }
       }
 
+      data.proxy.configs = data.proxy.configs.map(el => {
+        return {
+          ...el,
+          retry: 1
+        }
+      })
+
       try {
         fs.unlinkSync(`Task-${data.id}.json`)
       } catch (error) {
@@ -169,7 +176,8 @@ export default {
             rp: rp,
             jar: jar,
             userAgent: userAgent,
-            proxy: el.proxy
+            proxy: el.proxy,
+            retry: 1
           }
         })
 

@@ -580,7 +580,8 @@ export default {
               params.proxy.configs = params.proxy.configs.map(el => {
                 return {
                   ...el,
-                  userAgent: userAgent
+                  userAgent: userAgent,
+                  retry: 1
                 }
               })
             } else {
@@ -590,7 +591,8 @@ export default {
               params.proxy.configs = [{
                 rp: rp,
                 jar: jar,
-                userAgent: userAgent
+                userAgent: userAgent,
+                retry: 1
               }]
             }
           }

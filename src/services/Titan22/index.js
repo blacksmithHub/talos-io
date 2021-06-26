@@ -309,8 +309,27 @@ export default {
 
             let configs = currentTask.proxy.configs.slice()
 
-            configs = await configs.map((el) => {
-              if (el.proxy === options.proxy) el.options = options
+            configs = configs.map((el) => {
+              if (el.proxy === options.proxy) {
+                el.options = options
+                el.retry += 1
+              }
+
+              if (el.attempt > 3) {
+                const rp = require('request-promise')
+                const UserAgent = require('user-agents')
+
+                const opt = { deviceCategory: 'desktop' }
+
+                if (currentTask.mode !== 1) opt.deviceCategory = 'mobile'
+
+                const userAgent = new UserAgent(opt)
+
+                el.rp = rp
+                el.jar = rp.jar()
+                el.userAgent = userAgent.toString()
+                el.retry = 1
+              }
 
               return el
             })
@@ -2001,7 +2020,7 @@ export default {
         if (response && response.error) {
           await this.handleError(id, counter, response.error)
 
-          if (response.error.statusCode && (response.error.statusCode === 400 || response.error.statusCode === 404)) break
+          if (response.error.statusCode && response.error.message && response.error.message.includes('Some of the products are out of stock.')) break
         } else if (response && !response.error) {
           data = JSON.parse(response)
 
@@ -2029,28 +2048,52 @@ export default {
    */
   async getTransactionData (id, payload) {
     let data = null
+    let counter = 0
     let currentTask = await Bot.getCurrentTask(id)
 
     try {
-      currentTask = await Bot.getCurrentTask(id)
-      if (!Bot.isRunning(id) || !currentTask) return null
+      while (Bot.isRunning(id) && currentTask && !data) {
+        counter++
 
-      const params = {
-        token: currentTask.transactionData.token.token,
-        mode: currentTask.mode,
-        config: payload.config,
-        taskId: currentTask.id
-      }
+        currentTask = await Bot.getCurrentTask(id)
+        if (!Bot.isRunning(id) || !currentTask) break
 
-      const response = await orderApi.getTransactionData(params)
+        if (counter > 1) {
+          let interval = null
+          let timeout = null
+          await new Promise((resolve) => {
+            interval = setInterval(() => {
+              timeout = setTimeout(() => {
+                clearInterval(interval)
+                resolve()
+              }, currentTask.delay)
+            }, 500)
+          })
+          clearInterval(interval)
+          clearTimeout(timeout)
+        }
 
-      currentTask = await Bot.getCurrentTask(id)
-      if (!Bot.isRunning(id) || !currentTask) return null
+        currentTask = await Bot.getCurrentTask(id)
+        if (!Bot.isRunning(id) || !currentTask) break
 
-      if (response && response.error) {
-        await this.handleError(id, 0, response.error)
-      } else if (response && !response.error) {
-        data = response
+        const params = {
+          token: currentTask.transactionData.token.token,
+          mode: currentTask.mode,
+          config: payload.config,
+          taskId: currentTask.id
+        }
+
+        const response = await orderApi.getTransactionData(params)
+
+        currentTask = await Bot.getCurrentTask(id)
+        if (!Bot.isRunning(id) || !currentTask) return null
+
+        if (response && response.error) {
+          await this.handleError(id, 0, response.error)
+        } else if (response && !response.error) {
+          data = response
+          break
+        }
       }
     } catch (error) {
       console.log(error)

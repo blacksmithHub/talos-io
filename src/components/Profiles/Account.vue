@@ -192,6 +192,11 @@ export default {
     this.proxyList = (this.settings.accountProxyList && Object.keys(this.settings.accountProxyList).length)
       ? { ...this.settings.accountProxyList }
       : { ...this.proxies.slice().find((val) => val.id === 1) }
+
+    this.setSettings({
+      ...this.settings,
+      accountProxyList: { ...this.proxyList }
+    })
   },
   methods: {
     ...mapActions('account', { updateAccount: 'updateItem', deleteAccount: 'deleteItem' }),

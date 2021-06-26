@@ -3,7 +3,9 @@ export default {
    * Services Configuration
    */
   services: {
-    local: process.env.VUE_APP_LOCAL,
+    port: process.env.VUE_APP_PORT,
+    redirect: process.env.VUE_APP_REDIRECT,
+
     /**
      * ===========================================
      * API Service Configuration

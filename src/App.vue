@@ -20,11 +20,6 @@ export default {
     Dialog
   },
   mixins: [ProxyDistribution],
-  data () {
-    return {
-      //
-    }
-  },
   computed: {
     ...mapState('settings', { settings: 'items' }),
     ...mapState('task', { tasks: 'items' }),
@@ -100,7 +95,8 @@ export default {
                 data.proxy.configs = data.proxy.configs.map((val) => {
                   return {
                     ...val,
-                    userAgent: userAgent.toString()
+                    userAgent: userAgent.toString(),
+                    retry: 1
                   }
                 })
 
@@ -123,7 +119,8 @@ export default {
                 data.proxy.configs = data.proxy.configs.map((val) => {
                   return {
                     ...val,
-                    userAgent: userAgent.toString()
+                    userAgent: userAgent.toString(),
+                    retry: 1
                   }
                 })
 

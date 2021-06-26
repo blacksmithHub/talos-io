@@ -78,28 +78,35 @@
           </v-col>
 
           <v-col
-            cols="12"
+            cols="7"
             align-self="center"
             class="pl-5 pr-5"
           >
-            <v-text-field
-              v-model="key"
-              outlined
-              label="Key"
+            <v-alert
+              v-if="error"
               dense
-              :error-messages="(keyErrors.length) ? keyErrors : error"
-              @blur="$v.key.$touch()"
-            />
+              border="left"
+              type="error"
+              text
+              icon="mdi-alert-octagon"
+            >
+              {{ error }}
+            </v-alert>
 
             <v-btn
               depressed
               outlined
               rounded
-              color="primary"
+              :color="(success) ? 'success' : 'primary'"
               :loading="loading"
+              class="text-capitalize"
               @click="login"
             >
-              Login
+              <v-icon
+                left
+                v-text="'mdi-discord'"
+              />
+              login with discord
             </v-btn>
           </v-col>
         </v-row>
@@ -109,68 +116,95 @@
 </template>
 
 <script>
+/* global __static */
+
+import { mapActions } from 'vuex'
 import { required } from 'vuelidate/lib/validators'
-import { remote, ipcRenderer } from 'electron'
+import electron, { remote, globalShortcut, ipcRenderer } from 'electron'
+import path from 'path'
+import URL from 'url-parse'
 
 import AuthAPI from '@/api/auth'
-import AuthService from '@/services/auth'
+import Config from '@/config/app'
+
+const isDevelopment = process.env.NODE_ENV !== 'production'
 
 export default {
   data () {
     return {
       loading: false,
-      user: {},
-      key: '',
-      error: ''
-    }
-  },
-  computed: {
-    keyErrors () {
-      const errors = []
-
-      if (!this.$v.key.$dirty) return errors
-
-      this.$v.key.required || errors.push('Required')
-
-      return errors
-    }
-  },
-  watch: {
-    key () {
-      this.error = ''
+      error: '',
+      success: false
     }
   },
   methods: {
-    login () {
-      this.$v.$touch()
+    ...mapActions('snackbar', ['showSnackbar']),
 
-      if (!this.$v.$invalid) {
-        this.loading = true
+    async login (discord = true) {
+      this.error = ''
+      this.loading = true
 
-        AuthAPI.login({ key: this.key })
-          .then(({ data }) => {
+      const response = await AuthAPI.get()
+        .then(({ data }) => data)
+        .catch(({ response }) => response)
+
+      if (response.status) {
+        switch (response.status) {
+          case 401:
+            this.error = response.data.msg
             this.loading = false
+            break
 
-            if (data) {
-              AuthService.setAuth({ key: this.key })
-              this.$v.$reset()
+          default:
+            if (discord) {
+              const { BrowserWindow } = electron.remote
 
-              this.key = ''
-              this.error = ''
-              this.loading = false
+              let win = new BrowserWindow({
+                width: 520,
+                height: 850,
+                minWidth: 500,
+                minHeight: 500,
+                parent: remote.getCurrentWindow(),
+                icon: path.join(__static, 'icon.png')
+              })
 
-              ipcRenderer.send('login')
-            } else {
-              this.error = 'Invalid key'
+              win.removeMenu()
+              await win.loadURL(`http://localhost:${Config.services.port}/api/auth/discord`)
+
+              win.on('closed', () => {
+                win = null
+                this.error = ''
+                this.loading = false
+              })
+
+              win.webContents.on('did-frame-navigate', async (event, url, httpResponseCode) => {
+                const redirect = new URL(url)
+                if (redirect.pathname === Config.services.redirect) {
+                  win.close()
+
+                  if (httpResponseCode !== 401) this.login(false)
+                }
+              })
+
+              if (!isDevelopment) {
+                win.on('focus', () => {
+                  globalShortcut.register('CommandOrControl+R', () => {})
+                })
+
+                win.on('blur', () => {
+                  globalShortcut.unregister('CommandOrControl+R')
+                })
+              }
             }
-          })
-          .catch(() => {
-            this.loading = false
-            this.error = 'Invalid key'
-          })
+
+            break
+        }
+      } else {
+        this.success = true
+        this.error = ''
+        ipcRenderer.send('login')
       }
     },
-
     onClose () {
       remote.getCurrentWindow().close()
     },
