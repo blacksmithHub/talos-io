@@ -363,8 +363,8 @@ export default {
     async getResource (rp, jar, userAgent, fingerprint) {
       const params = {
         payload: {
-          returnUrl: Config.services.auth.url,
-          cancelUrl: Config.services.auth.url,
+          returnUrl: `http://localhost:${Config.services.port}/api/auth/paypal`,
+          cancelUrl: `http://localhost:${Config.services.port}/api/auth/paypal`,
           offerPaypalCredit: false,
           amount: 1,
           currencyIsoCode: 'PHP',
@@ -421,7 +421,7 @@ export default {
 
         let url = await page.url()
 
-        while (!url.includes(Config.services.auth.domain)) {
+        while (!url.includes(`localhost:${Config.services.port}`)) {
           await page.waitForNavigation({
             timeout: 0,
             waitUntil: 'domcontentloaded'
@@ -429,8 +429,8 @@ export default {
 
           url = await page.url()
 
-          if (url.includes(Config.services.auth.domain)) {
-            const domain = `${Config.services.auth.url}/?`
+          if (url.includes(`localhost:${Config.services.port}`)) {
+            const domain = `http://localhost:${Config.services.port}/api/auth/paypal?`
             const queries = url.slice(domain.length).split('&')
             const params = {}
 
