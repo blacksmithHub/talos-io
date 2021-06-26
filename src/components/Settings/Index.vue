@@ -20,6 +20,7 @@
                 <span class="cursor">Version: {{ about.version }}</span>
 
                 <v-btn
+                  v-if="!isDevelopment"
                   x-small
                   class="ml-3"
                   depressed
@@ -258,75 +259,47 @@
               <v-divider vertical />
 
               <v-col
+                v-if="!isDevelopment"
                 cols="6"
-                class="pt-0 pr-0 pb-0"
+                class="pt-0 pr-0 pb-0 pl-0"
               >
-                <v-list
-                  dense
-                  class="pa-0 cursor"
+                <v-row
+                  no-gutters
+                  style="height: 100%"
+                  justify="center"
                 >
-                  <v-subheader v-text="'Restore CSV Backup Files'" />
-                  <v-list-item class="pa-0">
-                    <v-list-item-content class="pa-2">
-                      <v-row
-                        justify="center"
-                        align="center"
-                        class="text-center"
-                      >
-                        <v-col>
-                          <v-btn
-                            class="primary"
-                            depressed
-                            rounded
-                            small
-                            @click="importTasks"
-                          >
-                            <v-icon
-                              small
-                              left
-                              v-text="'mdi-download'"
-                            />
-                            tasks
-                          </v-btn>
-                        </v-col>
+                  <v-col
+                    align-self="center"
+                    cols="8"
+                  >
+                    <v-list
+                      dense
+                      class="pa-0 cursor"
+                    >
+                      <v-list-item class="pa-0">
+                        <v-list-item-avatar>
+                          <v-img :src="`https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`" />
+                        </v-list-item-avatar>
 
-                        <v-col>
-                          <v-btn
-                            class="primary"
-                            depressed
-                            rounded
-                            small
-                            @click="importProfiles"
-                          >
-                            <v-icon
-                              small
-                              left
-                              v-text="'mdi-download'"
-                            />
-                            profiles
-                          </v-btn>
-                        </v-col>
+                        <v-list-item-content class="pa-2">
+                          <v-list-item-title v-text="profile.username" />
+                          <v-list-item-subtitle v-text="`#${profile.discriminator}`" />
+                        </v-list-item-content>
 
-                        <v-col>
+                        <v-list-item-action>
                           <v-btn
-                            class="primary"
-                            depressed
                             rounded
+                            depressed
+                            class="error"
                             small
-                            @click="importBanks"
-                          >
-                            <v-icon
-                              small
-                              left
-                              v-text="'mdi-download'"
-                            />
-                            banks
-                          </v-btn>
-                        </v-col>
-                      </v-row>
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list>
+                            @click="logout"
+                            v-text="'logout'"
+                          />
+                        </v-list-item-action>
+                      </v-list-item>
+                    </v-list>
+                  </v-col>
+                </v-row>
               </v-col>
             </v-row>
           </v-card-text>
@@ -416,14 +389,11 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import { required, url, minValue } from 'vuelidate/lib/validators'
-import electron, { ipcRenderer } from 'electron'
-import fs from 'fs'
-import csv from 'csv-parser'
+import { ipcRenderer } from 'electron'
 
+import Auth from '@/services/auth'
 import Webhook from '@/services/webhook'
 import Constant from '@/config/constant'
-
-const isDevelopment = process.env.NODE_ENV !== 'production'
 
 export default {
   data () {
@@ -448,6 +418,15 @@ export default {
     ...mapState('account', { accounts: 'items' }),
     ...mapState('billing', { billings: 'items' }),
 
+    isDevelopment () {
+      return process.env.NODE_ENV !== 'production'
+    },
+    /**
+     * Retrieve discord profile
+     */
+    profile () {
+      return Auth.getAuth()
+    },
     /**
      * Error messages for monitorInterval.
      */
@@ -595,10 +574,8 @@ export default {
     },
 
     checkUpdate () {
-      if (!isDevelopment) {
-        this.loading = true
-        ipcRenderer.send('check-update')
-      }
+      this.loading = true
+      ipcRenderer.send('check-update')
     },
 
     resetAll () {
@@ -620,158 +597,9 @@ export default {
       })
     },
 
-    // Temp import profiles csv
-    importProfiles () {
-      const dialog = electron.remote.dialog
-
-      dialog.showOpenDialog({
-        title: 'Import Profiles',
-        buttonLabel: 'Import',
-        filters: [
-          {
-            name: 'CSV',
-            extensions: ['csv']
-          }
-        ],
-        properties: []
-      })
-        .then(async (result) => {
-          if (!result.filePaths.length) return null
-
-          fs.createReadStream(result.filePaths[0].toString(), 'utf8')
-            .pipe(csv())
-            .on('data', (row) => {
-              this.addAccount({
-                name: null,
-                email: row.email,
-                password: row.password,
-                sameAs: false,
-                paypal: {
-                  email: null,
-                  password: null
-                },
-                loading: false
-              })
-            })
-            .on('end', () => {
-              this.showSnackbar({ message: 'Imported successfully', color: 'teal' })
-            })
-        })
-    },
-
-    // Temp import banks csv
-    importBanks () {
-      const dialog = electron.remote.dialog
-
-      dialog.showOpenDialog({
-        title: 'Import Banks',
-        buttonLabel: 'Import',
-        filters: [
-          {
-            name: 'CSV',
-            extensions: ['csv']
-          }
-        ],
-        properties: []
-      })
-        .then(async (result) => {
-          if (!result.filePaths.length) return null
-
-          fs.createReadStream(result.filePaths[0].toString(), 'utf8')
-            .pipe(csv())
-            .on('data', (row) => {
-              this.addBilling({
-                name: null,
-                bank: row.bank,
-                cardHolder: row.cardHolder,
-                cardNumber: row.cardNumber,
-                expiryMonth: row.expiryMonth,
-                expiryYear: row.expiryYear,
-                cvv: row.cvv
-              })
-            })
-            .on('end', () => {
-              this.showSnackbar({ message: 'Imported successfully', color: 'teal' })
-            })
-        })
-    },
-
-    // Temp import tasks csv
-    importTasks () {
-      const dialog = electron.remote.dialog
-
-      dialog.showOpenDialog({
-        title: 'Import Tasks',
-        buttonLabel: 'Import',
-        filters: [
-          {
-            name: 'CSV',
-            extensions: ['csv']
-          }
-        ],
-        properties: []
-      })
-        .then(async (result) => {
-          if (!result.filePaths.length) return null
-
-          fs.createReadStream(result.filePaths[0].toString(), 'utf8')
-            .pipe(csv())
-            .on('data', (row) => {
-              this.addBilling({
-                name: null,
-                bank: row.bank,
-                cardHolder: row.cardHolder,
-                cardNumber: row.cardNumber,
-                expiryMonth: row.expiryMonth,
-                expiryYear: row.expiryYear,
-                cvv: row.cvv
-              })
-
-              this.addAccount({
-                name: null,
-                email: row.email,
-                password: row.password,
-                sameAs: false,
-                paypal: {
-                  email: null,
-                  password: null
-                },
-                loading: false
-              })
-
-              const sizes = []
-
-              row.sizes.split('+').forEach((element) => {
-                const attr = Constant.TITAN_ATTRIBUTES.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
-
-                const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
-
-                sizes.push({
-                  attribute_id: attr.attribute_id,
-                  value: size.value,
-                  label: size.label
-                })
-              })
-
-              this.addTask({
-                sku: row.sku,
-                account: { ...this.accounts[this.accounts.length - 1] },
-                billing: { ...this.billings[this.billings.length - 1] },
-                proxy: { ...this.proxies[0] },
-                placeOrder: null,
-                sizes: sizes,
-                delay: 3500,
-                qty: 1,
-                mode: Constant.CLIENT[0],
-                checkoutMethod: Constant.METHODS[3],
-                autoPay: false,
-                autoFill: true
-              })
-            })
-            .on('end', () => {
-              this.showSnackbar({ message: 'Imported successfully', color: 'teal' })
-            })
-        })
+    logout () {
+      Auth.logout()
+      ipcRenderer.send('relaunch')
     }
   },
   validations: {

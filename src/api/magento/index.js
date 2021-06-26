@@ -111,6 +111,8 @@ export default {
       delete options.form
     }
 
+    options.timeout = 300000 // 5 mins
+
     const request = rp(options)
 
     if (params.taskId) {

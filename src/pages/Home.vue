@@ -98,7 +98,8 @@ export default {
                 data.proxy.configs = data.proxy.configs.map((val) => {
                   return {
                     ...val,
-                    userAgent: userAgent.toString()
+                    userAgent: userAgent.toString(),
+                    retry: 1
                   }
                 })
 
@@ -121,7 +122,8 @@ export default {
                 data.proxy.configs = data.proxy.configs.map((val) => {
                   return {
                     ...val,
-                    userAgent: userAgent.toString()
+                    userAgent: userAgent.toString(),
+                    retry: 1
                   }
                 })
 
@@ -202,14 +204,13 @@ export default {
     // Check authentication
     if (!isDevelopment) {
       const loop = setInterval(async () => {
-        const params = { key: Auth.getAuth().key }
-        const response = await Auth.verify(params).then(res => res).catch(err => err)
+        const isAuthenticated = await Auth.isAuthenticated()
 
-        if (!response.data) {
+        if (!isAuthenticated) {
           clearInterval(loop)
           ipcRenderer.send('logout')
         }
-      }, 3600000)
+      }, 300000)
     }
   },
   methods: {
