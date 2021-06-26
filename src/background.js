@@ -48,7 +48,28 @@ app.on('ready', async () => {
     }
   }
 
-  initializeWindows()
+  const gotTheLock = app.requestSingleInstanceLock()
+
+  if (!gotTheLock) {
+    app.quit()
+  } else {
+    require('../server/app.js')
+    initializeWindows()
+  }
+})
+
+app.on('second-instance', () => {
+  // Someone tried to run a second instance, we should focus our window.
+  if (LoginWindow.getWindow()) {
+    if (LoginWindow.getWindow().isMinimized()) LoginWindow.getWindow().restore()
+    LoginWindow.getWindow().focus()
+  } else if (CheckUpdateWindow.getWindow()) {
+    if (CheckUpdateWindow.getWindow().isMinimized()) CheckUpdateWindow.getWindow().restore()
+    CheckUpdateWindow.getWindow().focus()
+  } else if (MainWindow.getWindow()) {
+    if (MainWindow.getWindow().isMinimized()) MainWindow.getWindow().restore()
+    MainWindow.getWindow().focus()
+  }
 })
 
 // Exit cleanly on request from parent process in development mode.

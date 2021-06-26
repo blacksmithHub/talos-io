@@ -46,6 +46,7 @@ export default {
                 userAgent = userAgent.toString()
 
                 val.userAgent = userAgent
+                val.retry = 1
               }
 
               return val
@@ -69,7 +70,8 @@ export default {
           item.proxy.configs = item.proxy.configs.map(el => {
             return {
               ...el,
-              userAgent: userAgent
+              userAgent: userAgent,
+              retry: 1
             }
           })
 
@@ -123,6 +125,7 @@ export default {
               userAgent = userAgent.toString()
 
               val.userAgent = userAgent
+              val.retry = 1
             }
 
             return val

@@ -261,7 +261,7 @@
             <template v-slot:item.status="{ value }">
               <v-icon
                 small
-                :color="value ? 'red' : 'green'"
+                :color="value ? 'green' : 'red'"
                 v-text="'mdi-checkbox-blank-circle'"
               />
             </template>
@@ -439,7 +439,7 @@ export default {
             name: element.name,
             price: element.price_info.max_price.toLocaleString(),
             link: element.url,
-            status: !parseInt(element.is_salable)
+            status: parseInt(element.is_salable)
           }
         })
 
