@@ -8,16 +8,6 @@ export default {
 
     /**
      * ===========================================
-     * API Service Configuration
-     * ===========================================
-     *
-     */
-    auth: {
-      domain: process.env.VUE_APP_API_AUTH_DOMAIN,
-      url: process.env.VUE_APP_API_AUTH_URL
-    },
-    /**
-     * ===========================================
      * Discord Service Configuration
      * ===========================================
      *

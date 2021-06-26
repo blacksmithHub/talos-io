@@ -10,6 +10,10 @@ router.get('/discord/redirect', passport.authenticate('discord'), (req, res) => 
   res.send(200)
 })
 
+router.get('/paypal', (req, res) => {
+  res.send(200)
+})
+
 router.get('/', (req, res) => {
   refresh.use(
     new DiscordStrategy({
