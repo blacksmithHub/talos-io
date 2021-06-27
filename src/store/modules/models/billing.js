@@ -30,6 +30,8 @@ export default {
     setItems ({ commit }, items) {
       commit('SET_ITEMS', items)
       localStorage.setItem('billing', JSON.stringify(items))
+
+      return true
     },
 
     /**
@@ -50,6 +52,8 @@ export default {
 
       commit('SET_ITEMS', billings)
       localStorage.setItem('billings', JSON.stringify(billings))
+
+      return true
     },
 
     /**
@@ -68,6 +72,8 @@ export default {
 
       commit('SET_ITEMS', billings)
       localStorage.setItem('billings', JSON.stringify(billings))
+
+      return true
     },
 
     /**
@@ -84,6 +90,8 @@ export default {
 
       commit('SET_ITEMS', billings)
       localStorage.setItem('billings', JSON.stringify(billings))
+
+      return true
     }
   }
 }

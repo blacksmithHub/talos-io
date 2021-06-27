@@ -45,6 +45,8 @@ export default {
     reset ({ state, commit }) {
       commit('RESET')
       localStorage.setItem('settings', JSON.stringify(state.items))
+
+      return true
     },
 
     /**
@@ -56,6 +58,8 @@ export default {
     setItems ({ commit }, items) {
       commit('SET_ITEMS', items)
       localStorage.setItem('settings', JSON.stringify(items))
+
+      return true
     }
   }
 }

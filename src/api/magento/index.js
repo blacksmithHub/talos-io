@@ -37,11 +37,17 @@ export default {
     }
 
     await cookieJar._jar.store.getAllCookies((err, cookieArray) => {
-      if (err) cookies = []
+      if (err) {
+        cookies = []
+
+        return err
+      }
 
       cookies = cookieArray.slice().map((el) => {
         return `${el.key}=${el.value}`
       })
+
+      return cookies
     })
 
     headers.Cookie = cookies.join(';')
