@@ -37,12 +37,14 @@
       <v-card-actions class="justify-end pa-5">
         <v-btn
           v-if="!alert"
-          color="primary mr-3"
+          color="primary"
+          class="mr-3"
           rounded
           depressed
           small
+          outlined
           @click="closeAndDisagree()"
-          v-text="'Cancel'"
+          v-text="cancelLabel"
         />
 
         <v-btn
@@ -50,8 +52,9 @@
           rounded
           depressed
           small
+          outlined
           @click="closeAndAgree()"
-          v-text="'Ok'"
+          v-text="actionLabel"
         />
       </v-card-actions>
     </v-card>
@@ -69,7 +72,9 @@ export default {
       'body',
       'action',
       'cancel',
-      'alert'
+      'alert',
+      'cancelLabel',
+      'actionLabel'
     ]),
     /**
      * Body content splitted by new line (\n)
@@ -80,6 +85,7 @@ export default {
       try {
         return this.body ? this.body.split('\n') : []
       } catch (error) {
+        console.log(error)
         return ['Error encountered!']
       }
     }

@@ -1,6 +1,5 @@
 import api from '../index'
 import Config from '@/config/app'
-import Request from '@/services/request'
 
 const { http } = api
 
@@ -14,14 +13,29 @@ export default {
   http,
 
   /**
+   * Get merchant secret
+   */
+  getSecret (params) {
+    try {
+      params.url = `${Config.services.titan22.url}/rest/V1/braintree/merchant_server`
+      params.method = 'GET'
+
+      return this.http(params)
+        .then((res) => res)
+        .catch((err) => {
+          return { error: err }
+        })
+    } catch (error) {
+      return { error: error }
+    }
+  },
+  /**
    * Create paypal payment resource
-   *
    */
   createPaymentResource (params) {
     try {
       params.url = `${this.baseUrl}/paypal_hermes/create_payment_resource`
       params.method = 'POST'
-      params.configs = [{ ...Request.setRequest() }]
 
       return this.http(params)
         .then((res) => res)
@@ -34,30 +48,11 @@ export default {
   },
   /**
    * Get paypal account
-   *
    */
   getPaypalAccount (params) {
     try {
       params.url = `${this.baseUrl}/payment_methods/paypal_accounts`
       params.method = 'POST'
-      params.configs = [{ ...Request.setRequest() }]
-
-      return this.http(params)
-        .then((res) => res)
-        .catch((err) => {
-          return { error: err }
-        })
-    } catch (error) {
-      return { error: error }
-    }
-  },
-  /**
-   * Get merchant secret
-   */
-  getSecret (params) {
-    try {
-      params.url = `${Config.services.titan22.url}/rest/V1/braintree/merchant_server`
-      params.method = 'GET'
 
       return this.http(params)
         .then((res) => res)

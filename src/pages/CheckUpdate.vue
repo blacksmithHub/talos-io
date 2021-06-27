@@ -30,7 +30,7 @@
             </v-row>
 
             <span
-              class="text-capitalize font-italic caption"
+              class="text-capitalize font-italic caption cursor"
               v-text="msg"
             />
 
@@ -66,3 +66,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.cursor {
+  cursor: default
+}
+</style>

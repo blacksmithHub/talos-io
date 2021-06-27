@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <router-view />
-    <vue-progress-bar />
+    <SnackBar />
     <Dialog />
   </v-app>
 </template>
@@ -9,53 +9,156 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 
-import Dialog from '@/components/App/Dialog'
+import SnackBar from '@/components/App/SnackBar.vue'
+import Dialog from '@/components/App/Dialog.vue'
+import ProxyDistribution from '@/mixins/proxy-distribution'
+import DA from 'distribute-array'
 
 export default {
-  components: { Dialog },
+  components: {
+    SnackBar,
+    Dialog
+  },
+  mixins: [ProxyDistribution],
   computed: {
-    ...mapState('setting', { settings: 'items' }),
-    ...mapState('task', { tasks: 'items' })
+    ...mapState('settings', { settings: 'items' }),
+    ...mapState('task', { tasks: 'items' }),
+    ...mapState('account', { accounts: 'items' }),
+    ...mapState('proxy', { proxies: 'items' }),
+    ...mapState('cloudflare', { cloudflare: 'items' }),
+    ...mapState('monitor', { monitor: 'items' })
   },
-  mounted () {
-    //  [App.vue specific] When App.vue is finish loading finish the progress bar
-    this.$Progress.finish()
+  watch: {
+    'settings.nightMode': function (nightMode) {
+      this.$vuetify.theme.dark = nightMode
+    }
   },
-  created () {
-    //  [App.vue specific] When App.vue is first loaded start the progress bar
-    this.$Progress.start()
-    //  hook the progress bar to start before we move router-view
-    this.$router.beforeEach((to, from, next) => {
-      //  start the progress bar
-      this.$Progress.start()
-      //  continue to next page
-      next()
-    })
-    //  hook the progress bar to finish after we've finished moving router-view
-    this.$router.afterEach(() => this.$Progress.finish())
+  async created () {
+    if (!Object.keys(this.cloudflare).length) await this.resetCf()
 
-    if (!Object.keys(this.settings).length) this.resetSettings()
+    await this.initCf()
 
-    this.setTheme()
+    await this.initProxy()
+
+    if (!Object.keys(this.settings).length) {
+      await this.initSettings()
+      await this.setSettings({
+        ...this.settings,
+        monitorProxy: { ...this.proxies[0] }
+      })
+    }
+
+    if (!this.settings.monitorProxy.id) {
+      await this.setSettings({
+        ...this.settings,
+        monitorProxy: { ...this.proxies[0] }
+      })
+    }
+
+    if (!Object.keys(this.monitor).length) this.initMonitor()
+
+    if (this.accounts.length) await this.initAccount()
+
+    if (this.tasks.length) await this.initTask()
+
+    if (this.tasks.length && this.proxies.length) {
+      try {
+        for (let one = 0; one < this.proxies.length; one++) {
+          const tasks = this.tasks.slice().filter((val) => val.proxy.id === this.proxies[one].id)
+
+          if (tasks.length) {
+            if (this.proxies[one].distribute) {
+              const distributedProxy = DA(this.proxies[one].proxies, tasks.length)
+              const distributedConfigs = DA(this.proxies[one].configs, tasks.length)
+
+              for (let two = 0; two < distributedProxy.length; two++) {
+                const data = { ...tasks[two] }
+
+                if (distributedProxy[two].length && distributedConfigs[two].length) {
+                  data.proxy = {
+                    ...this.proxies[one],
+                    proxies: distributedProxy[two],
+                    configs: distributedConfigs[two]
+                  }
+                } else {
+                  const local = this.proxies.slice().find((val) => val.id === 1)
+                  data.proxy = local
+                }
+
+                const UserAgent = require('user-agents')
+                const opt = { deviceCategory: 'desktop' }
+
+                if (data.mode.id !== 1) opt.deviceCategory = 'mobile'
+
+                const userAgent = new UserAgent(opt)
+
+                data.proxy.configs = data.proxy.configs.map((val) => {
+                  return {
+                    ...val,
+                    userAgent: userAgent.toString(),
+                    retry: 1
+                  }
+                })
+
+                this.updateTask(data)
+              }
+            } else {
+              for (let three = 0; three < tasks.length; three++) {
+                const data = {
+                  ...tasks[three],
+                  proxy: this.proxies[one]
+                }
+
+                const UserAgent = require('user-agents')
+                const opt = { deviceCategory: 'desktop' }
+
+                if (data.mode.id !== 1) opt.deviceCategory = 'mobile'
+
+                const userAgent = new UserAgent(opt)
+
+                data.proxy.configs = data.proxy.configs.map((val) => {
+                  return {
+                    ...val,
+                    userAgent: userAgent.toString(),
+                    retry: 1
+                  }
+                })
+
+                await this.updateTask(data)
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    }
   },
   methods: {
-    ...mapActions('setting', { resetSettings: 'reset' }),
-
-    /**
-     * Set app theme.
-     *
-     */
-    setTheme () {
-      this.$vuetify.theme.dark = this.settings.nightMode
-    }
+    ...mapActions('settings', { initSettings: 'reset', setSettings: 'setItems' }),
+    ...mapActions('proxy', { initProxy: 'init' }),
+    ...mapActions('account', { initAccount: 'init' }),
+    ...mapActions('task', { initTask: 'init', updateTask: 'updateItem' }),
+    ...mapActions('cloudflare', { resetCf: 'reset', initCf: 'init' }),
+    ...mapActions('monitor', { initMonitor: 'reset' })
   }
 }
 </script>
 
 <style>
 html {
-  overflow: auto !important
+  overflow-y: auto !important;
+  overflow-x: auto !important
 }
+
+button {
+  -webkit-app-region: no-drag !important;
+}
+
+.v-tabs {
+  -webkit-app-region: no-drag !important;
+}
+
 .titleBar {
   -webkit-user-select: none !important;
   -webkit-app-region: drag !important;

@@ -2,13 +2,13 @@
   <v-dialog
     v-model="dialog"
     persistent
-    max-width="100vh"
+    max-width="600px"
   >
     <v-card>
       <v-card-title style="border-bottom:1px solid #d85820">
         <span
           class="headline primary--text"
-          v-text="`${header}`"
+          v-text="`Logs`"
         />
 
         <v-spacer />
@@ -16,7 +16,7 @@
         <v-btn
           icon
           class="primary--text"
-          @click="dialog=false"
+          @click="onClose"
         >
           <v-icon v-text="'mdi-close'" />
         </v-btn>
@@ -24,59 +24,71 @@
 
       <v-divider />
 
-      <v-card-text style="height: 30vh; max-height: 30vh; overflow-y: auto;">
-        <ul v-if="logs.length">
-          <li
-            v-for="(log, index) in logs"
-            :id="`log-${index}`"
-            :key="index"
-          >
-            {{ log }}
-          </li>
-        </ul>
-
-        <p
-          v-else
-          class="text-center mt-10"
+      <v-card-text class="pa-3">
+        <v-card
+          flat
+          height="200"
+          style="overflow-y: auto !important"
+          width="100%"
+          class="black"
         >
-          Nothing to display
-        </p>
+          <ul style="list-style-type: none; padding: 0px; margin: 0px">
+            <li
+              v-for="(log, index) in logs"
+              :id="`log-${index}`"
+              :key="index"
+            >
+              {{ log }}
+            </li>
+          </ul>
+        </v-card>
       </v-card-text>
 
-      <v-card-actions class="justify-center pa-5">
-        <v-btn
-          class="primary"
-          rounded
-          depressed
-          small
-          @click="download"
-        >
-          <v-icon
-            left
-            small
-            v-text="'mdi-download'"
-          />
-          Download
-        </v-btn>
+      <v-divider />
+
+      <v-card-actions>
+        <v-row no-gutters>
+          <v-col>
+            <v-btn
+              rounded
+              depressed
+              small
+              outlined
+              color="primary"
+              @click="clearLogs"
+              v-text="'Clear'"
+            />
+          </v-col>
+
+          <v-col class="text-right">
+            <v-btn
+              rounded
+              depressed
+              small
+              outlined
+              color="primary"
+              @click="exportLogs"
+              v-text="'Export'"
+            />
+          </v-col>
+        </v-row>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script>
+import fs from 'fs'
+import base64 from 'base-64'
+import utf8 from 'utf8'
+import electron from 'electron'
+
 export default {
   data () {
     return {
       dialog: false,
-      task: {}
-    }
-  },
-  computed: {
-    logs () {
-      return (this.task.logs) ? this.task.logs.split(';') : []
-    },
-    header () {
-      return (Object.keys(this.task).length) ? `${this.task.profile.name} - Logs` : 'Logs'
+      logs: [],
+      id: null
     }
   },
   watch: {
@@ -89,14 +101,48 @@ export default {
     }
   },
   methods: {
-    mapData (task) {
+    async launch (id) {
+      this.id = id
+      const data = await fs.readFileSync(`Task-${id}.json`, 'utf8')
+      this.logs = JSON.parse(base64.decode(data))
       this.dialog = true
-      this.task = task
     },
-    download () {
-      var FileSaver = require('file-saver')
-      var blob = new Blob([this.logs.join('\n')], { type: 'text/plain;charset=utf-8' })
-      FileSaver.saveAs(blob, `${this.header}.txt`)
+    exportLogs () {
+      const text = this.logs.join('\n')
+
+      const dialog = electron.remote.dialog
+
+      dialog.showSaveDialog({
+        title: 'Export Logs',
+        buttonLabel: 'Export',
+        filters: [
+          {
+            name: 'Text Files',
+            extensions: ['txt']
+          }
+        ],
+        properties: []
+      })
+        .then(file => {
+          if (!file.canceled) {
+            fs.writeFile(file.filePath.toString(), text, (err) => {
+              if (err) throw err
+
+              this.showSnackbar({ message: 'Exported successfully', color: 'teal' })
+            })
+          }
+        })
+    },
+    onClose () {
+      this.logs = []
+      this.dialog = false
+    },
+    clearLogs () {
+      this.logs = []
+      const text = JSON.stringify([])
+      const bytes = utf8.encode(text)
+      const encoded = base64.encode(bytes)
+      fs.writeFileSync(`Task-${this.id}.json`, encoded)
     }
   }
 }

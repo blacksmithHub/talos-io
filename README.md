@@ -1,4 +1,4 @@
-# titan-bot
+# titan-bot-frontend
 
 ## Project setup
 ```

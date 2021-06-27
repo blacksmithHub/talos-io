@@ -16,19 +16,11 @@ export default {
    * @return next
    */
   async authorized (next) {
-    if (!isDevelopment) {
-      if (!AuthService.isAuthenticated()) {
-        ipcRenderer.send('logout')
-      } else {
-        const params = { key: AuthService.getAuth().key }
+    if (isDevelopment) return next()
 
-        await AuthService.verify(params)
-          .then(({ data }) => {
-            if (!data) ipcRenderer.send('logout')
-          })
-          .catch(() => ipcRenderer.send('logout'))
-      }
-    }
+    const isAuthenticated = await AuthService.isAuthenticated()
+
+    if (!isAuthenticated) ipcRenderer.send('logout')
 
     return next()
   }

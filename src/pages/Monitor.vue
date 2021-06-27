@@ -1,468 +1,543 @@
 <template>
-  <div class="pa-5">
-    <v-card>
-      <v-card-title style="border-bottom: 1px solid #d85820">
-        <v-row>
-          <v-col align-self="center">
-            <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search"
-              hide-details
-              outlined
-              dense
-            />
-          </v-col>
-
-          <v-col
-            align-self="center"
-            cols="3"
-          >
-            <v-select
-              v-model="filter"
-              :items="filterItems"
-              outlined
-              dense
-              hide-details
-              item-text="title"
-              item-value="value"
-              label="Filter By"
-            />
-          </v-col>
-
-          <v-col
-            align-self="center"
-            cols="2"
-          >
-            <v-text-field
-              v-model="count"
-              label="Items"
-              hide-details
-              outlined
-              dense
-              @change="onCountChange"
-            />
-          </v-col>
-        </v-row>
-      </v-card-title>
-
-      <v-divider />
-
-      <v-card-text>
-        <v-data-table
-          dense
-          :headers="headers"
-          :items="products"
-          :search="search"
-          :loading="loading || !products.length"
-          hide-default-footer
-          loading-text="Loading... Please wait"
-          :no-results-text="'Nothing to display'"
-          :no-data-text="'Nothing to display'"
-          fixed-header
-          height="65vh"
-          :items-per-page="products.length || 5"
+  <v-app>
+    <v-app-bar
+      app
+      dense
+      class="titleBar"
+    >
+      <v-row no-gutters>
+        <v-col
+          cols="1"
+          class="titleBar"
+          align-self="center"
         >
-          <template v-slot:item.img="{ value }">
+          <div class="d-flex align-center">
             <v-img
-              :src="value"
-              width="80"
+              class="shrink mr-2"
+              contain
+              :src="require('@/assets/talos.png')"
+              transition="scale-transition"
+              width="35"
             />
-          </template>
+          </div>
+        </v-col>
 
-          <template v-slot:item.name="{ value }">
-            <small v-text="value" />
-          </template>
+        <v-col align-self="center">
+          <h4
+            class="mt-1 ml-3"
+            v-text="'Monitor'"
+          />
+        </v-col>
 
-          <template v-slot:item.sku="{ value }">
-            <small v-text="value" />
+        <v-col>
+          <v-row
+            no-gutters
+            class="text-right mt-1"
+            justify="center"
+            align="center"
+          >
+            <v-col align-self="center">
+              <v-btn
+                icon
+                x-small
+                :ripple="false"
+                class="mr-1"
+                @click="onMaximize"
+              >
+                <v-icon
+                  small
+                  color="success"
+                  v-text="'mdi-checkbox-blank-circle'"
+                />
+              </v-btn>
 
-            <v-icon
-              v-clipboard:copy="value"
-              v-clipboard:success="onCopy"
-              small
-              right
-              class="cursor"
-              v-text="'mdi-content-copy'"
-            />
-          </template>
+              <v-btn
+                icon
+                x-small
+                :ripple="false"
+                class="mr-1"
+                @click="onMinimize"
+              >
+                <v-icon
+                  small
+                  color="warning"
+                  v-text="'mdi-checkbox-blank-circle'"
+                />
+              </v-btn>
 
-          <template v-slot:item.price="{ value }">
-            <small v-text="`Php ${value}`" />
-          </template>
+              <v-btn
+                icon
+                x-small
+                :ripple="false"
+                @click="onClose"
+              >
+                <v-icon
+                  small
+                  color="error"
+                  v-text="'mdi-checkbox-blank-circle'"
+                />
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-col>
+      </v-row>
+    </v-app-bar>
 
-          <template v-slot:item.link="{ value }">
-            <small
-              class="text-capitalize text-decoration-underline primary--text cursor"
-              @click="redirect(value)"
-              v-text="'product'"
-            />
-          </template>
+    <v-main>
+      <v-container fluid>
+        <v-layout
+          v-resize="onResize"
+          fluid
+        >
+          <v-data-table
+            :height="windowSize.y - 86 - 46 - 81 - 58"
+            style="width: 100%"
+            class="elevation-2"
+            no-data-text="Nothing to display"
+            no-results-text="Nothing to display"
+            :headers="headers"
+            :items="products"
+            item-key="id"
+            hide-default-footer
+            fixed-header
+            disable-sort
+            mobile-breakpoint="100"
+            hide-default-header
+            :loading="loading"
+            :search="search"
+            :items-per-page="100"
+            :page.sync="page"
+            @page-count="pageCount = $event"
+          >
+            <template v-slot:top>
+              <v-row
+                align="center"
+                justify="center"
+                class="pa-3"
+              >
+                <v-col align-self="center">
+                  <v-text-field
+                    v-model="search"
+                    append-icon="mdi-magnify"
+                    label="Search"
+                    hide-details
+                    outlined
+                    dense
+                  />
+                </v-col>
+              </v-row>
 
-          <template v-slot:item.status="{ value }">
-            <v-chip
-              class="text-capitalize"
-              x-small
-              :color="(value) ? 'error' : 'success'"
-              v-text="(value) ? 'out of stock' : 'in stock'"
-            />
-          </template>
+              <v-divider />
+            </template>
 
-          <template v-slot:item.date="{ value }">
-            <small v-text="value" />
-          </template>
-        </v-data-table>
-      </v-card-text>
+            <template v-slot:footer>
+              <v-divider style="border:1px solid #d85820" />
+              <v-pagination
+                v-model="page"
+                class="my-3"
+                :length="pageCount"
+                :total-visible="8"
+                circle
+              />
+              <v-row
+                align="center"
+                justify="center"
+                class="text-center pa-3"
+              >
+                <v-col>
+                  <v-select
+                    v-model="filter"
+                    :items="filterItems"
+                    outlined
+                    dense
+                    hide-details
+                    item-text="title"
+                    item-value="value"
+                    label="Filter By"
+                  />
+                </v-col>
 
-      <v-divider />
+                <v-col cols="4">
+                  <v-text-field
+                    v-model="count"
+                    label="Items"
+                    hide-details
+                    outlined
+                    dense
+                  />
+                </v-col>
 
-      <v-card-actions>
-        <v-row no-gutters>
-          <v-col cols="6">
-            <small
-              style="max-width: 100%"
-              class="text-capitalize text-truncate d-inline-block"
-              v-text="`total: ${products.length}`"
-            />
-          </v-col>
-        </v-row>
-      </v-card-actions>
-    </v-card>
-  </div>
+                <v-col
+                  cols="3"
+                  class="text-center"
+                  align-self="center"
+                >
+                  <v-btn
+                    depressed
+                    small
+                    rounded
+                    outlined
+                    color="primary"
+                    :loading="loading"
+                    @click="applyFilter"
+                  >
+                    Apply
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </template>
+
+            <template v-slot:item.actions="{item}">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn
+                    v-clipboard:copy="item.sku"
+                    v-clipboard:success="() => {showSnackbar({ message: `You just copied: ${item.sku}`, color: 'teal' })}"
+                    icon
+                    color="primary"
+                    depressed
+                    small
+                    v-bind="attrs"
+                    v-on="on"
+                  >
+                    <v-icon
+                      small
+                      v-text="'mdi-content-copy'"
+                    />
+                  </v-btn>
+                </template>
+                <span v-text="'Copy SKU'" />
+              </v-tooltip>
+            </template>
+
+            <template v-slot:item.img="{ value }">
+              <v-img
+                :lazy-src="lazyImg"
+                :src="value"
+                width="80"
+              />
+            </template>
+
+            <template v-slot:item.name="{ item }">
+              <div class="pa-1">
+                <p
+                  v-if="item.name && item.link"
+                  class="font-weight-bold caption blue--text caption pa-0 ma-0 text-decoration-underline cursor"
+                  @click="redirect(item.link)"
+                  v-text="item.name"
+                />
+                <v-row
+                  no-gutters
+                  justify="center"
+                >
+                  <v-col align-self="center">
+                    <p
+                      v-if="item.sku"
+                      class="caption pa-0 ma-0 text"
+                      v-text="item.sku"
+                    />
+                    <p
+                      v-if="item.price"
+                      class="caption pa-0 ma-0 text"
+                      v-text="`Php ${item.price}`"
+                    />
+                  </v-col>
+
+                  <v-col
+                    v-if="item.date"
+                    align-self="center"
+                  >
+                    <p
+                      class="caption pa-0 ma-0 text"
+                      v-text="item.date"
+                    />
+                  </v-col>
+                </v-row>
+              </div>
+            </template>
+
+            <template v-slot:item.sku="{}" />
+
+            <template v-slot:item.status="{ value }">
+              <v-icon
+                small
+                :color="value ? 'green' : 'red'"
+                v-text="'mdi-checkbox-blank-circle'"
+              />
+            </template>
+          </v-data-table>
+        </v-layout>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
 
 <script>
-import { ipcRenderer } from 'electron'
 import { mapState, mapActions } from 'vuex'
-
-import Toastify from 'toastify-js'
-import 'toastify-js/src/toastify.css'
-import vanillaPuppeteer from 'puppeteer'
-import { addExtra } from 'puppeteer-extra'
-import StealthPlugin from 'puppeteer-extra-plugin-stealth'
-import ProxyChain from 'proxy-chain'
+import { remote, ipcRenderer } from 'electron'
 import { Cookie } from 'tough-cookie'
+import UserAgent from 'user-agents'
 
-import moment from '@/mixins/moment'
+import ProductApi from '@/api/magento/titan22/product'
+
+import CF from '@/services/cloudflare-bypass'
 import Config from '@/config/app'
-import productApi from '@/api/magento/titan22/product'
 import placeholder from '@/assets/no_image.png'
-import Request from '@/services/request'
-
-const blockedResources = ['queue-it']
 
 export default {
-  mixins: [moment],
   data () {
     return {
-      count: 100,
+      page: 1,
+      pageCount: 0,
+      search: '',
+      loading: false,
+      count: 500,
+      filter: 'updated_at',
       filterItems: [
         { title: 'Last created', value: 'created_at' },
         { title: 'Last update', value: 'updated_at' }
       ],
-      filter: 'updated_at',
-      interval: null,
-      loading: false,
-      search: '',
       headers: [
         {
-          sortable: false,
-          value: 'img',
-          width: '1%'
+          value: 'actions',
+          align: 'center',
+          filterable: false,
+          sortable: false
         },
         {
-          text: 'Product',
-          sortable: false,
-          value: 'name',
-          width: '10%'
+          value: 'img'
         },
         {
-          text: 'SKU',
-          value: 'sku',
-          width: '10%'
+          value: 'name'
         },
         {
-          text: 'Price',
-          value: 'price',
-          width: '3%'
+          value: 'sku'
         },
         {
-          text: 'Link',
-          sortable: false,
-          value: 'link',
-          width: '1%',
-          align: 'center'
-        },
-        {
-          text: 'Status',
-          value: 'status',
-          width: '2%',
-          align: 'center'
-        },
-        {
-          text: 'Date',
-          value: 'date',
-          width: '11%'
+          value: 'status'
         }
       ],
       products: [],
+      windowSize: {
+        x: 0,
+        y: 0
+      },
       loop: null,
-      configs: []
+      params: {
+        payload: {
+          searchCriteria: {
+            sortOrders: [
+              {
+                field: null,
+                direction: 'DESC'
+              }
+            ],
+            pageSize: null
+          },
+          currencyCode: 'php',
+          storeId: 1
+        },
+        token: null,
+        config: null
+      }
     }
   },
   computed: {
-    ...mapState('setting', { settings: 'items' })
+    ...mapState('settings', { settings: 'items' }),
+    ...mapState('monitor', { monitor: 'items' }),
+    lazyImg () {
+      return placeholder
+    }
   },
   watch: {
-    'settings.nightMode': function (nightMode) {
-      this.$vuetify.theme.dark = nightMode
-    },
-    'settings.monitorInterval': function () {
-      clearInterval(this.loop)
-      this.searchProduct()
-    },
-    'settings.monitorProxy': function () {
-      clearInterval(this.loop)
-      this.searchProduct()
-    },
-    filter () {
-      clearInterval(this.loop)
-      this.searchProduct()
+    settings () {
+      this.$vuetify.theme.dark = this.settings.nightMode
     }
   },
   async created () {
-    this.init()
+    await this.prepareData()
+
+    this.searchProduct()
 
     ipcRenderer.on('updateSettings', (event, arg) => {
-      this.setSettings(arg)
-      this.init()
+      this.setSettings(JSON.parse(arg))
     })
-
-    await this.fetchProducts()
-    const vm = this
-    setTimeout(() => (vm.searchProduct()), vm.settings.monitorInterval)
   },
   methods: {
-    ...mapActions('setting', { setSettings: 'setItems' }),
-    ...mapActions('dialog', ['openDialog']),
+    ...mapActions('settings', { setSettings: 'setItems' }),
+    ...mapActions('snackbar', ['showSnackbar']),
+    ...mapActions('monitor', { updateMonitor: 'setItems' }),
 
-    /**
-     * init request
-     */
-    init () {
-      if (this.settings.monitorProxy && Object.keys(this.settings.monitorProxy).length && this.settings.monitorProxy.proxies.length) {
-        this.settings.monitorProxy.proxies.forEach((element) => {
-          const data = Request.setRequest(null, element)
-          this.configs.push(data)
+    prepareData () {
+      this.count = this.monitor.total
+      this.filter = this.monitor.filter
+
+      this.params.payload.searchCriteria.sortOrders[0].field = this.filter
+      this.params.payload.searchCriteria.pageSize = this.count
+      this.params.token = Config.services.titan22.token
+
+      this.proxyList = { ...this.settings.monitorProxy }
+
+      this.proxyList.configs = []
+
+      const userAgent = new UserAgent({ deviceCategory: 'desktop' })
+
+      if (this.proxyList.proxies && this.proxyList.proxies.length) {
+        this.proxyList.proxies.forEach((el) => {
+          const rp = require('request-promise')
+          const jar = rp.jar()
+
+          this.proxyList.configs.push({
+            rp: rp,
+            jar: jar,
+            proxy: el.proxy,
+            userAgent: userAgent
+          })
         })
       } else {
-        const data = Request.setRequest()
-        this.configs.push(data)
+        const rp = require('request-promise')
+        const jar = rp.jar()
+
+        this.proxyList.configs.push({
+          rp: rp,
+          jar: jar,
+          userAgent: userAgent
+        })
       }
     },
+    onResize () {
+      this.windowSize = { x: window.innerWidth, y: window.innerHeight }
+    },
+    onClose () {
+      remote.getCurrentWindow().close()
+    },
+    onMaximize () {
+      const win = remote.getCurrentWindow()
 
-    /**
-     * on count field change
-     */
-    onCountChange () {
-      clearInterval(this.loop)
-      this.searchProduct()
+      if (!win.isMaximized()) {
+        win.maximize()
+      } else {
+        win.unmaximize()
+      }
     },
-    /**
-     * On copy event.
-     *
-     */
-    onCopy (e) {
-      Toastify({
-        text: `You just copied: ${e.text}`,
-        duration: 3000,
-        newWindow: true,
-        close: false,
-        gravity: 'bottom',
-        position: 'left',
-        backgroundColor: '#399cbd',
-        className: 'toastify'
-      }).showToast()
+    onMinimize () {
+      remote.getCurrentWindow().minimize()
     },
-    /**
-     * Redirect to product link.
-     *
-     */
-    redirect (slug) {
-      const { shell } = require('electron')
-      shell.openExternal(`${Config.services.titan22.url}/${slug}.html`)
-    },
-    /**
-     * Search product API.
-     *
-     */
     async searchProduct () {
-      const interval = this.settings.monitorInterval
-      const vm = this
-      this.loop = setInterval(async () => {
-        await vm.fetchProducts()
-      }, interval)
-    },
-    /**
-     * API call to backend.
-     *
-     */
-    async fetchProducts () {
       this.loading = true
-      let counter = 0
-      let done = false
 
-      try {
-        while (!done) {
-          counter++
+      const response = await this.fetchProduct()
 
-          if (counter > 1) await new Promise(resolve => setTimeout(resolve, 1000))
+      if (response) {
+        this.products = []
 
-          const params = {
-            payload: {
-              searchCriteria: {
-                sortOrders: [
-                  {
-                    field: this.filter,
-                    direction: 'DESC'
-                  }
-                ],
-                pageSize: this.count
-              }
-            },
-            token: Config.services.titan22.token,
-            proxy: this.settings.monitorProxy,
-            configs: this.configs
+        const data = JSON.parse(response)
+
+        const allProducts = data.items.map(element => {
+          return {
+            img: element.images[0].url || placeholder,
+            name: element.name,
+            price: element.price_info.max_price.toLocaleString(),
+            link: element.url,
+            status: parseInt(element.is_salable)
           }
-
-          const response = await productApi.search(params)
-
-          if (response && !response.error) {
-            this.products = []
-
-            JSON.parse(response).items.forEach((element) => {
-              const link = element.custom_attributes.find((val) => val.attribute_code === 'url_key')
-              const image = element.custom_attributes.find((val) => val.attribute_code === 'image')
-              this.products.push({
-                img: (image) ? `${Config.services.titan22.url}/media/catalog/product${image.value}` : placeholder,
-                name: element.name,
-                sku: element.sku,
-                price: element.price.toLocaleString(),
-                link: (link) ? link.value : '',
-                status: element.extension_attributes.out_of_stock,
-                date: this.formatDate(element.updated_at)
-              })
-            })
-
-            done = true
-          } else if (response.error && response.error.statusCode && response.error.statusCode === 503) {
-            Toastify({
-              text: 'Bypassing bot protection...',
-              duration: 3000,
-              newWindow: true,
-              close: false,
-              gravity: 'bottom',
-              position: 'left',
-              backgroundColor: '#399cbd',
-              className: 'toastify'
-            }).showToast()
-
-            const { options } = response.error
-
-            const puppeteer = addExtra(vanillaPuppeteer)
-            const stealth = StealthPlugin()
-            puppeteer.use(stealth)
-
-            const args = ['--no-sandbox', '--disable-setuid-sandbox']
-
-            if (options.proxy) {
-              const oldProxyUrl = options.proxy
-              const newProxyUrl = await ProxyChain.anonymizeProxy(oldProxyUrl)
-
-              args.push(`--proxy-server=${newProxyUrl}`)
-            }
-
-            args.push(`--user-agent=${options.headers['User-Agent']}`)
-
-            const browser = await puppeteer.launch({ args, executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked') })
-
-            const page = await browser.newPage()
-
-            await page.setRequestInterception(true)
-
-            page.on('request', (request) => {
-              if (request.url().endsWith('.png') || request.url().endsWith('.jpg')) {
-              // BLOCK IMAGES
-                request.abort()
-              } else if (blockedResources.some(resource => request.url().indexOf(resource) !== -1)) {
-              // BLOCK CERTAIN DOMAINS
-                request.abort()
-              } else {
-              // ALLOW OTHER REQUESTS
-                request.continue()
-              }
-            })
-
-            await page.goto(`${Config.services.titan22.url}/new-arrivals.html`)
-
-            let content = await page.content()
-
-            if (content.includes('cf-browser-verification')) {
-              let counter = 0
-
-              while (content.includes('cf-browser-verification')) {
-                counter++
-
-                if (counter >= 3) break
-
-                await page.waitForNavigation({
-                  timeout: 45000,
-                  waitUntil: 'domcontentloaded'
-                })
-
-                let cookies = await page._client.send('Network.getAllCookies')
-                cookies = cookies.cookies
-
-                if (!cookies.find((el) => el.name === 'cf_clearance')) {
-                  content = await page.content()
-                  continue
-                }
-
-                for (const cookie of cookies) {
-                  const data = new Cookie({
-                    key: cookie.name,
-                    value: cookie.value,
-                    domain: cookie.domain,
-                    path: cookie.path
-                  })
-
-                  options.jar.setCookie(data.toString(), Config.services.titan22.url)
-                }
-
-                content = await page.content()
-              }
-            }
-
-            await browser.close()
-
-            this.configs[0].options = options
-          } else {
-            this.openDialog({
-              title: 'Error',
-              body: response.error,
-              alert: true
-            })
-          }
-        }
-      } catch (error) {
-        this.openDialog({
-          title: 'Error',
-          body: error,
-          alert: true
         })
+
+        this.products = allProducts
       }
 
       this.loading = false
+
+      const vm = this
+      this.loop = setTimeout(vm.searchProduct, vm.settings.monitorInterval)
+    },
+    async fetchProduct () {
+      try {
+        let tries = 0
+        let data = null
+
+        while (!data) {
+          tries++
+
+          if (tries > 3) break
+
+          if (this.settings.monitorProxy && Object.keys(this.settings.monitorProxy).length) await this.assignProxy()
+
+          const response = await ProductApi.search(this.params)
+
+          if (response.error && (response.error.statusCode === 503 || response.error.statusCode === 403)) {
+            this.showSnackbar({ message: 'Please wait...' })
+
+            const { options } = response.error
+            const { jar } = options
+
+            const cookies = await CF.bypass(options)
+
+            if (cookies.length) {
+              for (const cookie of cookies) {
+                const { name, value, expires, domain, path } = cookie
+
+                const expiresDate = new Date(expires * 1000)
+
+                const val = new Cookie({
+                  key: name,
+                  value,
+                  expires: expiresDate,
+                  domain: domain.startsWith('.') ? domain.substring(1) : domain,
+                  path
+                }).toString()
+
+                jar.setCookie(val, Config.services.titan22.url)
+              }
+
+              this.proxyList.configs = this.proxyList.configs.map((el) => {
+                if (el.proxy === options.proxy) el.options = options
+
+                return el
+              })
+            }
+          } else if (response.error) {
+            data = null
+          } else {
+            data = response
+          }
+        }
+
+        return data
+      } catch (error) {
+        console.log(error)
+        return null
+      }
+    },
+
+    /**
+     * Redirect to product link.
+     */
+    redirect (slug) {
+      const { shell } = require('electron')
+      shell.openExternal(slug)
+    },
+
+    applyFilter () {
+      this.updateMonitor({
+        filter: this.filter,
+        total: this.count
+      })
+
+      this.params.payload.searchCriteria.sortOrders[0].field = this.filter
+      this.params.payload.searchCriteria.pageSize = this.count
+      clearTimeout(this.loop)
+      this.searchProduct()
+    },
+
+    assignProxy () {
+      let index = 0
+
+      if (this.proxyList.configs.length > 1) index = Math.floor(Math.random() * this.proxyList.configs.length)
+
+      const selected = this.proxyList.configs[index]
+
+      this.params.config = selected
     }
   }
 }
@@ -471,5 +546,8 @@ export default {
 <style scoped>
 .cursor {
   cursor: pointer;
+}
+.text {
+  cursor: default;
 }
 </style>

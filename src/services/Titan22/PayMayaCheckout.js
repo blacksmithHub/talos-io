@@ -1,24 +1,34 @@
-import MainWindow from '@/windows/Main'
+import { ipcRenderer } from 'electron'
+import store from '@/store/index'
+
+const Tasks = store._modules.root._children.task.context
 
 export default {
   /**
    * Initiate automation
    *
-   * @param {*} arg
+   * @param {*} id
    */
-  async automate (arg) {
-    const task = arg.task
+  async automate (id) {
+    const task = Tasks.state.items.find((data) => data.id === id)
 
     try {
       const puppeteer = require('puppeteer')
       const UserAgent = require('user-agents')
       const userAgent = new UserAgent({ deviceCategory: 'desktop' })
 
-      const settings = arg.settings
-
       const browser = await puppeteer.launch({
         headless: false,
-        args: ['--window-size=800,600'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu',
+          '--window-size=560,638'
+        ],
         defaultViewport: null,
         executablePath: puppeteer.executablePath().replace('app.asar', 'app.asar.unpacked')
       })
@@ -30,31 +40,34 @@ export default {
       await page.goto(task.transactionData.checkoutLink)
 
       try {
-        if (task.bank && Object.keys(task.bank).length && task.bank.bank.toLowerCase() === 'paymaya') {
-          if (settings.autoFill || settings.autoPay) {
+        if (task.billing && task.billing.id && task.billing.bank.toLowerCase() === 'paymaya') {
+          if (task.autoFill || task.autoPay) {
             await page.waitForSelector('#cardNumber')
-            await page.type('#cardNumber', task.bank.cardNumber)
+            await page.type('#cardNumber', task.billing.cardNumber)
 
             await page.waitForSelector('#expiryDate')
-            await page.type('#expiryDate', task.bank.expiryMonth)
-            await page.type('#expiryDate', task.bank.expiryYear.substring(task.bank.expiryYear.length - 2))
+            await page.type('#expiryDate', task.billing.expiryMonth)
+            await page.type('#expiryDate', task.billing.expiryYear.substring(task.billing.expiryYear.length - 2))
 
             await page.waitForSelector('#cvv')
-            await page.type('#cvv', task.bank.cvv)
+            await page.type('#cvv', task.billing.cvv)
           }
 
-          if (settings.autoPay) {
+          if (task.autoPay) {
             await page.waitForSelector('#pay')
             await page.click('#pay')
           }
         }
       } catch (error) {
-      //
+        console.log(error)
       }
 
-      page.on('close', () => { if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateTask', task) })
+      page.on('close', () => {
+        ipcRenderer.send('update-task', id)
+      })
     } catch (error) {
-      if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateTask', task)
+      console.log(error)
+      ipcRenderer.send('update-task', id)
     }
   }
 }

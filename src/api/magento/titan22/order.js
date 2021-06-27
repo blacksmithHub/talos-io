@@ -67,5 +67,20 @@ export default {
     } catch (error) {
       return { error: error }
     }
+  },
+
+  /**
+   * Get order details
+   *
+   */
+  get (params) {
+    params.url = `${Config.services.titan22.url}/rest/V2/orders/${params.payload.order_id}?fields=increment_id`
+    params.method = 'GET'
+
+    return this.http(params)
+      .then((res) => res)
+      .catch((err) => {
+        return { error: err }
+      })
   }
 }

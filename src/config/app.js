@@ -3,17 +3,9 @@ export default {
    * Services Configuration
    */
   services: {
-    local: process.env.VUE_APP_LOCAL,
-    /**
-     * ===========================================
-     * API Service Configuration
-     * ===========================================
-     *
-     */
-    auth: {
-      domain: process.env.VUE_APP_API_AUTH_DOMAIN,
-      url: process.env.VUE_APP_API_AUTH_URL
-    },
+    port: process.env.VUE_APP_PORT,
+    redirect: process.env.VUE_APP_REDIRECT,
+
     /**
      * ===========================================
      * Discord Service Configuration
@@ -21,9 +13,7 @@ export default {
      *
      */
     discord: {
-      auth: process.env.VUE_APP_DISCORD_AUTH,
-      clientId: process.env.VUE_APP_DISCORD_CLIENT_ID,
-      clientSecret: process.env.VUE_APP_DISCORD_CLIENT_SECRET
+      clientId: process.env.VUE_APP_DISCORD_CLIENT_ID
     },
     /**
      * ===========================================
@@ -34,7 +24,8 @@ export default {
     titan22: {
       url: process.env.VUE_APP_TITAN_URL,
       token: process.env.VUE_APP_TITAN_ADMIN_TOKEN,
-      checkout: process.env.VUE_APP_2C2P_URL
+      checkout: process.env.VUE_APP_2C2P_URL,
+      track: process.env.VUE_APP_TRACKING_URL
     },
     /**
      * ===========================================

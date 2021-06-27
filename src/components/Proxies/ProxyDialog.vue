@@ -1,129 +1,136 @@
 <template>
-  <div>
-    <v-dialog
-      v-model="dialog"
-      persistent
-      max-width="600px"
-    >
-      <v-form @submit.prevent="submit">
-        <v-card>
-          <v-card-title style="border-bottom:1px solid #d85820">
-            <span
-              class="headline primary--text"
-              v-text="`${header} Proxy Pool`"
+  <v-dialog
+    v-model="dialog"
+    persistent
+    max-width="600px"
+  >
+    <v-form @submit.prevent="submit">
+      <v-card>
+        <v-card-title style="border-bottom:1px solid #d85820">
+          <span
+            class="headline primary--text"
+            v-text="`${header} Proxy List`"
+          />
+
+          <v-spacer />
+
+          <v-btn
+            icon
+            class="primary--text"
+            @click="onCancel"
+          >
+            <v-icon v-text="'mdi-close'" />
+          </v-btn>
+        </v-card-title>
+
+        <v-divider />
+
+        <v-card-text>
+          <v-container>
+            <v-text-field
+              v-model="name"
+              label="Name (optional)"
+              required
+              outlined
+              dense
+              autocomplete="off"
             />
 
-            <v-spacer />
+            <v-textarea
+              v-model="proxies"
+              label="Proxies"
+              required
+              outlined
+              dense
+              hint="Insert proxy per line"
+              autocomplete="off"
+              auto-grow
+              :error-messages="proxiesErrors"
+              placeholder="ip:port:username:password OR ip:port"
+              hide-details="auto"
+              @blur="$v.proxies.$touch()"
+              @change="onChange"
+            />
 
-            <v-btn
-              icon
-              class="primary--text"
-              @click="onCancel"
+            <v-list
+              dense
+              class="cursor"
             >
-              <v-icon v-text="'mdi-close'" />
-            </v-btn>
-          </v-card-title>
+              <v-list-item class="pa-0">
+                <v-list-item-content class="pa-2">
+                  <v-list-item-title v-text="'Distribute to Tasks'" />
+                  <v-list-item-subtitle v-text="'Proxies will be distributed to assigned tasks equally'" />
+                </v-list-item-content>
 
-          <v-divider />
+                <v-list-item-action>
+                  <v-switch
+                    v-model="distribute"
+                    inset
+                  />
+                </v-list-item-action>
+              </v-list-item>
+            </v-list>
+          </v-container>
+        </v-card-text>
 
-          <v-card-text>
-            <v-container>
-              <v-text-field
-                v-model="name"
-                label="Pool name (optional)"
-                required
-                outlined
-                dense
-                autocomplete="off"
-              />
+        <v-divider />
 
-              <v-textarea
-                v-model="proxies"
-                label="Proxies"
-                required
-                outlined
-                dense
-                hint="Insert proxy per line"
-                autocomplete="off"
-                auto-grow
-                :error-messages="proxiesErrors"
-                placeholder="ip:port:username:password"
-                @blur="$v.proxies.$touch()"
-                @change="onChange"
-              />
-            </v-container>
-          </v-card-text>
-
-          <v-divider />
-
-          <v-card-actions>
-            <v-container class="text-right">
-              <v-btn
-                rounded
-                class="primary mr-2"
-                depressed
-                small
-                @click="onCancel"
-                v-text="'close'"
-              />
-              <v-btn
-                class="primary"
-                rounded
-                type="submit"
-                small
-                depressed
-                v-text="'Save'"
-              />
-            </v-container>
-          </v-card-actions>
-        </v-card>
-      </v-form>
-    </v-dialog>
-
-    <v-snackbar v-model="snackbar">
-      Proxy successfully {{ snackbarContent }}
-
-      <template v-slot:action="{ attrs }">
-        <v-btn
-          icon
-          v-bind="attrs"
-          @click="snackbar = false"
-        >
-          <v-icon v-text="'mdi-close'" />
-        </v-btn>
-      </template>
-    </v-snackbar>
-  </div>
+        <v-card-actions>
+          <v-container class="text-right">
+            <v-btn
+              rounded
+              class="mr-3"
+              depressed
+              small
+              outlined
+              color="primary"
+              @click="onCancel"
+              v-text="'close'"
+            />
+            <v-btn
+              color="primary"
+              rounded
+              type="submit"
+              small
+              depressed
+              outlined
+              v-text="'Save'"
+            />
+          </v-container>
+        </v-card-actions>
+      </v-card>
+    </v-form>
+  </v-dialog>
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 import { required } from 'vuelidate/lib/validators'
+
+import Constant from '@/config/constant'
 
 export default {
   data () {
     return {
-      snackbarContent: 'created',
-      snackbar: false,
       dialog: false,
-      isEditMode: false,
-      name: '',
-      proxies: '',
-      pool: [],
-      selectedProxy: {}
+      name: null,
+      proxies: null,
+      list: [],
+      id: null,
+      distribute: false
     }
   },
   computed: {
+    ...mapState('proxy', ['items']),
+
     /**
      * Set modal header.
-     *
      */
     header () {
-      return this.isEditMode ? 'Edit' : 'New'
+      return this.id ? 'Edit' : 'New'
     },
     /**
      * Error messages for proxies.
-     *
      */
     proxiesErrors () {
       const errors = []
@@ -136,21 +143,35 @@ export default {
     }
   },
   watch: {
-    pool () {
-      if (this.pool.length) this.setProxies()
+    list () {
+      if (this.list.length) this.setProxies()
     }
   },
   methods: {
     ...mapActions('proxy', { addProxy: 'addItem', updateProxy: 'updateItem' }),
-    ...mapActions('dialog', ['openDialog']),
+    ...mapActions('snackbar', ['showSnackbar']),
 
+    /**
+     * on edit event
+     */
+    onEdit (id) {
+      const item = this.items.find((el) => el.id === id)
+
+      this.dialog = true
+      this.name = item.name
+      this.list = item.proxies
+      this.id = id
+      this.distribute = item.distribute
+
+      this.setProxies()
+    },
     /**
      * set all proxies
      */
     setProxies () {
       this.proxies = []
 
-      const pool = this.pool.slice().map((val) => {
+      const list = this.list.slice().map((val) => {
         let ip = `${val.host}:${val.port}`
 
         if (val.username && val.password) {
@@ -160,124 +181,106 @@ export default {
         return ip
       })
 
-      this.proxies = pool.join('\n')
-    },
-    /**
-     * Map selected proxy.
-     *
-     */
-    mapData (proxy) {
-      if (Object.keys(proxy).length) {
-        this.selectedProxy = proxy
-
-        this.name = proxy.name
-        this.pool = proxy.proxies
-
-        this.setProxies()
-
-        this.isEditMode = true
-        this.dialog = true
-      }
+      this.proxies = list.join('\n')
     },
     /**
      * On cancel event.
-     *
      */
     onCancel () {
       this.$v.$reset()
 
-      this.name = ''
-      this.proxies = ''
-      this.pool = []
-      this.selectedProxy = {}
-
-      this.isEditMode = false
       this.dialog = false
+      this.name = null
+      this.proxies = null
+      this.pool = []
+      this.id = null
+      this.distribute = false
     },
     /**
      * On submit event.
-     *
      */
     submit () {
-      try {
-        this.$v.$touch()
+      this.$v.$touch()
 
-        if (!this.$v.$invalid) {
-          const params = {
-            name: this.name.trim(),
-            proxies: this.pool
-          }
-
-          if (this.isEditMode) {
-            this.updateProxy({
-              ...params,
-              name: this.name.trim() || this.selectedProxy.name,
-              id: this.selectedProxy.id
-            })
-
-            this.snackbarContent = 'updated'
-            this.snackbar = true
-            this.onCancel()
-          } else {
-            this.addProxy({ ...params })
-            this.snackbarContent = 'created'
-            this.snackbar = true
-          }
+      if (!this.$v.$invalid) {
+        const params = {
+          name: this.name,
+          proxies: this.list,
+          distribute: this.distribute
         }
-      } catch (error) {
-        this.openDialog({
-          title: 'Error',
-          body: error,
-          alert: true
-        })
+
+        if (this.id) {
+          const data = {
+            ...params,
+            id: this.id,
+            configs: [],
+            status: Constant.STATUS.STOPPED,
+            loading: false,
+            name: (params.name) ? params.name.trim() : `Proxy List ${this.id}`
+          }
+
+          data.proxies.forEach(el => {
+            const rp = require('request-promise')
+            const jar = rp.jar()
+
+            data.configs.push({
+              rp: rp,
+              jar: jar,
+              proxy: el.proxy
+            })
+          })
+
+          this.updateProxy(data)
+
+          this.showSnackbar({ message: 'Updated successfully', color: 'teal' })
+        } else {
+          this.addProxy(params)
+          this.showSnackbar({ message: 'Created successfully', color: 'teal' })
+        }
+
+        this.onCancel()
       }
     },
     /**
      * on change event
      */
     onChange () {
-      try {
-        let proxies = this.proxies.split('\n')
-        this.pool = []
+      let proxies = this.proxies.split('\n')
+      this.list = []
 
-        proxies = proxies.map(element => {
-          const proxy = element.split(':')
+      proxies = proxies.map(element => {
+        const proxy = element.split(':')
 
-          switch (proxy.length) {
-            case 4:
-              this.pool.push({
-                host: proxy[0],
-                port: proxy[1],
-                username: proxy[2],
-                password: proxy[3]
-              })
-              break
+        switch (proxy.length) {
+          case 4:
+            this.list.push({
+              host: proxy[0].trim(),
+              port: proxy[1].trim(),
+              username: proxy[2].trim(),
+              password: proxy[3].trim(),
+              proxy: `http://${proxy[2].trim()}:${proxy[3].trim()}@${proxy[0].trim()}:${proxy[1].trim()}`
+            })
+            break
 
-            case 2:
-              this.pool.push({
-                host: proxy[0],
-                port: proxy[1]
-              })
-              break
+          case 2:
+            this.list.push({
+              host: proxy[0].trim(),
+              port: proxy[1].trim(),
+              proxy: `http://${proxy[0].trim()}:${proxy[1].trim()}`
+            })
+            break
 
-            default:
-              element = ''
-              break
-          }
-
-          return element
-        })
-
-        if (proxies.length) {
-          proxies = proxies.filter((val) => val)
-          this.proxies = proxies.join('\n')
+          default:
+            element = ''
+            break
         }
-      } catch (error) {
-        this.openDialog({
-          title: 'Error',
-          body: error,
-          alert: true
-        })
+
+        return element
+      })
+
+      if (proxies.length) {
+        proxies = proxies.filter((val) => val)
+        this.proxies = proxies.join('\n')
       }
     }
   },
@@ -286,3 +289,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.cursor {
+  cursor: default
+}
+</style>

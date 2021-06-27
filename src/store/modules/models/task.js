@@ -1,4 +1,8 @@
-import Request from '@/services/request'
+import fs from 'fs'
+import base64 from 'base-64'
+import utf8 from 'utf8'
+
+import Constant from '@/config/constant'
 
 export default {
   namespaced: true,
@@ -12,15 +16,6 @@ export default {
 
   mutations: {
     /**
-     * Reset all items.
-     *
-     * @param {*} state
-     */
-    RESET (state) {
-      state.items = []
-    },
-
-    /**
      * Store all items.
      *
      * @param {*} state
@@ -28,31 +23,10 @@ export default {
      */
     SET_ITEMS (state, items) {
       state.items = items
-    },
-
-    /**
-     * Delete an item.
-     *
-     * @param {*} state
-     * @param {*} key
-     */
-    DELETE_ITEM (state, id) {
-      const index = state.items.indexOf(state.items.find((el) => el.id === id))
-      state.items.splice(index, 1)
     }
   },
 
   actions: {
-    /**
-     * Trigger reset.
-     *
-     * @param {*} param
-     */
-    reset ({ commit }) {
-      commit('RESET')
-      if (localStorage.getItem('tasks')) localStorage.removeItem('tasks')
-    },
-
     /**
      * Trigger store items.
      *
@@ -70,43 +44,45 @@ export default {
      * @param {*} param
      * @param {*} item
      */
-    addItem ({ state, commit }, item) {
+    async addItem ({ state, commit }, item) {
       const tasks = state.items.slice()
 
-      let lastItemId = tasks[tasks.length - 1]
-
-      if (lastItemId) {
-        lastItemId = lastItemId.id + 1
-      } else {
-        lastItemId = 1
-      }
-
-      const task = {
-        id: lastItemId,
+      const data = {
         ...item,
+        id: (tasks.length) ? tasks.length + 1 : 1,
+        transactionData: {},
+        loading: false,
         status: {
-          id: 1,
+          id: Constant.STATUS.STOPPED,
           msg: 'idle',
           class: 'grey'
-        },
-        transactionData: {},
-        configs: []
+        }
       }
 
-      if (task.proxy && task.proxy.proxies.length) {
-        task.proxy.proxies.forEach((element) => {
-          const data = Request.setRequest(task.mode, element)
-          task.configs.push(data)
-        })
-      } else {
-        const data = Request.setRequest(task.mode)
-        task.configs.push(data)
+      data.proxy.configs = data.proxy.configs.map(el => {
+        return {
+          ...el,
+          retry: 1
+        }
+      })
+
+      try {
+        fs.unlinkSync(`Task-${data.id}.json`)
+      } catch (error) {
+        console.log(error)
       }
 
-      tasks.push(task)
+      const text = JSON.stringify([])
+      const bytes = utf8.encode(text)
+      const encoded = base64.encode(bytes)
+      fs.writeFileSync(`Task-${data.id}.json`, encoded)
+
+      tasks.push(data)
 
       commit('SET_ITEMS', tasks)
       localStorage.setItem('tasks', JSON.stringify(tasks))
+
+      return data
     },
 
     /**
@@ -115,18 +91,26 @@ export default {
      * @param {*} param
      */
     updateItem ({ state, commit }, params) {
-      const tasks = state.items.slice()
+      let tasks = state.items.slice()
+      let updatedTask = {}
 
-      const task = tasks.find((val) => val.id === params.id)
+      tasks = tasks.map((val) => {
+        if (val.id === params.id) {
+          val = {
+            ...val,
+            ...params
+          }
 
-      if (task) {
-        const index = tasks.indexOf(task)
+          updatedTask = val
+        }
 
-        tasks[index] = params
-      }
+        return val
+      })
 
       commit('SET_ITEMS', tasks)
       localStorage.setItem('tasks', JSON.stringify(tasks))
+
+      return updatedTask
     },
 
     /**
@@ -135,42 +119,69 @@ export default {
      * @param {*} param
      * @param {*} key
      */
-    deleteItem ({ state, commit }, key) {
-      commit('DELETE_ITEM', key)
-      localStorage.setItem('tasks', JSON.stringify(state.items))
+    deleteItem ({ state, commit }, item) {
+      const tasks = state.items.slice()
+      const key = tasks.findIndex((el) => el.id === item.id)
+
+      tasks.splice(key, 1)
+
+      try {
+        fs.unlinkSync(`Task-${item.id}.json`)
+      } catch (error) {
+        console.log(error)
+      }
+
+      commit('SET_ITEMS', tasks)
+      localStorage.setItem('tasks', JSON.stringify(tasks))
     },
 
     /**
-     * Initialize items.
-     *
-     * @param {*} param
+     * Initialize items
      */
-    initializeItems ({ state, commit }) {
+    init ({ state, commit }) {
       let tasks = state.items.slice()
 
-      tasks = tasks.map((element) => {
-        element.status = {
-          id: 1,
+      tasks = tasks.map((val) => {
+        try {
+          fs.readFileSync(`Task-${val.id}.json`)
+        } catch (error) {
+          const text = JSON.stringify([])
+          const bytes = utf8.encode(text)
+          const encoded = base64.encode(bytes)
+          fs.writeFileSync(`Task-${val.id}.json`, encoded)
+        }
+
+        val.loading = false
+        val.transactionData = {}
+        val.paid = false
+        val.status = {
+          id: Constant.STATUS.STOPPED,
           msg: 'idle',
           class: 'grey'
         }
 
-        element.transactionData = {}
-        element.paid = false
-        element.logs = ''
-        element.configs = []
+        const UserAgent = require('user-agents')
+        const opt = { deviceCategory: 'desktop' }
 
-        if (element.proxy && element.proxy.proxies.length) {
-          element.proxy.proxies.forEach(el => {
-            const data = Request.setRequest(element.mode, el)
-            element.configs.push(data)
-          })
-        } else {
-          const data = Request.setRequest(element.mode)
-          element.configs.push(data)
-        }
+        if (val.mode !== 1) opt.deviceCategory = 'mobile'
 
-        return element
+        let userAgent = new UserAgent(opt)
+        userAgent = userAgent.toString()
+
+        val.proxy.configs = val.proxy.configs.map(el => {
+          const rp = require('request-promise')
+          const jar = rp.jar()
+
+          return {
+            rp: rp,
+            jar: jar,
+            userAgent: userAgent,
+            proxy: el.proxy,
+            retry: 1
+          }
+        })
+
+        return val
       })
 
       commit('SET_ITEMS', tasks)
