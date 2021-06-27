@@ -8,16 +8,14 @@ const { http } = api
  * ===================
  * Product API
  * ===================
- *
  */
 export default {
-  baseUrl: `${Config.services.titan22.url}/rest/V2`,
-  url: 'products',
+  baseUrl: `${Config.services.titan22.url}/rest/V1`,
+  url: 'products-render-info',
   http,
 
   /**
    * Search product
-   *
    */
   search (params) {
     try {

@@ -1,20 +1,13 @@
 'use strict'
 
-import { app, protocol, ipcMain, globalShortcut, BrowserWindow } from 'electron'
-import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
+import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
-import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
+import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
-import LoginWindow from '@/windows/Login'
 import MainWindow from '@/windows/Main'
 import MonitorWindow from '@/windows/Monitor'
-import ProfileWindow from '@/windows/Profile'
-import ProxyWindow from '@/windows/Proxy'
-import SettingWindow from '@/windows/Setting'
-
-import PayMayaCheckout from '@/services/Titan22/PayMayaCheckout'
-import CreditCardCheckout from '@/services/Titan22/CreditCardCheckout'
-import PayPalAuthorization from '@/services/Titan22/PayPalAuthorization'
+import LoginWindow from '@/windows/Login'
+import CheckUpdateWindow from '@/windows/CheckUpdate'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -23,160 +16,8 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
-let win
-
-// Send a message to the rendering thread
-function sendStatusToWindow (status, params) {
-  win.webContents.send(status, params)
-}
-
-autoUpdater.on('update-available', () => {
-  // version can be updated
-  sendStatusToWindow('versionUpdate', 'preparing to download')
-})
-
-autoUpdater.on('update-not-available', () => {
-  // no update available
-  sendStatusToWindow('versionUpdate', 'up to date')
-
-  if (!MainWindow.getWindow()) {
-    MainWindow.createWindow()
-    if (win) {
-      win.destroy()
-      win = null
-    }
-  }
-})
-
-autoUpdater.on('error', () => {
-  // Update Error
-  sendStatusToWindow('versionUpdate', 'oops! something went wrong')
-
-  setTimeout(() => {
-    if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
-
-    if (SettingWindow.getWindow()) SettingWindow.getWindow().destroy()
-
-    if (ProxyWindow.getWindow()) ProxyWindow.getWindow().destroy()
-
-    if (ProfileWindow.getWindow()) ProfileWindow.getWindow().destroy()
-
-    if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
-
-    if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
-
-    LoginWindow.closeWindow()
-    SettingWindow.closeWindow()
-    ProxyWindow.closeWindow()
-    ProfileWindow.closeWindow()
-    MonitorWindow.closeWindow()
-    MainWindow.closeWindow()
-
-    if (win) win.destroy()
-
-    win = null
-
-    app.exit()
-  }, 5000)
-})
-
-autoUpdater.on('download-progress', (progressObj) => {
-  // download progress being downloaded
-  sendStatusToWindow('versionUpdate', `downloading... ${progressObj.percent.toFixed()}%`)
-})
-
-autoUpdater.on('update-downloaded', () => {
-  // Download completed
-  sendStatusToWindow('versionUpdate', 're-launch the app')
-
-  setTimeout(() => {
-    if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
-
-    if (SettingWindow.getWindow()) SettingWindow.getWindow().destroy()
-
-    if (ProxyWindow.getWindow()) ProxyWindow.getWindow().destroy()
-
-    if (ProfileWindow.getWindow()) ProfileWindow.getWindow().destroy()
-
-    if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
-
-    if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
-
-    LoginWindow.closeWindow()
-    SettingWindow.closeWindow()
-    ProxyWindow.closeWindow()
-    ProfileWindow.closeWindow()
-    MonitorWindow.closeWindow()
-    MainWindow.closeWindow()
-
-    if (win) win.destroy()
-
-    win = null
-
-    app.exit()
-  }, 3000)
-})
-
-/**
- * Create main window
- */
-function initializeWindows () {
-  win = new BrowserWindow({
-    width: 250,
-    height: 250,
-    minWidth: 250,
-    minHeight: 250,
-    resizable: false,
-    minimizable: false,
-    maximizable: false,
-    closable: false,
-    fullscreenable: false,
-    center: true,
-    frame: false,
-    show: false,
-    webPreferences: {
-      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
-      enableRemoteModule: true,
-      webSecurity: false
-    }
-  })
-
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/check-update`)
-  } else {
-    createProtocol('app')
-    win.loadURL('app://./index.html/#/check-update')
-  }
-
-  win.once('ready-to-show', () => {
-    win.show()
-
-    setTimeout(() => {
-      if (!isDevelopment) {
-        autoUpdater.checkForUpdatesAndNotify()
-      } else if (!MainWindow.getWindow()) {
-        MainWindow.createWindow()
-        if (win) {
-          win.destroy()
-          win = null
-        }
-      }
-    }, 5000)
-  })
-
-  win.on('closed', () => {
-    win = null
-  })
-
-  if (!isDevelopment) {
-    win.on('focus', () => {
-      globalShortcut.register('CommandOrControl+R', () => {})
-    })
-
-    win.on('blur', () => {
-      globalShortcut.unregister('CommandOrControl+R')
-    })
-  }
+async function initializeWindows () {
+  CheckUpdateWindow.createWindow()
 }
 
 // Quit when all windows are closed.
@@ -191,9 +32,7 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (MainWindow.getWindow() === null) {
-    initializeWindows()
-  }
+  if (BrowserWindow.getAllWindows().length === 0) initializeWindows()
 })
 
 // This method will be called when Electron has finished
@@ -209,7 +48,28 @@ app.on('ready', async () => {
     }
   }
 
-  initializeWindows()
+  const gotTheLock = app.requestSingleInstanceLock()
+
+  if (!gotTheLock) {
+    app.quit()
+  } else {
+    require('../server/app.js')
+    initializeWindows()
+  }
+})
+
+app.on('second-instance', () => {
+  // Someone tried to run a second instance, we should focus our window.
+  if (LoginWindow.getWindow()) {
+    if (LoginWindow.getWindow().isMinimized()) LoginWindow.getWindow().restore()
+    LoginWindow.getWindow().focus()
+  } else if (CheckUpdateWindow.getWindow()) {
+    if (CheckUpdateWindow.getWindow().isMinimized()) CheckUpdateWindow.getWindow().restore()
+    CheckUpdateWindow.getWindow().focus()
+  } else if (MainWindow.getWindow()) {
+    if (MainWindow.getWindow().isMinimized()) MainWindow.getWindow().restore()
+    MainWindow.getWindow().focus()
+  }
 })
 
 // Exit cleanly on request from parent process in development mode.
@@ -228,193 +88,111 @@ if (isDevelopment) {
 }
 
 /**
- * open monitor window
+ * --------------------------------------------------------
+ * Auto Updater Events
+ * --------------------------------------------------------
  */
+
+autoUpdater.on('update-available', () => {
+  // version can be updated
+  if (CheckUpdateWindow.getWindow()) {
+    CheckUpdateWindow.sendStatusToWindow('versionUpdate', 'preparing to download')
+  } else if (MainWindow.getWindow()) {
+    MainWindow.getWindow().webContents.send('newUpdate')
+  }
+})
+
+autoUpdater.on('update-not-available', () => {
+  // no update available
+  if (CheckUpdateWindow.getWindow()) {
+    CheckUpdateWindow.sendStatusToWindow('versionUpdate', 'up to date')
+
+    setTimeout(() => {
+      MainWindow.createWindow()
+      CheckUpdateWindow.getWindow().destroy()
+    }, 3000)
+  } else if (MainWindow.getWindow()) {
+    MainWindow.getWindow().webContents.send('noUpdate')
+  }
+})
+
+autoUpdater.on('error', () => {
+  // Update Error
+  if (CheckUpdateWindow.getWindow()) {
+    CheckUpdateWindow.sendStatusToWindow('versionUpdate', 'oops! something went wrong')
+
+    setTimeout(() => {
+      CheckUpdateWindow.getWindow().destroy()
+      app.exit()
+    }, 5000)
+  } else if (MainWindow.getWindow()) {
+    MainWindow.getWindow().webContents.send('errorUpdate')
+  }
+})
+
+autoUpdater.on('download-progress', (progressObj) => {
+  // download progress being downloaded
+  if (CheckUpdateWindow.getWindow()) {
+    CheckUpdateWindow.sendStatusToWindow('versionUpdate', `downloading... ${progressObj.percent.toFixed()}%`)
+  } else if (MainWindow.getWindow()) {
+    MainWindow.getWindow().webContents.send('progressUpdate', progressObj.percent.toFixed())
+  }
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+  // Download completed
+  if (CheckUpdateWindow.getWindow()) {
+    this.sendStatusToWindow('versionUpdate', 'relaunching')
+
+    setTimeout(() => {
+      autoUpdater.quitAndInstall()
+    }, 3000)
+  } else if (MainWindow.getWindow()) {
+    MainWindow.getWindow().webContents.send('doneUpdate', info.version)
+  }
+})
+
+/**
+ * --------------------------------------------------------
+ * Electron Main Remove Events
+ * --------------------------------------------------------
+ */
+
 ipcMain.on('launch-monitor', (event, arg) => {
   if (!MonitorWindow.getWindow()) MonitorWindow.createWindow()
 })
 
-/**
- * open profile window
- */
-ipcMain.on('launch-profile', (event, arg) => {
-  if (!ProfileWindow.getWindow()) ProfileWindow.createWindow()
-})
-
-/**
- * open proxy window
- */
-ipcMain.on('launch-proxies', (event, arg) => {
-  if (!ProxyWindow.getWindow()) ProxyWindow.createWindow()
-})
-
-/**
- * open settings window
- */
-ipcMain.on('launch-setting', (event, arg) => {
-  if (!SettingWindow.getWindow()) SettingWindow.createWindow()
-})
-
-/**
- * settings update event
- */
 ipcMain.on('update-settings', (event, arg) => {
-  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateSettings', arg)
-
   if (MonitorWindow.getWindow()) MonitorWindow.getWindow().webContents.send('updateSettings', arg)
-
-  if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.send('updateSettings', arg)
-
-  if (ProxyWindow.getWindow()) ProxyWindow.getWindow().webContents.send('updateSettings', arg)
 })
 
-/**
- * task list update event
- */
-ipcMain.on('update-tasks', (event, arg) => {
-  if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateTasks', arg)
+ipcMain.on('update-task', (event, arg) => {
+  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateTask', arg)
 })
 
-/**
- * profile list update event
- */
-ipcMain.on('update-profiles', (event, arg) => {
-  if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateProfiles', arg)
-
-  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateProfiles', arg)
-})
-
-/**
- * bank list update event
- */
-ipcMain.on('update-banks', (event, arg) => {
-  if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateBanks', arg)
-
-  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateBanks', arg)
-})
-
-/**
- * proxy pool update event
- */
-ipcMain.on('update-proxies', (event, arg) => {
-  if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.send('updateProxies', arg)
-
-  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.send('updateProxies', arg)
-})
-
-/**
- * clear all local storage
- */
-ipcMain.on('clear-localStorage', (event, arg) => {
-  if (MainWindow.getWindow()) {
-    MainWindow.getWindow().webContents.session.clearCache()
-    MainWindow.getWindow().webContents.session.clearStorageData()
-    MainWindow.getWindow().reload()
-  }
-
-  if (MonitorWindow.getWindow()) {
-    MonitorWindow.getWindow().webContents.session.clearCache()
-    MonitorWindow.getWindow().webContents.session.clearStorageData()
-    MonitorWindow.getWindow().reload()
-  }
-
-  if (SettingWindow.getWindow()) {
-    SettingWindow.getWindow().webContents.session.clearCache()
-    SettingWindow.getWindow().webContents.session.clearStorageData()
-    SettingWindow.getWindow().reload()
-  }
-
-  if (ProfileWindow.getWindow()) {
-    ProfileWindow.getWindow().webContents.session.clearCache()
-    ProfileWindow.getWindow().webContents.session.clearStorageData()
-    ProfileWindow.getWindow().reload()
-  }
-
-  if (ProxyWindow.getWindow()) {
-    ProxyWindow.getWindow().webContents.session.clearCache()
-    ProxyWindow.getWindow().webContents.session.clearStorageData()
-    ProxyWindow.getWindow().reload()
-  }
-})
-
-/**
- * Clear cache
- */
-ipcMain.on('clear-cache', (event, arg) => {
-  if (MainWindow.getWindow()) MainWindow.getWindow().webContents.session.clearCache()
-
-  if (MonitorWindow.getWindow()) MonitorWindow.getWindow().webContents.session.clearCache()
-
-  if (SettingWindow.getWindow()) SettingWindow.getWindow().webContents.session.clearCache()
-
-  if (ProfileWindow.getWindow()) ProfileWindow.getWindow().webContents.session.clearCache()
-
-  if (ProxyWindow.getWindow()) ProxyWindow.getWindow().webContents.session.clearCache()
-})
-
-/**
- * user authentication
- */
 ipcMain.on('logout', async (event, arg) => {
   if (!LoginWindow.getWindow()) LoginWindow.createWindow()
 
-  if (MonitorWindow.getWindow()) {
-    MonitorWindow.getWindow().destroy()
-    MonitorWindow.closeWindow()
-  }
+  if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
 
-  if (ProfileWindow.getWindow()) {
-    ProfileWindow.getWindow().destroy()
-    ProfileWindow.closeWindow()
-  }
-
-  if (ProxyWindow.getWindow()) {
-    ProfileWindow.getWindow().destroy()
-    ProxyWindow.closeWindow()
-  }
-
-  if (SettingWindow.getWindow()) {
-    SettingWindow.getWindow().destroy()
-    SettingWindow.closeWindow()
-  }
-
-  if (MainWindow.getWindow()) {
-    MainWindow.getWindow().destroy()
-    MainWindow.closeWindow()
-  }
-
-  if (win) win.destroy()
+  if (MainWindow.getWindow()) MainWindow.getWindow().destroy()
 })
 
-/**
- * key binding
- */
 ipcMain.on('login', (event, arg) => {
   initializeWindows()
 
-  if (LoginWindow.getWindow()) {
-    LoginWindow.getWindow().destroy()
-    LoginWindow.closeWindow()
-  }
+  if (LoginWindow.getWindow()) LoginWindow.getWindow().destroy()
 })
 
-/**
- * PayPal authorization
- */
-ipcMain.on('paypal-login', (event, arg) => {
-  PayPalAuthorization.automate(JSON.parse(arg))
+ipcMain.on('relaunch', (event, arg) => {
+  app.relaunch()
+  app.exit()
 })
 
-/**
- * PayMaya checkout method
- */
-ipcMain.on('pay-with-paymaya', (event, arg) => {
-  PayMayaCheckout.automate(JSON.parse(arg))
+ipcMain.on('check-update', (event, arg) => {
+  autoUpdater.checkForUpdatesAndNotify()
 })
 
-/**
- * 2c2p checkout method
- */
-ipcMain.on('pay-with-2c2p', (event, arg) => {
-  CreditCardCheckout.automate(JSON.parse(arg))
+ipcMain.on('quit-install', (event, arg) => {
+  autoUpdater.quitAndInstall()
 })

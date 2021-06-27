@@ -9,20 +9,13 @@ const { http } = api
  * =======================================
  */
 export default {
-  baseUrl: `${Config.services.auth.url}/api`,
+  baseUrl: `http://localhost:${Config.services.port}/api`,
   http,
 
   /**
-   * Bind key
+   * Fetch user profile
    */
-  login (params) {
-    return this.http(this.baseUrl).post('/login', params)
-  },
-
-  /**
-   * Verify key
-   */
-  verify (params) {
-    return this.http(this.baseUrl).post('/verify', params)
+  get () {
+    return this.http(this.baseUrl).get('/auth')
   }
 }

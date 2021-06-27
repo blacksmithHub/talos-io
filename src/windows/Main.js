@@ -1,35 +1,31 @@
 'use strict'
 
-import { BrowserWindow, globalShortcut } from 'electron'
+import { app, BrowserWindow, globalShortcut } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
 import MonitorWindow from '@/windows/Monitor'
-import ProfileWindow from '@/windows/Profile'
-import ProxyWindow from '@/windows/Proxy'
-import SettingWindow from '@/windows/Setting'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
 let win
 
 export default {
   getWindow () {
     return win
   },
-  closeWindow () {
-    win = null
-  },
-  createWindow () {
+  async createWindow () {
+    // Create the browser window.
     win = new BrowserWindow({
-      width: 1100,
-      height: 900,
-      minWidth: 1100,
-      minHeight: 900,
-      frame: false,
+      width: 1122,
+      height: 600,
+      minHeight: 600,
+      minWidth: 1122,
+      center: true,
       show: false,
+      frame: false,
       webPreferences: {
+        // Use pluginOptions.nodeIntegration, leave this alone
+        // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
         nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
         enableRemoteModule: true,
         webSecurity: false
@@ -37,38 +33,35 @@ export default {
     })
 
     if (process.env.WEBPACK_DEV_SERVER_URL) {
-      win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-
-      if (isDevelopment) win.webContents.openDevTools()
+      // Load the url of the dev server if in development mode
+      await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+      if (!process.env.IS_TEST) win.webContents.openDevTools()
     } else {
       createProtocol('app')
+      // Load the index.html when not in development
       win.loadURL('app://./index.html')
     }
 
-    win.once('ready-to-show', () => {
+    win.once('ready-to-show', async () => {
       win.show()
+
+      try {
+        const version = await app.getVersion()
+        const client = require('discord-rich-presence')(process.env.VUE_APP_DISCORD_CLIENT_ID)
+
+        client.updatePresence({
+          startTimestamp: Math.floor(Date.now() / 1000),
+          details: `v${version}`,
+          largeImageKey: '1024x1024',
+          instance: true
+        })
+      } catch (error) {
+        console.log(error)
+      }
     })
 
     win.on('closed', () => {
-      if (MonitorWindow.getWindow()) {
-        MonitorWindow.getWindow().destroy()
-        MonitorWindow.closeWindow()
-      }
-
-      if (ProfileWindow.getWindow()) {
-        ProfileWindow.getWindow().destroy()
-        ProfileWindow.closeWindow()
-      }
-
-      if (ProxyWindow.getWindow()) {
-        ProfileWindow.getWindow().destroy()
-        ProxyWindow.closeWindow()
-      }
-
-      if (SettingWindow.getWindow()) {
-        SettingWindow.getWindow().destroy()
-        SettingWindow.closeWindow()
-      }
+      if (MonitorWindow.getWindow()) MonitorWindow.getWindow().destroy()
 
       win = null
     })

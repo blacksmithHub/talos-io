@@ -1,9 +1,7 @@
 export default {
-  TASK: {
-    STATUS: {
-      STOPPED: 1,
-      RUNNING: 2
-    }
+  STATUS: {
+    STOPPED: 1,
+    RUNNING: 2
   },
   METHODS: [
     {
@@ -20,7 +18,7 @@ export default {
     },
     {
       id: 4,
-      label: 'Safe mode'
+      label: 'Auto'
     }
   ],
   CLIENT: [
@@ -40,6 +38,16 @@ export default {
       label: 'Mobile (Android)'
     }
   ],
+  TABS: {
+    TASKS: 1,
+    PROFILES: 2,
+    PROXIES: 3,
+    SETTINGS: 4
+  },
+  TITAN_ATTRIBUTE_PRODUCTS: {
+    APPAREL: 9,
+    FOOTWEAR: 10
+  },
   TITAN_ATTRIBUTES: [
     {
       attribute_id: 139,

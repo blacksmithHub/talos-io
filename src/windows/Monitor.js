@@ -5,26 +5,25 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
 let win
 
 export default {
   getWindow () {
     return win
   },
-  closeWindow () {
-    win = null
-  },
-  createWindow () {
+  async createWindow () {
+    // Create the browser window.
     win = new BrowserWindow({
-      width: 1100,
-      height: 900,
-      minWidth: 1100,
-      minHeight: 900,
+      width: 553,
+      height: 780,
+      minWidth: 553,
+      minHeight: 650,
+      center: true,
       show: false,
       frame: false,
       webPreferences: {
+        // Use pluginOptions.nodeIntegration, leave this alone
+        // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
         nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
         enableRemoteModule: true,
         webSecurity: false
@@ -32,11 +31,12 @@ export default {
     })
 
     if (process.env.WEBPACK_DEV_SERVER_URL) {
-      win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/monitor`)
-
-      if (isDevelopment) win.webContents.openDevTools()
+      // Load the url of the dev server if in development mode
+      await win.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}/#/monitor`)
+      if (!process.env.IS_TEST) win.webContents.openDevTools()
     } else {
       createProtocol('app')
+      // Load the index.html when not in development
       win.loadURL('app://./index.html/#/monitor')
     }
 
@@ -44,7 +44,7 @@ export default {
       win.show()
     })
 
-    win.on('close', (e) => {
+    win.on('closed', () => {
       win = null
     })
 

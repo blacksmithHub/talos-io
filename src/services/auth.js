@@ -1,4 +1,5 @@
 import AuthAPI from '@/api/auth'
+import fs from 'fs'
 
 /**
  * ===============================================
@@ -12,21 +13,20 @@ import AuthAPI from '@/api/auth'
 
 export default {
   /**
-   * Formats and stores the auth access in localStorage
-   *
-   * @param data
-   */
-  setAuth (data) {
-    localStorage.setItem('auth', JSON.stringify(data))
-  },
-
-  /**
-   * Gets the auth access in localStorage.
+   * Gets the auth access in local storage.
    *
    * @return {*}
    */
   getAuth () {
-    return JSON.parse(localStorage.getItem('auth'))
+    let data = null
+
+    try {
+      data = JSON.parse(fs.readFileSync('User.json', 'utf8'))
+    } catch (error) {
+      data = null
+    }
+
+    return data
   },
 
   /**
@@ -34,22 +34,20 @@ export default {
    *
    * @return bool
    */
-  isAuthenticated () {
-    return !!this.getAuth()
+  async isAuthenticated () {
+    const response = await AuthAPI.get()
+      .then(({ data }) => data)
+      .catch(({ response }) => response)
+
+    return !(response.status)
   },
 
   /**
-   * Removes auth and user from localStorage.
+   * Logout discord
    *
+   * @return {*}
    */
-  flush () {
-    localStorage.removeItem('auth')
-  },
-
-  /**
-   * Verification api
-   */
-  verify (params) {
-    return AuthAPI.verify(params)
+  logout () {
+    return fs.writeFileSync('User.json', '')
   }
 }

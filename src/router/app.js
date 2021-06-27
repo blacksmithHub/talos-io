@@ -1,15 +1,9 @@
 import GuardService from '@/services/guard'
 
-const CheckUpdate = () => import('../pages/CheckUpdate')
-const Login = () => import('../pages/Login')
-
 const Home = () => import('../pages/Home')
-
-const Task = () => import('../pages/Task')
 const Monitor = () => import('../pages/Monitor')
-const Profiles = () => import('../pages/Profiles')
-const Proxies = () => import('../pages/Proxies')
-const Settings = () => import('../pages/Settings')
+const Login = () => import('../pages/Login')
+const CheckUpdate = () => import('../pages/CheckUpdate')
 
 /**
  * =======================================================================
@@ -26,46 +20,23 @@ export default {
   routes: [
     {
       path: '/login',
-      name: 'Login',
       component: Login
     },
     {
       path: '/check-update',
       name: 'CheckUpdate',
-      component: CheckUpdate,
-      beforeEnter: (to, from, next) => GuardService.authorized(next)
+      component: CheckUpdate
     },
     {
       path: '',
       component: Home,
-      beforeEnter: (to, from, next) => GuardService.authorized(next),
-      children: [
-        {
-          path: '/',
-          name: 'Task',
-          component: Task
-        },
-        {
-          path: '/monitor',
-          name: 'Monitor',
-          component: Monitor
-        },
-        {
-          path: '/profiles',
-          name: 'Profiles',
-          component: Profiles
-        },
-        {
-          path: '/proxies',
-          name: 'Proxies',
-          component: Proxies
-        },
-        {
-          path: '/settings',
-          name: 'Settings',
-          component: Settings
-        }
-      ]
+      beforeEnter: (to, from, next) => GuardService.authorized(next)
+    },
+    {
+      path: '/monitor',
+      name: 'Monitor',
+      component: Monitor,
+      beforeEnter: (to, from, next) => GuardService.authorized(next)
     }
   ]
 }

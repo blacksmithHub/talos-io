@@ -1,3 +1,5 @@
+import Constant from '@/config/constant'
+
 export default {
   namespaced: true,
   state () {
@@ -10,15 +12,6 @@ export default {
 
   mutations: {
     /**
-     * Reset all items.
-     *
-     * @param {*} state
-     */
-    RESET (state) {
-      state.items = []
-    },
-
-    /**
      * Store all items.
      *
      * @param {*} state
@@ -26,30 +19,10 @@ export default {
      */
     SET_ITEMS (state, items) {
       state.items = items
-    },
-
-    /**
-     * Delete an item.
-     *
-     * @param {*} state
-     * @param {*} key
-     */
-    DELETE_ITEM (state, key) {
-      state.items.splice(key, 1)
     }
   },
 
   actions: {
-    /**
-     * Trigger reset.
-     *
-     * @param {*} param
-     */
-    reset ({ commit }) {
-      commit('RESET')
-      if (localStorage.getItem('proxies')) localStorage.removeItem('proxies')
-    },
-
     /**
      * Trigger store items.
      *
@@ -69,20 +42,29 @@ export default {
      */
     addItem ({ state, commit }, item) {
       const proxies = state.items.slice()
+      const id = (proxies.length) ? proxies.length + 1 : 1
 
-      let lastItemId = proxies[proxies.length - 1]
-
-      if (lastItemId) {
-        lastItemId = lastItemId.id + 1
-      } else {
-        lastItemId = 1
+      const data = {
+        id: id,
+        ...item,
+        name: (item.name) ? item.name.trim() : `Proxy List ${id}`,
+        configs: [],
+        status: Constant.STATUS.STOPPED,
+        loading: false
       }
 
-      proxies.push({
-        id: lastItemId,
-        ...item,
-        name: item.name || `Proxy ${lastItemId}`
+      data.proxies.forEach((el) => {
+        const rp = require('request-promise')
+        const jar = rp.jar()
+
+        data.configs.push({
+          rp: rp,
+          jar: jar,
+          proxy: el.proxy
+        })
       })
+
+      proxies.push(data)
 
       commit('SET_ITEMS', proxies)
       localStorage.setItem('proxies', JSON.stringify(proxies))
@@ -112,9 +94,64 @@ export default {
      * @param {*} param
      * @param {*} key
      */
-    deleteItem ({ state, commit }, key) {
-      commit('DELETE_ITEM', key)
-      localStorage.setItem('proxies', JSON.stringify(state.items))
+    deleteItem ({ state, commit }, item) {
+      const proxies = state.items.slice()
+      const key = proxies.findIndex((el) => el.id === item.id)
+
+      proxies.splice(key, 1)
+
+      commit('SET_ITEMS', proxies)
+      localStorage.setItem('proxies', JSON.stringify(proxies))
+    },
+
+    /**
+     * Initialize items
+     */
+    init ({ state, commit }) {
+      let proxies = state.items.slice()
+
+      const key = proxies.findIndex((el) => !el.id || el.id === 1)
+      proxies.splice(key, 1)
+
+      const rp = require('request-promise')
+      const jar = rp.jar()
+
+      proxies.unshift({
+        id: null,
+        name: 'Localhost',
+        status: Constant.STATUS.STOPPED,
+        loading: false,
+        configs: [{
+          rp: rp,
+          jar: jar
+        }]
+      })
+
+      proxies = proxies.map((val, index) => {
+        val.id = index + 1
+        val.status = Constant.STATUS.STOPPED
+        val.loading = false
+
+        if (val.id !== 1 && val.proxies && val.proxies.length) {
+          val.configs = []
+
+          val.proxies.forEach((el) => {
+            const rp = require('request-promise')
+            const jar = rp.jar()
+
+            val.configs.push({
+              rp: rp,
+              jar: jar,
+              proxy: el.proxy
+            })
+          })
+        }
+
+        return val
+      })
+
+      commit('SET_ITEMS', proxies)
+      localStorage.setItem('proxies', JSON.stringify(proxies))
     }
   }
 }

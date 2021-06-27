@@ -1,240 +1,210 @@
 <template>
-  <div>
-    <v-dialog
-      v-model="dialog"
-      persistent
-      max-width="600px"
-    >
-      <v-form @submit.prevent="submit">
-        <v-card>
-          <v-card-title style="border-bottom: 1px solid #d85820">
-            <span
-              class="headline primary--text"
-              v-text="'Mass Edit'"
-            />
+  <v-dialog
+    v-model="dialog"
+    persistent
+    max-width="500px"
+  >
+    <v-form @submit.prevent="submit">
+      <v-card>
+        <v-card-title style="border-bottom:1px solid #d85820">
+          <span
+            class="headline primary--text"
+            v-text="'Edit All'"
+          />
 
-            <v-spacer />
+          <v-spacer />
 
+          <v-btn
+            icon
+            class="primary--text"
+            @click="onCancel"
+          >
+            <v-icon v-text="'mdi-close'" />
+          </v-btn>
+        </v-card-title>
+
+        <v-divider />
+
+        <v-card-text>
+          <v-container>
+            <v-row>
+              <v-col>
+                <v-autocomplete
+                  v-model="billing"
+                  clearable
+                  :items="billings"
+                  outlined
+                  dense
+                  label="Billing"
+                  item-text="name"
+                  return-object
+                  hide-details
+                />
+              </v-col>
+
+              <v-col>
+                <v-autocomplete
+                  v-model="proxy"
+                  :items="proxies"
+                  outlined
+                  dense
+                  label="Proxy List"
+                  item-text="name"
+                  return-object
+                  hide-details
+                />
+              </v-col>
+            </v-row>
+
+            <v-row>
+              <v-col>
+                <v-select
+                  v-model="mode"
+                  dense
+                  :items="modes"
+                  return-object
+                  item-text="label"
+                  label="Mode"
+                  outlined
+                  hide-details
+                />
+              </v-col>
+
+              <v-col>
+                <v-select
+                  v-model="checkoutMethod"
+                  dense
+                  :items="checkoutMethods"
+                  return-object
+                  item-text="label"
+                  label="Checkout Method"
+                  outlined
+                  hide-details
+                />
+              </v-col>
+            </v-row>
+
+            <v-row>
+              <v-col>
+                <v-text-field
+                  v-model="sku"
+                  label="Product SKU"
+                  outlined
+                  dense
+                  autocomplete="off"
+                  hide-details
+                />
+              </v-col>
+
+              <v-col>
+                <v-text-field
+                  v-model="qty"
+                  dense
+                  outlined
+                  type="number"
+                  label="Quantity"
+                  hide-details
+                />
+              </v-col>
+
+              <v-col cols="12">
+                <v-combobox
+                  v-model="sizes"
+                  chips
+                  small-chips
+                  deletable-chips
+                  clearable
+                  label="Size"
+                  multiple
+                  outlined
+                  dense
+                  append-icon=""
+                  hint="Press Enter per input to apply"
+                  hide-details
+                  @input="filterSizes"
+                />
+              </v-col>
+
+              <v-col>
+                <v-text-field
+                  v-model="delay"
+                  dense
+                  outlined
+                  type="number"
+                  label="Retry Delay (ms)"
+                  hide-details
+                />
+              </v-col>
+
+              <v-col>
+                <v-menu
+                  ref="placeOrderMenu"
+                  v-model="placeOrderMenu"
+                  :close-on-content-click="false"
+                  :nudge-right="40"
+                  :return-value.sync="placeOrder"
+                  transition="scale-transition"
+                  offset-y
+                  max-width="350px"
+                  min-width="350px"
+                >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="placeOrder"
+                      dense
+                      outlined
+                      readonly
+                      v-bind="attrs"
+                      clearable
+                      label="Place Order"
+                      hide-details
+                      v-on="on"
+                    />
+                  </template>
+                  <v-time-picker
+                    v-if="placeOrderMenu"
+                    v-model="placeOrder"
+                    full-width
+                    ampm-in-title
+                    format="ampm"
+                    use-seconds
+                    color="primary"
+                    @click:second="$refs.placeOrderMenu.save(placeOrder)"
+                  />
+                </v-menu>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+
+        <v-divider />
+
+        <v-card-actions>
+          <v-container class="text-right">
             <v-btn
-              icon
-              class="primary--text"
+              rounded
+              class="mr-3"
+              depressed
+              small
+              outlined
+              color="primary"
               @click="onCancel"
-            >
-              <v-icon v-text="'mdi-close'" />
-            </v-btn>
-          </v-card-title>
-
-          <v-card-text>
-            <v-container>
-              <v-row>
-                <v-col cols="12">
-                  <v-text-field
-                    v-model="sku"
-                    label="SKU"
-                    outlined
-                    dense
-                    hide-details
-                    autocomplete="off"
-                  />
-                </v-col>
-
-                <v-col cols="12">
-                  <v-combobox
-                    v-model="sizes"
-                    chips
-                    small-chips
-                    deletable-chips
-                    clearable
-                    label="Sizes"
-                    multiple
-                    outlined
-                    dense
-                    append-icon=""
-                    hint="Press Enter per input to apply"
-                    hide-details="auto"
-                    @input="filterSizes"
-                  />
-                </v-col>
-
-                <v-col cols="6">
-                  <v-select
-                    v-model="mode"
-                    required
-                    dense
-                    :items="modes"
-                    return-object
-                    item-text="label"
-                    label="Mode"
-                    outlined
-                    clearable
-                    hide-details
-                  />
-                </v-col>
-
-                <v-col cols="6">
-                  <v-autocomplete
-                    v-model="proxy"
-                    required
-                    clearable
-                    :items="allProxies"
-                    outlined
-                    dense
-                    label="Proxies"
-                    item-text="name"
-                    return-object
-                    hide-details
-                  />
-                </v-col>
-
-                <v-col cols="12">
-                  <v-expansion-panels
-                    v-model="panel"
-                    flat
-                    style="border:1px solid #d85820"
-                  >
-                    <v-expansion-panel>
-                      <v-expansion-panel-header>
-                        Advance Options
-                      </v-expansion-panel-header>
-                      <v-expansion-panel-content>
-                        <v-row>
-                          <v-col>
-                            <v-text-field
-                              v-model="delay"
-                              dense
-                              outlined
-                              type="number"
-                              :error-messages="delayErrors"
-                              label="Delays"
-                              hint="Input value in milliseconds"
-                              @blur="$v.delay.$touch()"
-                            />
-                          </v-col>
-
-                          <v-col>
-                            <v-menu
-                              ref="placeOrderMenu"
-                              v-model="placeOrderMenu"
-                              :close-on-content-click="false"
-                              :nudge-right="40"
-                              :return-value.sync="placeOrder"
-                              transition="scale-transition"
-                              offset-y
-                              max-width="350px"
-                              min-width="350px"
-                            >
-                              <template v-slot:activator="{ on, attrs }">
-                                <v-text-field
-                                  v-model="placeOrder"
-                                  dense
-                                  outlined
-                                  readonly
-                                  v-bind="attrs"
-                                  clearable
-                                  label="Place Order At"
-                                  v-on="on"
-                                />
-                              </template>
-                              <v-time-picker
-                                v-if="placeOrderMenu"
-                                v-model="placeOrder"
-                                full-width
-                                ampm-in-title
-                                format="ampm"
-                                use-seconds
-                                color="primary"
-                                @click:second="$refs.placeOrderMenu.save(placeOrder)"
-                              />
-                            </v-menu>
-                          </v-col>
-                        </v-row>
-
-                        <p>Checkout Method:</p>
-                        <v-radio-group
-                          v-model="checkoutMethod"
-                          row
-                          dense
-                        >
-                          <v-radio
-                            v-for="(method, index) in checkoutMethods"
-                            :key="index"
-                            :label="method.label"
-                            :value="method.id"
-                          />
-                        </v-radio-group>
-                      </v-expansion-panel-content>
-                    </v-expansion-panel>
-                  </v-expansion-panels>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-card-text>
-
-          <v-divider />
-
-          <v-card-actions>
-            <v-container>
-              <v-row
-                no-gutters
-                align="center"
-              >
-                <v-col
-                  cols="6"
-                  align-self="center"
-                >
-                  <v-btn
-                    class="primary"
-                    rounded
-                    small
-                    depressed
-                    @click="clearTimer"
-                    v-text="'clear timer'"
-                  />
-                </v-col>
-
-                <v-col
-                  cols="6"
-                  align-self="center"
-                  class="text-right"
-                >
-                  <v-btn
-                    class="primary mr-2"
-                    rounded
-                    small
-                    depressed
-                    @click="onCancel"
-                    v-text="'close'"
-                  />
-                  <v-btn
-                    class="primary"
-                    rounded
-                    type="submit"
-                    depressed
-                    small
-                    v-text="'save'"
-                  />
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-card-actions>
-        </v-card>
-      </v-form>
-    </v-dialog>
-
-    <v-snackbar v-model="snackbar">
-      Tasks successfully updated
-
-      <template v-slot:action="{ attrs }">
-        <v-btn
-          icon
-          v-bind="attrs"
-          @click="snackbar = false"
-        >
-          <v-icon v-text="'mdi-close'" />
-        </v-btn>
-      </template>
-    </v-snackbar>
-  </div>
+              v-text="'close'"
+            />
+            <v-btn
+              color="primary"
+              rounded
+              type="submit"
+              small
+              depressed
+              outlined
+              v-text="'Save'"
+            />
+          </v-container>
+        </v-card-actions>
+      </v-card>
+    </v-form>
+  </v-dialog>
 </template>
 
 <script>
@@ -242,8 +212,6 @@ import { mapState, mapActions } from 'vuex'
 import { minValue } from 'vuelidate/lib/validators'
 
 import Constant from '@/config/constant'
-
-import Request from '@/services/request'
 
 export default {
   props: {
@@ -254,22 +222,25 @@ export default {
   },
   data () {
     return {
-      snackbar: false,
       dialog: false,
-      sizes: [],
-      sku: '',
-      delay: '',
-      placeOrder: '',
       placeOrderMenu: false,
-      proxy: {},
-      mode: {},
+
+      sku: null,
+      billing: null,
+      placeOrder: null,
+      delay: null,
+      qty: null,
+      mode: null,
       checkoutMethod: null,
-      panel: []
+      proxy: null,
+      sizes: []
     }
   },
   computed: {
     ...mapState('task', { tasks: 'items' }),
+    ...mapState('billing', { billings: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
+
     /**
      * Return all modes
      */
@@ -289,18 +260,7 @@ export default {
       return Constant.METHODS
     },
     /**
-     * Return all proxies
-     */
-    allProxies () {
-      const proxies = this.proxies.slice()
-
-      proxies.push({ id: null, name: 'Localhost', proxies: [] })
-
-      return proxies
-    },
-    /**
      * Error messages for delay.
-     *
      */
     delayErrors () {
       const errors = []
@@ -310,38 +270,35 @@ export default {
       this.$v.delay.minValue || errors.push('Invalid input')
 
       return errors
+    },
+    /**
+     * Error messages for qty.
+     */
+    qtyErrors () {
+      const errors = []
+
+      if (!this.$v.qty.$dirty) return errors
+
+      this.$v.qty.minValue || errors.push('Invalid input')
+
+      return errors
     }
   },
   methods: {
     ...mapActions('task', { updateTask: 'updateItem' }),
-    ...mapActions('dialog', ['openDialog']),
+    ...mapActions('snackbar', ['showSnackbar']),
 
-    /**
-     * clear timer
-     */
-    clearTimer () {
-      this.tasks.forEach(element => {
-        const params = element
-
-        params.placeOrder = ''
-
-        this.updateTask(params)
-      })
-
-      this.onCancel()
-    },
     /**
      * Filter input sizes.
-     *
      */
     filterSizes () {
       if (this.sizes.length) {
         const sizes = []
 
         this.sizes.forEach(element => {
-          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label === element))
+          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
-          if (attr) sizes.push(element)
+          if (attr && !sizes.find((val) => val.toLowerCase() === element.toLowerCase())) sizes.push(element)
         })
 
         this.sizes = sizes
@@ -349,115 +306,112 @@ export default {
     },
     /**
      * On cancel event.
-     *
      */
     onCancel () {
       this.$v.$reset()
 
-      this.sizes = []
-      this.sku = ''
-      this.delay = ''
-      this.placeOrder = ''
-      this.placeOrderMenu = false
-      this.proxy = {}
-      this.mode = {}
-      this.checkoutMethod = null
-      this.panel = []
       this.dialog = false
-    },
+      this.placeOrderMenu = false
 
+      this.sku = null
+      this.billing = null
+      this.placeOrder = null
+      this.delay = null
+      this.qty = null
+      this.mode = null
+      this.checkoutMethod = null
+      this.proxy = null
+      this.sizes = []
+    },
     /**
      * On submit event.
-     *
      */
     submit () {
-      try {
-        const collection = (this.selected.length) ? this.selected : this.tasks
+      this.$v.$touch()
 
-        collection.forEach((element) => {
-          const params = element
+      if (!this.$v.$invalid) {
+        const params = {}
 
-          if (this.delay) params.delay = this.delay
+        if (this.sku) params.sku = this.sku
 
-          if (this.sku) params.sku = this.sku
+        if (this.proxy) params.proxy = this.proxy
 
-          if (this.placeOrder) params.placeOrder = this.placeOrder
+        if (this.billing) params.billing = this.billing
 
-          if (this.proxy && Object.keys(this.proxy).length) {
-            params.proxy = this.proxy
+        if (this.placeOrder) params.placeOrder = this.placeOrder
 
-            const configs = []
+        if (this.sizes.length) {
+          const sizes = []
 
-            if (params.proxy.proxies.length) {
-              params.proxy.proxies.forEach((el) => {
-                const data = Request.setRequest(params.mode, el)
-                configs.push(data)
+          this.sizes.forEach((element) => {
+            const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
+
+            const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
+
+            sizes.push({
+              attribute_id: attr.attribute_id,
+              value: size.value,
+              label: size.label
+            })
+          })
+
+          params.sizes = sizes
+        }
+
+        if (this.delay) params.delay = this.delay
+
+        if (this.qty) params.qty = this.qty
+
+        if (this.mode) params.mode = this.mode
+
+        if (this.checkoutMethod) params.checkoutMethod = this.checkoutMethod
+
+        const data = (this.selected.length) ? this.selected : this.tasks
+        data.forEach(el => {
+          const opt = { deviceCategory: 'desktop' }
+
+          if (this.mode && this.mode.id !== el.mode.id && this.mode.id !== 1) opt.deviceCategory = 'mobile'
+
+          if (this.proxy && (this.proxy.id !== el.proxy.id || !this.proxy.id)) {
+            const UserAgent = require('user-agents')
+            let userAgent = new UserAgent(opt)
+            userAgent = userAgent.toString()
+
+            if (this.proxy.id) {
+              params.proxy.configs = params.proxy.configs.map(el => {
+                return {
+                  ...el,
+                  userAgent: userAgent,
+                  retry: 1
+                }
               })
             } else {
-              const data = Request.setRequest(params.mode)
-              configs.push(data)
+              const rp = require('request-promise')
+              const jar = rp.jar()
+
+              params.proxy.configs = [{
+                rp: rp,
+                jar: jar,
+                userAgent: userAgent,
+                retry: 1
+              }]
             }
-
-            params.configs = configs
           }
 
-          if (this.mode && Object.keys(this.mode).length) {
-            params.mode = this.mode
-
-            params.configs = params.configs.map(el => {
-              const UserAgent = require('user-agents')
-              const option = {}
-
-              switch (params.mode.id) {
-                case 2:
-                case 3:
-                  option.deviceCategory = 'mobile'
-                  break
-              }
-
-              const userAgent = new UserAgent(option)
-              el.userAgent = userAgent.toString()
-
-              return el
-            })
-          }
-
-          if (this.checkoutMethod) params.checkoutMethod = this.checkoutMethod
-
-          if (this.sizes.length) {
-            const sizes = []
-
-            this.sizes.forEach(element => {
-              const attr = this.attributes.find((val) => val.sizes.find((data) => data.label === element))
-
-              const size = attr.sizes.find((data) => data.label === element)
-
-              sizes.push({
-                attribute_id: attr.attribute_id,
-                value: size.value,
-                label: size.label
-              })
-            })
-
-            params.sizes = sizes
-          }
-
-          this.updateTask(params)
+          this.updateTask({
+            ...el,
+            ...params
+          })
         })
 
-        this.snackbar = true
+        this.showSnackbar({ message: 'Updated successfully', color: 'teal' })
         this.onCancel()
-      } catch (error) {
-        this.openDialog({
-          title: 'Error',
-          body: error,
-          alert: true
-        })
       }
     }
   },
   validations: {
-    delay: { minValue: minValue(0) }
+    delay: { minValue: minValue(0) },
+    qty: { minValue: minValue(1) }
   }
 }
 </script>

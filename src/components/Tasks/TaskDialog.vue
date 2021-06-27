@@ -1,307 +1,329 @@
 <template>
-  <div>
-    <v-dialog
-      v-model="dialog"
-      persistent
-      max-width="600px"
-    >
-      <v-form @submit.prevent="submit">
-        <v-card>
-          <v-card-title style="border-bottom:1px solid #d85820">
-            <span
-              class="headline primary--text"
-              v-text="`${header} Task`"
-            />
+  <v-dialog
+    v-model="dialog"
+    persistent
+    max-width="900px"
+  >
+    <v-form @submit.prevent="submit">
+      <v-card>
+        <v-card-title style="border-bottom:1px solid #d85820">
+          <span
+            class="headline primary--text"
+            v-text="`${header} Task`"
+          />
 
-            <v-spacer />
+          <v-spacer />
 
-            <v-btn
-              icon
-              class="primary--text"
-              @click="onCancel"
-            >
-              <v-icon v-text="'mdi-close'" />
-            </v-btn>
-          </v-card-title>
+          <v-btn
+            icon
+            class="primary--text"
+            @click="onCancel"
+          >
+            <v-icon v-text="'mdi-close'" />
+          </v-btn>
+        </v-card-title>
 
-          <v-divider />
+        <v-divider />
 
-          <v-card-text>
-            <v-container>
-              <v-row>
-                <v-col>
-                  <v-autocomplete
-                    v-model="profile"
-                    required
-                    :error-messages="profileErrors"
-                    clearable
-                    :items="profiles"
-                    outlined
-                    dense
-                    label="Profile"
-                    item-text="name"
-                    return-object
-                    :disabled="isRunning"
-                    hide-details="auto"
-                    @blur="$v.profile.$touch()"
-                  />
-                </v-col>
+        <v-card-text>
+          <v-container>
+            <v-row>
+              <v-col>
+                <v-row>
+                  <v-col>
+                    <v-autocomplete
+                      v-model="account"
+                      required
+                      :error-messages="accountErrors"
+                      clearable
+                      :items="accounts"
+                      outlined
+                      dense
+                      label="Account"
+                      item-text="name"
+                      return-object
+                      :disabled="isRunning"
+                      hide-details="auto"
+                      @blur="$v.account.$touch()"
+                    />
+                  </v-col>
 
-                <v-col>
-                  <v-autocomplete
-                    v-model="bank"
-                    clearable
-                    :items="banks"
-                    outlined
-                    dense
-                    label="Bank"
-                    item-text="nickname"
-                    return-object
-                    hide-details="auto"
-                  />
-                </v-col>
-              </v-row>
+                  <v-col>
+                    <v-autocomplete
+                      v-model="billing"
+                      clearable
+                      :items="billings"
+                      outlined
+                      dense
+                      label="Billing"
+                      item-text="name"
+                      return-object
+                      hide-details="auto"
+                    />
+                  </v-col>
 
-              <v-row>
-                <v-col>
-                  <v-autocomplete
-                    v-model="proxy"
-                    required
-                    :items="allProxies"
-                    outlined
-                    dense
-                    label="Proxies"
-                    item-text="name"
-                    return-object
-                    :error-messages="proxyErrors"
-                    hide-details="auto"
-                    @blur="$v.proxy.$touch()"
-                  />
-                </v-col>
+                  <v-col>
+                    <v-autocomplete
+                      v-model="proxy"
+                      required
+                      :items="proxies"
+                      outlined
+                      dense
+                      label="Proxy List"
+                      item-text="name"
+                      return-object
+                      :error-messages="proxyErrors"
+                      hide-details="auto"
+                      @blur="$v.proxy.$touch()"
+                    />
+                  </v-col>
+                </v-row>
 
-                <v-col>
-                  <v-select
-                    v-model="mode"
-                    required
-                    dense
-                    :items="modes"
-                    return-object
-                    item-text="label"
-                    label="Mode"
-                    outlined
-                    hide-details="auto"
-                  />
-                </v-col>
-              </v-row>
+                <v-row>
+                  <v-col>
+                    <v-select
+                      v-model="mode"
+                      required
+                      dense
+                      :items="modes"
+                      return-object
+                      item-text="label"
+                      label="Mode"
+                      outlined
+                      hide-details="auto"
+                    />
+                  </v-col>
 
-              <v-row>
-                <v-col>
-                  <v-text-field
-                    v-model="sku"
-                    label="SKU"
-                    required
-                    outlined
-                    dense
-                    :error-messages="skuErrors"
-                    autocomplete="off"
-                    @blur="$v.sku.$touch()"
-                  />
-                </v-col>
+                  <v-col>
+                    <v-select
+                      v-model="checkoutMethod"
+                      required
+                      dense
+                      :items="checkoutMethods"
+                      return-object
+                      item-text="label"
+                      label="Checkout Method"
+                      outlined
+                      hide-details="auto"
+                    />
+                  </v-col>
+                </v-row>
 
-                <v-col>
-                  <v-text-field
-                    v-model="qty"
-                    dense
-                    outlined
-                    type="number"
-                    :error-messages="qtyErrors"
-                    label="Quantity"
-                    required
-                    @blur="$v.qty.$touch()"
-                  />
-                </v-col>
-              </v-row>
+                <v-row>
+                  <v-col>
+                    <v-text-field
+                      v-model="sku"
+                      label="Product SKU"
+                      required
+                      outlined
+                      dense
+                      :error-messages="skuErrors"
+                      autocomplete="off"
+                      hide-details="auto"
+                      @blur="$v.sku.$touch()"
+                    />
+                  </v-col>
 
-              <v-combobox
-                v-model="sizes"
-                chips
-                small-chips
-                deletable-chips
-                clearable
-                label="Sizes"
-                multiple
-                outlined
-                dense
-                append-icon=""
-                :error-messages="sizesErrors"
-                hint="Press Enter per input to apply"
-                :disabled="!sku"
-                @blur="$v.sizes.$touch()"
-                @input="filterSizes"
-              />
+                  <v-col>
+                    <v-text-field
+                      v-model="qty"
+                      dense
+                      outlined
+                      type="number"
+                      :error-messages="qtyErrors"
+                      label="Quantity"
+                      required
+                      hide-details="auto"
+                      @blur="$v.qty.$touch()"
+                    />
+                  </v-col>
 
-              <v-row>
-                <v-col>
-                  <v-expansion-panels
-                    v-model="panel"
-                    flat
-                    style="border:1px solid #d85820"
-                  >
-                    <v-expansion-panel>
-                      <v-expansion-panel-header>
-                        Advance Options
-                      </v-expansion-panel-header>
-                      <v-expansion-panel-content>
-                        <v-row>
-                          <v-col>
-                            <v-text-field
-                              v-model="delay"
-                              dense
-                              outlined
-                              type="number"
-                              :error-messages="delayErrors"
-                              label="Delays"
-                              hint="Input value in milliseconds"
-                              @blur="$v.delay.$touch()"
-                            />
-                          </v-col>
+                  <v-col cols="12">
+                    <v-combobox
+                      v-model="sizes"
+                      chips
+                      small-chips
+                      deletable-chips
+                      clearable
+                      label="Size"
+                      multiple
+                      outlined
+                      dense
+                      append-icon=""
+                      :error-messages="sizesErrors"
+                      hint="Press Enter per input to apply"
+                      hide-details="auto"
+                      @blur="$v.sizes.$touch()"
+                      @input="filterSizes"
+                    />
+                  </v-col>
+                </v-row>
+              </v-col>
 
-                          <v-col>
-                            <v-menu
-                              ref="placeOrderMenu"
-                              v-model="placeOrderMenu"
-                              :close-on-content-click="false"
-                              :nudge-right="40"
-                              :return-value.sync="placeOrder"
-                              transition="scale-transition"
-                              offset-y
-                              max-width="350px"
-                              min-width="350px"
-                            >
-                              <template v-slot:activator="{ on, attrs }">
-                                <v-text-field
-                                  v-model="placeOrder"
-                                  dense
-                                  outlined
-                                  readonly
-                                  v-bind="attrs"
-                                  clearable
-                                  label="Place Order At"
-                                  v-on="on"
-                                />
-                              </template>
-                              <v-time-picker
-                                v-if="placeOrderMenu"
-                                v-model="placeOrder"
-                                full-width
-                                ampm-in-title
-                                format="ampm"
-                                use-seconds
-                                color="primary"
-                                @click:second="$refs.placeOrderMenu.save(placeOrder)"
-                              />
-                            </v-menu>
-                          </v-col>
-                        </v-row>
+              <v-divider vertical />
 
-                        <p>Checkout Method:</p>
-                        <v-radio-group
-                          v-model="checkoutMethod"
-                          row
+              <v-col cols="5">
+                <v-row>
+                  <v-col>
+                    <v-text-field
+                      v-model="delay"
+                      dense
+                      outlined
+                      type="number"
+                      :error-messages="delayErrors"
+                      label="Retry Delay (ms)"
+                      hide-details="auto"
+                      @blur="$v.delay.$touch()"
+                    />
+                  </v-col>
+
+                  <v-col>
+                    <v-menu
+                      ref="placeOrderMenu"
+                      v-model="placeOrderMenu"
+                      :close-on-content-click="false"
+                      :nudge-right="40"
+                      :return-value.sync="placeOrder"
+                      transition="scale-transition"
+                      offset-y
+                      max-width="350px"
+                      min-width="350px"
+                    >
+                      <template v-slot:activator="{ on, attrs }">
+                        <v-text-field
+                          v-model="placeOrder"
                           dense
-                        >
-                          <v-radio
-                            v-for="(method, index) in checkoutMethods"
-                            :key="index"
-                            :label="method.label"
-                            :value="method.id"
-                          />
-                        </v-radio-group>
-                      </v-expansion-panel-content>
-                    </v-expansion-panel>
-                  </v-expansion-panels>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-card-text>
+                          outlined
+                          readonly
+                          v-bind="attrs"
+                          clearable
+                          label="Place Order"
+                          v-on="on"
+                        />
+                      </template>
+                      <v-time-picker
+                        v-if="placeOrderMenu"
+                        v-model="placeOrder"
+                        full-width
+                        ampm-in-title
+                        format="ampm"
+                        use-seconds
+                        color="primary"
+                        @click:second="$refs.placeOrderMenu.save(placeOrder)"
+                      />
+                    </v-menu>
+                  </v-col>
+                </v-row>
 
-          <v-divider />
+                <v-list dense>
+                  <v-list-item
+                    class="pa-0"
+                    dense
+                  >
+                    <v-list-item-content class="pa-2">
+                      <v-list-item-title v-text="'Auto Pay'" />
+                      <v-list-item-subtitle v-text="'Submit payment automatically'" />
+                    </v-list-item-content>
 
-          <v-card-actions>
-            <v-container class="text-right">
-              <v-btn
-                rounded
-                small
-                class="primary mr-2"
-                depressed
-                @click="onCancel"
-                v-text="'Close'"
-              />
-              <v-btn
-                class="primary"
-                rounded
-                type="submit"
-                small
-                depressed
-                v-text="'Save'"
-              />
-            </v-container>
-          </v-card-actions>
-        </v-card>
-      </v-form>
-    </v-dialog>
+                    <v-list-item-action>
+                      <v-switch
+                        v-model="autoPay"
+                        inset
+                      />
+                    </v-list-item-action>
+                  </v-list-item>
 
-    <v-snackbar v-model="snackbar">
-      Task successfully {{ snackbarContent }}
+                  <v-list-item
+                    class="pa-0"
+                    dense
+                  >
+                    <v-list-item-content class="pa-2">
+                      <v-list-item-title v-text="'Auto Fill'" />
 
-      <template v-slot:action="{ attrs }">
-        <v-btn
-          icon
-          v-bind="attrs"
-          @click="snackbar = false"
-        >
-          <v-icon v-text="'mdi-close'" />
-        </v-btn>
-      </template>
-    </v-snackbar>
-  </div>
+                      <v-list-item-subtitle v-text="'Fill up billing details automatically'" />
+                    </v-list-item-content>
+
+                    <v-list-item-action>
+                      <v-switch
+                        v-model="autoFill"
+                        inset
+                      />
+                    </v-list-item-action>
+                  </v-list-item>
+                </v-list>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+
+        <v-divider />
+
+        <v-card-actions>
+          <v-container class="text-right">
+            <v-btn
+              rounded
+              class="mr-3"
+              depressed
+              small
+              outlined
+              color="primary"
+              @click="onCancel"
+              v-text="'close'"
+            />
+            <v-btn
+              color="primary"
+              rounded
+              type="submit"
+              small
+              depressed
+              outlined
+              v-text="'Save'"
+            />
+          </v-container>
+        </v-card-actions>
+      </v-card>
+    </v-form>
+  </v-dialog>
 </template>
 
 <script>
 import { mapState, mapActions } from 'vuex'
-import { required, minValue, requiredIf } from 'vuelidate/lib/validators'
+import { required, minValue } from 'vuelidate/lib/validators'
 
 import Constant from '@/config/constant'
-
-import Request from '@/services/request'
+import ProxyDistribution from '@/mixins/proxy-distribution'
 
 export default {
+  mixins: [ProxyDistribution],
   data () {
     return {
-      snackbar: false,
-      snackbarContent: 'created',
+      id: null,
+
       dialog: false,
-      sku: '',
-      sizes: [],
-      profile: {},
-      proxy: { id: null, name: 'Localhost', proxies: [] },
-      bank: {},
-      isEditMode: false,
-      selectedTask: {},
-      delay: 3200,
-      placeOrder: '',
       placeOrderMenu: false,
+
+      autoPay: false,
+      autoFill: true,
+
+      sku: null,
+      account: null,
+      billing: null,
+      placeOrder: null,
+
+      sizes: [],
+      delay: 3500,
       qty: 1,
       mode: Constant.CLIENT[0],
-      checkoutMethod: Constant.METHODS[3].id,
-      panel: []
+      checkoutMethod: Constant.METHODS[3],
+      proxy: {}
     }
   },
   computed: {
-    ...mapState('task', { allTasks: 'items' }),
-    ...mapState('profile', { profiles: 'items' }),
-    ...mapState('bank', { banks: 'items' }),
+    ...mapState('task', { tasks: 'items' }),
+    ...mapState('account', { accounts: 'items' }),
+    ...mapState('billing', { billings: 'items' }),
     ...mapState('proxy', { proxies: 'items' }),
+
     /**
      * Return all modes
      */
@@ -309,25 +331,18 @@ export default {
       return Constant.CLIENT
     },
     /**
-     * Return all attributes
-     */
-    attributes () {
-      return Constant.TITAN_ATTRIBUTES
-    },
-    /**
      * Is task running
      */
     isRunning () {
       let data = false
 
-      if (this.allTasks.length && Object.keys(this.selectedTask).length) {
-        const task = this.allTasks.find((val) => val.id === this.selectedTask.id)
-        data = (task && task.status.id === Constant.TASK.STATUS.RUNNING)
+      if (this.tasks.length && this.id) {
+        const task = this.tasks.find((val) => val.id === this.id)
+        data = (task && task.status.id === Constant.STATUS.RUNNING)
       }
 
       return data
     },
-
     /**
      * return available checkout methods
      */
@@ -335,38 +350,25 @@ export default {
       return Constant.METHODS
     },
     /**
-     * Return all proxies
-     */
-    allProxies () {
-      const proxies = this.proxies.slice()
-
-      proxies.push({ id: null, name: 'Localhost', proxies: [] })
-
-      return proxies
-    },
-    /**
      * Set modal header.
-     *
      */
     header () {
-      return this.isEditMode ? 'Edit' : 'New'
+      return this.id ? 'Edit' : 'New'
     },
     /**
-     * Error messages for profile.
-     *
+     * Error messages for account.
      */
-    profileErrors () {
+    accountErrors () {
       const errors = []
 
-      if (!this.$v.profile.$dirty) return errors
+      if (!this.$v.account.$dirty) return errors
 
-      this.$v.profile.required || errors.push('Required')
+      this.$v.account.required || errors.push('Required')
 
       return errors
     },
     /**
      * Error messages for sku.
-     *
      */
     skuErrors () {
       const errors = []
@@ -379,20 +381,18 @@ export default {
     },
     /**
      * Error messages for sizes.
-     *
      */
     sizesErrors () {
       const errors = []
 
       if (!this.$v.sizes.$dirty) return errors
 
-      this.$v.sizes.requiredIf || errors.push('Required')
+      this.$v.sizes.required || errors.push('Required')
 
       return errors
     },
     /**
      * Error messages for delay.
-     *
      */
     delayErrors () {
       const errors = []
@@ -406,7 +406,6 @@ export default {
     },
     /**
      * Error messages for qty.
-     *
      */
     qtyErrors () {
       const errors = []
@@ -420,7 +419,6 @@ export default {
     },
     /**
      * Error messages for proxy.
-     *
      */
     proxyErrors () {
       const errors = []
@@ -432,48 +430,61 @@ export default {
       return errors
     }
   },
+  watch: {
+    autoPay () {
+      if (this.autoPay) this.autoFill = false
+    },
+    autoFill () {
+      if (this.autoFill) this.autoPay = false
+    },
+    dialog () {
+      if (this.dialog && !this.id) {
+        this.proxy = { ...this.proxies[0] }
+      }
+    }
+  },
   methods: {
-    ...mapActions('task', { addTask: 'addItem', updateTask: 'updateItem' }),
-    ...mapActions('dialog', ['openDialog']),
+    ...mapActions('task', { addTask: 'addItem', updateTask: 'updateItem', setAllTasks: 'setItems' }),
+    ...mapActions('snackbar', ['showSnackbar']),
 
     /**
-     * Map selected task.
-     *
+     * On edit event
      */
-    mapData (task) {
-      if (Object.keys(task).length) {
-        this.selectedTask = task
+    onEdit (id) {
+      const item = { ...this.tasks.find((el) => el.id === id) }
 
-        const sizes = task.sizes.slice().map((val) => val.label)
+      const sizes = item.sizes.slice().map((val) => val.label)
 
-        this.sku = task.sku
-        this.sizes = sizes
-        this.delay = task.delay
-        this.placeOrder = task.placeOrder
-        this.qty = task.qty || 1
-        this.proxy = task.proxy
-        this.mode = task.mode || Constant.CLIENT[0]
-        this.checkoutMethod = task.checkoutMethod || Constant.METHODS[3].id
+      this.id = id
 
-        this.profile = (task.profile.id) ? task.profile : {}
-        this.bank = (task.bank.id) ? task.bank : {}
+      this.dialog = true
+      this.placeOrderMenu = false
 
-        this.isEditMode = true
-        this.dialog = true
-      }
+      this.autoPay = item.autoPay
+      this.autoFill = item.autoFill
+
+      this.sku = item.sku
+      this.account = item.account
+      this.billing = item.billing
+      this.placeOrder = item.placeOrder
+      this.sizes = sizes
+      this.delay = item.delay
+      this.qty = item.qty
+      this.mode = item.mode
+      this.checkoutMethod = item.checkoutMethod
+      this.proxy = item.proxy || { ...this.proxies[0] }
     },
     /**
      * Filter input sizes.
-     *
      */
     filterSizes () {
       if (this.sizes.length) {
         const sizes = []
 
         this.sizes.forEach(element => {
-          const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
+          const attr = Constant.TITAN_ATTRIBUTES.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
-          if (attr && !sizes.find((val) => val.toLowerCase() === element.toLowerCase())) sizes.push(element)
+          if ((attr && !sizes.find((val) => val.toLowerCase() === element.toLowerCase())) || element.toLowerCase() === 'ra') sizes.push(element)
         })
 
         this.sizes = sizes
@@ -481,42 +492,43 @@ export default {
     },
     /**
      * On cancel event.
-     *
      */
     onCancel () {
       this.$v.$reset()
 
-      this.sku = ''
-      this.sizes = []
-      this.bank = {}
-      this.profile = {}
-      this.proxy = { id: null, name: 'Localhost', proxies: [] }
-      this.selectedTask = {}
-      this.delay = 3200
-      this.placeOrder = ''
-      this.placeOrderMenu = false
-      this.qty = 1
-      this.mode = 'Desktop'
-      this.checkoutMethod = Constant.METHODS[3].id
-      this.panel = []
-      this.isEditMode = false
+      this.id = null
 
       this.dialog = false
+      this.placeOrderMenu = false
+
+      this.autoPay = false
+      this.autoFill = true
+
+      this.sku = null
+      this.account = null
+      this.billing = null
+      this.placeOrder = null
+
+      this.sizes = []
+      this.delay = 3500
+      this.qty = 1
+      this.mode = Constant.CLIENT[0]
+      this.checkoutMethod = Constant.METHODS[3]
+      this.proxy = { ...this.proxies[0] }
     },
     /**
      * On submit event.
-     *
      */
-    submit () {
-      try {
-        this.$v.$touch()
+    async submit () {
+      this.$v.$touch()
 
-        if (!this.$v.$invalid) {
-          const sizes = []
+      if (!this.$v.$invalid) {
+        const sizes = []
 
-          this.sizes.forEach((element) => {
-            const attr = this.attributes.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
+        this.sizes.forEach((element) => {
+          const attr = Constant.TITAN_ATTRIBUTES.find((val) => val.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase()))
 
+          if (attr) {
             const size = attr.sizes.find((data) => data.label.toLowerCase() === element.toLowerCase())
 
             sizes.push({
@@ -524,92 +536,102 @@ export default {
               value: size.value,
               label: size.label
             })
+          } else {
+            sizes.push({
+              attribute_id: null,
+              value: null,
+              label: 'RA'
+            })
+          }
+        })
+
+        const params = {
+          sku: this.sku,
+          account: { ...this.account },
+          billing: this.billing ? { ...this.billing } : null,
+          proxy: { ...this.proxy },
+          placeOrder: this.placeOrder,
+
+          sizes: sizes,
+          delay: this.delay,
+          qty: this.qty,
+          mode: this.mode,
+          checkoutMethod: this.checkoutMethod,
+
+          autoPay: this.autoPay,
+          autoFill: this.autoFill
+        }
+
+        const localhost = this.proxies.find((el) => el.id === 1)
+
+        if (this.id) {
+          const item = this.tasks.slice().find((el) => el.id === this.id)
+
+          if (params.proxy.id !== item.proxy.id || params.mode.id !== item.mode.id) {
+            const opt = { deviceCategory: 'desktop' }
+
+            if (params.mode.id !== 1) opt.deviceCategory = 'mobile'
+
+            const UserAgent = require('user-agents')
+            let userAgent = new UserAgent(opt)
+            userAgent = userAgent.toString()
+
+            if (params.proxy.id) {
+              params.proxy.configs = params.proxy.configs.map(el => {
+                return {
+                  ...el,
+                  userAgent: userAgent,
+                  retry: 1
+                }
+              })
+            } else {
+              const rp = require('request-promise')
+              const jar = rp.jar()
+
+              params.proxy.configs = [{
+                rp: rp,
+                jar: jar,
+                userAgent: userAgent,
+                retry: 1
+              }]
+            }
+          }
+
+          const updatedTask = await this.updateTask({
+            ...params,
+            id: this.id
           })
 
-          const params = {
-            sku: this.sku.trim(),
-            sizes: sizes,
-            profile: this.profile,
-            proxy: this.proxy,
-            bank: this.bank || {},
-            delay: this.delay,
-            placeOrder: this.placeOrder,
-            qty: this.qty,
-            mode: this.mode,
-            checkoutMethod: this.checkoutMethod
+          const modifiedTasks = await this.setProxyConfigs(this.tasks, updatedTask, localhost)
+          await this.setAllTasks(modifiedTasks)
+
+          const proxy = this.proxies.find((val) => val.id === item.proxy.id)
+          const oldProxyTasks = this.tasks.filter((val) => val.proxy.id === proxy.id)
+
+          if (proxy && proxy.distribute && proxy.proxies && proxy.proxies.length && proxy.configs && proxy.configs.length && oldProxyTasks.length) {
+            const modifiedOldTasks = await this.setOldProxyConfigs(this.tasks, oldProxyTasks, proxy, localhost)
+            await this.setAllTasks(modifiedOldTasks)
           }
 
-          if (this.isEditMode) {
-            const task = {
-              ...this.selectedTask,
-              ...params
-            }
+          this.showSnackbar({ message: 'Updated successfully', color: 'teal' })
+        } else {
+          const newTask = await this.addTask(params)
 
-            if (task.proxy.id !== this.selectedTask.proxy.id) {
-              const configs = []
+          const modifiedTasks = await this.setProxyConfigs(this.tasks, newTask, localhost)
+          this.setAllTasks(modifiedTasks)
 
-              if (task.proxy.proxies.length) {
-                task.proxy.proxies.forEach((el) => {
-                  const data = Request.setRequest(task.mode, el)
-                  configs.push(data)
-                })
-              } else {
-                const data = Request.setRequest(task.mode)
-                configs.push(data)
-              }
-
-              task.configs = configs
-            }
-
-            if (task.mode.id !== this.selectedTask.mode.id) {
-              task.configs = task.configs.map(el => {
-                const UserAgent = require('user-agents')
-                const option = {}
-
-                switch (task.mode.id) {
-                  case 2:
-                  case 3:
-                    option.deviceCategory = 'mobile'
-                    break
-                }
-
-                const userAgent = new UserAgent(option)
-                el.userAgent = userAgent.toString()
-
-                return el
-              })
-            }
-
-            this.updateTask(task)
-
-            this.snackbarContent = 'updated'
-            this.snackbar = true
-
-            this.onCancel()
-          } else {
-            this.addTask({ ...params })
-            this.snackbarContent = 'created'
-            this.snackbar = true
-          }
+          this.showSnackbar({ message: 'Created successfully', color: 'teal' })
         }
-      } catch (error) {
-        this.openDialog({
-          title: 'Error',
-          body: error,
-          alert: true
-        })
+
+        this.onCancel()
       }
     }
   },
   validations: {
-    profile: { required },
+    account: { required },
     proxy: { required },
     sku: { required },
-    sizes: {
-      requiredIf: requiredIf(function () {
-        return this.sku
-      })
-    },
+    sizes: { required },
     delay: {
       required,
       minValue: minValue(0)

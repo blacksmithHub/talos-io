@@ -1,8 +1,7 @@
 export default {
   data () {
     return {
-      now: new Date(),
-      timezone: this.$moment.tz.guess()
+      now: new Date()
     }
   },
   methods: {
