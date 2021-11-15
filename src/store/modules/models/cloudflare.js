@@ -63,6 +63,8 @@ export default {
      */
     reset ({ commit }) {
       commit('RESET')
+
+      return true
     },
 
     /**
@@ -156,6 +158,8 @@ export default {
       items.doors = items.doors.map(el => true)
 
       commit('SET_ITEMS', items)
+
+      return true
     }
   }
 }

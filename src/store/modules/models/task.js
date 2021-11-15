@@ -36,6 +36,8 @@ export default {
     setItems ({ commit }, items) {
       commit('SET_ITEMS', items)
       localStorage.setItem('tasks', JSON.stringify(items))
+
+      return true
     },
 
     /**
@@ -133,6 +135,8 @@ export default {
 
       commit('SET_ITEMS', tasks)
       localStorage.setItem('tasks', JSON.stringify(tasks))
+
+      return true
     },
 
     /**
@@ -186,6 +190,8 @@ export default {
 
       commit('SET_ITEMS', tasks)
       localStorage.setItem('tasks', JSON.stringify(tasks))
+
+      return true
     }
   }
 }

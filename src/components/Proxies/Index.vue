@@ -324,7 +324,7 @@ export default {
         this.updateProxy(obj)
       }
     },
-    onStop (item) {
+    async onStop (item) {
       const data = this.proxies.find((el) => el.id === item.id)
 
       for (let index = 0; index < data.configs.length; index++) {
@@ -336,10 +336,12 @@ export default {
         }
       }
 
-      this.updateProxy({
+      await this.updateProxy({
         ...data,
         status: this.status.STOPPED
       })
+
+      return true
     },
     async onDelete (item) {
       await this.onStop(item)

@@ -404,6 +404,8 @@ export default {
           userAgent: userAgent
         })
       }
+
+      return true
     },
     onResize () {
       this.windowSize = { x: window.innerWidth, y: window.innerHeight }

@@ -32,6 +32,8 @@ export default {
     setItems ({ commit }, items) {
       commit('SET_ITEMS', items)
       localStorage.setItem('proxies', JSON.stringify(items))
+
+      return true
     },
 
     /**
@@ -68,6 +70,8 @@ export default {
 
       commit('SET_ITEMS', proxies)
       localStorage.setItem('proxies', JSON.stringify(proxies))
+
+      return true
     },
 
     /**
@@ -86,6 +90,8 @@ export default {
 
       commit('SET_ITEMS', proxies)
       localStorage.setItem('proxies', JSON.stringify(proxies))
+
+      return true
     },
 
     /**
@@ -102,6 +108,8 @@ export default {
 
       commit('SET_ITEMS', proxies)
       localStorage.setItem('proxies', JSON.stringify(proxies))
+
+      return true
     },
 
     /**
@@ -152,6 +160,8 @@ export default {
 
       commit('SET_ITEMS', proxies)
       localStorage.setItem('proxies', JSON.stringify(proxies))
+
+      return true
     }
   }
 }

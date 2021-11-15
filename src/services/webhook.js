@@ -50,5 +50,7 @@ export default {
       avatarURL: Config.bot.avatar,
       embeds: [embed]
     })
+
+    return true
   }
 }

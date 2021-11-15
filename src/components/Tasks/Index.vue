@@ -293,6 +293,8 @@ export default {
           await Task.updateCurrentTaskLog(item.id, '====================')
         }, 2000)
       }
+
+      return true
     },
     async onDelete (item) {
       await this.onStop(item)
